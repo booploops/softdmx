@@ -1,43 +1,53 @@
+<script setup lang="ts">
+import GridConfig from 'src/components/GridConfig.vue';
+import GridNode from 'src/components/GridNode.vue';
+import TestPanel from 'src/components/TestPanel.vue';
+import { TestShowfile } from 'src/shows/TestShowfile';
+import { useDMXStore } from 'src/stores/dmx';
+
+const dmx = useDMXStore();
+
+onMounted(() => {
+  dmx.loadShowfile(TestShowfile);
+  // @ts-ignore
+  window.$dmx = dmx; // Expose DMX store globally for debugging
+})
+</script>
+
+
 <template>
-  <q-page class="row items-center justify-evenly">
-    <example-component
-      title="Example component"
-      active
-      :todos="todos"
-      :meta="meta"
-    ></example-component>
+  <q-page class="">
+    <div class="main-view">
+      <div class="grid-node-container">
+        <GridNode />
+      </div>
+      <TestPanel />
+      <GridConfig />
+    </div>
   </q-page>
 </template>
 
-<script setup lang="ts">
-import { ref } from 'vue';
-import type { Todo, Meta } from 'components/models';
-import ExampleComponent from 'components/ExampleComponent.vue';
+<style scoped>
+.grid-node-container {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background-color: #999;
+  overflow: hidden;
+  overflow-x: scroll;
+}
 
-const todos = ref<Todo[]>([
-  {
-    id: 1,
-    content: 'ct1'
-  },
-  {
-    id: 2,
-    content: 'ct2'
-  },
-  {
-    id: 3,
-    content: 'ct3'
-  },
-  {
-    id: 4,
-    content: 'ct4'
-  },
-  {
-    id: 5,
-    content: 'ct5'
-  }
-]);
+.main-view {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 300px auto 1fr;
+  overflow: hidden;
+  position: absolute;
+  inset: 0;
+}
 
-const meta = ref<Meta>({
-  totalCount: 1200
-});
-</script>
+.config-view {
+  overflow: hidden;
+}
+</style>
