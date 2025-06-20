@@ -3,6 +3,7 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url'
 import { startServer } from './server';
+import { createArtnetWindow } from './artnet-window';
 
 // needed in case process is undefined under Linux
 const platform = process.platform || os.platform();
@@ -51,6 +52,8 @@ async function createWindow() {
   mainWindow.on('closed', () => {
     mainWindow = undefined;
   });
+
+  createArtnetWindow();
 }
 
 void app.whenReady().then(createWindow);

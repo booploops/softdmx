@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useDMXStore } from 'src/stores/dmx';
 import { storeToRefs } from 'pinia';
+import { useIOClient } from 'src/lib/io-client';
+import { ActiveChannel } from 'src/types';
 
 /**
  * DMX (Digital Multiplex) Grid Node Display
@@ -25,55 +27,55 @@ const SECTOR_STRIP_COUNT = 13; // Number of sector strips in the grid node
 const { channels } = storeToRefs(useDMXStore());
 
 const canvasStyle = computed(() => {
-    return {
-        width: `${width.value}px`,
-        height: `${height.value}px`,
-    };
+  return {
+    width: `${width.value}px`,
+    height: `${height.value}px`,
+  };
 });
 
 function drawCanvas() {
-    const canvas = canvasElement.value!;
-    const ctx = canvas.getContext('2d');
-    canvas.width = width.value;
-    canvas.height = height.value;
-    if (ctx) {
-        // Clear canvas with black background
-        ctx.fillStyle = 'black';
-        ctx.fillRect(0, 0, width.value, height.value);
+  const canvas = canvasElement.value!;
+  const ctx = canvas.getContext('2d');
+  canvas.width = width.value;
+  canvas.height = height.value;
+  if (ctx) {
+    // Clear canvas with black background
+    ctx.fillStyle = 'black';
+    ctx.fillRect(0, 0, width.value, height.value);
 
-        // Draw channels
-        channels.value.forEach(channel => {
-            const sectorIndex = Math.floor((channel.id - 1) / SECTOR_STRIP_COUNT);
-            const channelInSector = (channel.id - 1) % SECTOR_STRIP_COUNT;
+    // Draw channels
+    channelsCached.forEach(channel => {
+      const sectorIndex = Math.floor((channel.id - 1) / SECTOR_STRIP_COUNT);
+      const channelInSector = (channel.id - 1) % SECTOR_STRIP_COUNT;
 
-            // Calculate brightness based on channel value (0-255)
-            const brightness = channel.value;
-            ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
+      // Calculate brightness based on channel value (0-255)
+      const brightness = channel.value;
+      ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
 
-            // Draw channel pixel
-            ctx.fillRect(
-                sectorIndex * CHANNEL_PIXEL_SIZE, // x position
-                channelInSector * CHANNEL_PIXEL_SIZE, // y position
-                CHANNEL_PIXEL_SIZE, // width
-                CHANNEL_PIXEL_SIZE // height
-            );
-        });
+      // Draw channel pixel
+      ctx.fillRect(
+        sectorIndex * CHANNEL_PIXEL_SIZE, // x position
+        channelInSector * CHANNEL_PIXEL_SIZE, // y position
+        CHANNEL_PIXEL_SIZE, // width
+        CHANNEL_PIXEL_SIZE // height
+      );
+    });
 
-        // Fill remaining channels with black
-        if (channels.value.length < MAX_CHANNELS) {
-            ctx.fillStyle = 'rgb(0, 0, 0)';
-            for (let i = channels.value.length; i < MAX_CHANNELS; i++) {
-                const sectorIndex = Math.floor(i / SECTOR_STRIP_COUNT);
-                const channelInSector = i % SECTOR_STRIP_COUNT;
-                ctx.fillRect(
-                    sectorIndex * CHANNEL_PIXEL_SIZE,
-                    channelInSector * CHANNEL_PIXEL_SIZE,
-                    CHANNEL_PIXEL_SIZE,
-                    CHANNEL_PIXEL_SIZE
-                );
-            }
-        }
+    // Fill remaining channels with black
+    if (channelsCached.length < MAX_CHANNELS) {
+      ctx.fillStyle = 'rgb(0, 0, 0)';
+      for (let i = channelsCached.length; i < MAX_CHANNELS; i++) {
+        const sectorIndex = Math.floor(i / SECTOR_STRIP_COUNT);
+        const channelInSector = i % SECTOR_STRIP_COUNT;
+        ctx.fillRect(
+          sectorIndex * CHANNEL_PIXEL_SIZE,
+          channelInSector * CHANNEL_PIXEL_SIZE,
+          CHANNEL_PIXEL_SIZE,
+          CHANNEL_PIXEL_SIZE
+        );
+      }
     }
+  }
 }
 
 // watch(channels, () => {
@@ -84,44 +86,58 @@ function drawCanvas() {
 //     deep: true,
 // })
 
+let channelsCached: ActiveChannel[] = [];
+
 // use requestAnimationFrame to draw the canvas
 let animationFrameId: number;
 
 function animate() {
-    if (canvasElement.value) {
-        drawCanvas();
-    }
-    animationFrameId = requestAnimationFrame(animate);
+  if (canvasElement.value) {
+    drawCanvas();
+  }
+  animationFrameId = requestAnimationFrame(animate);
 }
 
-onMounted(() => {
+function listenForUpdates() {
+  const io = useIOClient();
+  io.on('channels:update', (channels: ActiveChannel[]) => {
     if (canvasElement.value) {
-        drawCanvas();
-        animate(); // Start the animation loop
+      channelsCached = channels;
+      // drawCanvas();
     }
-});
+  });
+}
+
+function stopListeningForUpdates() {
+  const io = useIOClient();
+  io.off('channels:update');
+}
+
 
 onBeforeUnmount(() => {
-    if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-    }
+  stopListeningForUpdates();
+  if (animationFrameId) {
+    cancelAnimationFrame(animationFrameId);
+  }
 });
 
 watch(canvasElement, (element) => {
-    if (element) {
-        drawCanvas();
-    }
+  if (element) {
+    listenForUpdates();
+    drawCanvas();
+    animate(); // Start the animation loop
+  }
 }, {
-    immediate: true,
+  immediate: true,
 })
 </script>
 
 <template>
-    <canvas
-        ref="canvasElement"
-        class="dmx-gridnode"
-        :style="canvasStyle"
-    ></canvas>
+  <canvas
+    ref="canvasElement"
+    class="dmx-gridnode"
+    :style="canvasStyle"
+  ></canvas>
 </template>
 
 <style scoped></style>

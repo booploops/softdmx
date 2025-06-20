@@ -1,6 +1,6 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header elevated>
+    <q-header class="bg-dark text-white">
       <q-toolbar>
         <q-btn
           flat
@@ -14,21 +14,18 @@
         <q-toolbar-title>
           SoftDMX
         </q-toolbar-title>
-
-        <div>Quasar v{{ $q.version }}</div>
       </q-toolbar>
     </q-header>
 
     <q-drawer
       v-model="leftDrawerOpen"
-      show-if-above
       bordered
     >
       <q-list>
         <q-item-label
           header
         >
-          Essential Links
+          Menu
         </q-item-label>
 
       </q-list>

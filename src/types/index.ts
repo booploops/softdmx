@@ -1,6 +1,5 @@
 export type ActiveChannel = {
   id: number;
-  instanceId: string;
   path: string;
   value: number;
 };
@@ -46,3 +45,10 @@ export type ShowfileFixtureMapped = {
     channels: FixtureChannelWithReference[];
   };
 };
+
+export type RecordedFrame = {
+  name: string;
+  type: 'channels' | 'delay';
+  channels: ActiveChannel[];
+  delayDuration?: number; // Optional delay duration in milliseconds
+}

@@ -52,10 +52,6 @@ watch(controlChannel, (newControlChannel) => {
                     </div>
                     <div class="channel-control">
                         <div>
-                            {{ channel.reference.id }}
-
-                        </div>
-                        <div>
                             <input
                                 type="range"
                                 min="0"
@@ -66,9 +62,6 @@ watch(controlChannel, (newControlChannel) => {
                         <div>
                             {{ Math.floor(channel.reference.value) }}
                         </div>
-                    </div>
-                    <div class="channel-reference">
-                        <code>{{ channel.reference.path }}</code>
                     </div>
                 </div>
             </template>
@@ -83,8 +76,6 @@ watch(controlChannel, (newControlChannel) => {
     border-radius: 4px;
     padding: 8px;
     margin-bottom: 12px;
-    background-color: #222;
-
 }
 
 .channel-name {
@@ -120,7 +111,7 @@ watch(controlChannel, (newControlChannel) => {
 
 .channel-control {
     display: grid;
-    grid-template-columns: auto 1fr auto;
+    grid-template-columns: 1fr auto;
     align-items: center;
     gap: 8px;
 

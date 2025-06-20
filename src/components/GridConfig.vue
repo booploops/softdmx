@@ -46,6 +46,5 @@ const groups = computed(() => dmx.showfile?.linkedGroups || []);
     padding: 8px;
     gap: 8px;
     position: relative;
-    background-color: #333;
 }
 </style>

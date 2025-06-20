@@ -46,7 +46,6 @@ export const useDMXStore = defineStore("dmx", () => {
             (c) => c.path === `show://${fixture.name}/${index + 1}`
           ) ?? {
             id: index + 1,
-            instanceId: crypto.randomUUID(),
             path: `show://${fixture.name}/${index + 1}`,
           },
         }));
@@ -91,7 +90,6 @@ export const useDMXStore = defineStore("dmx", () => {
       for (let i = 0; i < fixtureDefinition.channels.length; i++) {
         channels.value.push({
           id: channelIndex,
-          instanceId: crypto.randomUUID(),
           path: `show://${fixture.name}/${i + 1}`,
           value: fixtureDefinition.channels[i]?.defaultValue ?? 0,
         });
@@ -101,7 +99,6 @@ export const useDMXStore = defineStore("dmx", () => {
   };
 
   watch(channels, (newChannels) => {
-    console.log("Channels updated:", newChannels.length);
     useIOClient().emit("channels:update", newChannels);
   }, { deep: true });
 

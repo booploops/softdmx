@@ -14,10 +14,12 @@
     "postinstall": "quasar prepare"
   },
   "dependencies": {
+    "@fontsource-variable/roboto-flex": "^5.2.6",
     "@quasar/extras": "^1.16.4",
     "@vueuse/core": "^13.4.0",
     "fastify": "^5.4.0",
     "idb-keyval": "^6.2.2",
+    "lodash-es": "^4.17.21",
     "pinia": "^3.0.1",
     "quasar": "^2.16.0",
     "socket.io": "^4.8.1",
@@ -30,6 +32,7 @@
     "@electron/packager": "^18.3.2",
     "@intlify/unplugin-vue-i18n": "^4.0.0",
     "@quasar/app-vite": "^2.1.0",
+    "@types/lodash-es": "^4",
     "@types/node": "^20.5.9",
     "autoprefixer": "^10.4.2",
     "electron": "^36.5.0",

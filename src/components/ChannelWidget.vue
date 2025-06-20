@@ -52,8 +52,6 @@ const props = defineProps<{
     border-radius: 4px;
     padding: 8px;
     margin-bottom: 12px;
-    background-color: #222;
-
 }
 
 .channel-name {

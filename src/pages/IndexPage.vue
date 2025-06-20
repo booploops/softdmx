@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import GridConfig from 'src/components/GridConfig.vue';
 import GridNode from 'src/components/GridNode.vue';
-import TestPanel from 'src/components/TestPanel.vue';
+import GridToolbar from 'src/components/GridToolbar.vue';
+import RecorderBar from 'src/components/RecorderBar.vue';
 import { TestShowfile } from 'src/shows/TestShowfile';
 import { useDMXStore } from 'src/stores/dmx';
 
@@ -18,11 +19,9 @@ onMounted(() => {
 <template>
   <q-page class="">
     <div class="main-view">
-      <div class="grid-node-container">
-        <GridNode />
-      </div>
-      <TestPanel />
+      <GridToolbar />
       <GridConfig />
+      <RecorderBar />
     </div>
   </q-page>
 </template>
@@ -33,15 +32,13 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  background-color: #999;
   overflow: hidden;
   overflow-x: scroll;
 }
 
 .main-view {
-  display: grid;
-  grid-template-columns: 1fr;
-  grid-template-rows: 300px auto 1fr;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
   position: absolute;
   inset: 0;
