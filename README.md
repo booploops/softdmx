@@ -1,6 +1,7 @@
-# SoftDMX (softdmx)
+# SoftDMX (name not final)
 
-Soft DMX
+## Dependencies
+- Node.JS 22 ([`fnm`](https://github.com/Schniz/fnm) is recommended for managing Node versions)
 
 ## Install the dependencies
 ```bash
