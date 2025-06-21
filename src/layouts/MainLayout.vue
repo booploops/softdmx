@@ -1,6 +1,11 @@
 <template>
-  <q-layout view="lHh Lpr lFf">
-    <q-header class="bg-dark text-white app-titlebar">
+  <q-layout view="hHh Lpr lFf">
+    <q-header
+      class="bg-dark text-white app-titlebar"
+      :class="{
+        'is-mac': $q.platform.is.mac
+      }"
+    >
       <q-toolbar>
         <q-btn
           flat
@@ -8,8 +13,8 @@
           aria-label="Menu"
           @click="toggleLeftDrawer"
           class="no-app-drag"
+          dense
         />
-
       </q-toolbar>
     </q-header>
 
@@ -19,14 +24,13 @@
       class="no-app-drag"
     >
       <q-list>
-        <q-item-label
-          header
-        >
+        <q-item-label header>
           Menu
         </q-item-label>
 
       </q-list>
     </q-drawer>
+
 
     <q-page-container>
       <router-view />
@@ -35,10 +39,12 @@
 </template>
 
 <script setup lang="ts">
+import Titlebar from 'src/components/Titlebar.vue';
+
 
 const leftDrawerOpen = ref(false);
 
-function toggleLeftDrawer () {
+function toggleLeftDrawer() {
   leftDrawerOpen.value = !leftDrawerOpen.value;
 }
 </script>
@@ -46,5 +52,9 @@ function toggleLeftDrawer () {
 <style lang="scss" scoped>
 .app-titlebar {
   -webkit-app-region: drag;
+
+  &.is-mac {
+    padding-left: 64px;
+  }
 }
 </style>

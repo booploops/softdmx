@@ -3,6 +3,7 @@ import { Dialog } from 'quasar';
 import { TestShowfile } from 'src/shows/TestShowfile';
 import { useDMXStore } from 'src/stores/dmx';
 import { useUIStore } from 'src/stores/ui';
+import ViewTypeToggle from './ViewTypeToggle.vue';
 
 const ui = useUIStore();
 const dmx = useDMXStore();
@@ -194,7 +195,7 @@ const animationTest = () => {
 </script>
 
 <template>
-  <div>
+  <q-toolbar>
     <q-btn
       icon="mdi-refresh"
       @click="reloadShowfile"
@@ -203,19 +204,95 @@ const animationTest = () => {
         Reload Showfile
       </q-tooltip>
     </q-btn>
-    <q-btn @click="maxValues">Max Values</q-btn>
+    <q-btn-dropdown label="Testing">
+      <q-list>
+        <q-item
+          clickable
+          v-close-popup
+          @click="chaos"
+        >
+          <q-item-section>
+            Chaos
+          </q-item-section>
+        </q-item>
+        <q-item
+          clickable
+          v-close-popup
+          @click="chaos2"
+        >
+          <q-item-section>
+            Chaos 2
+          </q-item-section>
+        </q-item>
+        <q-item
+          clickable
+          v-close-popup
+          @click="clearAnimationIntervals"
+        >
+          <q-item-section>
+            Clear Animations
+          </q-item-section>
+        </q-item>
+        <q-item
+          clickable
+          v-close-popup
+          @click="colorCycleAnimation"
+        >
+          <q-item-section>
+            Color Cycle Animation
+          </q-item-section>
+        </q-item>
+        <q-item
+          clickable
+          v-close-popup
+          @click="lightFixtureSway"
+        >
+          <q-item-section>
+            Light Fixture Sway
+          </q-item-section>
+        </q-item>
+        <q-item
+          clickable
+          v-close-popup
+          @click="maxValues"
+        >
+          <q-item-section>
+            Max Values
+          </q-item-section>
+        </q-item>
+        <q-item
+          clickable
+          v-close-popup
+          @click="animationTest"
+        >
+          <q-item-section>
+            Animation Test
+          </q-item-section>
+        </q-item>
+        <q-item
+          clickable
+          v-close-popup
+          @click="copyCurrentChannels"
+        >
+          <q-item-section>
+            Copy Current Channels
+          </q-item-section>
+        </q-item>
+        <q-item
+          clickable
+          v-close-popup
+          @click="pasteChannels"
+        >
+          <q-item-section>
+            Paste Channels
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-btn-dropdown>
     <q-btn @click="blackOut">Black Out</q-btn>
-    <q-btn @click="colorCycleAnimation">Colors</q-btn>
-    <q-btn @click="lightFixtureSway">Sway</q-btn>
-    <q-btn @click="animationTest">Animation Test</q-btn>
-    <q-btn @click="copyCurrentChannels">Copy Current Channels</q-btn>
-    <q-btn @click="pasteChannels">Paste Channels</q-btn>
-
-    <select v-model="ui.currentTab">
-      <option value="channels">Channels</option>
-      <option value="groups">Groups</option>
-    </select>
-  </div>
+    <q-space />
+    <ViewTypeToggle />
+  </q-toolbar>
 </template>
 
 <style scoped></style>

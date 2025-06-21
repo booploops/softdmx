@@ -2,7 +2,7 @@
  * Quasar default overrides
  */
 
-import { QBtn, QDialog, QMenu, QSelect, QTab } from "quasar";
+import { QBtn, QBtnDropdown, QDialog, QMenu, QSelect, QTab } from "quasar";
 import { boot } from "quasar/wrappers";
 
 export default boot(async (app) => {
@@ -22,6 +22,15 @@ export default boot(async (app) => {
     default: "none",
   };
 
+  QMenu.props["transition-duration"] = {
+    type: Number,
+    default: 0,
+  };
+  QDialog.props["transition-duration"] = {
+    type: Number,
+    default: 0,
+  };
+
   QDialog.props["color"] = {
     type: String,
     default: "primary",
@@ -29,17 +38,27 @@ export default boot(async (app) => {
 
   QDialog.props["transition-show"] = {
     type: String,
-    default: "fade",
+    default: "none",
   };
 
   QDialog.props["transition-hide"] = {
     type: String,
-    default: "fade",
+    default: "none",
   };
 
-  QBtn.props['no-caps'] = {
+  QBtn.props["no-caps"] = {
     type: Boolean,
     default: true,
+  };
+
+  QBtnDropdown.props["no-caps"] = {
+    type: Boolean,
+    default: true,
+  };
+
+  QBtnDropdown.props["transition-duration"] = {
+    type: Number,
+    default: 0,
   };
   /**
    * Disabling ripple effect several components

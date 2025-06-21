@@ -30,6 +30,10 @@ async function createWindow() {
       color: '#1D1D1D',
       symbolColor: '#FFFFFF',
     },
+    trafficLightPosition: {
+      x: 12,
+      y: 16,
+    },
     titleBarStyle: 'hidden',
     webPreferences: {
       contextIsolation: true,
