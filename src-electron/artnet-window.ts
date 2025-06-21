@@ -7,14 +7,19 @@ const currentDir = fileURLToPath(new URL('.', import.meta.url));
 
 export async function createArtnetWindow(): Promise<BrowserWindow> {
   const win = new BrowserWindow({
+    icon: path.resolve(currentDir, 'icons/icon.png'), // tray icon
     width: 1920,
     height: 208,
     useContentSize: true,
-    titleBarOverlay: true,
+    titleBarOverlay: false,
     titleBarStyle: "hidden",
+    frame: false,
     resizable: false,
     roundedCorners: false,
     hasShadow: false,
+    enableLargerThanScreen: true,
+    transparent: true,
+    show: false,
     webPreferences: {
       contextIsolation: true,
       preload: path.resolve(
@@ -34,8 +39,6 @@ export async function createArtnetWindow(): Promise<BrowserWindow> {
       hash: "#/artnet",
     });
   }
-
-  win.show();
 
   return win;
 }

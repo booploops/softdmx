@@ -11,3 +11,7 @@ body {
 body.body--dark {
     color-scheme: dark;
 }
+
+.no-app-drag {
+  -webkit-app-region: no-drag;
+}

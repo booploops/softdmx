@@ -1,25 +1,22 @@
 <template>
   <q-layout view="lHh Lpr lFf">
-    <q-header class="bg-dark text-white">
+    <q-header class="bg-dark text-white app-titlebar">
       <q-toolbar>
         <q-btn
           flat
-          dense
-          round
-          icon="menu"
+          icon="fa fa-ellipsis-h"
           aria-label="Menu"
           @click="toggleLeftDrawer"
+          class="no-app-drag"
         />
 
-        <q-toolbar-title>
-          SoftDMX
-        </q-toolbar-title>
       </q-toolbar>
     </q-header>
 
     <q-drawer
       v-model="leftDrawerOpen"
       bordered
+      class="no-app-drag"
     >
       <q-list>
         <q-item-label
@@ -45,3 +42,9 @@ function toggleLeftDrawer () {
   leftDrawerOpen.value = !leftDrawerOpen.value;
 }
 </script>
+
+<style lang="scss" scoped>
+.app-titlebar {
+  -webkit-app-region: drag;
+}
+</style>

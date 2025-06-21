@@ -23,6 +23,14 @@ async function createWindow() {
     width: 1000,
     height: 600,
     useContentSize: true,
+    backgroundColor: '#1D1D1D',
+    resizable: true,
+    maximizable: true,
+    titleBarOverlay: {
+      color: '#1D1D1D',
+      symbolColor: '#FFFFFF',
+    },
+    titleBarStyle: 'hidden',
     webPreferences: {
       contextIsolation: true,
       // More info: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/electron-preload-script
@@ -48,24 +56,23 @@ async function createWindow() {
       mainWindow?.webContents.closeDevTools();
     });
   }
-
+  let artnetWindow: BrowserWindow | undefined = await createArtnetWindow();
+  artnetWindow.show();
   mainWindow.on('closed', () => {
     mainWindow = undefined;
+    // close the app
+    app.quit();
   });
-
-  createArtnetWindow();
 }
 
 void app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
-  if (platform !== 'darwin') {
-    app.quit();
-  }
+  app.quit();
 });
 
 app.on('activate', () => {
-  if (mainWindow === undefined) {
-    void createWindow();
-  }
+  // if (mainWindow === undefined) {
+    // void createWindow();
+  // }
 });
