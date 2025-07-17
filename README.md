@@ -1,8 +1,11 @@
 # SoftDMX (name not final)
 
+### This project is still in very early development
+
 ## What is this?
 
 The "SoftDMX" project is intended to be an easy to use, hackable, software lighting controller that can be used across a range of devices to make your own custom lighting consoles.
+
 
 Some of SoftDMX's current goals are:
 - A primarily software driven lighting controller
