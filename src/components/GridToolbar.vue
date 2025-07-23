@@ -1,6 +1,6 @@
 <!--
   Copyright (C) 2025-Present booploops and contributors
-  
+
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -11,9 +11,11 @@ import { TestShowfile } from 'src/shows/TestShowfile';
 import { useDMXStore } from 'src/stores/dmx';
 import { useUIStore } from 'src/stores/ui';
 import ViewTypeToggle from './ViewTypeToggle.vue';
+import { useRecorderStore } from 'src/stores/recorder';
 
 const ui = useUIStore();
 const dmx = useDMXStore();
+const rec = useRecorderStore();
 
 
 const reloadShowfile = () => {
@@ -42,6 +44,32 @@ function copyToClipboard(text: string) {
     console.log('Copied to clipboard:', text);
   }).catch(err => {
     console.error('Failed to copy text: ', err);
+  });
+}
+
+const copyFrames = () => {
+  const frames = JSON.stringify(rec.frames);
+  copyToClipboard(frames);
+}
+
+const pasteFrames = () => {
+  Dialog.create({
+    title: 'Paste frames JSON data:',
+    message: 'Please paste your JSON data below:',
+    prompt: {
+      model: '',
+      type: 'textarea',
+      placeholder: 'Paste your JSON data here...'
+    },
+  }).onOk((data) => {
+    if (data) {
+      try {
+        const frames = JSON.parse(data);
+        rec.frames = frames;
+      } catch (error) {
+        console.error('Failed to parse JSON data: ', error);
+      }
+    }
   });
 }
 
@@ -294,9 +322,30 @@ const animationTest = () => {
             Paste Channels
           </q-item-section>
         </q-item>
+
+        <q-item
+          clickable
+          v-close-popup
+          @click="copyFrames"
+        >
+          <q-item-section>
+            Copy Current Frames
+          </q-item-section>
+        </q-item>
+
+        <q-item
+          clickable
+          v-close-popup
+          @click="pasteFrames"
+        >
+          <q-item-section>
+            Paste Frames
+          </q-item-section>
+        </q-item>
       </q-list>
     </q-btn-dropdown>
     <q-btn @click="blackOut">Black Out</q-btn>
+    <q-input v-model.number="rec.timeDelay" label="Time Delay" outlined dense type="number"/>
     <q-space />
     <ViewTypeToggle />
   </q-toolbar>

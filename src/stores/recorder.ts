@@ -1,14 +1,14 @@
 /*
  * Copyright (C) 2025-Present booploops and contributors
- * 
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
+import type { RecordedFrame } from "src/types";
 import { ref, computed, watch } from "vue";
 import { defineStore } from "pinia";
 import { useDMXStore } from "./dmx";
-import type { RecordedFrame } from "src/types";
 import { clone, cloneDeep } from "lodash-es";
 import { useLocalStorage } from "@vueuse/core";
 
@@ -20,6 +20,8 @@ export const useRecorderStore = defineStore("recorder-store", () => {
   const activeFrameIndex = ref<number | null>(null);
 
   const propertiesClipboard = ref<RecordedFrame | null>(null);
+
+  const timeDelay = ref(1000);
 
   const activeFrame = computed(() => {
     if (activeFrameIndex.value === null || activeFrameIndex.value < 0) {
@@ -126,7 +128,7 @@ export const useRecorderStore = defineStore("recorder-store", () => {
     isPlaying.value = true;
     let currentFrameIndex = 0;
     let startTime: number | null = null;
-    const FRAME_DURATION = 1000; // 1 second per frame
+    const FRAME_DURATION = timeDelay.value; // 1 second per frame
 
     const animate = (timestamp: number) => {
       if (!startTime) startTime = timestamp;
@@ -170,6 +172,7 @@ export const useRecorderStore = defineStore("recorder-store", () => {
 
   return {
     frames,
+    timeDelay,
     recordFrame,
     clearFrames,
     totalFrames,
