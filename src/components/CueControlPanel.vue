@@ -149,6 +149,7 @@ const handleProgressClick = (event: MouseEvent) => {
           track-color="grey-8"
           size="8px"
           class="progress-bar clickable"
+          animation-speed="0"
           @click="handleProgressClick"
         />
       </div>
