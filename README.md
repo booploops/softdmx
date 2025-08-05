@@ -20,6 +20,12 @@ Some of SoftDMX's current goals are:
 - Multiple output formats (currently only produces a GridNode)
 - Cross-platform
 
+## Core Technologies
+- [Vue 3](https://vuejs.org/)
+- [Quasar Framework](https://quasar.dev/)
+- [Electron](https://www.electronjs.org/)
+
+
 ## Dependencies
 - Node.JS 22 ([`fnm`](https://github.com/Schniz/fnm) is recommended for managing Node versions)
 

@@ -82,6 +82,7 @@ export default defineConfig((ctx) => {
             imports: [
               // presets
               "vue",
+              "pinia",
             ],
           },
         ],

@@ -13,9 +13,12 @@ import { startServer } from './server';
 import { createArtnetWindow } from './artnet-window';
 import { AppState } from './state/main';
 import { getDevUrl, isDev } from './utils';
+import { Paths } from './utils/paths';
 
 // needed in case process is undefined under Linux
 const platform = process.platform || os.platform();
+
+app.setPath('userData', Paths.appData);
 
 const currentDir = fileURLToPath(new URL('.', import.meta.url));
 
