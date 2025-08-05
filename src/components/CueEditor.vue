@@ -6,7 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <!--
-  Purpose: Professional timeline-based cue editor for lighting shows
+  Purpose: Timeline-based cue editor for lighting shows
 -->
 <script setup lang="ts">
 import { useCueStore } from 'src/stores/cue';
@@ -23,6 +23,8 @@ const timelineHeight = ref(400);
 // Timeline state
 const isDragging = ref(false);
 const dragStartTime = ref(0);
+const dragStartX = ref(0);
+const dragFrameData = ref<{ layerId: string, frameIndex: number, originalStartTime: number } | null>(null);
 const selectedFrameId = ref<string | null>(null);
 
 // Computed properties
@@ -71,6 +73,14 @@ const getFramePosition = (layer: CueLayer, frameIndex: number) => {
   return position * timelineScale.value;
 };
 
+const getFrameStartTime = (layer: CueLayer, frameIndex: number) => {
+  let position = 0;
+  for (let i = 0; i < frameIndex; i++) {
+    position += layer.frames[i]?.duration || 1000;
+  }
+  return position;
+};
+
 const getFrameWidth = (frame: RecordedFrame) => {
   return (frame.duration || 1000) * timelineScale.value;
 };
@@ -90,9 +100,20 @@ const handleTimelineClick = (event: MouseEvent) => {
 const handleFrameMouseDown = (event: MouseEvent, layerId: string, frameIndex: number) => {
   event.stopPropagation();
 
+  const layer = cueStore.activeCue?.layers.find(l => l.id === layerId);
+  if (!layer) return;
+
   isDragging.value = true;
-  dragStartTime.value = event.clientX;
+  dragStartX.value = event.clientX;
+  dragStartTime.value = getFrameStartTime(layer, frameIndex);
   selectedFrameId.value = `${layerId}-${frameIndex}`;
+
+  // Store drag data for calculations
+  dragFrameData.value = {
+    layerId,
+    frameIndex,
+    originalStartTime: dragStartTime.value
+  };
 
   // Add global mouse listeners
   document.addEventListener('mousemove', handleMouseMove);
@@ -100,19 +121,70 @@ const handleFrameMouseDown = (event: MouseEvent, layerId: string, frameIndex: nu
 };
 
 const handleMouseMove = (event: MouseEvent) => {
-  if (!isDragging.value) return;
+  if (!isDragging.value || !dragFrameData.value || !cueStore.activeCue) return;
 
-  // TODO: Implement frame dragging logic
-  const deltaX = event.clientX - dragStartTime.value;
+  const deltaX = event.clientX - dragStartX.value;
   const deltaTime = deltaX / timelineScale.value;
+  const newStartTime = Math.max(0, dragFrameData.value.originalStartTime + deltaTime);
 
-  // For now, just update the timeline position
-  // In a full implementation, you'd update frame positions
+  // Snap to grid if enabled
+  const snappedTime = cueStore.snapToGrid(newStartTime);
+
+  // Find the layer and frame
+  const layer = cueStore.activeCue.layers.find(l => l.id === dragFrameData.value!.layerId);
+  if (!layer) return;
+
+  const frame = layer.frames[dragFrameData.value.frameIndex];
+  if (!frame) return;
+
+  // Calculate new position and duration adjustments
+  const currentStartTime = getFrameStartTime(layer, dragFrameData.value.frameIndex);
+  const timeDiff = snappedTime - currentStartTime;
+
+  if (Math.abs(timeDiff) > 10) { // Minimum 10ms movement to avoid jitter
+    // For now, we'll implement a simple reordering when dragged significantly
+    // In a more complex implementation, you might adjust durations of adjacent frames
+
+    // Find the new insertion point
+    let newIndex = 0;
+    let accumulatedTime = 0;
+
+    for (let i = 0; i < layer.frames.length; i++) {
+      if (i === dragFrameData.value.frameIndex) continue; // Skip the frame being dragged
+
+      const frameStart = accumulatedTime;
+      const frameEnd = accumulatedTime + (layer.frames[i]?.duration || 1000);
+
+      if (snappedTime < frameEnd) {
+        newIndex = i;
+        break;
+      }
+
+      accumulatedTime += layer.frames[i]?.duration || 1000;
+      newIndex = i + 1;
+    }
+
+    // Adjust for the removed frame's position
+    if (newIndex > dragFrameData.value.frameIndex) {
+      newIndex--;
+    }
+
+    // Only move if position actually changed
+    if (newIndex !== dragFrameData.value.frameIndex) {
+      // Use the store's moveFrame function
+      cueStore.moveFrame(dragFrameData.value.layerId, dragFrameData.value.frameIndex, newIndex);
+
+      // Update drag data for continued dragging
+      dragFrameData.value.frameIndex = newIndex;
+      dragFrameData.value.originalStartTime = getFrameStartTime(layer, newIndex);
+    }
+  }
 };
 
 const handleMouseUp = () => {
   isDragging.value = false;
   selectedFrameId.value = null;
+  dragFrameData.value = null;
 
   document.removeEventListener('mousemove', handleMouseMove);
   document.removeEventListener('mouseup', handleMouseUp);
@@ -409,7 +481,8 @@ const deleteFrame = () => {
               class="timeline-frame"
               :class="{
                 selected: selectedFrameId === `${layer.id}-${frameIndex}`,
-                active: cueStore.activeLayerId === layer.id && cueStore.activeFrameIndex === frameIndex
+                active: cueStore.activeLayerId === layer.id && cueStore.activeFrameIndex === frameIndex,
+                dragging: isDragging && selectedFrameId === `${layer.id}-${frameIndex}`
               }"
               :style="{
                 left: `${getFramePosition(layer, frameIndex)}px`,
@@ -686,7 +759,7 @@ const deleteFrame = () => {
     background: linear-gradient(135deg, var(--q-primary), var(--q-secondary));
     border: 1px solid rgba(255, 255, 255, 0.2);
     border-radius: 4px;
-    cursor: pointer;
+    cursor: grab;
     user-select: none;
 
     &:hover {
@@ -702,6 +775,14 @@ const deleteFrame = () => {
     &.active {
       border-color: var(--q-warning);
       box-shadow: 0 0 0 2px var(--q-warning);
+    }
+
+    &.dragging {
+      opacity: 0.7;
+      transform: scale(1.05);
+      z-index: 1000;
+      cursor: grabbing;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
     }
 
     .frame-content {

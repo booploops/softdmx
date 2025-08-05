@@ -34,12 +34,15 @@ const isPlaying = computed(() => {
 });
 
 const playbackProgress = computed(() => {
-  if (!cueStore.activeCue || !isPlaying.value) return 0;
+  if (!cueStore.activeCue) return 0;
 
-  const state = cueStore.playbackStates.get(cueStore.activeCue.id);
-  if (!state) return 0;
+  // Use the same timeline position that CueEditor uses for consistency
+  const currentTime = cueStore.timelinePosition;
 
-  return (state.currentTime / cueStore.activeCue.totalDuration) * 100;
+  // Use the same duration calculation as CueEditor
+  const duration = cueStore.totalDuration || 1000; // fallback to 1 second
+
+  return Math.min((currentTime / duration) * 100, 100);
 });
 
 // Quick actions
@@ -66,6 +69,20 @@ const recordFrame = () => {
 
 // Cue blending
 const showBlendingControls = ref(false);
+
+// Timeline scrubbing
+const handleProgressClick = (event: MouseEvent) => {
+  if (!cueStore.activeCue) return;
+
+  const progressBar = event.currentTarget as HTMLElement;
+  const rect = progressBar.getBoundingClientRect();
+  const clickX = event.clientX - rect.left;
+  const progressPercent = clickX / rect.width;
+  const duration = cueStore.totalDuration || 1000;
+  const newTime = progressPercent * duration;
+
+  cueStore.setTimelinePosition(Math.max(0, Math.min(newTime, duration)));
+};
 </script>
 
 <template>
@@ -76,7 +93,7 @@ const showBlendingControls = ref(false);
       <div class="cue-selection">
         <q-select
           v-model="cueStore.activeCueId"
-          :options="cueStore.cues.map(c => ({ label: c.name, value: c.id }))"
+          :options="(cueStore.cues || []).map(c => ({ label: c.name, value: c.id }))"
           emit-value
           map-options
           label="Active Cue"
@@ -123,7 +140,7 @@ const showBlendingControls = ref(false);
         <div class="progress-info">
           <span class="cue-name">{{ cueStore.activeCue.name }}</span>
           <span class="progress-text">
-            {{ Math.round(cueStore.timelinePosition / 1000) }}s / {{ Math.round(cueStore.activeCue.totalDuration / 1000) }}s
+            {{ Math.round(cueStore.timelinePosition / 1000) }}s / {{ Math.round((cueStore.totalDuration || 1000) / 1000) }}s
           </span>
         </div>
         <q-linear-progress
@@ -131,7 +148,8 @@ const showBlendingControls = ref(false);
           color="primary"
           track-color="grey-8"
           size="8px"
-          class="progress-bar"
+          class="progress-bar clickable"
+          @click="handleProgressClick"
         />
       </div>
 
@@ -303,6 +321,15 @@ const showBlendingControls = ref(false);
 
     .progress-bar {
       border-radius: 4px;
+
+      &.clickable {
+        cursor: pointer;
+        transition: opacity 0.2s;
+
+        &:hover {
+          opacity: 0.8;
+        }
+      }
     }
   }
 

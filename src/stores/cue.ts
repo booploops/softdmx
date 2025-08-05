@@ -44,34 +44,11 @@ export const useCueStore = defineStore("cue-store", () => {
   const activeFrameIndex = ref<number | null>(null);
   const playbackStates = ref<Map<string, CuePlaybackState>>(new Map());
 
-  // Initialize with example cue if no cues exist
-  const initializeDefaultCues = () => {
-    if (cues.value.length === 0) {
-      const exampleCue = createNewCue("Example Cue");
-
-      // Add a second layer for demonstration
-      const layer2 = createNewLayer("Layer 2");
-      exampleCue.layers.push(layer2);
-
-      // Set it as looping for demo
-      exampleCue.isLooping = true;
-
-      cues.value.push(exampleCue);
-      activeCueId.value = exampleCue.id;
-      activeLayerId.value = exampleCue.layers[0]?.id || null;
-    }
-  };
-
-  // Call initialization
-  initializeDefaultCues();
-
   // Timeline state
   const timelinePosition = ref(0); // Current position in milliseconds
   const timelineZoom = ref(1); // Zoom level for timeline
   const timelineSnapping = ref(true);
-  const snapInterval = ref(250); // Snap to 250ms intervals
-
-  // Editing state
+  const snapInterval = ref(250); // Snap to 250ms intervals  // Editing state
   const selectedFrames = ref<Set<string>>(new Set());
   const clipboard = ref<RecordedFrame[]>([]);
   const isRecording = ref(false);
@@ -224,6 +201,15 @@ export const useCueStore = defineStore("cue-store", () => {
     }
 
     updateCueModified();
+    updateCueTotalDuration();
+  };
+
+  const updateCueTotalDuration = () => {
+    if (activeCue.value) {
+      activeCue.value.totalDuration = Math.max(...activeCue.value.layers.map(layer =>
+        layer.frames.reduce((acc, frame) => acc + (frame.duration || 1000), 0)
+      ), 0);
+    }
   };
 
   const updateCueModified = () => {
@@ -245,6 +231,7 @@ export const useCueStore = defineStore("cue-store", () => {
     }
 
     updateCueModified();
+    updateCueTotalDuration();
   };
 
   const moveFrame = (layerId: string, fromIndex: number, toIndex: number) => {
@@ -364,6 +351,12 @@ export const useCueStore = defineStore("cue-store", () => {
     const enabledLayers = cue.layers.filter(layer => layer.enabled && !layer.solo);
     const soloLayers = cue.layers.filter(layer => layer.solo);
     const layersToProcess = soloLayers.length > 0 ? soloLayers : enabledLayers;
+
+    // If no layers have frames, return current DMX state
+    const hasAnyFrames = layersToProcess.some(layer => layer.frames.length > 0);
+    if (!hasAnyFrames) {
+      return dmx.channels.map(ch => ({ ...ch }));
+    }
 
     const layerOutputs = layersToProcess.map(layer => {
       let currentTime = 0;
@@ -505,11 +498,20 @@ export const useCueStore = defineStore("cue-store", () => {
 
         state.currentTime = (timestamp - state.startTime) * state.playbackRate;
 
+        // Update timeline position for active cue
+        if (cueId === activeCueId.value) {
+          timelinePosition.value = state.currentTime;
+        }
+
         // Handle looping
-        if (cue.isLooping && state.currentTime > cue.totalDuration) {
-          state.currentTime = state.currentTime % cue.totalDuration;
+        const cueTotalDuration = cue.totalDuration || Math.max(...cue.layers.map(layer =>
+          layer.frames.reduce((acc, frame) => acc + (frame.duration || 1000), 0)
+        ), 1000); // Minimum 1 second
+
+        if (cue.isLooping && state.currentTime > cueTotalDuration) {
+          state.currentTime = state.currentTime % cueTotalDuration;
           state.startTime = timestamp - state.currentTime / state.playbackRate;
-        } else if (!cue.isLooping && state.currentTime > cue.totalDuration) {
+        } else if (!cue.isLooping && state.currentTime > cueTotalDuration) {
           playbackStates.value.delete(cueId);
           continue;
         }
@@ -553,6 +555,16 @@ export const useCueStore = defineStore("cue-store", () => {
   const setTimelinePosition = (timeMs: number) => {
     timelinePosition.value = timeMs;
 
+    // If actively playing, update the playback state to sync scrubbing
+    if (activeCue.value && isGlobalPlaying.value) {
+      const state = playbackStates.value.get(activeCue.value.id);
+      if (state && !state.isPaused) {
+        // Update the start time to maintain the new position
+        state.startTime = performance.now() - timeMs / state.playbackRate;
+        state.currentTime = timeMs;
+      }
+    }
+
     if (activeCue.value && !isGlobalPlaying.value) {
       const channels = evaluateCueAtTime(activeCue.value, timeMs);
       // Update existing DMX channels instead of replacing the array
@@ -569,6 +581,27 @@ export const useCueStore = defineStore("cue-store", () => {
     if (!timelineSnapping.value) return timeMs;
     return Math.round(timeMs / snapInterval.value) * snapInterval.value;
   };
+
+  // Initialize with example cue if no cues exist
+  const initializeDefaultCues = () => {
+    if (cues.value.length === 0) {
+      const exampleCue = createNewCue("Example Cue");
+
+      // Add a second layer for demonstration
+      const layer2 = createNewLayer("Layer 2");
+      exampleCue.layers.push(layer2);
+
+      // Set it as looping for demo
+      exampleCue.isLooping = true;
+
+      cues.value.push(exampleCue);
+      activeCueId.value = exampleCue.id;
+      activeLayerId.value = exampleCue.layers[0]?.id || null;
+    }
+  };
+
+  // Call initialization
+  initializeDefaultCues();
 
   return {
     // State
@@ -621,6 +654,7 @@ export const useCueStore = defineStore("cue-store", () => {
 
     // Utilities
     generateId,
-    updateCueModified
+    updateCueModified,
+    updateCueTotalDuration
   };
 });

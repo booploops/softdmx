@@ -337,7 +337,6 @@ const animationTest = () => {
     <q-btn @click="blackOut">Black Out</q-btn>
     <q-btn @click="showCueEditor = true" icon="timeline" color="secondary">
       Cue Editor
-      <q-tooltip>Open Professional Cue Editor</q-tooltip>
     </q-btn>
 
     <!-- Widgets View Mode Toggle - only show when in widgets tab and groups exist -->
