@@ -10,7 +10,7 @@ import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 
 export const useUIStore = defineStore('ui-store', () => {
-  const currentTab = ref<'channels' | 'groups' | 'widgets'>('groups')
+  const currentTab = ref<'channels' | 'groups' | 'widgets' | 'show'>('groups')
   const widgetsViewMode = ref<'groups' | 'individual'>('groups')
 
   return { currentTab, widgetsViewMode }

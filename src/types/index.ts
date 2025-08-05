@@ -105,4 +105,5 @@ export type CuePlaybackState = {
   isPaused: boolean;
   playbackRate: number; // 1.0 = normal speed
   fadeProgress: number; // 0-1 for fade in/out
+  intensity?: number; // 0-1 for show mode intensity control
 }

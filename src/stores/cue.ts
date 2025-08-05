@@ -518,6 +518,12 @@ export const useCueStore = defineStore("cue-store", () => {
 
         const channels = evaluateCueAtTime(cue, state.currentTime);
 
+        // Apply cue-specific intensity
+        const cueIntensity = state.intensity ?? 1.0;
+        channels.forEach(channel => {
+          channel.value = channel.value * cueIntensity;
+        });
+
         // Merge channels with priority
         channels.forEach(channel => {
           const existing = allChannelsMap.get(channel.id);
@@ -585,19 +591,84 @@ export const useCueStore = defineStore("cue-store", () => {
   // Initialize with example cue if no cues exist
   const initializeDefaultCues = () => {
     if (cues.value.length === 0) {
-      const exampleCue = createNewCue("Example Cue");
+      // Create Red Wash cue
+      const redWashCue = createNewCue("Red Wash");
+      redWashCue.description = "Full red wash across all fixtures";
+      redWashCue.priority = 2;
+      redWashCue.isLooping = false;
+      cues.value.push(redWashCue);
 
-      // Add a second layer for demonstration
-      const layer2 = createNewLayer("Layer 2");
-      exampleCue.layers.push(layer2);
+      // Create Blue Chase cue
+      const blueChase = createNewCue("Blue Chase");
+      blueChase.description = "Animated blue chase pattern";
+      blueChase.priority = 1;
+      blueChase.isLooping = true;
+      const layer2 = createNewLayer("Chase Layer");
+      blueChase.layers.push(layer2);
+      cues.value.push(blueChase);
 
-      // Set it as looping for demo
-      exampleCue.isLooping = true;
+      // Create Strobe Effect cue
+      const strobeEffect = createNewCue("Strobe Effect");
+      strobeEffect.description = "White strobe effect";
+      strobeEffect.priority = 3;
+      strobeEffect.isLooping = true;
+      cues.value.push(strobeEffect);
 
-      cues.value.push(exampleCue);
-      activeCueId.value = exampleCue.id;
-      activeLayerId.value = exampleCue.layers[0]?.id || null;
+      // Create Color Fade cue
+      const colorFade = createNewCue("Color Fade");
+      colorFade.description = "Smooth color transitions";
+      colorFade.priority = 1;
+      colorFade.isLooping = true;
+      const fadeLayer2 = createNewLayer("Fade Layer 2");
+      const fadeLayer3 = createNewLayer("Fade Layer 3");
+      colorFade.layers.push(fadeLayer2, fadeLayer3);
+      cues.value.push(colorFade);
+
+      // Create Spotlight cue
+      const spotlight = createNewCue("Spotlight");
+      spotlight.description = "Center spotlight focus";
+      spotlight.priority = 4;
+      spotlight.isLooping = false;
+      cues.value.push(spotlight);
+
+      // Set the first cue as active
+      activeCueId.value = redWashCue.id;
+      activeLayerId.value = redWashCue.layers[0]?.id || null;
     }
+  };
+
+  // Show mode functions for live cue control
+  const setCueIntensity = (cueId: string, intensity: number) => {
+    const state = playbackStates.value.get(cueId);
+    if (state) {
+      state.intensity = Math.max(0, Math.min(1, intensity));
+    }
+  };
+
+  const setMasterIntensity = (intensity: number) => {
+    masterVolume.value = Math.max(0, Math.min(1, intensity));
+  };
+
+  const setCueLooping = (cueId: string, isLooping: boolean) => {
+    const cue = cues.value.find(c => c.id === cueId);
+    if (cue) {
+      cue.isLooping = isLooping;
+      updateCueModified();
+    }
+  };
+
+  const getCueProgress = (cueId: string): number => {
+    const state = playbackStates.value.get(cueId);
+    if (!state) return 0;
+
+    const cue = cues.value.find(c => c.id === cueId);
+    if (!cue) return 0;
+
+    const cueTotalDuration = cue.totalDuration || Math.max(...cue.layers.map(layer =>
+      layer.frames.reduce((acc, frame) => acc + (frame.duration || 1000), 0)
+    ), 1000);
+
+    return Math.min(state.currentTime / cueTotalDuration, 1);
   };
 
   // Call initialization
@@ -651,6 +722,12 @@ export const useCueStore = defineStore("cue-store", () => {
     // Timeline
     setTimelinePosition,
     snapToGrid,
+
+    // Show mode functions
+    setCueIntensity,
+    setMasterIntensity,
+    setCueLooping,
+    getCueProgress,
 
     // Utilities
     generateId,

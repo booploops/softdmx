@@ -12,6 +12,7 @@ import { useDMXStore } from 'src/stores/dmx';
 import GroupWidget from './GroupWidget.vue';
 import WidgetContainer from './WidgetContainer.vue';
 import GroupWidgetContainer from './GroupWidgetContainer.vue';
+import CueShowPanel from './CueShowPanel.vue';
 
 const dmx = useDMXStore();
 const ui = useUIStore();
@@ -96,6 +97,12 @@ const ungroupedFixtures = computed(() => {
             </template>
         </template>
     </div>
+    <div
+        class="show-mode-container"
+        v-show="ui.currentTab == 'show'"
+    >
+        <CueShowPanel />
+    </div>
 </template>
 
 <style scoped>
@@ -115,5 +122,10 @@ const ungroupedFixtures = computed(() => {
         /* Adjust gap for widget containers */
         gap: 16px;
     }
+}
+
+.show-mode-container {
+    height: 100%;
+    overflow: hidden;
 }
 </style>

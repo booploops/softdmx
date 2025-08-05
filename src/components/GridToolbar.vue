@@ -10,6 +10,7 @@ import { Dialog } from 'quasar';
 import { TestShowfile } from 'src/shows/TestShowfile';
 import { useDMXStore } from 'src/stores/dmx';
 import { useUIStore } from 'src/stores/ui';
+import { ref, computed } from 'vue';
 import ViewTypeToggle from './ViewTypeToggle.vue';
 import CueEditor from './CueEditor.vue';
 

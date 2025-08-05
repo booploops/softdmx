@@ -42,5 +42,14 @@ const ui = useUIStore();
     >
       Widgets
     </q-btn>
+    <q-btn
+      @click="ui.currentTab = 'show'"
+      :class="{
+        'bg-primary text-white': ui.currentTab === 'show',
+      }"
+      icon="theater_comedy"
+    >
+      Show
+    </q-btn>
   </q-btn-group>
 </template>
