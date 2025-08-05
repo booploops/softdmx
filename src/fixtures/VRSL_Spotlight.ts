@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2025-Present booploops and contributors
- * 
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -13,94 +13,122 @@ export const VRSL_Spotlight: FixtureDefinition = {
   channels: [
     {
       name: "Pan",
-      type: "generic",
+      type: "position",
       minValue: 0,
       maxValue: 255,
-      defaultValue: 100,
+      defaultValue: 127,
     },
     {
       name: "Pan fine",
-      type: "generic",
+      type: "position",
       minValue: 0,
       maxValue: 255,
-      defaultValue: 100,
+      defaultValue: 128,
     },
     {
       name: "Tilt",
-      type: "generic",
+      type: "position",
       minValue: 0,
       maxValue: 255,
-      defaultValue: 100,
+      defaultValue: 127,
     },
     {
       name: "Tilt fine",
-      type: "generic",
+      type: "position",
       minValue: 0,
       maxValue: 255,
-      defaultValue: 100,
+      defaultValue: 128,
     },
     {
       name: "Zoom",
-      type: "generic",
+      type: "effect",
       minValue: 0,
       maxValue: 255,
       defaultValue: 100,
     },
     {
       name: "Dimmer",
-      type: "generic",
+      type: "intensity",
       minValue: 0,
       maxValue: 255,
       defaultValue: 255,
     },
     {
       name: "Strobe",
-      type: "generic",
+      type: "effect",
       minValue: 0,
       maxValue: 255,
       defaultValue: 0,
     },
     {
       name: "Red",
-      type: "generic",
+      type: "color",
       minValue: 0,
       maxValue: 255,
-      defaultValue: 100,
+      defaultValue: 255,
     },
     {
       name: "Green",
-      type: "generic",
+      type: "color",
       minValue: 0,
       maxValue: 255,
-      defaultValue: 100,
+      defaultValue: 255,
     },
     {
       name: "Blue",
-      type: "generic",
+      type: "color",
       minValue: 0,
       maxValue: 255,
-      defaultValue: 100,
+      defaultValue: 255,
     },
     {
       name: "Gobo Spin Speed",
-      type: "generic",
+      type: "effect",
       minValue: 0,
       maxValue: 255,
       defaultValue: 100,
     },
     {
       name: "Gobo Index",
-      type: "generic",
+      type: "effect",
       minValue: 0,
       maxValue: 255,
       defaultValue: 100,
     },
     {
       name: "Mover Speed",
-      type: "generic",
+      type: "effect",
       minValue: 0,
       maxValue: 255,
       defaultValue: 100,
     },
   ],
+  widgets: [
+    {
+      type: "lightMover",
+      name: "Pan/Tilt Control",
+      channels: {
+        panChannel: "Pan",
+        panFineChannel: "Pan fine",
+        tiltChannel: "Tilt",
+        tiltFineChannel: "Tilt fine"
+      }
+    },
+    {
+      type: "colorPicker",
+      name: "RGB Color",
+      channels: {
+        redChannel: "Red",
+        greenChannel: "Green",
+        blueChannel: "Blue"
+      }
+    },
+    {
+      type: "dimmerSlider",
+      name: "Intensity",
+      channels: {
+        dimmerChannel: "Dimmer"
+      }
+    }
+  ]
 };

@@ -1,6 +1,6 @@
 <!--
   Copyright (C) 2025-Present booploops and contributors
-  
+
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -10,6 +10,7 @@ import { useUIStore } from 'src/stores/ui';
 import ChannelWidget from './ChannelWidget.vue';
 import { useDMXStore } from 'src/stores/dmx';
 import GroupWidget from './GroupWidget.vue';
+import WidgetContainer from './WidgetContainer.vue';
 
 const dmx = useDMXStore();
 const ui = useUIStore();
@@ -42,6 +43,18 @@ const groups = computed(() => dmx.showfile?.linkedGroups || []);
             />
         </template>
     </div>
+    <div
+        class="horizontal-fixture-scroller widgets-view"
+        v-show="ui.currentTab == 'widgets'"
+    >
+        <template v-if="dmx.showfile">
+            <WidgetContainer
+                :fixture="fixture"
+                v-for="(fixture, index) in dmx.showfileFixturesMapped"
+                :key="index"
+            />
+        </template>
+    </div>
 </template>
 
 <style scoped>
@@ -53,5 +66,13 @@ const groups = computed(() => dmx.showfile?.linkedGroups || []);
     padding: 8px;
     gap: 8px;
     position: relative;
+
+    &.widgets-view {
+        /* Allow widgets to wrap to new rows if needed */
+        flex-wrap: wrap;
+
+        /* Adjust gap for widget containers */
+        gap: 16px;
+    }
 }
 </style>

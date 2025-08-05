@@ -36,7 +36,7 @@ const color = computed({
 
 <template>
   <div class="color-picker-widget">
-    <q-color v-model="color" />
+    <q-color v-model="color" no-header-tabs no-header no-footer />
   </div>
 </template>
 

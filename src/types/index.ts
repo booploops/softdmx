@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2025-Present booploops and contributors
- * 
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -37,10 +37,19 @@ export type FixtureChannelDefinition = {
   reference?: ActiveChannel; // Optional reference to an active channel
 };
 
+export type WidgetConfiguration = {
+  type: "lightMover" | "colorPicker" | "dimmerSlider" | (string & {});
+  name: string;
+  channels: {
+    [key: string]: string; // Maps widget property to channel name
+  };
+};
+
 export type FixtureDefinition = {
   id: string;
   name: string;
   channels: FixtureChannelDefinition[];
+  widgets?: WidgetConfiguration[];
 };
 
 export type FixtureChannelWithReference = FixtureChannelDefinition & {

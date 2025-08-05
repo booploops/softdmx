@@ -9,7 +9,6 @@
   Purpose: A widget for moving lights in the 3D space
 -->
 <script setup lang="ts">
-import { unwrapRef } from 'src/utils';
 import { LightMoverModel } from './LightMover';
 
 const val = defineModel<LightMoverModel>({required: true});
