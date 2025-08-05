@@ -11,11 +11,13 @@ import { TestShowfile } from 'src/shows/TestShowfile';
 import { useDMXStore } from 'src/stores/dmx';
 import { useUIStore } from 'src/stores/ui';
 import ViewTypeToggle from './ViewTypeToggle.vue';
-import { useRecorderStore } from 'src/stores/recorder';
+import CueEditor from './CueEditor.vue';
 
 const ui = useUIStore();
 const dmx = useDMXStore();
-const rec = useRecorderStore();
+
+// Cue Editor dialog state
+const showCueEditor = ref(false);
 
 const hasGroups = computed(() => {
   return (dmx.showfile?.linkedGroups || []).length > 0;
@@ -52,29 +54,13 @@ function copyToClipboard(text: string) {
 }
 
 const copyFrames = () => {
-  const frames = JSON.stringify(rec.frames);
-  copyToClipboard(frames);
+  // This functionality has been moved to the new Cue System
+  console.log('Frame copying is now handled by the Cue Editor');
 }
 
 const pasteFrames = () => {
-  Dialog.create({
-    title: 'Paste frames JSON data:',
-    message: 'Please paste your JSON data below:',
-    prompt: {
-      model: '',
-      type: 'textarea',
-      placeholder: 'Paste your JSON data here...'
-    },
-  }).onOk((data) => {
-    if (data) {
-      try {
-        const frames = JSON.parse(data);
-        rec.frames = frames;
-      } catch (error) {
-        console.error('Failed to parse JSON data: ', error);
-      }
-    }
-  });
+  // This functionality has been moved to the new Cue System
+  console.log('Frame pasting is now handled by the Cue Editor');
 }
 
 const copyCurrentChannels = () => {
@@ -349,7 +335,10 @@ const animationTest = () => {
       </q-list>
     </q-btn-dropdown>
     <q-btn @click="blackOut">Black Out</q-btn>
-    <q-input v-model.number="rec.timeDelay" label="Time Delay" outlined dense type="number"/>
+    <q-btn @click="showCueEditor = true" icon="timeline" color="secondary">
+      Cue Editor
+      <q-tooltip>Open Professional Cue Editor</q-tooltip>
+    </q-btn>
 
     <!-- Widgets View Mode Toggle - only show when in widgets tab and groups exist -->
     <div v-if="ui.currentTab === 'widgets' && hasGroups" class="widgets-mode-toggle">
@@ -383,6 +372,16 @@ const animationTest = () => {
     <q-space />
     <ViewTypeToggle />
   </q-toolbar>
+
+  <!-- Cue Editor Dialog -->
+  <q-dialog
+    v-model="showCueEditor"
+    maximized
+    transition-show="slide-up"
+    transition-hide="slide-down"
+  >
+    <CueEditor />
+  </q-dialog>
 </template>
 
 <style scoped>

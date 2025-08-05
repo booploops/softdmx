@@ -68,4 +68,41 @@ export type RecordedFrame = {
   type: 'channels' | 'delay';
   channels: ActiveChannel[];
   delayDuration?: number; // Optional delay duration in milliseconds
+  duration?: number; // Duration of this frame in milliseconds
+  easing?: 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'bounce' | 'elastic';
+}
+
+export type CueLayer = {
+  id: string;
+  name: string;
+  frames: RecordedFrame[];
+  enabled: boolean;
+  opacity: number; // 0-1 for blending
+  blendMode: 'replace' | 'add' | 'multiply' | 'screen';
+  solo: boolean;
+}
+
+export type Cue = {
+  id: string;
+  name: string;
+  description?: string;
+  layers: CueLayer[];
+  totalDuration: number; // Total duration in milliseconds
+  isLooping: boolean;
+  fadeInDuration: number;
+  fadeOutDuration: number;
+  priority: number; // Higher priority cues override lower ones
+  tags: string[];
+  created: Date;
+  modified: Date;
+}
+
+export type CuePlaybackState = {
+  cueId: string;
+  startTime: number;
+  currentTime: number;
+  isPlaying: boolean;
+  isPaused: boolean;
+  playbackRate: number; // 1.0 = normal speed
+  fadeProgress: number; // 0-1 for fade in/out
 }

@@ -5,3 +5,5 @@ Our technology stack includes: Vue 3, Quasar Framework, SCSS, lodash-es, Electro
 Vue and Pinia reactivity are auto-imported in all components.
 
 We use Yarn 4 for package management.
+
+You can test for build errors with: `yarn build:spa`, don't bother running the development server with `yarn dev` you won't be able to see anything related to the UI.

@@ -1,6 +1,6 @@
 <!--
   Copyright (C) 2025-Present booploops and contributors
-  
+
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -9,7 +9,7 @@
 import GridConfig from 'src/components/GridConfig.vue';
 import GridNode from 'src/components/GridNode.vue';
 import GridToolbar from 'src/components/GridToolbar.vue';
-import RecorderBar from 'src/components/RecorderBar.vue';
+import CueControlPanel from 'src/components/CueControlPanel.vue';
 import { TestShowfile } from 'src/shows/TestShowfile';
 import { useDMXStore } from 'src/stores/dmx';
 
@@ -28,7 +28,7 @@ onMounted(() => {
     <div class="main-view">
       <GridToolbar />
       <GridConfig />
-      <RecorderBar />
+      <CueControlPanel />
     </div>
   </q-page>
 </template>
