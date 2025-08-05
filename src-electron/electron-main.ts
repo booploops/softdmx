@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2025-Present booploops and contributors
- * 
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -11,6 +11,8 @@ import os from 'os';
 import { fileURLToPath } from 'url'
 import { startServer } from './server';
 import { createArtnetWindow } from './artnet-window';
+import { AppState } from './state/main';
+import { getDevUrl, isDev } from './utils';
 
 // needed in case process is undefined under Linux
 const platform = process.platform || os.platform();
@@ -52,20 +54,15 @@ async function createWindow() {
     },
   });
 
-  if (process.env.DEV) {
-    await mainWindow.loadURL(process.env.APP_URL);
+  if (isDev()) {
+    await mainWindow.loadURL(getDevUrl());
   } else {
-    await mainWindow.loadFile('index.html');
+    await mainWindow.loadURL(`http://127.0.0.1:${AppState.port}/app/`);
   }
 
   if (process.env.DEBUGGING) {
     // if on DEV or Production with debug enabled
     mainWindow.webContents.openDevTools();
-  } else {
-    // we're on production; no access to devtools pls
-    mainWindow.webContents.on('devtools-opened', () => {
-      mainWindow?.webContents.closeDevTools();
-    });
   }
   let artnetWindow: BrowserWindow | undefined = await createArtnetWindow();
   artnetWindow.show();

@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2025-Present booploops and contributors
- * 
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -27,9 +27,9 @@ export default defineConfig((ctx) => {
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
-      'ionicons-v4',
-      'mdi-v7',
-      'fontawesome-v6',
+      "ionicons-v4",
+      "mdi-v7",
+      "fontawesome-v6",
       // 'eva-icons',
       // 'themify',
       // 'line-awesome',
@@ -209,7 +209,7 @@ export default defineConfig((ctx) => {
       // specify the debugging port to use for the Electron app when running in development mode
       inspectPort: 5858,
 
-      bundler: "packager", // 'packager' or 'builder'
+      bundler: "builder", // 'packager' or 'builder'
 
       packager: {
         // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
@@ -220,12 +220,21 @@ export default defineConfig((ctx) => {
         // protocol: 'myapp://path',
         // Windows only
         // win32metadata: { ... }
+        asar: false,
       },
 
       builder: {
         // https://www.electron.build/configuration/configuration
 
         appId: "softdmx",
+        // unpack index.html, assets/, favicon.ico
+        asarUnpack: ["index.html", "assets/**/*", "favicon.ico", "site.webmanifest", "*.png"],
+        win: {
+          target: ['dir']
+        },
+        mac: {
+          target: ['dir']
+        }
       },
     },
 

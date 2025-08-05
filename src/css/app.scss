@@ -8,15 +8,19 @@
 // app global css in SCSS form
 
 body {
-    font-family: "Roboto Flex Variable", sans-serif;
-    font-weight: 500;
-    // font-variation-settings: "wdth" 75, "wght" 500;
-    user-select: none;
-    -webkit-user-drag: none;
+  font-family: "Roboto Flex Variable", sans-serif;
+  font-weight: 500;
+  // font-variation-settings: "wdth" 75, "wght" 500;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+html, body {
+  overscroll-behavior: none;
 }
 
 body.body--dark {
-    color-scheme: dark;
+  color-scheme: dark;
 }
 
 .no-app-drag {
