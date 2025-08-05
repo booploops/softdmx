@@ -11,6 +11,7 @@ import { defineStore } from 'pinia'
 
 export const useUIStore = defineStore('ui-store', () => {
   const currentTab = ref<'channels' | 'groups' | 'widgets'>('groups')
+  const widgetsViewMode = ref<'groups' | 'individual'>('groups')
 
-  return { currentTab }
+  return { currentTab, widgetsViewMode }
 })

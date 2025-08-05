@@ -17,6 +17,10 @@ const ui = useUIStore();
 const dmx = useDMXStore();
 const rec = useRecorderStore();
 
+const hasGroups = computed(() => {
+  return (dmx.showfile?.linkedGroups || []).length > 0;
+});
+
 
 const reloadShowfile = () => {
   dmx.loadShowfile(TestShowfile);
@@ -346,9 +350,51 @@ const animationTest = () => {
     </q-btn-dropdown>
     <q-btn @click="blackOut">Black Out</q-btn>
     <q-input v-model.number="rec.timeDelay" label="Time Delay" outlined dense type="number"/>
+
+    <!-- Widgets View Mode Toggle - only show when in widgets tab and groups exist -->
+    <div v-if="ui.currentTab === 'widgets' && hasGroups" class="widgets-mode-toggle">
+      <span class="mode-label">View:</span>
+      <q-btn-group rounded unelevated>
+        <q-btn
+          @click="ui.widgetsViewMode = 'groups'"
+          :class="{
+            'bg-primary text-white': ui.widgetsViewMode === 'groups',
+          }"
+          icon="group_work"
+          size="sm"
+          dense
+        >
+          Groups
+        </q-btn>
+        <q-btn
+          @click="ui.widgetsViewMode = 'individual'"
+          :class="{
+            'bg-primary text-white': ui.widgetsViewMode === 'individual',
+          }"
+          icon="widgets"
+          size="sm"
+          dense
+        >
+          Individual
+        </q-btn>
+      </q-btn-group>
+    </div>
+
     <q-space />
     <ViewTypeToggle />
   </q-toolbar>
 </template>
 
-<style scoped></style>
+<style scoped>
+.widgets-mode-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .mode-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    font-weight: 500;
+  }
+}
+</style>

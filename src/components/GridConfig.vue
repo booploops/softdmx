@@ -11,11 +11,32 @@ import ChannelWidget from './ChannelWidget.vue';
 import { useDMXStore } from 'src/stores/dmx';
 import GroupWidget from './GroupWidget.vue';
 import WidgetContainer from './WidgetContainer.vue';
+import GroupWidgetContainer from './GroupWidgetContainer.vue';
 
 const dmx = useDMXStore();
 const ui = useUIStore();
 
 const groups = computed(() => dmx.showfile?.linkedGroups || []);
+
+// For widgets view, we want to show groups when available and user prefers groups
+const showGroupWidgets = computed(() => {
+  return ui.currentTab === 'widgets' &&
+         groups.value.length > 0 &&
+         ui.widgetsViewMode === 'groups';
+});
+
+// Get individual fixtures that are NOT part of any group
+const ungroupedFixtures = computed(() => {
+  if (!dmx.showfile) return [];
+
+  const groupedFixtureNames = new Set(
+    groups.value.flatMap(group => group.names)
+  );
+
+  return dmx.showfileFixturesMapped.filter(
+    fixture => !groupedFixtureNames.has(fixture.fixtureName)
+  );
+});
 </script>
 
 <template>
@@ -48,11 +69,31 @@ const groups = computed(() => dmx.showfile?.linkedGroups || []);
         v-show="ui.currentTab == 'widgets'"
     >
         <template v-if="dmx.showfile">
-            <WidgetContainer
-                :fixture="fixture"
-                v-for="(fixture, index) in dmx.showfileFixturesMapped"
-                :key="index"
-            />
+            <!-- Show group widgets when groups are available -->
+            <template v-if="showGroupWidgets">
+                <!-- Group Widgets -->
+                <GroupWidgetContainer
+                    :group="group"
+                    v-for="(group, index) in groups"
+                    :key="`group-${index}`"
+                />
+
+                <!-- Individual fixtures not in any group -->
+                <WidgetContainer
+                    :fixture="fixture"
+                    v-for="(fixture, index) in ungroupedFixtures"
+                    :key="`individual-${index}`"
+                />
+            </template>
+
+            <!-- Show all individual fixtures when no groups exist -->
+            <template v-else>
+                <WidgetContainer
+                    :fixture="fixture"
+                    v-for="(fixture, index) in dmx.showfileFixturesMapped"
+                    :key="`fixture-${index}`"
+                />
+            </template>
         </template>
     </div>
 </template>
