@@ -426,6 +426,58 @@ export const useCueStore = defineStore("cue-store", () => {
     return blendLayers(layerOutputs);
   };
 
+  // Blend multiple cue outputs with different blend modes
+  const blendCueOutputs = (cueOutputs: { cueId: string, channels: ActiveChannel[], priority: number, blendMode: string, intensity: number }[]): Map<number, ActiveChannel> => {
+    const finalChannelsMap = new Map<number, ActiveChannel>();
+
+    // Process cues in priority order (highest to lowest)
+    for (const cueOutput of cueOutputs) {
+      for (const channel of cueOutput.channels) {
+        const existing = finalChannelsMap.get(channel.id);
+
+        if (!existing) {
+          // First cue to affect this channel
+          finalChannelsMap.set(channel.id, { ...channel });
+        } else {
+          // Blend with existing channel value
+          let blendedValue = existing.value;
+
+          switch (cueOutput.blendMode) {
+            case 'replace':
+              // Higher priority replaces lower priority
+              if (cueOutput.priority >= (existing as any).priority) {
+                blendedValue = channel.value;
+              }
+              break;
+
+            case 'add':
+              blendedValue = Math.min(255, existing.value + channel.value);
+              break;
+
+            case 'multiply':
+              blendedValue = (existing.value * channel.value) / 255;
+              break;
+
+            case 'screen':
+              blendedValue = 255 - ((255 - existing.value) * (255 - channel.value)) / 255;
+              break;
+
+            default:
+              // Default to additive blending for unknown modes
+              blendedValue = Math.min(255, existing.value + channel.value);
+          }
+
+          finalChannelsMap.set(channel.id, {
+            ...channel,
+            value: Math.max(0, Math.min(255, blendedValue))
+          });
+        }
+      }
+    }
+
+    return finalChannelsMap;
+  };
+
   // Playback control
   let playbackAnimationId: number | null = null;
 
@@ -484,7 +536,7 @@ export const useCueStore = defineStore("cue-store", () => {
 
   const startPlaybackEngine = () => {
     const animate = (timestamp: number) => {
-      const allChannelsMap = new Map<number, ActiveChannel>();
+      const allCueOutputs: { cueId: string, channels: ActiveChannel[], priority: number, blendMode: string, intensity: number }[] = [];
 
       // Process all playing cues
       for (const [cueId, state] of playbackStates.value.entries()) {
@@ -524,21 +576,30 @@ export const useCueStore = defineStore("cue-store", () => {
           channel.value = channel.value * cueIntensity;
         });
 
-        // Merge channels with priority
-        channels.forEach(channel => {
-          const existing = allChannelsMap.get(channel.id);
-          if (!existing || cue.priority >= (existing as any).priority) {
-            allChannelsMap.set(channel.id, { ...channel, priority: cue.priority } as any);
-          }
+        // Get the dominant blend mode from the cue's layers
+        const dominantBlendMode = cue.layers.find(layer => layer.enabled)?.blendMode || 'replace';
+
+        allCueOutputs.push({
+          cueId,
+          channels,
+          priority: cue.priority,
+          blendMode: dominantBlendMode,
+          intensity: cueIntensity
         });
       }
 
+      // Sort by priority (higher priority first)
+      allCueOutputs.sort((a, b) => b.priority - a.priority);
+
+      // Blend all cue outputs
+      const finalChannelsMap = blendCueOutputs(allCueOutputs);
+
       // Apply to DMX
-      const finalChannels = Array.from(allChannelsMap.values());
+      const finalChannels = Array.from(finalChannelsMap.values());
 
       if (finalChannels.length > 0) {
         // Update existing DMX channels instead of replacing the array
-        finalChannels.forEach(cueChannel => {
+        finalChannels.forEach((cueChannel: ActiveChannel) => {
           const dmxChannel = dmx.channels.find(ch => ch.path === cueChannel.path);
           if (dmxChannel) {
             dmxChannel.value = Math.round(cueChannel.value * masterVolume.value);
@@ -596,14 +657,17 @@ export const useCueStore = defineStore("cue-store", () => {
       redWashCue.description = "Full red wash across all fixtures";
       redWashCue.priority = 2;
       redWashCue.isLooping = false;
+      if (redWashCue.layers[0]) redWashCue.layers[0].blendMode = 'replace';
       cues.value.push(redWashCue);
 
-      // Create Blue Chase cue
+      // Create Blue Chase cue  
       const blueChase = createNewCue("Blue Chase");
       blueChase.description = "Animated blue chase pattern";
       blueChase.priority = 1;
       blueChase.isLooping = true;
+      if (blueChase.layers[0]) blueChase.layers[0].blendMode = 'add';
       const layer2 = createNewLayer("Chase Layer");
+      layer2.blendMode = 'add';
       blueChase.layers.push(layer2);
       cues.value.push(blueChase);
 
@@ -612,6 +676,7 @@ export const useCueStore = defineStore("cue-store", () => {
       strobeEffect.description = "White strobe effect";
       strobeEffect.priority = 3;
       strobeEffect.isLooping = true;
+      if (strobeEffect.layers[0]) strobeEffect.layers[0].blendMode = 'screen';
       cues.value.push(strobeEffect);
 
       // Create Color Fade cue
@@ -619,8 +684,11 @@ export const useCueStore = defineStore("cue-store", () => {
       colorFade.description = "Smooth color transitions";
       colorFade.priority = 1;
       colorFade.isLooping = true;
+      if (colorFade.layers[0]) colorFade.layers[0].blendMode = 'multiply';
       const fadeLayer2 = createNewLayer("Fade Layer 2");
+      fadeLayer2.blendMode = 'add';
       const fadeLayer3 = createNewLayer("Fade Layer 3");
+      fadeLayer3.blendMode = 'screen';
       colorFade.layers.push(fadeLayer2, fadeLayer3);
       cues.value.push(colorFade);
 
@@ -629,6 +697,7 @@ export const useCueStore = defineStore("cue-store", () => {
       spotlight.description = "Center spotlight focus";
       spotlight.priority = 4;
       spotlight.isLooping = false;
+      if (spotlight.layers[0]) spotlight.layers[0].blendMode = 'replace';
       cues.value.push(spotlight);
 
       // Set the first cue as active

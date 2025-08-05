@@ -19,6 +19,14 @@ const showIntensities = ref<Map<string, number>>(new Map());
 const activeCues = ref<Set<string>>(new Set());
 const masterIntensity = ref(1.0);
 
+// Blend mode options
+const blendModeOptions = [
+  { label: 'Replace', value: 'replace' },
+  { label: 'Add', value: 'add' },
+  { label: 'Multiply', value: 'multiply' },
+  { label: 'Screen', value: 'screen' }
+];
+
 // Get all cues sorted by name
 const allCues = computed(() => {
   return [...cueStore.cues].sort((a, b) => a.name.localeCompare(b.name));
@@ -92,6 +100,30 @@ const getCueColor = (cueId: string, index: number) => {
 const prioritySortedCues = computed(() => {
   return [...allCues.value].sort((a, b) => (b.priority || 1) - (a.priority || 1));
 });
+
+// Blend mode controls
+const getCueBlendMode = (cueId: string) => {
+  const cue = cueStore.cues.find(c => c.id === cueId);
+  return cue?.layers[0]?.blendMode || 'replace';
+};
+
+const setCueBlendMode = (cueId: string, blendMode: string) => {
+  const cue = cueStore.cues.find(c => c.id === cueId);
+  if (cue && cue.layers[0]) {
+    cue.layers[0].blendMode = blendMode as any;
+    cueStore.updateCueModified();
+  }
+};
+
+const getBlendModeColor = (blendMode: string) => {
+  const colorMap: Record<string, string> = {
+    'replace': 'blue',
+    'add': 'green',
+    'multiply': 'orange',
+    'screen': 'purple'
+  };
+  return colorMap[blendMode] || 'grey';
+};
 </script>
 
 <template>
@@ -193,6 +225,12 @@ const prioritySortedCues = computed(() => {
                   color="grey-6"
                   outline
                 />
+                <q-badge
+                  v-if="isCueActive(cue.id)"
+                  :label="getCueBlendMode(cue.id).toUpperCase()"
+                  :color="getBlendModeColor(getCueBlendMode(cue.id))"
+                  class="blend-mode-badge"
+                />
               </div>
             </div>
           </div>
@@ -228,6 +266,21 @@ const prioritySortedCues = computed(() => {
               class="main-cue-btn"
               :class="{ 'cue-playing': isCueActive(cue.id) }"
             />
+
+            <!-- Blend Mode Control -->
+            <div class="blend-controls" v-if="isCueActive(cue.id)">
+              <q-select
+                :model-value="getCueBlendMode(cue.id)"
+                @update:model-value="(val) => setCueBlendMode(cue.id, val)"
+                :options="blendModeOptions"
+                dense
+                emit-value
+                map-options
+                label="Blend"
+                class="blend-select"
+                :color="getCueColor(cue.id, index)"
+              />
+            </div>
 
             <div class="quick-buttons">
               <q-btn
@@ -418,6 +471,13 @@ const prioritySortedCues = computed(() => {
       display: flex;
       flex-wrap: wrap;
       gap: 4px;
+
+      .blend-mode-badge {
+        font-size: 10px;
+        font-weight: 600;
+        border: 1px solid currentColor;
+        animation: glow 2s ease-in-out infinite alternate;
+      }
     }
   }
 
@@ -456,12 +516,16 @@ const prioritySortedCues = computed(() => {
       }
     }
 
+    .blend-controls {
+      .blend-select {
+        font-size: 11px;
+      }
+    }
+
     .quick-buttons {
       display: flex;
       justify-content: space-around;
-      gap: 4px;
-
-      .flash-btn:active {
+      gap: 4px;      .flash-btn:active {
         background: var(--q-accent) !important;
         color: white !important;
       }
@@ -506,5 +570,10 @@ const prioritySortedCues = computed(() => {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
+}
+
+@keyframes glow {
+  0% { box-shadow: 0 0 5px currentColor; }
+  100% { box-shadow: 0 0 15px currentColor; }
 }
 </style>
