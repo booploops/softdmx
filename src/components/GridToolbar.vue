@@ -302,7 +302,10 @@ const animationTest = () => {
           @click="showShowfileEditor = true"
         >
           <q-item-section avatar>
-            <q-icon name="edit" color="secondary" />
+            <q-icon
+              name="edit"
+              color="secondary"
+            />
           </q-item-section>
           <q-item-section>
             <q-item-label>Edit/Create Showfile</q-item-label>
@@ -329,7 +332,10 @@ const animationTest = () => {
           @click="exportShowfileWithMetadata"
         >
           <q-item-section avatar>
-            <q-icon name="download" color="primary" />
+            <q-icon
+              name="download"
+              color="primary"
+            />
           </q-item-section>
           <q-item-section>
             <q-item-label>Export with Metadata</q-item-label>
@@ -472,14 +478,24 @@ const animationTest = () => {
       </q-list>
     </q-btn-dropdown>
     <q-btn @click="blackOut">Black Out</q-btn>
-    <q-btn @click="showCueEditor = true" icon="timeline" color="secondary">
+    <q-btn
+      @click="showCueEditor = true"
+      icon="timeline"
+      color="secondary"
+    >
       Cue Editor
     </q-btn>
 
     <!-- Widgets View Mode Toggle - only show when in widgets tab and groups exist -->
-    <div v-if="ui.currentTab === 'widgets' && hasGroups" class="widgets-mode-toggle">
+    <div
+      v-if="ui.currentTab === 'widgets' && hasGroups"
+      class="widgets-mode-toggle"
+    >
       <span class="mode-label">View:</span>
-      <q-btn-group rounded unelevated>
+      <q-btn-group
+        rounded
+        unelevated
+      >
         <q-btn
           @click="ui.widgetsViewMode = 'groups'"
           :class="{
@@ -526,7 +542,9 @@ const animationTest = () => {
     transition-show="slide-up"
     transition-hide="slide-down"
   >
-    <ShowfileEditor />
+    <q-card>
+      <ShowfileEditor />
+    </q-card>
   </q-dialog>
 </template>
 

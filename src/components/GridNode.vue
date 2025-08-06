@@ -1,6 +1,6 @@
 <!--
   Copyright (C) 2025-Present booploops and contributors
-  
+
   This Source Code Form is subject to the terms of the Mozilla Public
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -18,8 +18,10 @@ import { ActiveChannel } from 'src/types';
  * The canvas is initialized with a black rectangle and has a default size of 1920x208 pixels.
  *
  * Important considerations:
- * - Channels start a 1 and go up to 512, which is the standard for DMX512 universes.
+ * - Channels start at 1 and go up to 512, which is the standard for DMX512 universes.
  * - Each channel is represented as a 16x16 pixel square in the grid node.
+ * - Supports explicit channel assignments (e.g., fixture at channel 100) with gaps filled as black.
+ * - Channels are displayed at their actual DMX channel positions, not sequential array positions.
  */
 const canvasElement = ref<HTMLCanvasElement | null>(null);
 
@@ -50,13 +52,16 @@ function drawCanvas() {
     ctx.fillStyle = 'black';
     ctx.fillRect(0, 0, width.value, height.value);
 
-    // Draw channels
-    channelsCached.forEach(channel => {
-      const sectorIndex = Math.floor((channel.id - 1) / SECTOR_STRIP_COUNT);
-      const channelInSector = (channel.id - 1) % SECTOR_STRIP_COUNT;
+    // Update channel map cache if needed
+    updateChannelMapCache();
 
-      // Calculate brightness based on channel value (0-255)
-      const brightness = channel.value;
+    // Draw all 512 channels, using actual values where available
+    for (let channelId = 1; channelId <= MAX_CHANNELS; channelId++) {
+      const sectorIndex = Math.floor((channelId - 1) / SECTOR_STRIP_COUNT);
+      const channelInSector = (channelId - 1) % SECTOR_STRIP_COUNT;
+
+      // Get channel value from cache, default to 0 if not found
+      const brightness = channelMapCache.get(channelId) ?? 0;
       ctx.fillStyle = `rgb(${brightness}, ${brightness}, ${brightness})`;
 
       // Draw channel pixel
@@ -66,21 +71,6 @@ function drawCanvas() {
         CHANNEL_PIXEL_SIZE, // width
         CHANNEL_PIXEL_SIZE // height
       );
-    });
-
-    // Fill remaining channels with black
-    if (channelsCached.length < MAX_CHANNELS) {
-      ctx.fillStyle = 'rgb(0, 0, 0)';
-      for (let i = channelsCached.length; i < MAX_CHANNELS; i++) {
-        const sectorIndex = Math.floor(i / SECTOR_STRIP_COUNT);
-        const channelInSector = i % SECTOR_STRIP_COUNT;
-        ctx.fillRect(
-          sectorIndex * CHANNEL_PIXEL_SIZE,
-          channelInSector * CHANNEL_PIXEL_SIZE,
-          CHANNEL_PIXEL_SIZE,
-          CHANNEL_PIXEL_SIZE
-        );
-      }
     }
   }
 }
@@ -94,9 +84,21 @@ function drawCanvas() {
 // })
 
 let channelsCached: ActiveChannel[] = [];
+let channelMapCache = new Map<number, number>();
+let isDirty = true; // Flag to track if we need to rebuild the channel map
 
 // use requestAnimationFrame to draw the canvas
 let animationFrameId: number;
+
+function updateChannelMapCache() {
+  if (isDirty) {
+    channelMapCache.clear();
+    channelsCached.forEach(channel => {
+      channelMapCache.set(channel.id, channel.value);
+    });
+    isDirty = false;
+  }
+}
 
 function animate() {
   if (canvasElement.value) {
@@ -110,6 +112,7 @@ function listenForUpdates() {
   io.on('channels:update', (channels: ActiveChannel[]) => {
     if (canvasElement.value) {
       channelsCached = channels;
+      isDirty = true; // Mark cache as dirty when channels update
       // drawCanvas();
     }
   });

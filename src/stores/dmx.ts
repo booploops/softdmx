@@ -95,14 +95,19 @@ export const useDMXStore = defineStore("dmx", () => {
       const fixtureDefinition = getFixtureDefinition(fixture.fixtureId);
       if (!fixtureDefinition) return;
 
+      // Use explicit starting channel if defined, otherwise use current channelIndex
+      let startingChannel = fixture.startingChannel ?? channelIndex;
+
       for (let i = 0; i < fixtureDefinition.channels.length; i++) {
         channels.value.push({
-          id: channelIndex,
+          id: startingChannel + i,
           path: `show://${fixture.name}/${i + 1}`,
           value: fixtureDefinition.channels[i]?.defaultValue ?? 0,
         });
-        channelIndex++;
       }
+
+      // Update channelIndex to continue after this fixture's channels
+      channelIndex = startingChannel + fixtureDefinition.channels.length;
     });
   };
 
@@ -121,7 +126,8 @@ export const useDMXStore = defineStore("dmx", () => {
       name: showfile.value.name,
       fixtures: showfile.value.fixtures.map(fixture => ({
         name: fixture.name,
-        fixtureId: fixture.fixtureId
+        fixtureId: fixture.fixtureId,
+        ...(fixture.startingChannel !== undefined && { startingChannel: fixture.startingChannel })
       })),
       linkedGroups: showfile.value.linkedGroups || []
     };
@@ -149,7 +155,8 @@ export const useDMXStore = defineStore("dmx", () => {
         name: showfile.value.name,
         fixtures: showfile.value.fixtures.map(fixture => ({
           name: fixture.name,
-          fixtureId: fixture.fixtureId
+          fixtureId: fixture.fixtureId,
+          ...(fixture.startingChannel !== undefined && { startingChannel: fixture.startingChannel })
         })),
         linkedGroups: showfile.value.linkedGroups || []
       }

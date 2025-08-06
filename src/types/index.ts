@@ -26,6 +26,7 @@ export type ShowfileLinkedGroup = {
 export type ShowfileFixture = {
   name: string;
   fixtureId: string;
+  startingChannel?: number;
 };
 
 export type FixtureChannelDefinition = {

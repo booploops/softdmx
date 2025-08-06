@@ -36,7 +36,10 @@ const groupSearchText = ref('');
 const availableFixtureTypes = computed(() => dmx.Fixtures);
 const selectedFixtureType = ref<string>('');
 const newFixtureName = ref('');
+const newFixtureStartingChannel = ref<number | undefined>(undefined);
 const showAddFixtureDialog = ref(false);
+const showEditFixtureDialog = ref(false);
+const editingFixtureIndex = ref<number | null>(null);
 
 // Group management
 const newGroupName = ref('');
@@ -86,12 +89,14 @@ const addFixture = () => {
 
   const fixture: ShowfileFixture = {
     name: newFixtureName.value.trim(),
-    fixtureId: selectedFixtureType.value
+    fixtureId: selectedFixtureType.value,
+    ...(newFixtureStartingChannel.value !== undefined && { startingChannel: newFixtureStartingChannel.value })
   };
 
   editingShowfile.value.fixtures.push(fixture);
   newFixtureName.value = '';
   selectedFixtureType.value = '';
+  newFixtureStartingChannel.value = undefined;
   showAddFixtureDialog.value = false;
 };
 
@@ -126,6 +131,8 @@ const duplicateFixture = (index: number) => {
   const originalFixture = editingShowfile.value.fixtures[index];
   if (!originalFixture) return;
 
+  // When duplicating, don't copy the starting channel as it would cause conflicts
+  // Let the new fixture follow the normal channel progression
   const duplicatedFixture: ShowfileFixture = {
     name: `${originalFixture.name} Copy`,
     fixtureId: originalFixture.fixtureId
@@ -134,7 +141,36 @@ const duplicateFixture = (index: number) => {
   editingShowfile.value.fixtures.splice(index + 1, 0, duplicatedFixture);
 };
 
-// Group operations
+const editFixture = (index: number) => {
+  const fixture = editingShowfile.value.fixtures[index];
+  if (!fixture) return;
+
+  newFixtureName.value = fixture.name;
+  selectedFixtureType.value = fixture.fixtureId;
+  newFixtureStartingChannel.value = fixture.startingChannel;
+  editingFixtureIndex.value = index;
+  showEditFixtureDialog.value = true;
+};
+
+const updateFixture = () => {
+  if (!newFixtureName.value.trim() || !selectedFixtureType.value || editingFixtureIndex.value === null) {
+    return;
+  }
+
+  const fixture: ShowfileFixture = {
+    name: newFixtureName.value.trim(),
+    fixtureId: selectedFixtureType.value,
+    ...(newFixtureStartingChannel.value !== undefined && { startingChannel: newFixtureStartingChannel.value })
+  };
+
+  editingShowfile.value.fixtures[editingFixtureIndex.value] = fixture;
+
+  newFixtureName.value = '';
+  selectedFixtureType.value = '';
+  newFixtureStartingChannel.value = undefined;
+  editingFixtureIndex.value = null;
+  showEditFixtureDialog.value = false;
+};// Group operations
 const addGroup = () => {
   if (!newGroupName.value.trim() || newGroupFixtures.value.length === 0) {
     return;
@@ -312,6 +348,41 @@ const availableFixturesForGroup = computed(() => {
 const getFixtureDefinition = (fixtureId: string): FixtureDefinition | undefined => {
   return dmx.Fixtures.find(f => f.id === fixtureId);
 };
+
+// Helper function to calculate channel ranges for fixtures
+const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) => {
+  const fixtureDef = getFixtureDefinition(fixture.fixtureId);
+  if (!fixtureDef) return { startChannel: 1, endChannel: 1, channelCount: 0 };
+
+  const channelCount = fixtureDef.channels.length;
+
+  // Calculate starting channel
+  let startChannel = 1;
+
+  if (fixture.startingChannel !== undefined) {
+    // Use explicit starting channel
+    startChannel = fixture.startingChannel;
+  } else {
+    // Calculate based on previous fixtures
+    for (let i = 0; i < fixtureIndex; i++) {
+      const prevFixture = editingShowfile.value.fixtures[i];
+      if (!prevFixture) continue;
+
+      const prevFixtureDef = getFixtureDefinition(prevFixture.fixtureId);
+      if (prevFixtureDef) {
+        if (prevFixture.startingChannel !== undefined) {
+          startChannel = Math.max(startChannel, prevFixture.startingChannel + prevFixtureDef.channels.length);
+        } else {
+          startChannel += prevFixtureDef.channels.length;
+        }
+      }
+    }
+  }
+
+  const endChannel = startChannel + channelCount - 1;
+
+  return { startChannel, endChannel, channelCount };
+};
 </script>
 
 <template>
@@ -455,11 +526,26 @@ const getFixtureDefinition = (fixtureId: string): FixtureDefinition | undefined 
                     <div class="fixture-name">{{ fixture.name }}</div>
                     <div class="fixture-type">{{ fixture.fixtureId }}</div>
                     <div class="fixture-details">
-                      {{ getFixtureDefinition(fixture.fixtureId)?.channels.length || 0 }} channels
+                      {{ (() => {
+                        const info = getFixtureChannelInfo(fixture, index);
+                        return `Ch ${info.startChannel}-${info.endChannel} (${info.channelCount} channels)`;
+                      })() }}
+                    </div>
+                    <div v-if="fixture.startingChannel !== undefined" class="fixture-starting-channel">
+                      Explicit start: {{ fixture.startingChannel }}
                     </div>
                   </div>
 
                   <div class="fixture-actions">
+                    <q-btn
+                      @click="editFixture(index)"
+                      icon="edit"
+                      size="sm"
+                      flat
+                      round
+                    >
+                      <q-tooltip>Edit</q-tooltip>
+                    </q-btn>
                     <q-btn
                       @click="duplicateFixture(index)"
                       icon="content_copy"
@@ -656,6 +742,16 @@ const getFixtureDefinition = (fixtureId: string): FixtureDefinition | undefined 
             map-options
             class="q-mt-md"
           />
+
+          <q-input
+            v-model.number="newFixtureStartingChannel"
+            label="Starting Channel (optional)"
+            type="number"
+            min="1"
+            max="512"
+            hint="If not specified, will continue from previous fixture"
+            class="q-mt-md"
+          />
         </q-card-section>
 
         <q-card-actions align="right">
@@ -664,6 +760,53 @@ const getFixtureDefinition = (fixtureId: string): FixtureDefinition | undefined 
             color="primary"
             label="Add"
             @click="addFixture"
+            :disable="!newFixtureName.trim() || !selectedFixtureType"
+          />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <!-- Edit Fixture Dialog -->
+    <q-dialog v-model="showEditFixtureDialog">
+      <q-card style="min-width: 400px">
+        <q-card-section>
+          <div class="text-h6">Edit Fixture</div>
+        </q-card-section>
+
+        <q-card-section>
+          <q-input
+            v-model="newFixtureName"
+            label="Fixture Name"
+            autofocus
+            @keyup.enter="updateFixture"
+          />
+
+          <q-select
+            v-model="selectedFixtureType"
+            :options="availableFixtureTypes.map(f => ({ label: f.name, value: f.id }))"
+            label="Fixture Type"
+            emit-value
+            map-options
+            class="q-mt-md"
+          />
+
+          <q-input
+            v-model.number="newFixtureStartingChannel"
+            label="Starting Channel (optional)"
+            type="number"
+            min="1"
+            max="512"
+            hint="If not specified, will continue from previous fixture"
+            class="q-mt-md"
+          />
+        </q-card-section>
+
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" v-close-popup />
+          <q-btn
+            color="primary"
+            label="Update"
+            @click="updateFixture"
             :disable="!newFixtureName.trim() || !selectedFixtureType"
           />
         </q-card-actions>
@@ -874,6 +1017,13 @@ const getFixtureDefinition = (fixtureId: string): FixtureDefinition | undefined 
         .fixture-details {
           color: rgba(255, 255, 255, 0.7);
           font-size: 11px;
+        }
+
+        .fixture-starting-channel {
+          color: var(--q-primary);
+          font-size: 10px;
+          font-weight: 600;
+          margin-top: 2px;
         }
       }
 
