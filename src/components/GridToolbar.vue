@@ -29,6 +29,67 @@ const reloadShowfile = () => {
   dmx.loadShowfile(TestShowfile);
 };
 
+// Import/Export Functions
+const exportShowfile = () => {
+  try {
+    const success = dmx.downloadShowfileAsYAML();
+    if (success) {
+      console.log('Showfile exported successfully');
+    }
+  } catch (error) {
+    console.error('Export failed:', error);
+    Dialog.create({
+      title: 'Export Failed',
+      message: `Failed to export showfile: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    });
+  }
+};
+
+const exportShowfileWithMetadata = () => {
+  try {
+    const success = dmx.downloadShowfileAsYAML(undefined, true);
+    if (success) {
+      console.log('Showfile with metadata exported successfully');
+    }
+  } catch (error) {
+    console.error('Export failed:', error);
+    Dialog.create({
+      title: 'Export Failed',
+      message: `Failed to export showfile: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    });
+  }
+};
+
+const importShowfile = () => {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.yml,.yaml';
+
+  input.onchange = async (event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+
+    try {
+      const success = await dmx.loadShowfileFromFile(file);
+      if (success) {
+        console.log('Showfile imported successfully');
+        Dialog.create({
+          title: 'Import Successful',
+          message: `Successfully imported showfile: ${dmx.showfile?.name}`,
+        });
+      }
+    } catch (error) {
+      console.error('Import failed:', error);
+      Dialog.create({
+        title: 'Import Failed',
+        message: `Failed to import showfile: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      });
+    }
+  };
+
+  input.click();
+};
+
 const maxValues = () => {
   dmx.channels.forEach(channel => {
     channel.value = 255; // Set all channels to maximum value
@@ -230,6 +291,65 @@ const animationTest = () => {
         Reload Showfile
       </q-tooltip>
     </q-btn>
+
+    <q-btn-dropdown label="Showfile">
+      <q-list>
+        <q-item
+          clickable
+          v-close-popup
+          @click="exportShowfile"
+        >
+          <q-item-section avatar>
+            <q-icon name="download" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Export as YAML</q-item-label>
+            <q-item-label caption>Simple format</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-item
+          clickable
+          v-close-popup
+          @click="exportShowfileWithMetadata"
+        >
+          <q-item-section avatar>
+            <q-icon name="download" color="primary" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Export with Metadata</q-item-label>
+            <q-item-label caption>Extended format with export info</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-separator />
+        <q-item
+          clickable
+          v-close-popup
+          @click="importShowfile"
+        >
+          <q-item-section avatar>
+            <q-icon name="upload" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Import from YAML</q-item-label>
+            <q-item-label caption>Supports both simple and extended formats</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-separator />
+        <q-item
+          clickable
+          v-close-popup
+          @click="reloadShowfile"
+        >
+          <q-item-section avatar>
+            <q-icon name="restore" />
+          </q-item-section>
+          <q-item-section>
+            Load Test Showfile
+          </q-item-section>
+        </q-item>
+      </q-list>
+    </q-btn-dropdown>
+
     <q-btn-dropdown label="Testing">
       <q-list>
         <q-item

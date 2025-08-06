@@ -660,7 +660,7 @@ export const useCueStore = defineStore("cue-store", () => {
       if (redWashCue.layers[0]) redWashCue.layers[0].blendMode = 'replace';
       cues.value.push(redWashCue);
 
-      // Create Blue Chase cue  
+      // Create Blue Chase cue
       const blueChase = createNewCue("Blue Chase");
       blueChase.description = "Animated blue chase pattern";
       blueChase.priority = 1;

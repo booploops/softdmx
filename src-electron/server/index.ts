@@ -35,10 +35,6 @@ export function startServer() {
     prefix: "/app/",
   });
 
-  http_server.get('/foo', (req, reply) => {
-    return 'bar'
-  })
-
   http_server.get('/source', (req, reply) => {
     if(isDev()) {
       reply.redirect(getDevUrl() + '/#/artnet');

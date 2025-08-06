@@ -1,3 +1,6 @@
 {
   "extends": "./.quasar/tsconfig.json",
+  "compilerOptions": {
+    "noImplicitOverride": false,
+  }
 }
