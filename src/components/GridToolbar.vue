@@ -13,12 +13,14 @@ import { useUIStore } from 'src/stores/ui';
 import { ref, computed } from 'vue';
 import ViewTypeToggle from './ViewTypeToggle.vue';
 import CueEditor from './CueEditor.vue';
+import ShowfileEditor from './ShowfileEditor.vue';
 
 const ui = useUIStore();
 const dmx = useDMXStore();
 
 // Cue Editor dialog state
 const showCueEditor = ref(false);
+const showShowfileEditor = ref(false);
 
 const hasGroups = computed(() => {
   return (dmx.showfile?.linkedGroups || []).length > 0;
@@ -297,6 +299,20 @@ const animationTest = () => {
         <q-item
           clickable
           v-close-popup
+          @click="showShowfileEditor = true"
+        >
+          <q-item-section avatar>
+            <q-icon name="edit" color="secondary" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Edit/Create Showfile</q-item-label>
+            <q-item-label caption>Create new or modify existing showfiles</q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-separator />
+        <q-item
+          clickable
+          v-close-popup
           @click="exportShowfile"
         >
           <q-item-section avatar>
@@ -501,6 +517,16 @@ const animationTest = () => {
     transition-hide="slide-down"
   >
     <CueEditor />
+  </q-dialog>
+
+  <!-- Showfile Editor Dialog -->
+  <q-dialog
+    v-model="showShowfileEditor"
+    maximized
+    transition-show="slide-up"
+    transition-hide="slide-down"
+  >
+    <ShowfileEditor />
   </q-dialog>
 </template>
 
