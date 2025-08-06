@@ -39,7 +39,7 @@ export type FixtureChannelDefinition = {
 };
 
 export type WidgetConfiguration = {
-  type: "lightMover" | "colorPicker" | "dimmerSlider" | (string & {});
+  type: "lightMover" | "colorPicker" | "dimmerSlider" | "strobe" | (string & {});
   name: string;
   channels: {
     [key: string]: string; // Maps widget property to channel name

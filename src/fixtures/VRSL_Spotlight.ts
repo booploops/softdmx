@@ -129,6 +129,13 @@ export const VRSL_Spotlight: FixtureDefinition = {
       channels: {
         dimmerChannel: "Dimmer"
       }
+    },
+    {
+      type: "strobe",
+      name: "Strobe Effect",
+      channels: {
+        strobeChannel: "Strobe"
+      }
     }
   ]
 };

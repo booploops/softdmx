@@ -30,3 +30,7 @@ body.body--dark {
 .no-app-drag {
   -webkit-app-region: no-drag;
 }
+
+.q-focus-helper {
+  transition: none!important;
+}

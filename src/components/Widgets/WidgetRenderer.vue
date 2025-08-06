@@ -14,9 +14,11 @@ import type { WidgetConfiguration, ShowfileFixtureMapped } from 'src/types';
 import ColorPicker from './ColorPicker.vue';
 import LightMover from './LightMover.vue';
 import DimmerSlider from './DimmerSlider.vue';
+import Strobe from './Strobe.vue';
 import type { ColorPickerModel } from './ColorPicker';
 import type { LightMoverModel } from './LightMover';
 import type { DimmerSliderModel } from './DimmerSlider';
+import type { StrobeModel } from './Strobe';
 
 const props = defineProps<{
   widget: WidgetConfiguration;
@@ -96,6 +98,27 @@ const dimmerSliderModel = computed((): DimmerSliderModel | null => {
     dimmerChannel: dimmerChannel as any
   };
 });
+
+const strobeModel = computed((): StrobeModel | null => {
+  if (props.widget.type !== 'strobe') return null;
+
+  const findChannel = (channelName?: string) => {
+    if (!channelName) return undefined;
+    return props.fixture.def.channels.find(ch => ch.name === channelName);
+  };
+
+  const strobeChannel = findChannel(props.widget.channels.strobeChannel);
+
+  if (!strobeChannel) {
+    console.warn('Missing required channels for strobe widget:', props.widget);
+    return null;
+  }
+
+  // The channels from ShowfileFixtureMapped already have references
+  return {
+    strobeChannel: strobeChannel as any
+  };
+});
 </script>
 
 <template>
@@ -121,8 +144,15 @@ const dimmerSliderModel = computed((): DimmerSliderModel | null => {
       :key="`${fixture.fixtureName}-${widget.name}`"
     />
 
+    <!-- Strobe Widget -->
+    <Strobe
+      v-if="widget.type === 'strobe' && strobeModel"
+      v-model="strobeModel"
+      :key="`${fixture.fixtureName}-${widget.name}`"
+    />
+
     <!-- Fallback for unknown widget types -->
-    <div v-if="!lightMoverModel && !colorPickerModel && !dimmerSliderModel" class="widget-error">
+    <div v-if="!lightMoverModel && !colorPickerModel && !dimmerSliderModel && !strobeModel" class="widget-error">
       <q-card flat bordered class="error-card">
         <q-card-section>
           <div class="text-h6 text-negative">
