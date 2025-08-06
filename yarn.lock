@@ -746,6 +746,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@msgpack/msgpack@npm:^3.1.2":
+  version: 3.1.2
+  resolution: "@msgpack/msgpack@npm:3.1.2"
+  checksum: 10c0/4fee6dbea70a485d3a787ac76dd43687f489d662f22919237db1f2abbc3c88070c1d3ad78417ce6e764bcd041051680284654021f52068e0aff82d570cb942d5
+  languageName: node
+  linkType: hard
+
 "@nodelib/fs.scandir@npm:2.1.5":
   version: 2.1.5
   resolution: "@nodelib/fs.scandir@npm:2.1.5"
@@ -7046,6 +7053,7 @@ __metadata:
     "@fastify/static": "npm:^8.2.0"
     "@fontsource-variable/roboto-flex": "npm:^5.2.6"
     "@intlify/unplugin-vue-i18n": "npm:^4.0.0"
+    "@msgpack/msgpack": "npm:^3.1.2"
     "@quasar/app-vite": "npm:^2.1.0"
     "@quasar/extras": "npm:^1.16.4"
     "@types/better-sqlite3": "npm:^7.6.13"
