@@ -6,62 +6,103 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <template>
-  <q-layout view="hHh Lpr lFf">
+  <q-layout view="hHh lpr lFf" class="app-layout">
     <q-header
       class="bg-dark text-white app-titlebar"
       :class="{
         'is-mac': $q.platform.is.mac
       }"
     >
-      <q-toolbar>
+      <q-toolbar class="titlebar-toolbar">
         <q-btn
           flat
           icon="fa fa-ellipsis-h"
           aria-label="Menu"
-          @click="toggleLeftDrawer"
+          @click="ui.toggleLeftDrawer()"
           class="no-app-drag"
           dense
         />
+        <q-toolbar-title class="titlebar-title no-app-drag">
+          SoftDMX
+        </q-toolbar-title>
       </q-toolbar>
     </q-header>
 
     <q-drawer
-      v-model="leftDrawerOpen"
+      v-model="ui.leftDrawerOpen"
       bordered
-      class="no-app-drag"
+      class="no-app-drag sdmx-drawer"
+      :width="280"
+      overlay
+      behavior="mobile"
     >
-      <q-list>
-        <q-item-label header>
-          Menu
-        </q-item-label>
-
-      </q-list>
+      <AppSidebarMenu />
     </q-drawer>
 
-
-    <q-page-container>
+    <q-page-container class="app-page-container">
       <router-view />
     </q-page-container>
+
+    <AppDialogs />
+    <ShowStartupDialog />
   </q-layout>
 </template>
 
 <script setup lang="ts">
-import Titlebar from 'src/components/Titlebar.vue';
+import AppSidebarMenu from 'src/components/AppSidebarMenu.vue';
+import AppDialogs from 'src/components/AppDialogs.vue';
+import ShowStartupDialog from 'src/components/ShowStartupDialog.vue';
+import { useUIStore } from 'src/stores/ui';
 
-
-const leftDrawerOpen = ref(false);
-
-function toggleLeftDrawer() {
-  leftDrawerOpen.value = !leftDrawerOpen.value;
-}
+const ui = useUIStore();
 </script>
 
 <style lang="scss" scoped>
+.app-layout {
+  height: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
 .app-titlebar {
   -webkit-app-region: drag;
 
   &.is-mac {
     padding-left: 64px;
   }
+}
+
+.titlebar-toolbar {
+  min-height: 36px;
+  padding-right: 8px;
+}
+
+.titlebar-title {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.app-page-container {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.app-page-container :deep(.q-page) {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+</style>
+
+<style lang="scss">
+.no-app-drag {
+  -webkit-app-region: no-drag;
 }
 </style>

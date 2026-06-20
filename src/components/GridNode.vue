@@ -24,6 +24,7 @@ import { ActiveChannel } from 'src/types';
  * - Channels are displayed at their actual DMX channel positions, not sequential array positions.
  */
 const canvasElement = ref<HTMLCanvasElement | null>(null);
+const destinationId = ref<string>('default-gridnode');
 
 const width = ref(1920);
 const height = ref(208);
@@ -109,22 +110,53 @@ function animate() {
 
 function listenForUpdates() {
   const io = useIOClient();
+
+  // Listen for destination-specific dense updates (numbers array)
+  io.on(`channels:update:${destinationId.value}`, (channelsData: number[]) => {
+    if (canvasElement.value) {
+      channelMapCache.clear();
+      channelsData.forEach((value, index) => {
+        channelMapCache.set(index + 1, value);
+      });
+      isDirty = false;
+    }
+  });
+
+  // Fallback / legacy sparse updates (ActiveChannel[] array)
   io.on('channels:update', (channels: ActiveChannel[]) => {
     if (canvasElement.value) {
       channelsCached = channels;
-      isDirty = true; // Mark cache as dirty when channels update
-      // drawCanvas();
+      isDirty = true;
     }
   });
 }
 
 function stopListeningForUpdates() {
   const io = useIOClient();
+  io.off(`channels:update:${destinationId.value}`);
   io.off('channels:update');
 }
 
+function handleSettings(settings: any) {
+  if (settings && settings.OutputDestinations) {
+    const firstGridNode = settings.OutputDestinations.find((d: any) => d.type === 'gridnode');
+    if (firstGridNode && firstGridNode.id !== destinationId.value) {
+      stopListeningForUpdates();
+      destinationId.value = firstGridNode.id;
+      listenForUpdates();
+    }
+  }
+}
+
+onMounted(() => {
+  const io = useIOClient();
+  io.on('settings:current', handleSettings);
+  io.emit('settings:get');
+});
 
 onBeforeUnmount(() => {
+  const io = useIOClient();
+  io.off('settings:current', handleSettings);
   stopListeningForUpdates();
   if (animationFrameId) {
     cancelAnimationFrame(animationFrameId);

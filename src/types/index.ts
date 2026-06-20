@@ -6,43 +6,107 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+export type {
+  OutputDestination,
+  ShowMeta,
+  FixturePosition,
+  ShowfileFixture,
+  ShowfileGroup,
+  PresetTarget,
+  Preset,
+  ShowAudioConfig,
+  ShowTimecodeConfig,
+  TimecodeSource,
+  ShowLinkSyncConfig,
+  ShowOscSyncConfig,
+  ShowTimelineAudioAsset,
+  ShowTimelineConfig,
+  TimelineSyncMode,
+  ShowAudioMapping,
+  ShowExecutor,
+  ExecutorSlot,
+  ShowSubmaster,
+  PixelChannelOrder,
+  PixelMapFixtureChannel,
+  PixelMapDefinition,
+  VideoInputKind,
+  VideoSampleRegion,
+  ShowVideoConfig,
+  ShowDocumentVersion,
+  ShowDocumentV1,
+} from './show-document';
+export type {
+  DeskWindowType,
+  DeskPane,
+  DeskView,
+  ShowDeskConfig,
+  TouchControlType,
+  TouchControl,
+  TouchPage,
+  ShowTouchConfig,
+} from './desk';
+export { createEmptyShow } from './show-document';
+
+export type {
+  EasingType,
+  RecordedFrame,
+  CueLayer,
+  StackStep,
+  Cue,
+  CuePlaybackState,
+} from './cue';
+
+export type {
+  EffectTarget,
+  EffectDefinition,
+  SineEffect,
+  SawEffect,
+  StepEffect,
+  ChaseEffect,
+  PhaserEffect,
+  RandomHoldEffect,
+} from './effects';
+
+export type {
+  BindingTargetType,
+  BindingTarget,
+  MidiMapping,
+  OscMapping,
+  ShowBindings,
+} from './bindings';
+
 export type ActiveChannel = {
   id: number;
+  universe?: string;
   path: string;
   value: number;
-};
-
-export type Showfile = {
-  name: string;
-  fixtures: ShowfileFixture[];
-  linkedGroups?: ShowfileLinkedGroup[];
-};
-
-export type ShowfileLinkedGroup = {
-  name: string;
-  names: string[];
-}
-
-export type ShowfileFixture = {
-  name: string;
-  fixtureId: string;
-  startingChannel?: number;
+  attributeType?: string;
 };
 
 export type FixtureChannelDefinition = {
   name: string;
-  type: "intensity" | "color" | "effect" | "position" | (string & {});
+  type: 'intensity' | 'color' | 'effect' | 'position' | (string & {});
   minValue: number;
   maxValue: number;
   defaultValue: number;
-  reference?: ActiveChannel; // Optional reference to an active channel
+  attributeId?: string;
+  dmxOffset?: number;
+  /** Continuous DMX slider (default) or discrete indexed slots (gobo, color wheel, etc.). */
+  controlMode?: 'dmx' | 'indexed';
+  /** Number of discrete slots when controlMode is indexed. */
+  indexedSlots?: number;
+  /** Optional labels for each slot (length must match indexedSlots). */
+  indexedLabels?: string[];
+  reference?: ActiveChannel;
 };
 
+export type FixtureSource = 'yaml' | 'gdtf';
+
 export type WidgetConfiguration = {
-  type: "lightMover" | "colorPicker" | "dimmerSlider" | "strobe" | (string & {});
+  type: 'lightMover' | 'colorPicker' | 'dimmerSlider' | 'strobe' | 'indexedSelect' | (string & {});
   name: string;
   channels: {
-    [key: string]: string; // Maps widget property to channel name
+    [key: string]: string;
   };
 };
 
@@ -51,6 +115,11 @@ export type FixtureDefinition = {
   name: string;
   channels: FixtureChannelDefinition[];
   widgets?: WidgetConfiguration[];
+  attributes?: import('./attributes.ts').AttributeDefinition[];
+  modes?: import('./attributes.ts').FixtureModeDefinition[];
+  defaultModeId?: string;
+  source?: FixtureSource;
+  gdtfMeta?: import('./attributes.ts').FixtureGdtfMeta;
 };
 
 export type FixtureChannelWithReference = FixtureChannelDefinition & {
@@ -64,47 +133,9 @@ export type ShowfileFixtureMapped = {
   };
 };
 
-export type RecordedFrame = {
+/** @deprecated Use ShowDocumentV1 */
+export type Showfile = {
   name: string;
-  type: 'channels' | 'delay';
-  channels: ActiveChannel[];
-  delayDuration?: number; // Optional delay duration in milliseconds
-  duration?: number; // Duration of this frame in milliseconds
-  easing?: 'linear' | 'ease' | 'ease-in' | 'ease-out' | 'ease-in-out' | 'bounce' | 'elastic';
-}
-
-export type CueLayer = {
-  id: string;
-  name: string;
-  frames: RecordedFrame[];
-  enabled: boolean;
-  opacity: number; // 0-1 for blending
-  blendMode: 'replace' | 'add' | 'multiply' | 'screen';
-  solo: boolean;
-}
-
-export type Cue = {
-  id: string;
-  name: string;
-  description?: string;
-  layers: CueLayer[];
-  totalDuration: number; // Total duration in milliseconds
-  isLooping: boolean;
-  fadeInDuration: number;
-  fadeOutDuration: number;
-  priority: number; // Higher priority cues override lower ones
-  tags: string[];
-  created: Date;
-  modified: Date;
-}
-
-export type CuePlaybackState = {
-  cueId: string;
-  startTime: number;
-  currentTime: number;
-  isPlaying: boolean;
-  isPaused: boolean;
-  playbackRate: number; // 1.0 = normal speed
-  fadeProgress: number; // 0-1 for fade in/out
-  intensity?: number; // 0-1 for show mode intensity control
-}
+  fixtures: import('./show-document').ShowfileFixture[];
+  linkedGroups?: { name: string; names: string[] }[];
+};

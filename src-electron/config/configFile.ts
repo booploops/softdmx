@@ -6,9 +6,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import type { OutputDestination } from "src/types";
+
 export class ConfigFile {
   Port: number = 5353;
-  GridNode = {
-    WindowEnabled: true,
-  }
+  /** @deprecated Destinations live in the show document */
+  OutputDestinations: OutputDestination[] = [];
 }

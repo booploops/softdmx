@@ -10,27 +10,50 @@
 -->
 <script setup lang="ts">
 import { LightMoverModel } from './LightMover';
+import { useChannelBinding } from 'src/composables/useChannelBinding';
 
 const val = defineModel<LightMoverModel>({required: true});
 
-const padRef = ref<HTMLElement>();
+const pan = useChannelBinding(() => val.value.panChannel, 'position');
+const panFine = useChannelBinding(() => val.value.panFineChannel, 'position');
+const tilt = useChannelBinding(() => val.value.tiltChannel, 'position');
+const tiltFine = useChannelBinding(() => val.value.tiltFineChannel, 'position');
 
-// Convert DMX values (0-255) to pad coordinates (0-100%)
+const hasFineChannels = computed(
+  () => !!val.value.panFineChannel && !!val.value.tiltFineChannel
+);
+
+// Convert DMX values to pad coordinates (0-100%)
 const panPosition = computed(() => {
-  const panValue = val.value.panChannel.reference.value;
-  const panFineValue = val.value.panFineChannel.reference.value;
-  // Combine coarse and fine values for 16-bit precision
-  const combined = (panValue * 256 + panFineValue) / 65535;
-  return combined * 100;
+  if (hasFineChannels.value) {
+    const combined = (pan.value * 256 + panFine.value) / 65535;
+    return combined * 100;
+  }
+  return (pan.value / 255) * 100;
 });
 
 const tiltPosition = computed(() => {
-  const tiltValue = val.value.tiltChannel.reference.value;
-  const tiltFineValue = val.value.tiltFineChannel.reference.value;
-  // Combine coarse and fine values for 16-bit precision
-  const combined = (tiltValue * 256 + tiltFineValue) / 65535;
-  return combined * 100;
+  if (hasFineChannels.value) {
+    const combined = (tilt.value * 256 + tiltFine.value) / 65535;
+    return combined * 100;
+  }
+  return (tilt.value / 255) * 100;
 });
+
+const panDisplay = computed(() => {
+  if (hasFineChannels.value) {
+    return `${pan.value}.${String(panFine.value).padStart(3, '0')}`;
+  }
+  return String(pan.value);
+});
+const tiltDisplay = computed(() => {
+  if (hasFineChannels.value) {
+    return `${tilt.value}.${String(tiltFine.value).padStart(3, '0')}`;
+  }
+  return String(tilt.value);
+});
+
+const padRef = ref<HTMLElement>();
 
 // Handle mouse/touch interactions
 const isDragging = ref(false);
@@ -82,23 +105,31 @@ function updatePosition(event: MouseEvent | TouchEvent) {
   const x = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
   const y = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
 
-  // Convert to 16-bit DMX values
-  const panValue16bit = Math.round(x * 65535);
-  const tiltValue16bit = Math.round(y * 65535);
-
-  // Split into coarse and fine channels
-  val.value.panChannel.reference.value = Math.floor(panValue16bit / 256);
-  val.value.panFineChannel.reference.value = panValue16bit % 256;
-  val.value.tiltChannel.reference.value = Math.floor(tiltValue16bit / 256);
-  val.value.tiltFineChannel.reference.value = tiltValue16bit % 256;
+  // Convert to DMX values
+  if (hasFineChannels.value) {
+    const panValue16bit = Math.round(x * 65535);
+    const tiltValue16bit = Math.round(y * 65535);
+    pan.value = Math.floor(panValue16bit / 256);
+    panFine.value = panValue16bit % 256;
+    tilt.value = Math.floor(tiltValue16bit / 256);
+    tiltFine.value = tiltValue16bit % 256;
+  } else {
+    pan.value = Math.round(x * 255);
+    tilt.value = Math.round(y * 255);
+  }
 }
 
-// Reset to center position
 function resetPosition() {
-  val.value.panChannel.reference.value = 127;
-  val.value.panFineChannel.reference.value = 128;
-  val.value.tiltChannel.reference.value = 127;
-  val.value.tiltFineChannel.reference.value = 128;
+  if (hasFineChannels.value) {
+    pan.value = 127;
+    panFine.value = 128;
+    tilt.value = 127;
+    tiltFine.value = 128;
+    return;
+  }
+
+  pan.value = 127;
+  tilt.value = 127;
 }
 
 </script>
@@ -156,11 +187,11 @@ function resetPosition() {
     <div class="value-display">
       <div class="value-row">
         <span class="label">Pan:</span>
-        <span class="value">{{ val.panChannel.reference.value }}.{{ String(val.panFineChannel.reference.value).padStart(3, '0') }}</span>
+        <span class="value">{{ panDisplay }}</span>
       </div>
       <div class="value-row">
         <span class="label">Tilt:</span>
-        <span class="value">{{ val.tiltChannel.reference.value }}.{{ String(val.tiltFineChannel.reference.value).padStart(3, '0') }}</span>
+        <span class="value">{{ tiltDisplay }}</span>
       </div>
     </div>
   </div>
@@ -168,7 +199,7 @@ function resetPosition() {
 
 <style scoped lang="scss">
 .light-mover-widget {
-  background: var(--q-dark);
+  background: var(--sdmx-color-bg-surface);
   border-radius: 8px;
   padding: 16px;
   min-width: 280px;
@@ -183,11 +214,11 @@ function resetPosition() {
 
   .mover-title {
     font-weight: 500;
-    color: var(--q-primary);
+    color: var(--sdmx-color-primary);
   }
 
   .reset-btn {
-    color: var(--q-accent);
+    color: var(--sdmx-color-accent);
   }
 }
 
@@ -195,8 +226,8 @@ function resetPosition() {
   position: relative;
   width: 100%;
   height: 200px;
-  background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-  border: 2px solid var(--q-primary);
+  background: var(--sdmx-gradient-widget);
+  border: 2px solid var(--sdmx-color-primary);
   border-radius: 8px;
   cursor: crosshair;
   margin-bottom: 12px;
@@ -217,7 +248,7 @@ function resetPosition() {
 
   .grid-line {
     position: absolute;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--sdmx-color-border);
 
     &.horizontal {
       left: 0;
@@ -237,12 +268,12 @@ function resetPosition() {
   position: absolute;
   width: 16px;
   height: 16px;
-  background: var(--q-accent);
+  background: var(--sdmx-color-accent);
   border: 2px solid white;
   border-radius: 50%;
   transform: translate(-50%, -50%);
   pointer-events: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 8px var(--sdmx-color-shadow);
   z-index: 2;
 }
 
@@ -254,7 +285,7 @@ function resetPosition() {
     position: absolute;
     bottom: 4px;
     right: 8px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--sdmx-color-text-muted);
     font-size: 12px;
   }
 
@@ -262,7 +293,7 @@ function resetPosition() {
     position: absolute;
     top: 8px;
     left: 4px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--sdmx-color-text-muted);
     font-size: 12px;
     transform: rotate(-90deg);
     transform-origin: left center;
@@ -282,14 +313,14 @@ function resetPosition() {
 
     .label {
       font-size: 12px;
-      color: rgba(255, 255, 255, 0.7);
+      color: var(--sdmx-color-text-muted);
       margin-bottom: 2px;
     }
 
     .value {
       font-family: 'Courier New', monospace;
       font-size: 14px;
-      color: var(--q-accent);
+      color: var(--sdmx-color-accent);
       font-weight: bold;
     }
   }

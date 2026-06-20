@@ -9,18 +9,20 @@
   Purpose: Display available fixture definitions with their channels and capabilities
 -->
 <script setup lang="ts">
-import { useDMXStore } from 'src/stores/dmx';
+import { getAllFixtures, pluginRegistryVersion, registerRuntimeFixtureFromYaml } from 'src/plugins/registry';
 import { ref, computed } from 'vue';
 import type { FixtureDefinition } from 'src/types';
-
-const dmx = useDMXStore();
+import { Dialog, Notify } from 'quasar';
 
 const searchText = ref('');
 const selectedFixture = ref<FixtureDefinition | null>(null);
+const fileInput = ref<HTMLInputElement | null>(null);
 
 const filteredFixtures = computed(() => {
-  if (!searchText.value) return dmx.Fixtures;
-  return dmx.Fixtures.filter(fixture =>
+  void pluginRegistryVersion.value;
+  const fixtures = getAllFixtures();
+  if (!searchText.value) return fixtures;
+  return fixtures.filter(fixture =>
     fixture.name.toLowerCase().includes(searchText.value.toLowerCase()) ||
     fixture.id.toLowerCase().includes(searchText.value.toLowerCase()) ||
     fixture.channels.some(channel =>
@@ -36,22 +38,57 @@ const selectFixture = (fixture: FixtureDefinition) => {
 const clearSelection = () => {
   selectedFixture.value = null;
 };
+
+const openFixtureImportPicker = () => {
+  fileInput.value?.click();
+};
+
+const onFixtureYamlPicked = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  try {
+    const fixture = registerRuntimeFixtureFromYaml(await file.text());
+    Notify.create({
+      type: 'positive',
+      message: `Imported fixture "${fixture.name}" (${fixture.id})`,
+    });
+  } catch (error) {
+    Dialog.create({
+      title: 'Fixture Import Failed',
+      message: error instanceof Error ? error.message : 'Unknown fixture import error',
+    });
+  } finally {
+    target.value = '';
+  }
+};
 </script>
 
 <template>
   <div class="fixture-browser">
+    <input
+      ref="fileInput"
+      type="file"
+      accept=".yaml,.yml"
+      style="display: none"
+      @change="onFixtureYamlPicked"
+    />
+
     <div v-if="!selectedFixture" class="fixture-list">
       <div class="list-header">
-        <h6>Available Fixtures</h6>
-        <q-input
-          v-model="searchText"
-          placeholder="Search fixtures..."
-          dense
-          class="search-input"
-        >
-          <template v-slot:prepend>
-            <q-icon name="search" />
-          </template>
+        <div class="header-title-row">
+          <h6>Available Fixtures</h6>
+          <q-btn
+            color="primary"
+            icon="upload_file"
+            label="Import YAML"
+            dense
+            @click="openFixtureImportPicker"
+          />
+        </div>
+        <q-input v-model="searchText" placeholder="Search fixtures..." dense class="search-input">
+          <template v-slot:prepend><q-icon name="search" /></template>
         </q-input>
       </div>
 
@@ -148,7 +185,14 @@ const clearSelection = () => {
 
   .list-header {
     padding: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--sdmx-color-border);
+
+    .header-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
 
     h6 {
       margin: 0 0 12px 0;
@@ -168,11 +212,11 @@ const clearSelection = () => {
     gap: 12px;
 
     .fixture-card {
-      background: rgba(255, 255, 255, 0.08);
+      background: var(--sdmx-color-border-subtle);
       transition: background-color 0.2s;
 
       &:hover {
-        background: rgba(255, 255, 255, 0.12);
+        background: var(--sdmx-color-border);
       }
 
       .fixture-name {
@@ -182,13 +226,13 @@ const clearSelection = () => {
       }
 
       .fixture-id {
-        color: var(--q-primary);
+        color: var(--sdmx-color-primary);
         font-size: 12px;
         margin-bottom: 4px;
       }
 
       .fixture-channels {
-        color: rgba(255, 255, 255, 0.7);
+        color: var(--sdmx-color-text-muted);
         font-size: 12px;
         margin-bottom: 8px;
       }
@@ -201,7 +245,7 @@ const clearSelection = () => {
 
         .more-channels {
           font-size: 11px;
-          color: rgba(255, 255, 255, 0.5);
+          color: var(--sdmx-color-text-faint);
         }
       }
     }
@@ -214,7 +258,7 @@ const clearSelection = () => {
     align-items: center;
     justify-content: center;
     text-align: center;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--sdmx-color-text-faint);
 
     .empty-message {
       font-size: 18px;
@@ -223,7 +267,7 @@ const clearSelection = () => {
 
     .empty-hint {
       font-size: 14px;
-      color: rgba(255, 255, 255, 0.3);
+      color: var(--sdmx-color-text-faint);
     }
   }
 }
@@ -237,7 +281,7 @@ const clearSelection = () => {
     display: flex;
     align-items: center;
     padding: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--sdmx-color-border);
     gap: 12px;
 
     h6 {
@@ -247,7 +291,7 @@ const clearSelection = () => {
 
   .fixture-info {
     padding: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--sdmx-color-border);
 
     .info-row {
       display: flex;
@@ -256,11 +300,11 @@ const clearSelection = () => {
 
       .label {
         font-weight: 600;
-        color: rgba(255, 255, 255, 0.7);
+        color: var(--sdmx-color-text-muted);
       }
 
       .value {
-        color: var(--q-primary);
+        color: var(--sdmx-color-primary);
       }
     }
   }
@@ -285,12 +329,12 @@ const clearSelection = () => {
         display: flex;
         align-items: center;
         padding: 8px 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        border-bottom: 1px solid var(--sdmx-color-border-faint);
 
         .channel-number {
           width: 32px;
           height: 32px;
-          background: var(--q-primary);
+          background: var(--sdmx-color-primary);
           color: white;
           border-radius: 4px;
           display: flex;
@@ -311,7 +355,7 @@ const clearSelection = () => {
 
           .channel-range {
             font-size: 12px;
-            color: rgba(255, 255, 255, 0.7);
+            color: var(--sdmx-color-text-muted);
           }
         }
       }

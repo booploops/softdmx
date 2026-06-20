@@ -10,14 +10,21 @@
 -->
 <script setup lang="ts">
 import { useCueStore } from 'src/stores/cue';
+import { useOutputEngineStore } from 'src/stores/output-engine';
 import { ref, computed } from 'vue';
 
 const cueStore = useCueStore();
+const outputEngine = useOutputEngineStore();
 
 // Show control state
-const showIntensities = ref<Map<string, number>>(new Map());
-const activeCues = ref<Set<string>>(new Set());
-const masterIntensity = ref(1.0);
+const activeCues = computed(() => {
+  return new Set(cueStore.playbackStates.keys());
+});
+const playbackBusMaster = computed({
+  get: () => outputEngine.playbackBusMaster,
+  set: (value: number) => outputEngine.setPlaybackBusMaster(value),
+});
+const playbackBusPercent = computed(() => Math.round(playbackBusMaster.value * 100));
 
 // Blend mode options
 const blendModeOptions = [
@@ -31,31 +38,32 @@ const blendModeOptions = [
 const allCues = computed(() => {
   return [...cueStore.cues].sort((a, b) => a.name.localeCompare(b.name));
 });
+const hasCues = computed(() => allCues.value.length > 0);
 
 // Cue control functions
 const toggleCue = (cueId: string) => {
-  if (activeCues.value.has(cueId)) {
-    // Stop and remove from active
+  const cue = cueStore.cues.find((c) => c.id === cueId);
+  if (isCueActive(cueId)) {
     cueStore.stopCue(cueId);
-    activeCues.value.delete(cueId);
-  } else {
-    // Add to active and play
-    activeCues.value.add(cueId);
+  } else if (cue?.view === 'stack') {
     cueStore.playCue(cueId);
+  } else {
+    cueStore.playCue(cueId);
+    cueStore.setCueIntensity(cueId, getCueIntensity(cueId));
   }
 };
 
+const stackGo = (cueId: string) => {
+  cueStore.stackGo(cueId);
+};
+
 const getCueIntensity = (cueId: string) => {
-  return showIntensities.value.get(cueId) ?? 1.0;
+  return cueStore.getCueLevel(cueId);
 };
 
 const setCueIntensity = (cueId: string, intensity: number | null) => {
   if (intensity === null) return;
-  showIntensities.value.set(cueId, intensity);
-  // Apply intensity to the cue if it's playing
-  if (activeCues.value.has(cueId)) {
-    cueStore.setCueIntensity(cueId, intensity);
-  }
+  cueStore.setCueLevel(cueId, intensity);
 };
 
 const isCueActive = (cueId: string) => {
@@ -65,28 +73,38 @@ const isCueActive = (cueId: string) => {
 // Master controls
 const stopAllCues = () => {
   cueStore.stopAllCues();
-  activeCues.value.clear();
 };
 
-const setMasterIntensity = (intensity: number | null) => {
+const setPlaybackBusMaster = (intensity: number | null) => {
   if (intensity === null) return;
-  masterIntensity.value = intensity;
-  cueStore.setMasterIntensity(intensity);
+  outputEngine.setPlaybackBusMaster(intensity);
+};
+
+const outputGrandMaster = computed({
+  get: () => outputEngine.grandMaster,
+  set: (value: number | null) => {
+    if (value === null) return;
+    outputEngine.setGrandMaster(value);
+  },
+});
+
+const outputGrandMasterPercent = computed(() => Math.round(outputGrandMaster.value * 100));
+
+const toggleOutputBlackout = () => {
+  outputEngine.setBlackout(!outputEngine.blackout);
 };
 
 // Quick actions
 const flashCue = (cueId: string) => {
-  if (!activeCues.value.has(cueId)) {
+  if (!isCueActive(cueId)) {
     cueStore.playCue(cueId);
     cueStore.setCueIntensity(cueId, 1.0);
-    activeCues.value.add(cueId);
   }
 };
 
 const releaseCue = (cueId: string) => {
-  if (activeCues.value.has(cueId)) {
+  if (isCueActive(cueId)) {
     cueStore.stopCue(cueId);
-    activeCues.value.delete(cueId);
   }
 };
 
@@ -104,12 +122,12 @@ const prioritySortedCues = computed(() => {
 // Blend mode controls
 const getCueBlendMode = (cueId: string) => {
   const cue = cueStore.cues.find(c => c.id === cueId);
-  return cue?.layers[0]?.blendMode || 'replace';
+  return cue?.layers?.[0]?.blendMode || 'replace';
 };
 
 const setCueBlendMode = (cueId: string, blendMode: string) => {
   const cue = cueStore.cues.find(c => c.id === cueId);
-  if (cue && cue.layers[0]) {
+  if (cue?.layers?.[0]) {
     cue.layers[0].blendMode = blendMode as any;
     cueStore.updateCueModified();
   }
@@ -132,53 +150,64 @@ const getBlendModeColor = (blendMode: string) => {
     <div class="master-controls">
       <div class="master-section">
         <h6 class="section-title">Master Controls</h6>
-        <div class="master-controls-grid">
-          <div class="master-intensity">
-            <q-linear-progress
-              :value="masterIntensity"
-              size="12px"
-              color="orange"
-              track-color="grey-8"
-              class="intensity-bar"
-            />
+        <div class="master-controls-row">
+          <div class="master-intensity-horizontal">
+            <span class="intensity-label">Playback: {{ playbackBusPercent }}%</span>
             <q-slider
-              v-model="masterIntensity"
+              v-model="playbackBusMaster"
               :min="0"
               :max="1"
               :step="0.01"
-              vertical
-              reverse
-              color="orange"
+              color="deep-purple"
               track-color="grey-8"
-              thumb-color="orange"
+              thumb-color="deep-purple"
               class="master-slider"
-              @update:model-value="setMasterIntensity"
             />
-            <div class="intensity-label">
-              Master<br>{{ Math.round(masterIntensity * 100) }}%
-            </div>
+          </div>
+
+          <div class="master-intensity-horizontal output-master-horizontal">
+            <span class="intensity-label">Output GM: {{ outputGrandMasterPercent }}%</span>
+            <q-slider
+              v-model="outputGrandMaster"
+              :min="0"
+              :max="1"
+              :step="0.01"
+              color="amber"
+              track-color="grey-8"
+              thumb-color="amber"
+              class="master-slider"
+            />
           </div>
 
           <div class="master-buttons">
             <q-btn
               @click="stopAllCues"
               color="negative"
-              size="lg"
               icon="stop"
               label="Stop All"
               class="stop-all-btn"
+              unelevated
             />
             <q-btn
-              @click="setMasterIntensity(1.0)"
+              @click="setPlaybackBusMaster(1.0)"
               color="positive"
-              size="md"
               label="Full"
+              class="quick-btn"
+              unelevated
             />
             <q-btn
-              @click="setMasterIntensity(0)"
+              @click="setPlaybackBusMaster(0)"
               color="warning"
-              size="md"
-              label="Blackout"
+              label="Off"
+              class="quick-btn"
+              unelevated
+            />
+            <q-btn
+              @click="toggleOutputBlackout"
+              :color="outputEngine.blackout ? 'negative' : 'grey-7'"
+              :label="outputEngine.blackout ? 'Output BO ON' : 'Output BO'"
+              class="quick-btn"
+              unelevated
             />
           </div>
         </div>
@@ -192,7 +221,7 @@ const getBlendModeColor = (blendMode: string) => {
         <q-badge :label="activeCues.size" color="accent" />
       </h6>
 
-      <div class="cue-grid">
+      <div v-if="hasCues" class="cue-grid">
         <div
           v-for="(cue, index) in allCues"
           :key="cue.id"
@@ -220,8 +249,14 @@ const getBlendModeColor = (blendMode: string) => {
                   outline
                 />
                 <q-badge
-                  v-if="cue.layers.length > 1"
-                  :label="`${cue.layers.length} layers`"
+                  v-if="(cue.layers?.length ?? 0) > 1"
+                  :label="`${cue.layers?.length ?? 0} layers`"
+                  color="grey-6"
+                  outline
+                />
+                <q-badge
+                  v-if="cue.view === 'stack' && (cue.stack?.length ?? 0) > 0"
+                  :label="`${cue.stack?.length ?? 0} steps`"
                   color="grey-6"
                   outline
                 />
@@ -251,11 +286,25 @@ const getBlendModeColor = (blendMode: string) => {
               :color="getCueColor(cue.id, index)"
               track-color="grey-8"
               class="cue-intensity-slider"
-              :disable="!isCueActive(cue.id)"
             />
           </div>
 
-          <!-- Control Buttons -->
+          <!-- Blend Mode Control (above buttons when active) -->
+          <div class="blend-controls" v-if="isCueActive(cue.id)">
+            <q-select
+              :model-value="getCueBlendMode(cue.id)"
+              @update:model-value="(val) => setCueBlendMode(cue.id, val)"
+              :options="blendModeOptions"
+              dense
+              emit-value
+              map-options
+              label="Blend"
+              class="blend-select"
+              :color="getCueColor(cue.id, index)"
+            />
+          </div>
+
+          <!-- Control Buttons — pinned to bottom via margin-top: auto -->
           <div class="cue-buttons">
             <q-btn
               @click="toggleCue(cue.id)"
@@ -267,20 +316,15 @@ const getBlendModeColor = (blendMode: string) => {
               :class="{ 'cue-playing': isCueActive(cue.id) }"
             />
 
-            <!-- Blend Mode Control -->
-            <div class="blend-controls" v-if="isCueActive(cue.id)">
-              <q-select
-                :model-value="getCueBlendMode(cue.id)"
-                @update:model-value="(val) => setCueBlendMode(cue.id, val)"
-                :options="blendModeOptions"
-                dense
-                emit-value
-                map-options
-                label="Blend"
-                class="blend-select"
-                :color="getCueColor(cue.id, index)"
-              />
-            </div>
+            <q-btn
+              v-if="cue.view === 'stack'"
+              @click="stackGo(cue.id)"
+              color="secondary"
+              icon="skip_next"
+              label="Next"
+              size="sm"
+              class="q-ml-sm"
+            />
 
             <div class="quick-buttons">
               <q-btn
@@ -289,9 +333,7 @@ const getBlendModeColor = (blendMode: string) => {
                 @mouseleave="releaseCue(cue.id)"
                 color="accent"
                 icon="flash_on"
-                size="xs"
-                round
-                flat
+                unelevated
                 class="flash-btn"
               >
                 <q-tooltip>Flash (hold)</q-tooltip>
@@ -299,12 +341,10 @@ const getBlendModeColor = (blendMode: string) => {
 
               <q-btn
                 @click="cueStore.setCueLooping(cue.id, !cue.isLooping)"
-                :color="cue.isLooping ? 'info' : 'grey'"
+                :color="cue.isLooping ? 'info' : 'grey-8'"
                 icon="repeat"
-                size="xs"
-                round
-                flat
-                :class="{ 'loop-active': cue.isLooping }"
+                unelevated
+                class="loop-btn"
               >
                 <q-tooltip>Toggle Loop</q-tooltip>
               </q-btn>
@@ -321,6 +361,11 @@ const getBlendModeColor = (blendMode: string) => {
             />
           </div>
         </div>
+      </div>
+      <div v-else class="empty-cues-state">
+        <q-icon name="playlist_remove" size="3rem" class="text-grey-5 q-mb-sm" />
+        <div class="text-h6">No cues in this show</div>
+        <div class="text-caption text-grey-5">Open Cue Editor to create your first cue.</div>
       </div>
     </div>
 
@@ -356,7 +401,7 @@ const getBlendModeColor = (blendMode: string) => {
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: var(--q-dark);
+  background: var(--sdmx-color-bg-surface);
   color: white;
   overflow: hidden;
 }
@@ -364,7 +409,7 @@ const getBlendModeColor = (blendMode: string) => {
 .section-title {
   margin: 0 0 16px 0;
   padding: 0 16px;
-  color: var(--q-primary);
+  color: var(--sdmx-color-primary);
   font-weight: 600;
   display: flex;
   align-items: center;
@@ -373,44 +418,49 @@ const getBlendModeColor = (blendMode: string) => {
 
 // Master Controls
 .master-controls {
-  background: rgba(255, 255, 255, 0.05);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--sdmx-color-border-faint);
+  border-bottom: 1px solid var(--sdmx-color-border);
   padding: 16px;
 
-  .master-controls-grid {
+  .master-controls-row {
     display: flex;
-    align-items: stretch;
+    flex-direction: row;
+    align-items: center;
     gap: 24px;
-    height: 120px;
 
-    .master-intensity {
+    .master-intensity-horizontal {
       display: flex;
-      flex-direction: column;
+      flex-direction: row;
       align-items: center;
-      gap: 8px;
-      min-width: 60px;
+      gap: 12px;
+      min-width: 250px;
+      flex: 1;
+      max-width: 400px;
+
+      .intensity-label {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--sdmx-color-accent);
+        white-space: nowrap;
+        min-width: 90px;
+      }
 
       .master-slider {
         flex: 1;
-        width: 40px;
-      }
-
-      .intensity-label {
-        text-align: center;
-        font-size: 11px;
-        font-weight: 600;
-        color: var(--q-accent);
       }
     }
 
     .master-buttons {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      flex-direction: row;
+      gap: 12px;
+      align-items: center;
 
-      .stop-all-btn {
-        min-height: 50px;
+      .stop-all-btn, .quick-btn {
         font-weight: 600;
+        border-radius: 6px;
+        height: 40px;
+        min-width: 90px;
       }
     }
   }
@@ -426,37 +476,48 @@ const getBlendModeColor = (blendMode: string) => {
 
 .cue-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, 150px);
+  justify-content: center;
   gap: 16px;
   padding: 16px;
   overflow-y: auto;
   flex: 1;
 }
 
+.empty-cues-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
 .cue-control-card {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: var(--sdmx-color-border-subtle);
+  border: 1px solid var(--sdmx-color-border-strong);
   border-radius: 8px;
   padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
   transition: all 0.3s ease;
-  height: 280px;
+  height: 360px;
+  overflow: hidden;
 
   &:hover {
-    background: rgba(255, 255, 255, 0.12);
-    border-color: rgba(255, 255, 255, 0.3);
+    background: var(--sdmx-color-border);
+    border-color: var(--sdmx-color-text-faint);
   }
 
   &.active {
-    background: rgba(var(--q-primary-rgb), 0.2);
-    border-color: var(--q-primary);
-    box-shadow: 0 0 12px rgba(var(--q-primary-rgb), 0.3);
+    background: var(--sdmx-color-primary-soft);
+    border-color: var(--sdmx-color-primary);
+    box-shadow: 0 0 12px var(--sdmx-color-primary-soft);
   }
 
   &.has-high-priority {
-    border-left: 4px solid var(--q-warning);
+    border-left: 4px solid var(--sdmx-color-warning);
   }
 
   .cue-header {
@@ -492,14 +553,14 @@ const getBlendModeColor = (blendMode: string) => {
       font-family: 'Courier New', monospace;
       font-weight: 600;
       font-size: 16px;
-      color: var(--q-accent);
+      color: var(--sdmx-color-accent);
       min-height: 20px;
     }
 
     .cue-intensity-slider {
       flex: 1;
-      width: 30px;
-      min-height: 120px;
+      width: 20px;
+      min-height: 80px;
     }
   }
 
@@ -507,6 +568,7 @@ const getBlendModeColor = (blendMode: string) => {
     display: flex;
     flex-direction: column;
     gap: 8px;
+    margin-top: auto;
 
     .main-cue-btn {
       font-weight: 600;
@@ -524,15 +586,14 @@ const getBlendModeColor = (blendMode: string) => {
 
     .quick-buttons {
       display: flex;
-      justify-content: space-around;
-      gap: 4px;      .flash-btn:active {
-        background: var(--q-accent) !important;
-        color: white !important;
-      }
+      gap: 8px;
+      width: 100%;
 
-      .loop-active {
-        background: var(--q-info) !important;
-        color: white !important;
+      .flash-btn, .loop-btn {
+        flex: 1;
+        font-weight: 600;
+        border-radius: 6px;
+        height: 32px;
       }
     }
   }
@@ -544,8 +605,8 @@ const getBlendModeColor = (blendMode: string) => {
 
 // Active Summary
 .active-summary {
-  background: rgba(255, 255, 255, 0.05);
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--sdmx-color-border-faint);
+  border-top: 1px solid var(--sdmx-color-border);
   padding: 16px;
 
   .summary-header {
@@ -556,7 +617,7 @@ const getBlendModeColor = (blendMode: string) => {
 
     h6 {
       margin: 0;
-      color: var(--q-primary);
+      color: var(--sdmx-color-primary);
     }
   }
 

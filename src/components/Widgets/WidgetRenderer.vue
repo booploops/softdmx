@@ -15,10 +15,12 @@ import ColorPicker from './ColorPicker.vue';
 import LightMover from './LightMover.vue';
 import DimmerSlider from './DimmerSlider.vue';
 import Strobe from './Strobe.vue';
+import IndexedSelect from './IndexedSelect.vue';
 import type { ColorPickerModel } from './ColorPicker';
 import type { LightMoverModel } from './LightMover';
 import type { DimmerSliderModel } from './DimmerSlider';
 import type { StrobeModel } from './Strobe';
+import type { IndexedSelectModel } from './IndexedSelect';
 
 const props = defineProps<{
   widget: WidgetConfiguration;
@@ -39,7 +41,7 @@ const lightMoverModel = computed((): LightMoverModel | null => {
   const tiltChannel = findChannel(props.widget.channels.tiltChannel);
   const tiltFineChannel = findChannel(props.widget.channels.tiltFineChannel);
 
-  if (!panChannel || !panFineChannel || !tiltChannel || !tiltFineChannel) {
+  if (!panChannel || !tiltChannel) {
     console.warn('Missing required channels for lightMover widget:', props.widget);
     return null;
   }
@@ -49,7 +51,7 @@ const lightMoverModel = computed((): LightMoverModel | null => {
     panChannel: panChannel as any,
     panFineChannel: panFineChannel as any,
     tiltChannel: tiltChannel as any,
-    tiltFineChannel: tiltFineChannel as any
+    tiltFineChannel: tiltFineChannel as any,
   };
 });
 
@@ -119,6 +121,26 @@ const strobeModel = computed((): StrobeModel | null => {
     strobeChannel: strobeChannel as any
   };
 });
+
+const indexedSelectModel = computed((): IndexedSelectModel | null => {
+  if (props.widget.type !== 'indexedSelect') return null;
+
+  const findChannel = (channelName?: string) => {
+    if (!channelName) return undefined;
+    return props.fixture.def.channels.find(ch => ch.name === channelName);
+  };
+
+  const channel = findChannel(props.widget.channels.channel);
+
+  if (!channel) {
+    console.warn('Missing required channel for indexedSelect widget:', props.widget);
+    return null;
+  }
+
+  return {
+    channel: channel as any,
+  };
+});
 </script>
 
 <template>
@@ -151,8 +173,15 @@ const strobeModel = computed((): StrobeModel | null => {
       :key="`${fixture.fixtureName}-${widget.name}`"
     />
 
+    <!-- Indexed Select Widget -->
+    <IndexedSelect
+      v-if="widget.type === 'indexedSelect' && indexedSelectModel"
+      v-model="indexedSelectModel"
+      :key="`${fixture.fixtureName}-${widget.name}`"
+    />
+
     <!-- Fallback for unknown widget types -->
-    <div v-if="!lightMoverModel && !colorPickerModel && !dimmerSliderModel && !strobeModel" class="widget-error">
+    <div v-if="!lightMoverModel && !colorPickerModel && !dimmerSliderModel && !strobeModel && !indexedSelectModel" class="widget-error">
       <q-card flat bordered class="error-card">
         <q-card-section>
           <div class="text-h6 text-negative">
@@ -178,8 +207,8 @@ const strobeModel = computed((): StrobeModel | null => {
 
 .widget-error {
   .error-card {
-    background: rgba(244, 67, 54, 0.1);
-    border-color: rgba(244, 67, 54, 0.3);
+    background: var(--sdmx-color-negative-soft);
+    border-color: var(--sdmx-color-negative-border);
   }
 }
 </style>

@@ -1,0 +1,45 @@
+{
+  "id": "neon-console",
+  "name": "Neon Console",
+  "description": "Example imported theme with hot pink accents",
+  "dark": true,
+  "tokens": {
+    "colors": {
+      "bgPage": "#09040f",
+      "bgSurface": "#140a1f",
+      "bgElevated": "#1c1030",
+      "bgToolbar": "#12081c",
+      "bgDrawer": "#0a0510",
+      "border": "rgba(255, 120, 220, 0.18)",
+      "borderSubtle": "rgba(255, 120, 220, 0.08)",
+      "text": "#ffeefe",
+      "textMuted": "rgba(255, 220, 250, 0.72)",
+      "textFaint": "rgba(255, 220, 250, 0.45)",
+      "primary": "#ff3eb5",
+      "secondary": "#7c3aed",
+      "accent": "#22d3ee",
+      "positive": "#34d399",
+      "negative": "#fb7185",
+      "warning": "#fbbf24",
+      "info": "#60a5fa",
+      "overlay": "rgba(8, 0, 16, 0.72)",
+      "selected": "rgba(255, 62, 181, 0.22)",
+      "hover": "rgba(255, 120, 220, 0.12)",
+      "scratch": "#a21caf",
+      "gm": "#f472b6"
+    },
+    "typography": {
+      "fontFamily": "\"Roboto Flex Variable\", sans-serif",
+      "fontWeight": "500"
+    },
+    "radius": {
+      "sm": "6px",
+      "md": "10px",
+      "lg": "14px",
+      "button": "24px"
+    },
+    "layout": {
+      "toolbarHeight": "48px"
+    }
+  }
+}

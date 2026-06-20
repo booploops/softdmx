@@ -16,6 +16,6 @@
 <style scoped>
 .titlebar {
   -webkit-app-region: drag;
-  background-color: #333;
+  background-color: var(--sdmx-color-bg-drawer);
 }
 </style>

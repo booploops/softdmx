@@ -11,20 +11,28 @@
 <script setup lang="ts">
 import type { ShowfileFixtureMapped } from 'src/types';
 import WidgetRenderer from './Widgets/WidgetRenderer.vue';
+import { useSelectionStore } from 'src/stores/selection';
 
 const props = defineProps<{
   fixture: ShowfileFixtureMapped;
 }>();
+const selection = useSelectionStore();
 
 // Get widgets from the fixture definition
 const widgets = computed(() => {
   return props.fixture.def.widgets || [];
 });
+
+const isSelected = computed(() => selection.isFixtureSelected(props.fixture.fixtureName));
+
+function toggleFixtureSelection() {
+  selection.toggleFixture(props.fixture.fixtureName);
+}
 </script>
 
 <template>
-  <div class="widget-container">
-    <div class="fixture-header">
+  <div class="widget-container" :class="{ selected: isSelected }">
+    <div class="fixture-header" @click="toggleFixtureSelection">
       <h6 class="fixture-name">{{ fixture.fixtureName }}</h6>
       <div class="fixture-type">{{ fixture.def.name }}</div>
     </div>
@@ -53,29 +61,35 @@ const widgets = computed(() => {
 
 <style scoped lang="scss">
 .widget-container {
-  background: var(--q-dark);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--sdmx-color-bg-surface);
+  border: 1px solid var(--sdmx-color-border);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
   flex-shrink: 0;
   min-width: 320px;
+
+  &.selected {
+    border-color: var(--sdmx-color-primary);
+    box-shadow: 0 0 0 1px var(--sdmx-color-primary-ring);
+  }
 }
 
 .fixture-header {
   margin-bottom: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--sdmx-color-border);
   padding-bottom: 12px;
+  cursor: pointer;
 
   .fixture-name {
     margin: 0 0 4px 0;
     font-weight: 600;
-    color: var(--q-primary);
+    color: var(--sdmx-color-primary);
   }
 
   .fixture-type {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--sdmx-color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -83,8 +97,8 @@ const widgets = computed(() => {
 
 .no-widgets {
   .info-card {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: var(--sdmx-color-border-faint);
+    border-color: var(--sdmx-color-border);
   }
 }
 

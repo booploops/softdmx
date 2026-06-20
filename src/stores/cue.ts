@@ -5,87 +5,93 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import type { RecordedFrame, Cue, CueLayer, CuePlaybackState, ActiveChannel } from "src/types";
-import { ref, computed, watch } from "vue";
-import { defineStore } from "pinia";
-import { useDMXStore } from "./dmx";
-import { cloneDeep, merge } from "lodash-es";
-import { useLocalStorage } from "@vueuse/core";
 
-// Easing functions
-const easingFunctions = {
-  linear: (t: number) => t,
-  ease: (t: number) => t * t * (3.0 - 2.0 * t),
-  'ease-in': (t: number) => t * t,
-  'ease-out': (t: number) => t * (2.0 - t),
-  'ease-in-out': (t: number) => t < 0.5 ? 2.0 * t * t : -1.0 + (4.0 - 2.0 * t) * t,
-  bounce: (t: number) => {
-    if (t < 1 / 2.75) return 7.5625 * t * t;
-    if (t < 2 / 2.75) return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
-    if (t < 2.5 / 2.75) return 7.5625 * (t -= 2.25 / 2.75) * t + 0.9375;
-    return 7.5625 * (t -= 2.625 / 2.75) * t + 0.984375;
-  },
-  elastic: (t: number) => {
-    if (t === 0) return 0;
-    if (t === 1) return 1;
-    const p = 0.3;
-    const s = p / 4;
-    return -(Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p));
-  }
-};
+import type { Cue, CueLayer, RecordedFrame } from 'src/types';
+import { ref, computed } from 'vue';
+import { defineStore } from 'pinia';
+import { cloneDeep } from 'lodash-es';
+import { useShowStore } from './show';
+import { useDMXStore } from './dmx';
+import { useOutputEngineStore } from './output-engine';
+import { useScratchStore } from './scratch';
+import { getCueTotalDuration } from 'src/engine/cue-playback';
+import type { AttributeFeature } from 'src/types/attributes';
+import type { ProgrammerStoreMode } from './programmer';
+import { applyProgrammerStoreMode, captureScratchPreset } from 'src/utils/programmer-store';
+import { filterScratchEntries } from 'src/utils/programmer-filter';
+import { resolvePresetIdFromPoolSlot } from 'src/utils/preset-pool';
 
-export const useCueStore = defineStore("cue-store", () => {
+export const useCueStore = defineStore('cue-store', () => {
+  const showStore = useShowStore();
   const dmx = useDMXStore();
+  const engine = useOutputEngineStore();
+  const scratch = useScratchStore();
 
-  // Core state
-  const cues = useLocalStorage<Cue[]>("cues", []);
   const activeCueId = ref<string | null>(null);
   const activeLayerId = ref<string | null>(null);
   const activeFrameIndex = ref<number | null>(null);
-  const playbackStates = ref<Map<string, CuePlaybackState>>(new Map());
-
-  // Timeline state
-  const timelinePosition = ref(0); // Current position in milliseconds
-  const timelineZoom = ref(1); // Zoom level for timeline
+  const timelinePosition = ref(0);
+  const timelineZoom = ref(1);
   const timelineSnapping = ref(true);
-  const snapInterval = ref(250); // Snap to 250ms intervals  // Editing state
+  const snapInterval = ref(250);
   const selectedFrames = ref<Set<string>>(new Set());
   const clipboard = ref<RecordedFrame[]>([]);
   const isRecording = ref(false);
 
-  // Playback state
-  const masterVolume = ref(1.0);
-  const isGlobalPlaying = ref(false);
+  const cues = computed(() => showStore.document.cues);
 
-  // Computed properties
   const activeCue = computed(() => {
     if (!activeCueId.value) return null;
-    return cues.value.find(cue => cue.id === activeCueId.value) || null;
+    return cues.value.find((cue) => cue.id === activeCueId.value) || null;
   });
 
   const activeLayer = computed(() => {
     if (!activeCue.value || !activeLayerId.value) return null;
-    return activeCue.value.layers.find(layer => layer.id === activeLayerId.value) || null;
+    return activeCue.value.layers?.find((layer) => layer.id === activeLayerId.value) || null;
   });
 
   const totalDuration = computed(() => {
     if (!activeCue.value) return 0;
-    return Math.max(...activeCue.value.layers.map(layer =>
-      layer.frames.reduce((acc, frame) => acc + (frame.duration || 1000), 0)
-    ));
+    return getCueTotalDuration(activeCue.value);
   });
 
-  // Core functions
-  const generateId = () => `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  const playbackBusMaster = computed({
+    get: () => engine.playbackBusMaster,
+    set: (value: number) => engine.setPlaybackBusMaster(value),
+  });
+  const playbackStates = computed(() => engine.playbackStates);
+  const isGlobalPlaying = computed(() => engine.isGlobalPlaying);
 
-  const createNewCue = (name: string): Cue => {
-    const id = generateId();
-    const now = new Date();
+  function generateId() {
+    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+  }
+
+  function createNewLayer(name: string): CueLayer {
     return {
-      id,
+      id: generateId(),
+      name,
+      frames: [],
+      enabled: true,
+      opacity: 1.0,
+      blendMode: 'replace',
+      solo: false,
+    };
+  }
+
+  function createNewCue(name: string, view: 'timeline' | 'stack' = 'timeline'): Cue {
+    const now = new Date().toISOString();
+    return {
+      id: generateId(),
       name,
       description: '',
-      layers: [createNewLayer(`${name} - Main`)],
+      timecodeIn: undefined,
+      timecodeOut: undefined,
+      view,
+      tracking: false,
+      block: true,
+      mib: false,
+      layers: view === 'timeline' ? [createNewLayer(`${name} - Main`)] : [],
+      stack: view === 'stack' ? [] : [],
       totalDuration: 0,
       isLooping: false,
       fadeInDuration: 0,
@@ -93,658 +99,294 @@ export const useCueStore = defineStore("cue-store", () => {
       priority: 1,
       tags: [],
       created: now,
-      modified: now
+      modified: now,
     };
-  };
+  }
 
-  const createNewLayer = (name: string): CueLayer => ({
-    id: generateId(),
-    name,
-    frames: [],
-    enabled: true,
-    opacity: 1.0,
-    blendMode: 'replace',
-    solo: false
-  });
+  function updateCueModified(cue: Cue) {
+    cue.modified = new Date().toISOString();
+    cue.totalDuration = getCueTotalDuration(cue);
+    showStore.markDirty();
+  }
 
-  const addCue = (name: string) => {
-    const cue = createNewCue(name);
-    cues.value.push(cue);
+  function addCue(name: string, view: 'timeline' | 'stack' = 'timeline') {
+    const cue = createNewCue(name, view);
+    showStore.updateDocument((doc) => {
+      doc.cues.push(cue);
+    });
     activeCueId.value = cue.id;
-    activeLayerId.value = cue.layers[0]?.id || null;
+    activeLayerId.value = cue.layers?.[0]?.id ?? null;
     return cue;
-  };
+  }
 
-  const duplicateCue = (cueId: string) => {
-    const originalCue = cues.value.find(c => c.id === cueId);
-    if (!originalCue) return;
+  function duplicateCue(cueId: string) {
+    const original = cues.value.find((c) => c.id === cueId);
+    if (!original) return;
 
-    const duplicated = cloneDeep(originalCue);
+    const duplicated = cloneDeep(original);
     duplicated.id = generateId();
-    duplicated.name = `${originalCue.name} Copy`;
-    duplicated.created = new Date();
-    duplicated.modified = new Date();
+    duplicated.name = `${original.name} Copy`;
+    duplicated.created = new Date().toISOString();
+    duplicated.modified = new Date().toISOString();
+    duplicated.layers = duplicated.layers?.map((layer) => ({ ...layer, id: generateId() }));
+    duplicated.stack = duplicated.stack?.map((step) => ({ ...step, id: generateId() }));
 
-    // Generate new IDs for layers
-    duplicated.layers = duplicated.layers.map(layer => ({
-      ...layer,
-      id: generateId()
-    }));
-
-    cues.value.push(duplicated);
+    showStore.updateDocument((doc) => {
+      doc.cues.push(duplicated);
+    });
     return duplicated;
-  };
+  }
 
-  const deleteCue = (cueId: string) => {
-    const index = cues.value.findIndex(c => c.id === cueId);
-    if (index === -1) return;
-
-    cues.value.splice(index, 1);
-
+  function deleteCue(cueId: string) {
+    showStore.updateDocument((doc) => {
+      doc.cues = doc.cues.filter((c) => c.id !== cueId);
+    });
+    engine.stopCue(cueId);
     if (activeCueId.value === cueId) {
-      activeCueId.value = cues.value.length > 0 ? cues.value[0]?.id || null : null;
-      activeLayerId.value = activeCueId.value ? cues.value[0]?.layers[0]?.id || null : null;
+      activeCueId.value = cues.value[0]?.id ?? null;
+      activeLayerId.value = cues.value[0]?.layers?.[0]?.id ?? null;
     }
-  };
+  }
 
-  const addLayer = (cueId: string, name: string) => {
-    const cue = cues.value.find(c => c.id === cueId);
-    if (!cue) return;
-
+  function addLayer(cueId: string, name: string) {
     const layer = createNewLayer(name);
-    cue.layers.push(layer);
-    cue.modified = new Date();
+    showStore.updateDocument((doc) => {
+      const cue = doc.cues.find((c) => c.id === cueId);
+      if (cue) {
+        cue.layers = cue.layers ?? [];
+        cue.layers.push(layer);
+        updateCueModified(cue);
+      }
+    });
     return layer;
-  };
+  }
 
-  const deleteLayer = (cueId: string, layerId: string) => {
-    const cue = cues.value.find(c => c.id === cueId);
-    if (!cue) return;
-
-    const index = cue.layers.findIndex(l => l.id === layerId);
-    if (index === -1) return;
-
-    cue.layers.splice(index, 1);
-    cue.modified = new Date();
-
+  function deleteLayer(cueId: string, layerId: string) {
+    showStore.updateDocument((doc) => {
+      const cue = doc.cues.find((c) => c.id === cueId);
+      if (cue?.layers) {
+        cue.layers = cue.layers.filter((l) => l.id !== layerId);
+        updateCueModified(cue);
+      }
+    });
     if (activeLayerId.value === layerId) {
-      activeLayerId.value = cue.layers.length > 0 ? cue.layers[0]?.id || null : null;
+      activeLayerId.value = activeCue.value?.layers?.[0]?.id ?? null;
     }
-  };
+  }
 
-  const recordFrame = (at?: number) => {
+  function recordFrame(at?: number) {
     if (!activeLayer.value) return;
 
-    const channels = cloneDeep(dmx.channels);
+    const mergedOutput = engine.computeMergedOutput({ includeBlindScratch: true });
     const position = at ?? timelinePosition.value;
-
     const frame: RecordedFrame = {
       name: `Frame ${activeLayer.value.frames.length + 1}`,
       type: 'channels',
-      channels,
-      duration: 1000, // Default 1 second
-      easing: 'linear'
+      channels: cloneDeep(mergedOutput),
+      duration: 1000,
+      easing: 'linear',
     };
 
-    // Insert frame at the correct position based on timeline
-    const insertIndex = activeLayer.value.frames.findIndex((f, i) => {
-      const frameStart = activeLayer.value!.frames.slice(0, i).reduce((acc, fr) => acc + (fr.duration || 1000), 0);
-      return frameStart > position;
-    });
+    showStore.updateDocument((doc) => {
+      const cue = doc.cues.find((c) => c.id === activeCueId.value);
+      const layer = cue?.layers?.find((l) => l.id === activeLayerId.value);
+      if (!layer) return;
 
-    if (insertIndex === -1) {
-      activeLayer.value.frames.push(frame);
-      activeFrameIndex.value = activeLayer.value.frames.length - 1;
+      const insertIndex = layer.frames.findIndex((_f, i) => {
+        const frameStart = layer.frames.slice(0, i).reduce((acc, fr) => acc + (fr.duration || 1000), 0);
+        return frameStart > position;
+      });
+
+      if (insertIndex === -1) {
+        layer.frames.push(frame);
+        activeFrameIndex.value = layer.frames.length - 1;
+      } else {
+        layer.frames.splice(insertIndex, 0, frame);
+        activeFrameIndex.value = insertIndex;
+      }
+
+      if (cue) updateCueModified(cue);
+    });
+  }
+
+  function recordScratchAsPreset(
+    name: string,
+    options?: {
+      mode?: ProgrammerStoreMode;
+      attributeFilter?: AttributeFeature[];
+      presetId?: string;
+      poolId?: string;
+      poolSlot?: number;
+      clearScratch?: boolean;
+    }
+  ) {
+    const entries = scratch.getEntries();
+    if (entries.length === 0) return;
+
+    const mode = options?.mode ?? 'store';
+    const attributeFilter = options?.attributeFilter;
+    const mergedByPath = new Map(
+      engine.computeMergedOutput({ includeBlindScratch: true }).map((ch) => [ch.path, ch.value])
+    );
+    const capture = captureScratchPreset(
+      entries,
+      dmx.showfileFixturesMapped,
+      mergedByPath,
+      attributeFilter
+    );
+    if (capture.targets.length === 0) return;
+
+    let targetPresetId = options?.presetId;
+    if (!targetPresetId && options?.poolId !== undefined && options.poolSlot !== undefined) {
+      targetPresetId = resolvePresetIdFromPoolSlot(showStore.document, options.poolId, options.poolSlot) ?? undefined;
+    }
+
+    const existingPreset = targetPresetId
+      ? showStore.document.presets.find((preset) => preset.id === targetPresetId)
+      : undefined;
+
+    const nextTargets = applyProgrammerStoreMode(mode, existingPreset, capture);
+    if (nextTargets.length === 0 && mode === 'remove' && existingPreset) {
+      showStore.updateDocument((doc) => {
+        doc.presets = doc.presets.filter((preset) => preset.id !== existingPreset.id);
+      });
+    } else if (existingPreset) {
+      showStore.updateDocument((doc) => {
+        const preset = doc.presets.find((entry) => entry.id === existingPreset.id);
+        if (!preset) return;
+        preset.targets = nextTargets;
+      });
     } else {
-      activeLayer.value.frames.splice(insertIndex, 0, frame);
-      activeFrameIndex.value = insertIndex;
-    }
-
-    updateCueModified();
-    updateCueTotalDuration();
-  };
-
-  const updateCueTotalDuration = () => {
-    if (activeCue.value) {
-      activeCue.value.totalDuration = Math.max(...activeCue.value.layers.map(layer =>
-        layer.frames.reduce((acc, frame) => acc + (frame.duration || 1000), 0)
-      ), 0);
-    }
-  };
-
-  const updateCueModified = () => {
-    if (activeCue.value) {
-      activeCue.value.modified = new Date();
-    }
-  };
-
-  const deleteFrame = (layerId: string, frameIndex: number) => {
-    const layer = activeCue.value?.layers.find(l => l.id === layerId);
-    if (!layer || frameIndex < 0 || frameIndex >= layer.frames.length) return;
-
-    layer.frames.splice(frameIndex, 1);
-
-    if (activeFrameIndex.value === frameIndex) {
-      activeFrameIndex.value = null;
-    } else if (activeFrameIndex.value !== null && activeFrameIndex.value > frameIndex) {
-      activeFrameIndex.value--;
-    }
-
-    updateCueModified();
-    updateCueTotalDuration();
-  };
-
-  const moveFrame = (layerId: string, fromIndex: number, toIndex: number) => {
-    const layer = activeCue.value?.layers.find(l => l.id === layerId);
-    if (!layer) return;
-
-    const frame = layer.frames.splice(fromIndex, 1)[0];
-    if (frame) {
-      layer.frames.splice(toIndex, 0, frame);
-      updateCueModified();
-    }
-  };
-
-  const copyFrames = (layerId: string, frameIndices: number[]) => {
-    const layer = activeCue.value?.layers.find(l => l.id === layerId);
-    if (!layer) return;
-
-    clipboard.value = frameIndices
-      .map(index => layer.frames[index])
-      .filter((frame): frame is RecordedFrame => frame !== undefined)
-      .map(frame => cloneDeep(frame));
-  };
-
-  const pasteFrames = (layerId: string, atIndex: number) => {
-    const layer = activeCue.value?.layers.find(l => l.id === layerId);
-    if (!layer || clipboard.value.length === 0) return;
-
-    const framesToPaste = cloneDeep(clipboard.value);
-    layer.frames.splice(atIndex, 0, ...framesToPaste);
-    updateCueModified();
-  };
-
-  // Interpolation between frames
-  const interpolateChannels = (fromChannels: ActiveChannel[], toChannels: ActiveChannel[], progress: number, easing: string = 'linear'): ActiveChannel[] => {
-    const easingFn = easingFunctions[easing as keyof typeof easingFunctions] || easingFunctions.linear;
-    const t = easingFn(progress);
-
-    const result: ActiveChannel[] = [];
-
-    // Create a map for faster lookup
-    const toChannelsMap = new Map(toChannels.map(ch => [ch.id, ch]));
-
-    fromChannels.forEach(fromChannel => {
-      const toChannel = toChannelsMap.get(fromChannel.id);
-      if (toChannel) {
-        result.push({
-          ...fromChannel,
-          value: Math.round(fromChannel.value + (toChannel.value - fromChannel.value) * t)
+      const id = generateId();
+      showStore.updateDocument((doc) => {
+        doc.presets.push({
+          id,
+          name,
+          targets: nextTargets,
         });
-      } else {
-        result.push({ ...fromChannel });
-      }
-    });
-
-    // Add any channels that exist in toChannels but not in fromChannels
-    toChannels.forEach(toChannel => {
-      if (!fromChannels.find(ch => ch.id === toChannel.id)) {
-        result.push({
-          ...toChannel,
-          value: Math.round(toChannel.value * t)
-        });
-      }
-    });
-
-    return result;
-  };
-
-  // Layer blending
-  const blendLayers = (layers: { channels: ActiveChannel[], opacity: number, blendMode: string }[]): ActiveChannel[] => {
-    if (layers.length === 0) return [];
-    if (layers.length === 1) return layers[0]?.channels || [];
-
-    let result = cloneDeep(layers[0]?.channels || []);
-
-    for (let i = 1; i < layers.length; i++) {
-      const layer = layers[i];
-      if (!layer) continue;
-
-      const channelsMap = new Map(result.map(ch => [ch.id, ch]));
-
-      layer.channels.forEach(layerChannel => {
-        const resultChannel = channelsMap.get(layerChannel.id);
-        if (resultChannel) {
-          const layerValue = layerChannel.value * layer.opacity;
-
-          switch (layer.blendMode) {
-            case 'add':
-              resultChannel.value = Math.min(255, resultChannel.value + layerValue);
-              break;
-            case 'multiply':
-              resultChannel.value = Math.round((resultChannel.value * layerValue) / 255);
-              break;
-            case 'screen':
-              resultChannel.value = Math.round(255 - ((255 - resultChannel.value) * (255 - layerValue)) / 255);
-              break;
-            case 'replace':
-            default:
-              resultChannel.value = Math.round(resultChannel.value * (1 - layer.opacity) + layerValue);
-              break;
-          }
-
-          resultChannel.value = Math.max(0, Math.min(255, resultChannel.value));
-        } else {
-          result.push({
-            ...layerChannel,
-            value: Math.round(layerChannel.value * layer.opacity)
-          });
-        }
-      });
-    }
-
-    return result;
-  };
-
-  // Playback engine
-  const evaluateCueAtTime = (cue: Cue, timeMs: number): ActiveChannel[] => {
-    const enabledLayers = cue.layers.filter(layer => layer.enabled && !layer.solo);
-    const soloLayers = cue.layers.filter(layer => layer.solo);
-    const layersToProcess = soloLayers.length > 0 ? soloLayers : enabledLayers;
-
-    // If no layers have frames, return current DMX state
-    const hasAnyFrames = layersToProcess.some(layer => layer.frames.length > 0);
-    if (!hasAnyFrames) {
-      return dmx.channels.map(ch => ({ ...ch }));
-    }
-
-    const layerOutputs = layersToProcess.map(layer => {
-      let currentTime = 0;
-
-      for (let i = 0; i < layer.frames.length; i++) {
-        const frame = layer.frames[i];
-        if (!frame) continue;
-
-        const frameDuration = frame.duration || 1000;
-
-        if (timeMs >= currentTime && timeMs < currentTime + frameDuration) {
-          // We're in this frame
-          if (i === layer.frames.length - 1) {
-            // Last frame, just return its channels
-            return {
-              channels: frame.channels,
-              opacity: layer.opacity,
-              blendMode: layer.blendMode
-            };
-          } else {
-            // Interpolate to next frame
-            const nextFrame = layer.frames[i + 1];
-            if (!nextFrame) {
-              return {
-                channels: frame.channels,
-                opacity: layer.opacity,
-                blendMode: layer.blendMode
-              };
+        if (options?.poolId !== undefined && options.poolSlot !== undefined) {
+          const pool = (doc.presetPools ?? []).find((entry) => entry.id === options.poolId);
+          if (pool) {
+            while (pool.slots.length <= options.poolSlot!) {
+              pool.slots.push('');
             }
-
-            const progress = (timeMs - currentTime) / frameDuration;
-            const interpolatedChannels = interpolateChannels(
-              frame.channels,
-              nextFrame.channels,
-              progress,
-              frame.easing || 'linear'
-            );
-
-            return {
-              channels: interpolatedChannels,
-              opacity: layer.opacity,
-              blendMode: layer.blendMode
-            };
+            pool.slots[options.poolSlot!] = id;
           }
-        }
-
-        currentTime += frameDuration;
-      }
-
-      // If we're past all frames, return the last frame
-      if (layer.frames.length > 0) {
-        const lastFrame = layer.frames[layer.frames.length - 1];
-        return {
-          channels: lastFrame?.channels || [],
-          opacity: layer.opacity,
-          blendMode: layer.blendMode
-        };
-      }
-
-      return {
-        channels: [],
-        opacity: layer.opacity,
-        blendMode: layer.blendMode
-      };
-    });
-
-    return blendLayers(layerOutputs);
-  };
-
-  // Blend multiple cue outputs with different blend modes
-  const blendCueOutputs = (cueOutputs: { cueId: string, channels: ActiveChannel[], priority: number, blendMode: string, intensity: number }[]): Map<number, ActiveChannel> => {
-    const finalChannelsMap = new Map<number, ActiveChannel>();
-
-    // Process cues in priority order (highest to lowest)
-    for (const cueOutput of cueOutputs) {
-      for (const channel of cueOutput.channels) {
-        const existing = finalChannelsMap.get(channel.id);
-
-        if (!existing) {
-          // First cue to affect this channel
-          finalChannelsMap.set(channel.id, { ...channel });
-        } else {
-          // Blend with existing channel value
-          let blendedValue = existing.value;
-
-          switch (cueOutput.blendMode) {
-            case 'replace':
-              // Higher priority replaces lower priority
-              if (cueOutput.priority >= (existing as any).priority) {
-                blendedValue = channel.value;
-              }
-              break;
-
-            case 'add':
-              blendedValue = Math.min(255, existing.value + channel.value);
-              break;
-
-            case 'multiply':
-              blendedValue = (existing.value * channel.value) / 255;
-              break;
-
-            case 'screen':
-              blendedValue = 255 - ((255 - existing.value) * (255 - channel.value)) / 255;
-              break;
-
-            default:
-              // Default to additive blending for unknown modes
-              blendedValue = Math.min(255, existing.value + channel.value);
-          }
-
-          finalChannelsMap.set(channel.id, {
-            ...channel,
-            value: Math.max(0, Math.min(255, blendedValue))
-          });
-        }
-      }
-    }
-
-    return finalChannelsMap;
-  };
-
-  // Playback control
-  let playbackAnimationId: number | null = null;
-
-  const playCue = (cueId: string) => {
-    const cue = cues.value.find(c => c.id === cueId);
-    if (!cue) return;
-
-    const state: CuePlaybackState = {
-      cueId,
-      startTime: performance.now(),
-      currentTime: 0,
-      isPlaying: true,
-      isPaused: false,
-      playbackRate: 1.0,
-      fadeProgress: 0
-    };
-
-    playbackStates.value.set(cueId, state);
-    isGlobalPlaying.value = true;
-
-    if (!playbackAnimationId) {
-      startPlaybackEngine();
-    }
-  };
-
-  const pauseCue = (cueId: string) => {
-    const state = playbackStates.value.get(cueId);
-    if (state) {
-      state.isPaused = !state.isPaused;
-      if (!state.isPaused) {
-        state.startTime = performance.now() - state.currentTime;
-      }
-    }
-  };
-
-  const stopCue = (cueId: string) => {
-    playbackStates.value.delete(cueId);
-
-    if (playbackStates.value.size === 0) {
-      isGlobalPlaying.value = false;
-      if (playbackAnimationId) {
-        cancelAnimationFrame(playbackAnimationId);
-        playbackAnimationId = null;
-      }
-    }
-  };
-
-  const stopAllCues = () => {
-    playbackStates.value.clear();
-    isGlobalPlaying.value = false;
-    if (playbackAnimationId) {
-      cancelAnimationFrame(playbackAnimationId);
-      playbackAnimationId = null;
-    }
-  };
-
-  const startPlaybackEngine = () => {
-    const animate = (timestamp: number) => {
-      const allCueOutputs: { cueId: string, channels: ActiveChannel[], priority: number, blendMode: string, intensity: number }[] = [];
-
-      // Process all playing cues
-      for (const [cueId, state] of playbackStates.value.entries()) {
-        if (state.isPaused) continue;
-
-        const cue = cues.value.find(c => c.id === cueId);
-        if (!cue) {
-          playbackStates.value.delete(cueId);
-          continue;
-        }
-
-        state.currentTime = (timestamp - state.startTime) * state.playbackRate;
-
-        // Update timeline position for active cue
-        if (cueId === activeCueId.value) {
-          timelinePosition.value = state.currentTime;
-        }
-
-        // Handle looping
-        const cueTotalDuration = cue.totalDuration || Math.max(...cue.layers.map(layer =>
-          layer.frames.reduce((acc, frame) => acc + (frame.duration || 1000), 0)
-        ), 1000); // Minimum 1 second
-
-        if (cue.isLooping && state.currentTime > cueTotalDuration) {
-          state.currentTime = state.currentTime % cueTotalDuration;
-          state.startTime = timestamp - state.currentTime / state.playbackRate;
-        } else if (!cue.isLooping && state.currentTime > cueTotalDuration) {
-          playbackStates.value.delete(cueId);
-          continue;
-        }
-
-        const channels = evaluateCueAtTime(cue, state.currentTime);
-
-        // Apply cue-specific intensity
-        const cueIntensity = state.intensity ?? 1.0;
-        channels.forEach(channel => {
-          channel.value = channel.value * cueIntensity;
-        });
-
-        // Get the dominant blend mode from the cue's layers
-        const dominantBlendMode = cue.layers.find(layer => layer.enabled)?.blendMode || 'replace';
-
-        allCueOutputs.push({
-          cueId,
-          channels,
-          priority: cue.priority,
-          blendMode: dominantBlendMode,
-          intensity: cueIntensity
-        });
-      }
-
-      // Sort by priority (higher priority first)
-      allCueOutputs.sort((a, b) => b.priority - a.priority);
-
-      // Blend all cue outputs
-      const finalChannelsMap = blendCueOutputs(allCueOutputs);
-
-      // Apply to DMX
-      const finalChannels = Array.from(finalChannelsMap.values());
-
-      if (finalChannels.length > 0) {
-        // Update existing DMX channels instead of replacing the array
-        finalChannels.forEach((cueChannel: ActiveChannel) => {
-          const dmxChannel = dmx.channels.find(ch => ch.path === cueChannel.path);
-          if (dmxChannel) {
-            dmxChannel.value = Math.round(cueChannel.value * masterVolume.value);
-          }
-        });
-      }
-
-      if (playbackStates.value.size > 0) {
-        playbackAnimationId = requestAnimationFrame(animate);
-      } else {
-        playbackAnimationId = null;
-        isGlobalPlaying.value = false;
-      }
-    };
-
-    playbackAnimationId = requestAnimationFrame(animate);
-  };
-
-  // Timeline functions
-  const setTimelinePosition = (timeMs: number) => {
-    timelinePosition.value = timeMs;
-
-    // If actively playing, update the playback state to sync scrubbing
-    if (activeCue.value && isGlobalPlaying.value) {
-      const state = playbackStates.value.get(activeCue.value.id);
-      if (state && !state.isPaused) {
-        // Update the start time to maintain the new position
-        state.startTime = performance.now() - timeMs / state.playbackRate;
-        state.currentTime = timeMs;
-      }
-    }
-
-    if (activeCue.value && !isGlobalPlaying.value) {
-      const channels = evaluateCueAtTime(activeCue.value, timeMs);
-      // Update existing DMX channels instead of replacing the array
-      channels.forEach(cueChannel => {
-        const dmxChannel = dmx.channels.find(ch => ch.path === cueChannel.path);
-        if (dmxChannel) {
-          dmxChannel.value = Math.round(cueChannel.value * masterVolume.value);
         }
       });
+      targetPresetId = id;
     }
-  };
 
-  const snapToGrid = (timeMs: number): number => {
+    if (options?.clearScratch !== false) {
+      const filteredPaths = new Set(
+        filterScratchEntries(entries, attributeFilter).map((entry) => entry.path)
+      );
+      if (attributeFilter && attributeFilter.length > 0) {
+        scratch.removePaths([...filteredPaths]);
+      } else {
+        scratch.clear();
+      }
+    }
+
+    return targetPresetId;
+  }
+
+  function deleteFrame(layerId: string, frameIndex: number) {
+    showStore.updateDocument((doc) => {
+      const cue = doc.cues.find((c) => c.id === activeCueId.value);
+      const layer = cue?.layers?.find((l) => l.id === layerId);
+      if (!layer || frameIndex < 0 || frameIndex >= layer.frames.length) return;
+      layer.frames.splice(frameIndex, 1);
+      if (cue) updateCueModified(cue);
+    });
+  }
+
+  function moveFrame(layerId: string, fromIndex: number, toIndex: number) {
+    showStore.updateDocument((doc) => {
+      const cue = doc.cues.find((c) => c.id === activeCueId.value);
+      const layer = cue?.layers?.find((l) => l.id === layerId);
+      if (!layer) return;
+      const frame = layer.frames.splice(fromIndex, 1)[0];
+      if (frame) layer.frames.splice(toIndex, 0, frame);
+      if (cue) updateCueModified(cue);
+    });
+  }
+
+  function updateCueModifiedForActive() {
+    if (activeCue.value) updateCueModified(activeCue.value);
+  }
+
+  function copyFrames(layerId: string, frameIndices: number[]) {
+    const layer = activeCue.value?.layers?.find((l) => l.id === layerId);
+    if (!layer || frameIndices.length === 0) {
+      clipboard.value = [];
+      return;
+    }
+
+    const sorted = [...new Set(frameIndices)]
+      .filter((idx) => idx >= 0 && idx < layer.frames.length)
+      .sort((a, b) => a - b);
+
+    clipboard.value = sorted.map((idx) => cloneDeep(layer.frames[idx]!));
+  }
+
+  function pasteFrames(layerId: string, atIndex: number) {
+    if (clipboard.value.length === 0) return;
+
+    showStore.updateDocument((doc) => {
+      const cue = doc.cues.find((c) => c.id === activeCueId.value);
+      const layer = cue?.layers?.find((l) => l.id === layerId);
+      if (!cue || !layer) return;
+
+      const insertAt = Math.max(0, Math.min(atIndex, layer.frames.length));
+      const copies = clipboard.value.map((frame) => cloneDeep(frame));
+      layer.frames.splice(insertAt, 0, ...copies);
+      updateCueModified(cue);
+      activeFrameIndex.value = insertAt;
+    });
+  }
+
+  function setTimelinePosition(timeMs: number) {
+    timelinePosition.value = timeMs;
+  }
+
+  function snapToGrid(timeMs: number): number {
     if (!timelineSnapping.value) return timeMs;
     return Math.round(timeMs / snapInterval.value) * snapInterval.value;
-  };
+  }
 
-  // Initialize with example cue if no cues exist
-  const initializeDefaultCues = () => {
-    if (cues.value.length === 0) {
-      // Create Red Wash cue
-      const redWashCue = createNewCue("Red Wash");
-      redWashCue.description = "Full red wash across all fixtures";
-      redWashCue.priority = 2;
-      redWashCue.isLooping = false;
-      if (redWashCue.layers[0]) redWashCue.layers[0].blendMode = 'replace';
-      cues.value.push(redWashCue);
+  // Playback delegated to output engine
+  const playCue = (cueId: string) => engine.playCue(cueId);
+  const pauseCue = (cueId: string) => engine.pauseCue(cueId);
+  const stopCue = (cueId: string) => engine.stopCue(cueId);
+  const stopAllCues = () => engine.stopAllCues();
+  const setCueIntensity = (cueId: string, intensity: number) => engine.setCueIntensity(cueId, intensity);
+  const setCueLevel = (cueId: string, level: number) => engine.setCueLevel(cueId, level);
+  const getCueLevel = (cueId: string) => engine.getCueLevel(cueId);
+  const setPlaybackBusMaster = (intensity: number) => engine.setPlaybackBusMaster(intensity);
+  const stackGo = (cueId: string) => engine.stackGo(cueId);
+  const firePreset = (presetId: string, fadeMs?: number) => engine.firePreset(presetId, fadeMs);
 
-      // Create Blue Chase cue
-      const blueChase = createNewCue("Blue Chase");
-      blueChase.description = "Animated blue chase pattern";
-      blueChase.priority = 1;
-      blueChase.isLooping = true;
-      if (blueChase.layers[0]) blueChase.layers[0].blendMode = 'add';
-      const layer2 = createNewLayer("Chase Layer");
-      layer2.blendMode = 'add';
-      blueChase.layers.push(layer2);
-      cues.value.push(blueChase);
+  function setCueLooping(cueId: string, isLooping: boolean) {
+    showStore.updateDocument((doc) => {
+      const cue = doc.cues.find((c) => c.id === cueId);
+      if (cue) {
+        cue.isLooping = isLooping;
+        updateCueModified(cue);
+      }
+    });
+  }
 
-      // Create Strobe Effect cue
-      const strobeEffect = createNewCue("Strobe Effect");
-      strobeEffect.description = "White strobe effect";
-      strobeEffect.priority = 3;
-      strobeEffect.isLooping = true;
-      if (strobeEffect.layers[0]) strobeEffect.layers[0].blendMode = 'screen';
-      cues.value.push(strobeEffect);
-
-      // Create Color Fade cue
-      const colorFade = createNewCue("Color Fade");
-      colorFade.description = "Smooth color transitions";
-      colorFade.priority = 1;
-      colorFade.isLooping = true;
-      if (colorFade.layers[0]) colorFade.layers[0].blendMode = 'multiply';
-      const fadeLayer2 = createNewLayer("Fade Layer 2");
-      fadeLayer2.blendMode = 'add';
-      const fadeLayer3 = createNewLayer("Fade Layer 3");
-      fadeLayer3.blendMode = 'screen';
-      colorFade.layers.push(fadeLayer2, fadeLayer3);
-      cues.value.push(colorFade);
-
-      // Create Spotlight cue
-      const spotlight = createNewCue("Spotlight");
-      spotlight.description = "Center spotlight focus";
-      spotlight.priority = 4;
-      spotlight.isLooping = false;
-      if (spotlight.layers[0]) spotlight.layers[0].blendMode = 'replace';
-      cues.value.push(spotlight);
-
-      // Set the first cue as active
-      activeCueId.value = redWashCue.id;
-      activeLayerId.value = redWashCue.layers[0]?.id || null;
-    }
-  };
-
-  // Show mode functions for live cue control
-  const setCueIntensity = (cueId: string, intensity: number) => {
-    const state = playbackStates.value.get(cueId);
-    if (state) {
-      state.intensity = Math.max(0, Math.min(1, intensity));
-    }
-  };
-
-  const setMasterIntensity = (intensity: number) => {
-    masterVolume.value = Math.max(0, Math.min(1, intensity));
-  };
-
-  const setCueLooping = (cueId: string, isLooping: boolean) => {
-    const cue = cues.value.find(c => c.id === cueId);
-    if (cue) {
-      cue.isLooping = isLooping;
-      updateCueModified();
-    }
-  };
-
-  const getCueProgress = (cueId: string): number => {
-    const state = playbackStates.value.get(cueId);
+  function getCueProgress(cueId: string): number {
+    const state = engine.playbackStates.get(cueId);
     if (!state) return 0;
-
-    const cue = cues.value.find(c => c.id === cueId);
+    const cue = cues.value.find((c) => c.id === cueId);
     if (!cue) return 0;
-
-    const cueTotalDuration = cue.totalDuration || Math.max(...cue.layers.map(layer =>
-      layer.frames.reduce((acc, frame) => acc + (frame.duration || 1000), 0)
-    ), 1000);
-
-    return Math.min(state.currentTime / cueTotalDuration, 1);
-  };
-
-  // Call initialization
-  initializeDefaultCues();
+    const duration = getCueTotalDuration(cue) || 1000;
+    return Math.min(state.currentTime / duration, 1);
+  }
 
   return {
-    // State
     cues,
     activeCueId,
     activeLayerId,
@@ -756,51 +398,38 @@ export const useCueStore = defineStore("cue-store", () => {
     selectedFrames,
     clipboard,
     isRecording,
-    masterVolume,
-    isGlobalPlaying,
-    playbackStates,
-
-    // Computed
     activeCue,
     activeLayer,
     totalDuration,
-
-    // Cue management
+    playbackStates,
+    isGlobalPlaying,
+    playbackBusMaster,
+    generateId,
     addCue,
     duplicateCue,
     deleteCue,
-
-    // Layer management
     addLayer,
     deleteLayer,
-
-    // Frame management
     recordFrame,
+    recordScratchAsPreset,
     deleteFrame,
     moveFrame,
     copyFrames,
     pasteFrames,
-
-    // Playback
+    updateCueModified: updateCueModifiedForActive,
+    setTimelinePosition,
+    snapToGrid,
     playCue,
     pauseCue,
     stopCue,
     stopAllCues,
-    evaluateCueAtTime,
-
-    // Timeline
-    setTimelinePosition,
-    snapToGrid,
-
-    // Show mode functions
     setCueIntensity,
-    setMasterIntensity,
+    setCueLevel,
+    getCueLevel,
+    setPlaybackBusMaster,
     setCueLooping,
     getCueProgress,
-
-    // Utilities
-    generateId,
-    updateCueModified,
-    updateCueTotalDuration
+    stackGo,
+    firePreset,
   };
 });

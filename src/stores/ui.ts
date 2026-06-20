@@ -6,12 +6,103 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { ref, computed } from 'vue'
-import { defineStore } from 'pinia'
+import { ref, computed } from 'vue';
+import { defineStore } from 'pinia';
+import type { ProgramSection, SetupSection, WorkspaceMode } from 'src/utils/workspace-modes';
+
+export type AppDialog = 'cueEditor' | 'settings' | 'interface' | 'theme' | 'audio' | 'bindings';
+
+const OPERATE_LOCKED_KEY = 'softdmx-operate-locked';
+
+function readOperateLocked(): boolean {
+  if (typeof localStorage === 'undefined') return true;
+  const stored = localStorage.getItem(OPERATE_LOCKED_KEY);
+  if (stored === null) return true;
+  return stored === 'true';
+}
 
 export const useUIStore = defineStore('ui-store', () => {
-  const currentTab = ref<'channels' | 'groups' | 'widgets' | 'show'>('groups')
-  const widgetsViewMode = ref<'groups' | 'individual'>('groups')
+  const mode = ref<WorkspaceMode>('live');
+  const setupSection = ref<SetupSection>('patch');
+  const programSection = ref<ProgramSection>('executors');
+  const widgetsViewMode = ref<'groups' | 'individual'>('groups');
+  const leftDrawerOpen = ref(false);
+  const operateLocked = ref(readOperateLocked());
+  const programmerCollapsed = ref(false);
+  const cueBarCollapsed = ref(false);
+  const dialogs = ref<Record<AppDialog, boolean>>({
+    cueEditor: false,
+    settings: false,
+    interface: false,
+    theme: false,
+    audio: false,
+    bindings: false,
+  });
 
-  return { currentTab, widgetsViewMode }
-})
+  const isLive = computed(() => mode.value === 'live');
+  const isProgram = computed(() => mode.value === 'program');
+  const isTimeline = computed(() => mode.value === 'timeline');
+  const isSetup = computed(() => mode.value === 'setup');
+
+  function setMode(nextMode: WorkspaceMode) {
+    mode.value = nextMode;
+  }
+
+  function setSetupSection(section: SetupSection) {
+    setupSection.value = section;
+    mode.value = 'setup';
+  }
+
+  function setProgramSection(section: ProgramSection) {
+    programSection.value = section;
+    mode.value = 'program';
+  }
+
+  function toggleOperateLock(force?: boolean) {
+    operateLocked.value = force ?? !operateLocked.value;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(OPERATE_LOCKED_KEY, operateLocked.value ? 'true' : 'false');
+    }
+  }
+
+  function toggleLeftDrawer(force?: boolean) {
+    leftDrawerOpen.value = force ?? !leftDrawerOpen.value;
+  }
+
+  function openDialog(name: AppDialog) {
+    dialogs.value[name] = true;
+    leftDrawerOpen.value = false;
+  }
+
+  function closeDialog(name: AppDialog) {
+    dialogs.value[name] = false;
+  }
+
+  function setWidgetsViewMode(next: 'groups' | 'individual') {
+    widgetsViewMode.value = next;
+  }
+
+  return {
+    mode,
+    setupSection,
+    programSection,
+    widgetsViewMode,
+    leftDrawerOpen,
+    operateLocked,
+    programmerCollapsed,
+    cueBarCollapsed,
+    dialogs,
+    isLive,
+    isProgram,
+    isTimeline,
+    isSetup,
+    setMode,
+    setSetupSection,
+    setProgramSection,
+    toggleOperateLock,
+    toggleLeftDrawer,
+    openDialog,
+    closeDialog,
+    setWidgetsViewMode,
+  };
+});

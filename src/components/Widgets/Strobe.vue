@@ -10,8 +10,10 @@
 -->
 <script setup lang="ts">
 import { StrobeModel } from './Strobe';
+import { useChannelBinding } from 'src/composables/useChannelBinding';
 
 const val = defineModel<StrobeModel>({required: true});
+const strobe = useChannelBinding(val.value.strobeChannel, 'effect');
 
 // Strobe speed presets - common DMX strobe values
 const strobePresets = [
@@ -25,7 +27,7 @@ const strobePresets = [
 
 // Current strobe mode based on DMX value
 const currentMode = computed(() => {
-  const value = val.value.strobeChannel.reference.value;
+  const value = strobe.value;
   if (value === 0) return 'Off';
   if (value <= 31) return 'Open';
   if (value <= 95) return 'Slow Strobe';
@@ -36,7 +38,7 @@ const currentMode = computed(() => {
 
 // Strobe frequency estimation (rough approximation)
 const strobeFrequency = computed(() => {
-  const value = val.value.strobeChannel.reference.value;
+  const value = strobe.value;
   if (value <= 31) return 0; // No strobe
   // Approximate frequency calculation (this varies by fixture)
   const frequency = ((value - 32) / 223) * 30; // 0-30 Hz range
@@ -54,8 +56,8 @@ const updateFlashEffect = () => {
     flashInterval = null;
   }
 
-  const value = val.value.strobeChannel.reference.value;
-  if (value > 31) { // Strobe is active
+  const value = strobe.value;
+  if (value > 31) {
     const frequency = strobeFrequency.value;
     if (frequency > 0) {
       const intervalMs = (1000 / frequency) / 2; // Half period for on/off
@@ -69,7 +71,7 @@ const updateFlashEffect = () => {
 };
 
 // Watch for changes in strobe value
-watch(() => val.value.strobeChannel.reference.value, updateFlashEffect, { immediate: true });
+watch(strobe, updateFlashEffect, { immediate: true });
 
 // Cleanup interval on unmount
 onBeforeUnmount(() => {
@@ -80,18 +82,16 @@ onBeforeUnmount(() => {
 
 // Quick preset buttons
 const setPreset = (presetValue: number) => {
-  val.value.strobeChannel.reference.value = presetValue;
+  strobe.value = presetValue;
 };
 
-// Toggle strobe on/off
 const toggleStrobe = () => {
-  const currentValue = val.value.strobeChannel.reference.value;
+  const currentValue = strobe.value;
   if (currentValue === 0) {
     // Turn on to medium strobe
-    val.value.strobeChannel.reference.value = 128;
+    strobe.value = 128;
   } else {
-    // Turn off
-    val.value.strobeChannel.reference.value = 0;
+    strobe.value = 0;
   }
 };
 </script>
@@ -112,9 +112,9 @@ const toggleStrobe = () => {
     <div class="toggle-section">
       <q-btn
         @click="toggleStrobe"
-        :color="val.strobeChannel.reference.value > 0 ? 'negative' : 'positive'"
-        :icon="val.strobeChannel.reference.value > 0 ? 'flash_off' : 'flash_on'"
-        :label="val.strobeChannel.reference.value > 0 ? 'Stop' : 'Strobe'"
+        :color="strobe > 0 ? 'negative' : 'positive'"
+        :icon="strobe > 0 ? 'flash_off' : 'flash_on'"
+        :label="strobe > 0 ? 'Stop' : 'Strobe'"
         class="toggle-btn"
         size="md"
       />
@@ -128,7 +128,7 @@ const toggleStrobe = () => {
           v-for="preset in strobePresets"
           :key="preset.value"
           @click="setPreset(preset.value)"
-          :color="val.strobeChannel.reference.value === preset.value ? 'primary' : 'grey-7'"
+          :color="strobe === preset.value ? 'primary' : 'grey-7'"
           :label="preset.label"
           size="sm"
           class="preset-btn"
@@ -143,7 +143,7 @@ const toggleStrobe = () => {
     <div class="slider-section">
       <div class="slider-label">Fine Control:</div>
       <q-slider
-        v-model="val.strobeChannel.reference.value"
+        v-model="strobe"
         :min="0"
         :max="255"
         :step="1"
@@ -160,7 +160,7 @@ const toggleStrobe = () => {
     <div class="value-display">
       <div class="dmx-value">
         <span class="label">DMX:</span>
-        <span class="value">{{ val.strobeChannel.reference.value }}</span>
+        <span class="value">{{ strobe }}</span>
       </div>
     </div>
 
@@ -173,7 +173,7 @@ const toggleStrobe = () => {
 
 <style scoped lang="scss">
 .strobe-widget {
-  background: var(--q-dark);
+  background: var(--sdmx-color-bg-surface);
   border-radius: 8px;
   padding: 16px;
   min-width: 250px;
@@ -182,14 +182,14 @@ const toggleStrobe = () => {
   position: relative;
 
   &.flashing {
-    box-shadow: 0 0 20px rgba(255, 0, 0, 0.5);
+    box-shadow: 0 0 20px var(--sdmx-color-negative-border);
     animation: strobe-glow 0.1s infinite alternate;
   }
 }
 
 @keyframes strobe-glow {
-  0% { box-shadow: 0 0 10px rgba(255, 0, 0, 0.3); }
-  100% { box-shadow: 0 0 30px rgba(255, 0, 0, 0.8); }
+  0% { box-shadow: 0 0 10px var(--sdmx-color-negative-soft); }
+  100% { box-shadow: 0 0 30px var(--sdmx-color-negative-border); }
 }
 
 .strobe-header {
@@ -205,21 +205,21 @@ const toggleStrobe = () => {
 
     .strobe-title {
       font-weight: 500;
-      color: var(--q-primary);
+      color: var(--sdmx-color-primary);
       font-size: 16px;
     }
 
     .strobe-mode {
       font-size: 12px;
-      color: var(--q-negative);
+      color: var(--sdmx-color-negative);
       font-weight: 600;
       text-transform: uppercase;
     }
   }
 
   .frequency-display {
-    background: rgba(255, 0, 0, 0.1);
-    color: var(--q-negative);
+    background: var(--sdmx-color-negative-soft);
+    color: var(--sdmx-color-negative);
     padding: 4px 8px;
     border-radius: 4px;
     font-size: 12px;
@@ -244,7 +244,7 @@ const toggleStrobe = () => {
 
   .presets-label {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--sdmx-color-text-muted);
     margin-bottom: 8px;
   }
 
@@ -265,7 +265,7 @@ const toggleStrobe = () => {
 
   .slider-label {
     font-size: 12px;
-    color: rgba(255, 255, 255, 0.7);
+    color: var(--sdmx-color-text-muted);
     margin-bottom: 8px;
   }
 
@@ -285,13 +285,13 @@ const toggleStrobe = () => {
 
     .label {
       font-size: 12px;
-      color: rgba(255, 255, 255, 0.7);
+      color: var(--sdmx-color-text-muted);
     }
 
     .value {
       font-family: 'Courier New', monospace;
       font-size: 14px;
-      color: var(--q-negative);
+      color: var(--sdmx-color-negative);
       font-weight: bold;
       min-width: 30px;
     }
@@ -307,7 +307,7 @@ const toggleStrobe = () => {
 
   &.active {
     opacity: 1;
-    color: var(--q-negative);
+    color: var(--sdmx-color-negative);
     animation: flash-pulse 0.1s infinite alternate;
   }
 }

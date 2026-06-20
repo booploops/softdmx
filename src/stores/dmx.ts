@@ -5,58 +5,59 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { ref, shallowRef, computed, watch } from "vue";
-import { defineStore } from "pinia";
-import * as YAML from "yaml";
+
+import { ref, computed, shallowRef } from 'vue';
+import { defineStore } from 'pinia';
 import type {
   ActiveChannel,
   FixtureDefinition,
-  FixtureChannelDefinition,
-  Showfile,
   FixtureChannelWithReference,
   ShowfileFixtureMapped,
-} from "src/types";
-import { VRSL_Spotlight } from "src/fixtures/VRSL_Spotlight";
-import { VRSL_Light5CH } from "src/fixtures/VRSL_Light5CH";
-import { useIOClient } from "src/lib/io-client";
+} from 'src/types';
+import type { ShowDocumentV1 } from 'src/types/show-document';
+import { getFixtureDefinition, getAllFixtures } from 'src/plugins/registry';
+import { resolveFixtureChannelsForMode } from 'src/plugins/gdtf/gdtf-to-fixture';
+import { buildChannelMap } from 'src/engine/preset-resolver';
+import { useIOClient } from 'src/lib/io-client';
 
-export const useDMXStore = defineStore("dmx", () => {
-  /**
-   * Fixtures that are available for Showfiles to use
-   */
-  const Fixtures = ref<FixtureDefinition[]>([VRSL_Spotlight, VRSL_Light5CH]);
-  const showfile = ref<Showfile>();
+export const useDMXStore = defineStore('dmx', () => {
+  const baseChannels = shallowRef<ActiveChannel[]>([]);
   const channels = ref<ActiveChannel[]>([]);
+  const showDocument = ref<ShowDocumentV1 | null>(null);
 
-  const showfileFixtures = computed(() => {
-    return showfile.value?.fixtures;
+  const Fixtures = computed(() => getAllFixtures());
+
+  const showfile = computed(() => {
+    if (!showDocument.value) return undefined;
+    return {
+      name: showDocument.value.meta.name,
+      fixtures: showDocument.value.fixtures,
+      linkedGroups: showDocument.value.groups.map((g) => ({
+        name: g.name,
+        names: g.fixtures,
+      })),
+    };
   });
 
+  const showfileFixtures = computed(() => showDocument.value?.fixtures);
+
   const showfileFixturesMapped = computed<ShowfileFixtureMapped[]>(() => {
-    if (!showfile.value || !showfileFixtures.value) return [];
+    if (!showDocument.value) return [];
 
-    return showfileFixtures.value.map((fixture) => {
-      const fixtureDefinition = Fixtures.value.find(
-        (f) => f.id === fixture.fixtureId
-      );
+    return showDocument.value.fixtures.map((fixture) => {
+      const fixtureDefinition = getFixtureDefinition(fixture.fixtureId);
+      if (!fixtureDefinition) return null;
 
-      if (!fixtureDefinition) {
-        throw new Error(
-          `Fixture definition not found for ${fixture.fixtureId}`
-        );
-      }
-
-      // @ts-ignore TODO: Fix this type issue
-      const channelsWithReferences: FixtureChannelWithReference[] =
-        fixtureDefinition.channels.map((channel, index) => ({
-          ...channel,
-          reference: channels.value.find(
-            (c) => c.path === `show://${fixture.name}/${index + 1}`
-          ) ?? {
-            id: index + 1,
-            path: `show://${fixture.name}/${index + 1}`,
-          },
-        }));
+      const modeChannels = resolveFixtureChannelsForMode(fixtureDefinition, fixture.modeId);
+      const channelsWithReferences: FixtureChannelWithReference[] = modeChannels.map((channel, index) => ({
+        ...channel,
+        reference: {
+          id: index + 1,
+          path: `show://${fixture.name}/${index + 1}`,
+          value: channel.defaultValue,
+          attributeType: channel.type,
+        },
+      }));
 
       return {
         fixtureName: fixture.name,
@@ -65,238 +66,77 @@ export const useDMXStore = defineStore("dmx", () => {
           channels: channelsWithReferences,
         },
       } as ShowfileFixtureMapped;
-    });
+    }).filter((f): f is ShowfileFixtureMapped => f !== null);
   });
+
+  function rebuildFromShow(doc: ShowDocumentV1) {
+    showDocument.value = doc;
+    const built = buildChannelMap(doc);
+    baseChannels.value = built.map((ch) => ({ ...ch }));
+    channels.value = built.map((ch) => ({ ...ch }));
+    useIOClient().emit('show:state', doc);
+  }
+
+  function applyMergedOutput(merged: ActiveChannel[]) {
+    const current = channels.value;
+    if (
+      current.length === merged.length &&
+      current.every(
+        (ch, i) => ch.path === merged[i]?.path && ch.value === merged[i]?.value
+      )
+    ) {
+      return;
+    }
+
+    channels.value = merged;
+    useIOClient().emit('channels:state', merged);
+  }
 
   const getChannelByPath = (path: string): ActiveChannel | undefined => {
     return channels.value.find((channel) => channel.path === path);
   };
 
-  const getFixtureDefinitionByPath = (
-    path: string
-  ): FixtureDefinition | undefined => {
-    const fixtureName = path.split("/")[1]; // Extract fixture name from path
-    return Fixtures.value.find((fixture) => fixture.name === fixtureName);
+  const getFixtureDefinitionById = (fixtureId: string): FixtureDefinition | undefined => {
+    return getFixtureDefinition(fixtureId);
   };
 
-  const getFixtureDefinition = (fixtureId: string) => {
-    return Fixtures.value.find((fixture) => fixture.id === fixtureId);
-  };
-
-  const loadShowfile = (newShowfile: Showfile) => {
-    showfile.value = newShowfile;
-    channels.value = [];
-
-    if (!showfile.value) return;
-
-    let channelIndex = 1; // Keep track of overall channel count
-
-    showfile.value.fixtures.forEach((fixture) => {
-      const fixtureDefinition = getFixtureDefinition(fixture.fixtureId);
-      if (!fixtureDefinition) return;
-
-      // Use explicit starting channel if defined, otherwise use current channelIndex
-      let startingChannel = fixture.startingChannel ?? channelIndex;
-
-      for (let i = 0; i < fixtureDefinition.channels.length; i++) {
-        channels.value.push({
-          id: startingChannel + i,
-          path: `show://${fixture.name}/${i + 1}`,
-          value: fixtureDefinition.channels[i]?.defaultValue ?? 0,
-        });
-      }
-
-      // Update channelIndex to continue after this fixture's channels
-      channelIndex = startingChannel + fixtureDefinition.channels.length;
-    });
-  };
-
-  watch(channels, (newChannels) => {
-    useIOClient().emit("channels:update", newChannels);
-  }, { deep: true });
-
-  // YAML Import/Export Functions
-  const exportShowfileAsYAML = (): string => {
-    if (!showfile.value) {
-      throw new Error("No showfile loaded to export");
+  /** @deprecated Use show store loadShow */
+  function loadShowfile(doc: ShowDocumentV1 | { name: string; fixtures: ShowDocumentV1['fixtures']; linkedGroups?: { name: string; names: string[] }[] }) {
+    if ('version' in doc) {
+      rebuildFromShow(doc as ShowDocumentV1);
+      return;
     }
-
-    // Create a clean copy for export (remove any runtime data)
-    const exportData: Showfile = {
-      name: showfile.value.name,
-      fixtures: showfile.value.fixtures.map(fixture => ({
-        name: fixture.name,
-        fixtureId: fixture.fixtureId,
-        ...(fixture.startingChannel !== undefined && { startingChannel: fixture.startingChannel })
-      })),
-      linkedGroups: showfile.value.linkedGroups || []
+    const migrated: ShowDocumentV1 = {
+      version: '1.1',
+      meta: { name: doc.name, created: new Date().toISOString(), modified: new Date().toISOString() },
+      destinations: [
+        { id: 'default-gridnode', name: 'Default GridNode Overlay', type: 'gridnode', settings: {} },
+      ],
+      fixtures: doc.fixtures,
+      groups: (doc.linkedGroups ?? []).map((g) => ({ name: g.name, fixtures: g.names })),
+      presets: [],
+      effects: [],
+      cues: [],
+      bindings: { midi: [], osc: [] },
+      audioMappings: [],
+      executors: [],
+      submasters: [],
     };
-
-    return YAML.stringify(exportData);
-  };
-
-  const exportShowfileWithMetadataAsYAML = (): string => {
-    if (!showfile.value) {
-      throw new Error("No showfile loaded to export");
-    }
-
-    const exportDate = new Date().toISOString();
-    const availableFixtureTypes = Fixtures.value.map(f => f.id);
-
-    // Create an extended export with metadata
-    const exportData = {
-      metadata: {
-        exportedAt: exportDate,
-        exportedBy: "SoftDMX",
-        version: "1.0",
-        availableFixtureTypes
-      },
-      showfile: {
-        name: showfile.value.name,
-        fixtures: showfile.value.fixtures.map(fixture => ({
-          name: fixture.name,
-          fixtureId: fixture.fixtureId,
-          ...(fixture.startingChannel !== undefined && { startingChannel: fixture.startingChannel })
-        })),
-        linkedGroups: showfile.value.linkedGroups || []
-      }
-    };
-
-    return YAML.stringify(exportData);
-  };
-
-  const downloadShowfileAsYAML = (filename?: string, includeMetadata = false) => {
-    try {
-      const yamlContent = includeMetadata ? exportShowfileWithMetadataAsYAML() : exportShowfileAsYAML();
-      const blob = new Blob([yamlContent], { type: 'text/yaml' });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = filename || `${showfile.value?.name || 'showfile'}.yml`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      return true;
-    } catch (error) {
-      console.error('Failed to download showfile:', error);
-      return false;
-    }
-  };
-
-  const importShowfileFromYAML = (yamlContent: string): Showfile => {
-    try {
-      const parsed = YAML.parse(yamlContent);
-
-      // Check if this is an extended format with metadata
-      let showfileData: Showfile;
-      if (parsed.metadata && parsed.showfile) {
-        // Extended format
-        showfileData = parsed.showfile as Showfile;
-        console.log('Importing extended format showfile exported at:', parsed.metadata.exportedAt);
-      } else {
-        // Simple format
-        showfileData = parsed as Showfile;
-      }
-
-      // Validate the parsed showfile structure
-      if (!showfileData.name || !Array.isArray(showfileData.fixtures)) {
-        throw new Error("Invalid showfile format: missing name or fixtures");
-      }
-
-      // Validate each fixture
-      for (const fixture of showfileData.fixtures) {
-        if (!fixture.name || !fixture.fixtureId) {
-          throw new Error(`Invalid fixture: missing name or fixtureId`);
-        }
-
-        // Check if the fixture definition exists
-        const fixtureDefinition = getFixtureDefinition(fixture.fixtureId);
-        if (!fixtureDefinition) {
-          console.warn(`Unknown fixture type: ${fixture.fixtureId} - skipping validation`);
-          // Don't throw error, just warn - this allows importing showfiles with newer fixture types
-        }
-      }
-
-      // Validate linked groups if they exist
-      if (showfileData.linkedGroups) {
-        for (const group of showfileData.linkedGroups) {
-          if (!group.name || !Array.isArray(group.names)) {
-            throw new Error(`Invalid linked group: missing name or names array`);
-          }
-
-          // Check if all referenced fixtures exist
-          for (const fixtureName of group.names) {
-            const fixtureExists = showfileData.fixtures.some(f => f.name === fixtureName);
-            if (!fixtureExists) {
-              throw new Error(`Linked group "${group.name}" references unknown fixture "${fixtureName}"`);
-            }
-          }
-        }
-      }
-
-      return showfileData;
-    } catch (error) {
-      console.error('Failed to parse YAML showfile:', error);
-      throw new Error(`Failed to import showfile: ${error instanceof Error ? error.message : 'Unknown error'}`);
-    }
-  };
-
-  const loadShowfileFromYAML = (yamlContent: string): boolean => {
-    try {
-      const importedShowfile = importShowfileFromYAML(yamlContent);
-      loadShowfile(importedShowfile);
-      return true;
-    } catch (error) {
-      console.error('Failed to load showfile from YAML:', error);
-      return false;
-    }
-  };
-
-  const loadShowfileFromFile = (file: File): Promise<boolean> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-
-      reader.onload = (event) => {
-        try {
-          const content = event.target?.result as string;
-          if (!content) {
-            throw new Error("File is empty or could not be read");
-          }
-
-          const success = loadShowfileFromYAML(content);
-          resolve(success);
-        } catch (error) {
-          reject(error);
-        }
-      };
-
-      reader.onerror = () => {
-        reject(new Error("Failed to read file"));
-      };
-
-      reader.readAsText(file);
-    });
-  };
+    rebuildFromShow(migrated);
+  }
 
   return {
+    baseChannels,
     channels,
-    showfile,
+    showDocument,
     Fixtures,
-    loadShowfile,
-    getFixtureDefinition,
+    showfile,
     showfileFixtures,
     showfileFixturesMapped,
+    rebuildFromShow,
+    applyMergedOutput,
     getChannelByPath,
-    getFixtureDefinitionByPath,
-    // YAML Import/Export
-    exportShowfileAsYAML,
-    exportShowfileWithMetadataAsYAML,
-    downloadShowfileAsYAML,
-    importShowfileFromYAML,
-    loadShowfileFromYAML,
-    loadShowfileFromFile,
+    getFixtureDefinition: getFixtureDefinitionById,
+    loadShowfile,
   };
 });

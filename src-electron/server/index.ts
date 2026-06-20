@@ -11,6 +11,12 @@ import { fastifyStatic } from "@fastify/static";
 import { join } from "path";
 import { getDevUrl, isDev } from "../utils";
 import { AppState } from "../state/main";
+import { OutputManager } from "../output/OutputManager";
+import { ConfigFile } from "../config/configFile";
+import { DmxUsbProDriver } from "../output/DmxUsbProDriver";
+import { registerRemoteHandlers, attachChannelPipeline } from "./api/remote";
+import { registerRemoteRestRoutes } from "./api/rest";
+import type { ShowDocumentV1 } from "src/types/show-document";
 
 function getIOCors() {
   return {
@@ -26,6 +32,12 @@ export const http_server = fastify();
 export const io = new Server(http_server.server, {
   cors: getIOCors(),
 });
+AppState.io = io;
+
+export const config = new ConfigFile();
+export const outputManager = new OutputManager(config);
+
+let currentShow: ShowDocumentV1 | null = null;
 
 export function startServer() {
   const __dirname = new URL(".", import.meta.url).pathname;
@@ -43,24 +55,48 @@ export function startServer() {
     reply.redirect('/app/index.html#/artnet');
   })
 
+  const remoteContext = {
+    io,
+    outputManager,
+    getShow: () => currentShow,
+    setShow: (show: ShowDocumentV1) => {
+      currentShow = show;
+    },
+  };
+
+  registerRemoteRestRoutes(http_server, remoteContext);
+  attachChannelPipeline(io, outputManager);
   http_server.listen({ port: AppState.port, ipv6Only: false });
 
   io.on("connection", (socket) => {
     console.log("New client connected:", socket.id);
-  });
 
-  io.use((socket, next) => {
-    // echo back any message received
-    socket.on("message", (message) => {
-      console.log("Message received:", message);
-      socket.emit("message", message);
+    socket.emit("settings:current", config);
+    if (currentShow) {
+      socket.emit("show:state", currentShow);
+    }
+
+    socket.on("settings:get", () => {
+      socket.emit("settings:current", config);
     });
 
-    socket.on("channels:update", (message) => {
-      io.emit("channels:update", message);
+    socket.on("settings:update", (newConfig: Partial<ConfigFile>) => {
+      Object.assign(config, newConfig);
+      if (currentShow && newConfig.OutputDestinations) {
+        currentShow.destinations = newConfig.OutputDestinations;
+      }
+      outputManager.updateConfig(config);
+      io.emit("settings:current", config);
     });
-    next();
+
+    socket.on("ports:list", async () => {
+      const ports = await DmxUsbProDriver.listPorts();
+      socket.emit("ports:available", ports);
+    });
+
+    registerRemoteHandlers(socket, remoteContext);
   });
+
   console.log("Server started on port 5353");
   console.log("WebSocket server started on port 5353");
 }

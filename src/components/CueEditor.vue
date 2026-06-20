@@ -10,26 +10,79 @@
 -->
 <script setup lang="ts">
 import { useCueStore } from 'src/stores/cue';
+import { useShowStore } from 'src/stores/show';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
-import type { Cue, CueLayer, RecordedFrame } from 'src/types';
+import type { CueLayer, RecordedFrame, StackStep } from 'src/types';
+import { formatSmpte, parseSmpteInput } from 'src/utils/timecode-format';
 
 const cueStore = useCueStore();
+const showStore = useShowStore();
+const emit = defineEmits<{ close: [] }>();
+const activeCueLayers = computed(() => cueStore.activeCue?.layers ?? []);
+const isTimelineCue = computed(() => cueStore.activeCue?.view !== 'stack');
+const presetOptions = computed(() =>
+  showStore.document.presets.map((preset) => ({ label: preset.name, value: preset.id }))
+);
+const stackFollowOptions = [
+  { label: 'Manual', value: 'manual' },
+  { label: 'Auto', value: 'auto' },
+  { label: 'Time', value: 'timed' },
+];
+const frameEasingOptions = [
+  'linear',
+  'ease',
+  'ease-in',
+  'ease-out',
+  'ease-in-out',
+  'bounce',
+  'elastic',
+];
+
+const showFps = computed(() => showStore.document.timeline?.fps ?? showStore.document.timecode?.fps ?? 30);
+
+const activeCueTimecodeIn = computed({
+  get: () => {
+    const value = cueStore.activeCue?.timecodeIn;
+    return value === undefined ? '' : formatSmpte(value, showFps.value);
+  },
+  set: (input: string) => {
+    if (!cueStore.activeCue) return;
+    const parsed = parseSmpteInput(input, showFps.value);
+    cueStore.activeCue.timecodeIn = parsed === null ? undefined : parsed;
+    cueStore.updateCueModified();
+  },
+});
+
+const activeCueTimecodeOut = computed({
+  get: () => {
+    const value = cueStore.activeCue?.timecodeOut;
+    return value === undefined ? '' : formatSmpte(value, showFps.value);
+  },
+  set: (input: string) => {
+    if (!cueStore.activeCue) return;
+    const parsed = parseSmpteInput(input, showFps.value);
+    cueStore.activeCue.timecodeOut = parsed === null ? undefined : parsed;
+    cueStore.updateCueModified();
+  },
+});
 
 // Timeline refs
 const timelineContainer = ref<HTMLElement>();
 const timelineWidth = ref(800);
-const timelineHeight = ref(400);
 
 // Timeline state
 const isDragging = ref(false);
 const dragStartTime = ref(0);
 const dragStartX = ref(0);
 const dragFrameData = ref<{ layerId: string, frameIndex: number, originalStartTime: number } | null>(null);
-const selectedFrameId = ref<string | null>(null);
+const selectedFrame = ref<{ layerId: string; frameIndex: number } | null>(null);
+const selectedFrameId = computed(() =>
+  selectedFrame.value ? `${selectedFrame.value.layerId}-${selectedFrame.value.frameIndex}` : null
+);
 
 // Computed properties
 const timelineScale = computed(() => {
-  return timelineWidth.value / Math.max(cueStore.totalDuration, 10000); // minimum 10 seconds
+  return timelineWidth.value / Math.max(cueStore.totalDuration, 10000);
 });
 
 const playheadPosition = computed(() => {
@@ -85,6 +138,12 @@ const getFrameWidth = (frame: RecordedFrame) => {
   return (frame.duration || 1000) * timelineScale.value;
 };
 
+const getFrameTypeLabel = (frame: RecordedFrame) => {
+  if (frame.type === 'preset') return 'Preset';
+  if (frame.type === 'delay') return 'Delay';
+  return 'Channels';
+};
+
 // Timeline interactions
 const handleTimelineClick = (event: MouseEvent) => {
   if (!timelineContainer.value) return;
@@ -97,16 +156,22 @@ const handleTimelineClick = (event: MouseEvent) => {
   cueStore.setTimelinePosition(snappedTime);
 };
 
+const selectFrame = (layerId: string, frameIndex: number) => {
+  selectedFrame.value = { layerId, frameIndex };
+  cueStore.activeLayerId = layerId;
+  cueStore.activeFrameIndex = frameIndex;
+};
+
 const handleFrameMouseDown = (event: MouseEvent, layerId: string, frameIndex: number) => {
   event.stopPropagation();
 
-  const layer = cueStore.activeCue?.layers.find(l => l.id === layerId);
+  const layer = cueStore.activeCue?.layers?.find(l => l.id === layerId);
   if (!layer) return;
 
   isDragging.value = true;
   dragStartX.value = event.clientX;
   dragStartTime.value = getFrameStartTime(layer, frameIndex);
-  selectedFrameId.value = `${layerId}-${frameIndex}`;
+  selectFrame(layerId, frameIndex);
 
   // Store drag data for calculations
   dragFrameData.value = {
@@ -131,7 +196,7 @@ const handleMouseMove = (event: MouseEvent) => {
   const snappedTime = cueStore.snapToGrid(newStartTime);
 
   // Find the layer and frame
-  const layer = cueStore.activeCue.layers.find(l => l.id === dragFrameData.value!.layerId);
+  const layer = activeCueLayers.value.find(l => l.id === dragFrameData.value!.layerId);
   if (!layer) return;
 
   const frame = layer.frames[dragFrameData.value.frameIndex];
@@ -183,7 +248,6 @@ const handleMouseMove = (event: MouseEvent) => {
 
 const handleMouseUp = () => {
   isDragging.value = false;
-  selectedFrameId.value = null;
   dragFrameData.value = null;
 
   document.removeEventListener('mousemove', handleMouseMove);
@@ -210,17 +274,20 @@ const stop = () => {
 };
 
 const record = () => {
+  if (!isTimelineCue.value) return;
   cueStore.recordFrame();
 };
 
 // Cue management
 const showAddCueDialog = ref(false);
 const newCueName = ref('');
+const newCueView = ref<'timeline' | 'stack'>('timeline');
 
 const addCue = () => {
   if (newCueName.value.trim()) {
-    cueStore.addCue(newCueName.value.trim());
+    cueStore.addCue(newCueName.value.trim(), newCueView.value);
     newCueName.value = '';
+    newCueView.value = 'timeline';
     showAddCueDialog.value = false;
   }
 };
@@ -248,6 +315,7 @@ const frameContextMenu = ref<{ layerId: string, frameIndex: number } | null>(nul
 const showContextMenu = ref(false);
 
 const showFrameContextMenu = (layerId: string, frameIndex: number) => {
+  selectFrame(layerId, frameIndex);
   frameContextMenu.value = { layerId, frameIndex };
   showContextMenu.value = true;
 };
@@ -256,7 +324,7 @@ const duplicateFrame = () => {
   if (!frameContextMenu.value || !cueStore.activeCue) return;
 
   const { layerId, frameIndex } = frameContextMenu.value;
-  const layer = cueStore.activeCue.layers.find(l => l.id === layerId);
+  const layer = activeCueLayers.value.find(l => l.id === layerId);
   if (!layer) return;
 
   const frame = layer.frames[frameIndex];
@@ -277,6 +345,148 @@ const deleteFrame = () => {
   cueStore.deleteFrame(layerId, frameIndex);
   frameContextMenu.value = null;
   showContextMenu.value = false;
+};
+
+const copySelectedFrames = () => {
+  if (!selectedFrame.value) return;
+  cueStore.copyFrames(selectedFrame.value.layerId, [selectedFrame.value.frameIndex]);
+};
+
+const pasteFramesAfterSelection = () => {
+  const layerId = selectedFrame.value?.layerId ?? cueStore.activeLayerId;
+  if (!layerId) return;
+  const atIndex = selectedFrame.value ? selectedFrame.value.frameIndex + 1 : activeCueLayers.value.find((l) => l.id === layerId)?.frames.length ?? 0;
+  cueStore.pasteFrames(layerId, atIndex);
+};
+
+const copyFrameFromContext = () => {
+  if (!frameContextMenu.value) return;
+  cueStore.copyFrames(frameContextMenu.value.layerId, [frameContextMenu.value.frameIndex]);
+  frameContextMenu.value = null;
+  showContextMenu.value = false;
+};
+
+const pasteFrameFromContext = () => {
+  if (!frameContextMenu.value) return;
+  cueStore.pasteFrames(frameContextMenu.value.layerId, frameContextMenu.value.frameIndex + 1);
+  frameContextMenu.value = null;
+  showContextMenu.value = false;
+};
+
+const showPresetFrameDialog = ref(false);
+const presetFrameLayerId = ref<string | null>(null);
+const presetFramePresetId = ref<string | null>(null);
+const presetFrameDuration = ref(1000);
+const presetFrameName = ref('');
+const presetFrameEasing = ref<RecordedFrame['easing']>('linear');
+
+const openPresetFrameDialog = () => {
+  if (!cueStore.activeCue) return;
+  presetFrameLayerId.value = cueStore.activeLayerId ?? cueStore.activeCue.layers?.[0]?.id ?? null;
+  presetFramePresetId.value = presetOptions.value[0]?.value ?? null;
+  presetFrameDuration.value = 1000;
+  presetFrameEasing.value = 'linear';
+  const presetName = showStore.document.presets.find((p) => p.id === presetFramePresetId.value)?.name ?? 'Preset';
+  presetFrameName.value = `${presetName} Frame`;
+  showPresetFrameDialog.value = true;
+};
+
+const addPresetFrame = () => {
+  if (!presetFrameLayerId.value || !presetFramePresetId.value) return;
+  const layer = activeCueLayers.value.find((l) => l.id === presetFrameLayerId.value);
+  if (!layer) return;
+
+  const presetName = showStore.document.presets.find((p) => p.id === presetFramePresetId.value)?.name ?? 'Preset';
+  layer.frames.push({
+    name: presetFrameName.value.trim() || `${presetName} Frame`,
+    type: 'preset',
+    presetId: presetFramePresetId.value,
+    duration: Math.max(1, presetFrameDuration.value || 1000),
+    easing: presetFrameEasing.value ?? 'linear',
+  });
+  cueStore.activeLayerId = layer.id;
+  cueStore.activeFrameIndex = layer.frames.length - 1;
+  selectFrame(layer.id, layer.frames.length - 1);
+  cueStore.updateCueModified();
+  showPresetFrameDialog.value = false;
+};
+
+const showDelayFrameDialog = ref(false);
+const delayFrameLayerId = ref<string | null>(null);
+const delayFrameDuration = ref(1000);
+const delayFrameName = ref('Delay');
+
+const openDelayFrameDialog = () => {
+  if (!cueStore.activeCue) return;
+  delayFrameLayerId.value = cueStore.activeLayerId ?? cueStore.activeCue.layers?.[0]?.id ?? null;
+  delayFrameDuration.value = 1000;
+  delayFrameName.value = 'Delay';
+  showDelayFrameDialog.value = true;
+};
+
+const addDelayFrame = () => {
+  if (!delayFrameLayerId.value) return;
+  const layer = activeCueLayers.value.find((l) => l.id === delayFrameLayerId.value);
+  if (!layer) return;
+
+  const duration = Math.max(1, delayFrameDuration.value || 1000);
+  layer.frames.push({
+    name: delayFrameName.value.trim() || 'Delay',
+    type: 'delay',
+    duration,
+    delayDuration: duration,
+    easing: 'linear',
+  });
+  cueStore.activeLayerId = layer.id;
+  cueStore.activeFrameIndex = layer.frames.length - 1;
+  selectFrame(layer.id, layer.frames.length - 1);
+  cueStore.updateCueModified();
+  showDelayFrameDialog.value = false;
+};
+
+const createStackStep = (): StackStep => ({
+  id: cueStore.generateId(),
+  label: `Step ${(cueStore.activeCue?.stack?.length ?? 0) + 1}`,
+  presetId: presetOptions.value[0]?.value,
+  fadeIn: 1000,
+  follow: 'manual',
+});
+
+const addStackStep = () => {
+  if (!cueStore.activeCue || cueStore.activeCue.view !== 'stack') return;
+  cueStore.activeCue.stack = cueStore.activeCue.stack ?? [];
+  cueStore.activeCue.stack.push(createStackStep());
+  cueStore.updateCueModified();
+};
+
+const removeStackStep = (index: number) => {
+  if (!cueStore.activeCue?.stack) return;
+  cueStore.activeCue.stack.splice(index, 1);
+  cueStore.updateCueModified();
+};
+
+const moveStackStep = (index: number, direction: -1 | 1) => {
+  if (!cueStore.activeCue?.stack) return;
+  const nextIndex = index + direction;
+  if (nextIndex < 0 || nextIndex >= cueStore.activeCue.stack.length) return;
+  const [step] = cueStore.activeCue.stack.splice(index, 1);
+  if (!step) return;
+  cueStore.activeCue.stack.splice(nextIndex, 0, step);
+  cueStore.updateCueModified();
+};
+
+const normalizeStackStep = (step: StackStep) => {
+  if ((step as { follow?: string }).follow === 'go') {
+    step.follow = 'auto';
+  }
+  if (step.follow === 'timed' && (!step.followTime || step.followTime < 0)) {
+    step.followTime = 1000;
+  }
+  if (step.follow !== 'timed') {
+    step.followTime = undefined;
+  }
+  step.fadeIn = Math.max(0, step.fadeIn || 0);
+  cueStore.updateCueModified();
 };
 </script>
 
@@ -307,12 +517,46 @@ const deleteFrame = () => {
         <q-btn-group unelevated>
           <q-btn @click="playPause" :icon="cueStore.isGlobalPlaying ? 'pause' : 'play_arrow'" />
           <q-btn @click="stop" icon="stop" />
-          <q-btn @click="record" icon="fiber_manual_record" color="red" />
+          <q-btn @click="record" icon="fiber_manual_record" color="red" :disable="!isTimelineCue" />
         </q-btn-group>
 
         <q-separator vertical inset />
 
         <div class="timeline-controls">
+          <q-btn
+            v-if="isTimelineCue"
+            @click="openPresetFrameDialog"
+            icon="library_add"
+            label="Preset Frame"
+            size="sm"
+            flat
+          />
+          <q-btn
+            v-if="isTimelineCue"
+            @click="openDelayFrameDialog"
+            icon="hourglass_bottom"
+            label="Delay"
+            size="sm"
+            flat
+          />
+          <q-btn
+            v-if="isTimelineCue"
+            @click="copySelectedFrames"
+            icon="content_copy"
+            label="Copy"
+            size="sm"
+            flat
+            :disable="!selectedFrame"
+          />
+          <q-btn
+            v-if="isTimelineCue"
+            @click="pasteFramesAfterSelection"
+            icon="content_paste"
+            label="Paste"
+            size="sm"
+            flat
+            :disable="cueStore.clipboard.length === 0"
+          />
           <q-btn-toggle
             v-model="cueStore.timelineSnapping"
             :options="[{label: 'Snap', value: true}]"
@@ -363,13 +607,36 @@ const deleteFrame = () => {
               dense
               style="width: 80px"
             />
+            <template v-if="isTimelineCue">
+              <q-input
+                v-model="activeCueTimecodeIn"
+                label="TC In"
+                dense
+                style="width: 130px"
+              />
+              <q-input
+                v-model="activeCueTimecodeOut"
+                label="TC Out"
+                dense
+                style="width: 130px"
+              />
+            </template>
           </div>
         </div>
       </div>
+
+      <q-btn
+        flat
+        round
+        dense
+        icon="close"
+        aria-label="Close cue editor"
+        @click="emit('close')"
+      />
     </div>
 
     <!-- Timeline -->
-    <div class="timeline-wrapper" v-if="cueStore.activeCue">
+    <div class="timeline-wrapper" v-if="cueStore.activeCue && isTimelineCue">
       <div class="layers-panel">
         <div class="layers-header">
           <span>Layers</span>
@@ -384,7 +651,7 @@ const deleteFrame = () => {
 
         <div class="layer-list">
           <div
-            v-for="layer in cueStore.activeCue.layers"
+            v-for="layer in activeCueLayers"
             :key="layer.id"
             class="layer-item"
             :class="{ active: cueStore.activeLayerId === layer.id }"
@@ -469,7 +736,7 @@ const deleteFrame = () => {
 
           <!-- Layer Tracks -->
           <div
-            v-for="(layer, layerIndex) in cueStore.activeCue.layers"
+            v-for="(layer, layerIndex) in activeCueLayers"
             :key="layer.id"
             class="timeline-track"
             :style="{ top: `${layerIndex * 60 + 40}px` }"
@@ -482,24 +749,117 @@ const deleteFrame = () => {
               :class="{
                 selected: selectedFrameId === `${layer.id}-${frameIndex}`,
                 active: cueStore.activeLayerId === layer.id && cueStore.activeFrameIndex === frameIndex,
-                dragging: isDragging && selectedFrameId === `${layer.id}-${frameIndex}`
+                dragging: isDragging && selectedFrameId === `${layer.id}-${frameIndex}`,
+                preset: frame.type === 'preset',
+                delay: frame.type === 'delay'
               }"
               :style="{
                 left: `${getFramePosition(layer, frameIndex)}px`,
                 width: `${getFrameWidth(frame)}px`
               }"
               @mousedown="handleFrameMouseDown($event, layer.id, frameIndex)"
+              @click.stop="selectFrame(layer.id, frameIndex)"
               @contextmenu.prevent="showFrameContextMenu(layer.id, frameIndex)"
             >
               <div class="frame-content">
                 <div class="frame-name">{{ frame.name }}</div>
                 <div class="frame-duration">{{ frame.duration }}ms</div>
-                <div class="frame-easing">{{ frame.easing }}</div>
+                <div class="frame-easing">{{ getFrameTypeLabel(frame) }} · {{ frame.easing }}</div>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Stack cue editor -->
+    <div v-else-if="cueStore.activeCue && !isTimelineCue" class="no-cue-state">
+      <q-card flat class="stack-editor">
+        <div class="stack-header">
+          <div>
+            <div class="text-h6">{{ cueStore.activeCue.name }}</div>
+            <div class="text-body2 text-grey-6">
+              Build sequential steps for GO playback. Auto follows after fade-in, Time uses an explicit delay.
+            </div>
+          </div>
+          <q-btn color="primary" icon="add" label="Add Step" @click="addStackStep" />
+        </div>
+
+        <div v-if="(cueStore.activeCue.stack?.length ?? 0) === 0" class="empty-stack">
+          <q-icon name="playlist_add" size="3rem" class="text-grey-6" />
+          <div class="text-body2 text-grey-6">No steps yet. Add a step to start building the stack cue.</div>
+        </div>
+
+        <div v-else class="stack-steps">
+          <q-card
+            v-for="(step, index) in cueStore.activeCue.stack"
+            :key="step.id"
+            flat
+            bordered
+            class="stack-step"
+          >
+            <div class="step-header">
+              <q-badge color="primary" :label="`Step ${index + 1}`" />
+              <div class="step-actions">
+                <q-btn flat dense icon="arrow_upward" :disable="index === 0" @click="moveStackStep(index, -1)" />
+                <q-btn
+                  flat
+                  dense
+                  icon="arrow_downward"
+                  :disable="index === (cueStore.activeCue.stack?.length ?? 1) - 1"
+                  @click="moveStackStep(index, 1)"
+                />
+                <q-btn flat dense color="negative" icon="delete" @click="removeStackStep(index)" />
+              </div>
+            </div>
+
+            <div class="step-grid">
+              <q-input
+                v-model="step.label"
+                dense
+                label="Step Label"
+                @blur="cueStore.updateCueModified"
+              />
+              <q-select
+                v-model="step.presetId"
+                :options="presetOptions"
+                emit-value
+                map-options
+                clearable
+                dense
+                label="Preset"
+                @update:model-value="cueStore.updateCueModified"
+              />
+              <q-input
+                v-model.number="step.fadeIn"
+                type="number"
+                min="0"
+                dense
+                label="Fade In (ms)"
+                @blur="normalizeStackStep(step)"
+              />
+              <q-select
+                v-model="step.follow"
+                :options="stackFollowOptions"
+                emit-value
+                map-options
+                dense
+                label="Follow"
+                @update:model-value="normalizeStackStep(step)"
+              />
+              <q-input
+                v-if="step.follow === 'timed'"
+                v-model.number="step.followTime"
+                type="number"
+                min="0"
+                dense
+                label="Follow Time (ms)"
+                @blur="normalizeStackStep(step)"
+              />
+            </div>
+          </q-card>
+        </div>
+      </q-card>
     </div>
 
     <!-- No Cue State -->
@@ -527,6 +887,15 @@ const deleteFrame = () => {
             label="Cue Name"
             autofocus
             @keyup.enter="addCue"
+          />
+          <q-option-group
+            v-model="newCueView"
+            :options="[
+              { label: 'Timeline Cue', value: 'timeline' },
+              { label: 'Stack Cue', value: 'stack' }
+            ]"
+            type="radio"
+            class="q-mt-md"
           />
         </q-card-section>
 
@@ -567,6 +936,12 @@ const deleteFrame = () => {
       context-menu
     >
       <q-list>
+        <q-item clickable @click="copyFrameFromContext">
+          <q-item-section>Copy Frame</q-item-section>
+        </q-item>
+        <q-item clickable @click="pasteFrameFromContext" :disable="cueStore.clipboard.length === 0">
+          <q-item-section>Paste After</q-item-section>
+        </q-item>
         <q-item clickable @click="duplicateFrame">
           <q-item-section>Duplicate Frame</q-item-section>
         </q-item>
@@ -575,6 +950,59 @@ const deleteFrame = () => {
         </q-item>
       </q-list>
     </q-menu>
+
+    <q-dialog v-model="showPresetFrameDialog">
+      <q-card style="min-width: 340px">
+        <q-card-section class="text-h6">Add Preset Frame</q-card-section>
+        <q-card-section class="q-gutter-md">
+          <q-select
+            v-model="presetFrameLayerId"
+            :options="activeCueLayers.map((layer) => ({ label: layer.name, value: layer.id }))"
+            emit-value
+            map-options
+            dense
+            label="Layer"
+          />
+          <q-select
+            v-model="presetFramePresetId"
+            :options="presetOptions"
+            emit-value
+            map-options
+            dense
+            label="Preset"
+          />
+          <q-input v-model="presetFrameName" dense label="Frame Name" />
+          <q-input v-model.number="presetFrameDuration" dense type="number" min="1" label="Duration (ms)" />
+          <q-select v-model="presetFrameEasing" :options="frameEasingOptions" dense label="Easing" />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" v-close-popup />
+          <q-btn color="primary" label="Add" @click="addPresetFrame" :disable="!presetFrameLayerId || !presetFramePresetId" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="showDelayFrameDialog">
+      <q-card style="min-width: 340px">
+        <q-card-section class="text-h6">Add Delay Frame</q-card-section>
+        <q-card-section class="q-gutter-md">
+          <q-select
+            v-model="delayFrameLayerId"
+            :options="activeCueLayers.map((layer) => ({ label: layer.name, value: layer.id }))"
+            emit-value
+            map-options
+            dense
+            label="Layer"
+          />
+          <q-input v-model="delayFrameName" dense label="Frame Name" />
+          <q-input v-model.number="delayFrameDuration" dense type="number" min="1" label="Duration (ms)" />
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancel" v-close-popup />
+          <q-btn color="primary" label="Add" @click="addDelayFrame" :disable="!delayFrameLayerId" />
+        </q-card-actions>
+      </q-card>
+    </q-dialog>
   </div>
 </template>
 
@@ -583,7 +1011,7 @@ const deleteFrame = () => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--q-dark);
+  background: var(--sdmx-color-bg-surface);
   color: white;
 }
 
@@ -592,7 +1020,7 @@ const deleteFrame = () => {
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--sdmx-color-border);
   gap: 16px;
 
   .cue-controls {
@@ -634,7 +1062,7 @@ const deleteFrame = () => {
 
 .layers-panel {
   width: 200px;
-  border-right: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid var(--sdmx-color-border);
   display: flex;
   flex-direction: column;
 
@@ -643,7 +1071,7 @@ const deleteFrame = () => {
     justify-content: space-between;
     align-items: center;
     padding: 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--sdmx-color-border);
     font-weight: 600;
   }
 
@@ -656,16 +1084,16 @@ const deleteFrame = () => {
     display: flex;
     align-items: center;
     padding: 8px 12px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--sdmx-color-border-faint);
     cursor: pointer;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--sdmx-color-border-faint);
     }
 
     &.active {
-      background: rgba(var(--q-primary-rgb), 0.2);
-      border-left: 3px solid var(--q-primary);
+      background: var(--sdmx-color-primary-soft);
+      border-left: 3px solid var(--sdmx-color-primary);
     }
 
     .layer-controls {
@@ -700,7 +1128,7 @@ const deleteFrame = () => {
 
 .timeline-header {
   height: 40px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid var(--sdmx-color-border);
   position: relative;
 
   .timeline-ruler {
@@ -715,13 +1143,13 @@ const deleteFrame = () => {
     .marker-line {
       width: 1px;
       height: 20px;
-      background: rgba(255, 255, 255, 0.3);
+      background: var(--sdmx-color-text-faint);
     }
 
     .marker-label {
       font-size: 10px;
       margin-top: 2px;
-      color: rgba(255, 255, 255, 0.7);
+      color: var(--sdmx-color-text-muted);
       transform: translateX(-50%);
     }
   }
@@ -731,17 +1159,17 @@ const deleteFrame = () => {
   flex: 1;
   position: relative;
   overflow: auto;
-  background: linear-gradient(to bottom, #1e1e1e 0%, #2a2a2a 100%);
+  background: var(--sdmx-gradient-surface);
 
   .playhead {
     position: absolute;
     top: 0;
     bottom: 0;
     width: 2px;
-    background: var(--q-accent);
+    background: var(--sdmx-color-accent);
     z-index: 100;
     pointer-events: none;
-    box-shadow: 0 0 4px var(--q-accent);
+    box-shadow: 0 0 4px var(--sdmx-color-accent);
   }
 
   .timeline-track {
@@ -749,32 +1177,32 @@ const deleteFrame = () => {
     left: 0;
     right: 0;
     height: 50px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--sdmx-color-border-faint);
   }
 
   .timeline-frame {
     position: absolute;
     top: 5px;
     height: 40px;
-    background: linear-gradient(135deg, var(--q-primary), var(--q-secondary));
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, var(--sdmx-color-primary), var(--sdmx-color-secondary));
+    border: 1px solid var(--sdmx-color-border);
     border-radius: 4px;
     cursor: grab;
     user-select: none;
 
     &:hover {
-      border-color: rgba(255, 255, 255, 0.4);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      border-color: var(--sdmx-color-border-strong);
+      box-shadow: 0 2px 8px var(--sdmx-color-shadow);
     }
 
     &.selected {
-      border-color: var(--q-accent);
-      box-shadow: 0 0 0 2px var(--q-accent);
+      border-color: var(--sdmx-color-accent);
+      box-shadow: 0 0 0 2px var(--sdmx-color-accent);
     }
 
     &.active {
-      border-color: var(--q-warning);
-      box-shadow: 0 0 0 2px var(--q-warning);
+      border-color: var(--sdmx-color-warning);
+      box-shadow: 0 0 0 2px var(--sdmx-color-warning);
     }
 
     &.dragging {
@@ -782,7 +1210,15 @@ const deleteFrame = () => {
       transform: scale(1.05);
       z-index: 1000;
       cursor: grabbing;
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+      box-shadow: 0 4px 16px var(--sdmx-color-shadow-strong);
+    }
+
+    &.preset {
+      background: var(--sdmx-gradient-keyframe);
+    }
+
+    &.delay {
+      background: var(--sdmx-gradient-keyframe-disabled);
     }
 
     .frame-content {
@@ -804,7 +1240,7 @@ const deleteFrame = () => {
       .frame-duration,
       .frame-easing {
         font-size: 10px;
-        color: rgba(255, 255, 255, 0.8);
+        color: var(--sdmx-color-text-muted);
       }
     }
   }
@@ -815,5 +1251,63 @@ const deleteFrame = () => {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.stack-editor {
+  width: min(1000px, 95%);
+  max-height: 90%;
+  overflow: auto;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.stack-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.empty-stack {
+  min-height: 220px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.stack-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.stack-step {
+  background: var(--sdmx-color-bg-inset);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.step-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.step-actions {
+  display: flex;
+  gap: 4px;
+}
+
+.step-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  align-items: end;
 }
 </style>

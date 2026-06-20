@@ -7,25 +7,33 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "test": "echo \"No test specified\" && exit 0",
+    "test": "node --experimental-strip-types --test test/show-io.test.ts test/desk-defaults.test.ts test/group-colors.test.ts test/last-show.test.ts test/timecode-format.test.ts test/timecode-set-playback.test.ts test/sync-compensation.test.ts test/playback-masters.test.ts test/lfo-sync.test.ts test/midi-parser.test.ts test/mtc-parser.test.ts test/theme.test.ts test/osc-parser.test.ts test/audio-mapping.test.ts test/load-merge.test.ts test/indexed-channel.test.ts test/pixel-mapper.test.ts test/video-sampler.test.ts test/video-mapping.test.ts test/show-migrate-1.3.test.ts test/show-migrate-1.5.test.ts test/attributes.test.ts test/preset-pool.test.ts test/cue-parts.test.ts test/effects-spread.test.ts test/align-wings.test.ts test/session.test.ts test/backup.test.ts test/output-health.test.ts test/gdtf-import.test.ts test/fixture-export.test.ts test/programmer-v2.test.ts test/selection-controls.test.ts test/e2e-smoke.mjs",
+    "output-node": "quasar dev -m electron -- --output-node",
     "dev": "quasar dev -m electron",
     "build": "quasar build -m electron",
     "build:spa": "quasar build",
-    "postinstall": "quasar prepare"
+    "cli": "node scripts/softdmx-cli.mjs",
+    "postinstall": "node scripts/patch-abletonlink.mjs && node scripts/rebuild-native.mjs && quasar prepare"
   },
   "dependencies": {
     "@fastify/static": "^8.2.0",
     "@fontsource-variable/roboto-flex": "^5.2.6",
     "@msgpack/msgpack": "^3.1.2",
+    "@napolab/texture-bridge": "0.13.1",
     "@quasar/extras": "^1.16.4",
     "@vueuse/core": "^13.4.0",
+    "abletonlink": "^0.2.0-beta.0",
     "alien-signals": "^2.0.6",
-    "better-sqlite3": "^12.2.0",
+    "fast-xml-parser": "^5.9.3",
     "fastify": "^5.4.0",
+    "fflate": "^0.8.3",
     "idb-keyval": "^6.2.2",
+    "linear-timecode": "^0.1.0",
     "lodash-es": "^4.17.21",
+    "node-osc": "^11.5.0",
     "pinia": "^3.0.1",
     "quasar": "^2.16.0",
+    "serialport": "^13.0.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
     "vue": "3.6.0-alpha.2",
@@ -34,22 +42,27 @@
     "yaml": "^2.8.0"
   },
   "devDependencies": {
-    "@electron/packager": "^18.3.2",
+    "@electron/packager": "^19.0.0",
+    "@electron/rebuild": "^3.7.2",
     "@intlify/unplugin-vue-i18n": "^4.0.0",
     "@quasar/app-vite": "^2.1.0",
-    "@types/better-sqlite3": "^7.6.13",
     "@types/lodash-es": "^4",
-    "@types/node": "^20.5.9",
+    "@types/node": "^22.15.0",
     "autoprefixer": "^10.4.2",
-    "electron": "^36.5.0",
-    "electron-builder": "^24.3.0",
+    "electron": "^40.0.0",
+    "electron-builder": "^26.0.0",
     "typescript": "~5.5.3",
     "unplugin-auto-import": "^19.3.0"
   },
   "engines": {
     "node": "^28 || ^26 || ^24 || ^22 || ^20 || ^18",
     "npm": ">= 6.13.4",
-    "yarn": ">= 1.21.1"
+    "yarn": ">= 4.9.2"
   },
-  "packageManager": "yarn@4.9.2"
+  "packageManager": "yarn@4.9.2",
+  "optionalDependencies": {
+    "@napolab/texture-bridge-darwin-arm64": "0.13.1",
+    "@napolab/texture-bridge-darwin-x64": "0.13.1",
+    "@napolab/texture-bridge-win32-x64-msvc": "0.13.1"
+  }
 }

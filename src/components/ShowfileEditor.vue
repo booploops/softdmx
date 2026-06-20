@@ -9,23 +9,112 @@
   Purpose: Comprehensive showfile editor for creating and modifying lighting setups
 -->
 <script setup lang="ts">
-import { useDMXStore } from 'src/stores/dmx';
-import { ref, computed, watch } from 'vue';
-import type { Showfile, ShowfileFixture, ShowfileLinkedGroup, FixtureDefinition } from 'src/types';
+import { useShowStore } from 'src/stores/show';
+import { useUIStore } from 'src/stores/ui';
+import {
+  getAllFixtures,
+  getFixtureDefinition as lookupFixture,
+  pluginRegistryVersion,
+} from 'src/plugins/registry';
+import type { ShowDocumentV1 } from 'src/types/show-document';
+import { createEmptyShow } from 'src/types/show-document';
+import { ref, computed, watch, onMounted } from 'vue';
+import type { ShowfileFixture, FixtureDefinition } from 'src/types';
 import { Dialog } from 'quasar';
 import * as YAML from 'yaml';
 import FixtureBrowser from './FixtureBrowser.vue';
+import {
+  GROUP_COLOR_PALETTE,
+  defaultGroupColorForIndex,
+  groupColorStyle,
+  normalizeGroupColor,
+} from 'src/utils/group-colors';
 
-const dmx = useDMXStore();
+const showStore = useShowStore();
+const ui = useUIStore();
+const props = withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false });
+const emit = defineEmits<{ close: [] }>();
 
-// Editor state
-const editingShowfile = ref<Showfile>({
-  name: '',
-  fixtures: [],
-  linkedGroups: []
-});
+type ShowfileLinkedGroup = {
+  name: string;
+  names: string[];
+  color?: string;
+};
+
+type EditorShowfile = {
+  name: string;
+  fixtures: ShowfileFixture[];
+  linkedGroups: ShowfileLinkedGroup[];
+};
+
+function docToEditor(doc: ShowDocumentV1): EditorShowfile {
+  return {
+    name: doc.meta.name,
+    fixtures: doc.fixtures,
+    linkedGroups: doc.groups.map((group, index) => ({
+      name: group.name,
+      names: group.fixtures,
+      color: normalizeGroupColor(group.color) ?? defaultGroupColorForIndex(index),
+    })),
+  };
+}
+
+function editorToDoc(editor: EditorShowfile): ShowDocumentV1 {
+  return {
+    ...showStore.document,
+    meta: { ...showStore.document.meta, name: editor.name, modified: new Date().toISOString() },
+    fixtures: editor.fixtures,
+    groups: editor.linkedGroups.map((group, index) => ({
+      name: group.name,
+      fixtures: group.names,
+      color: normalizeGroupColor(group.color) ?? defaultGroupColorForIndex(index),
+    })),
+  };
+}
+const editingShowfile = ref<EditorShowfile>({ name: '', fixtures: [], linkedGroups: [] });
+
 const isEditing = ref(false);
 const hasUnsavedChanges = ref(false);
+const fileInput = ref<HTMLInputElement | null>(null);
+
+const triggerFilePicker = () => {
+  fileInput.value?.click();
+};
+
+const onFilePicked = async (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  const file = target.files?.[0];
+  if (!file) return;
+
+  try {
+    await showStore.loadShowFromFile(file);
+    editingShowfile.value = docToEditor(showStore.document);
+    isEditing.value = true;
+    hasUnsavedChanges.value = false;
+  } catch (error) {
+    Dialog.create({
+      title: 'Error',
+      message: `Failed to load showfile: ${error instanceof Error ? error.message : 'Unknown error'}`,
+    });
+  } finally {
+    target.value = '';
+  }
+};
+
+const loadFromFileInEditor = () => {
+  if (hasUnsavedChanges.value) {
+    Dialog.create({
+      title: 'Discard Changes?',
+      message: 'You have unsaved changes in the editor. Loading a file will overwrite your changes. Do you want to proceed?',
+      cancel: true,
+      persistent: true
+    }).onOk(() => {
+      triggerFilePicker();
+    });
+  } else {
+    triggerFilePicker();
+  }
+};
 
 // UI state
 const selectedTab = ref('basic');
@@ -33,7 +122,10 @@ const fixtureSearchText = ref('');
 const groupSearchText = ref('');
 
 // Fixture management
-const availableFixtureTypes = computed(() => dmx.Fixtures);
+const availableFixtureTypes = computed(() => {
+  void pluginRegistryVersion.value;
+  return getAllFixtures();
+});
 const selectedFixtureType = ref<string>('');
 const newFixtureName = ref('');
 const newFixtureStartingChannel = ref<number | undefined>(undefined);
@@ -44,6 +136,7 @@ const editingFixtureIndex = ref<number | null>(null);
 // Group management
 const newGroupName = ref('');
 const newGroupFixtures = ref<string[]>([]);
+const newGroupColor = ref(defaultGroupColorForIndex(0));
 const showAddGroupDialog = ref(false);
 const editingGroupIndex = ref<number | null>(null);
 
@@ -55,14 +148,8 @@ const initializeEditor = (createNew = false) => {
       fixtures: [],
       linkedGroups: []
     };
-  } else if (dmx.showfile) {
-    editingShowfile.value = JSON.parse(JSON.stringify(dmx.showfile));
   } else {
-    editingShowfile.value = {
-      name: 'New Showfile',
-      fixtures: [],
-      linkedGroups: []
-    };
+    editingShowfile.value = docToEditor(showStore.document);
   }
   isEditing.value = true;
   hasUnsavedChanges.value = false;
@@ -75,6 +162,26 @@ const createNewShowfile = () => {
 const editCurrentShowfile = () => {
   initializeEditor(false);
 };
+
+function openForEdit() {
+  editCurrentShowfile();
+}
+
+function leaveEditor() {
+  if (props.embedded) {
+    ui.setMode('live');
+    return;
+  }
+  emit('close');
+}
+
+defineExpose({ openForEdit });
+
+onMounted(() => {
+  if (props.embedded) {
+    openForEdit();
+  }
+});
 
 // Track changes
 watch(editingShowfile, () => {
@@ -171,6 +278,18 @@ const updateFixture = () => {
   editingFixtureIndex.value = null;
   showEditFixtureDialog.value = false;
 };// Group operations
+const resetGroupDialog = () => {
+  newGroupName.value = '';
+  newGroupFixtures.value = [];
+  newGroupColor.value = defaultGroupColorForIndex(editingShowfile.value.linkedGroups?.length ?? 0);
+  editingGroupIndex.value = null;
+};
+
+const openAddGroupDialog = () => {
+  resetGroupDialog();
+  showAddGroupDialog.value = true;
+};
+
 const addGroup = () => {
   if (!newGroupName.value.trim() || newGroupFixtures.value.length === 0) {
     return;
@@ -178,7 +297,8 @@ const addGroup = () => {
 
   const group: ShowfileLinkedGroup = {
     name: newGroupName.value.trim(),
-    names: [...newGroupFixtures.value]
+    names: [...newGroupFixtures.value],
+    color: normalizeGroupColor(newGroupColor.value) ?? defaultGroupColorForIndex(editingGroupIndex.value ?? editingShowfile.value.linkedGroups?.length ?? 0),
   };
 
   if (!editingShowfile.value.linkedGroups) {
@@ -186,16 +306,13 @@ const addGroup = () => {
   }
 
   if (editingGroupIndex.value !== null) {
-    // Editing existing group
     editingShowfile.value.linkedGroups[editingGroupIndex.value] = group;
     editingGroupIndex.value = null;
   } else {
-    // Adding new group
     editingShowfile.value.linkedGroups.push(group);
   }
 
-  newGroupName.value = '';
-  newGroupFixtures.value = [];
+  resetGroupDialog();
   showAddGroupDialog.value = false;
 };
 
@@ -205,6 +322,7 @@ const editGroup = (index: number) => {
 
   newGroupName.value = group.name;
   newGroupFixtures.value = [...group.names];
+  newGroupColor.value = normalizeGroupColor(group.color) ?? defaultGroupColorForIndex(index);
   editingGroupIndex.value = index;
   showAddGroupDialog.value = true;
 };
@@ -270,12 +388,11 @@ const saveShowfile = () => {
   }
 
   try {
-    dmx.loadShowfile(editingShowfile.value);
+    showStore.loadShow(editorToDoc(editingShowfile.value));
     hasUnsavedChanges.value = false;
-    Dialog.create({
-      title: 'Success',
-      message: `Showfile "${editingShowfile.value.name}" has been loaded successfully!`,
-    });
+    isEditing.value = false;
+    ui.setMode('live');
+    leaveEditor();
   } catch (error) {
     Dialog.create({
       title: 'Error',
@@ -294,13 +411,12 @@ const saveAndExport = () => {
   }
 
   try {
-    dmx.loadShowfile(editingShowfile.value);
-    dmx.downloadShowfileAsYAML();
+    showStore.loadShow(editorToDoc(editingShowfile.value));
+    showStore.downloadShow();
     hasUnsavedChanges.value = false;
-    Dialog.create({
-      title: 'Success',
-      message: `Showfile "${editingShowfile.value.name}" has been saved and exported!`,
-    });
+    isEditing.value = false;
+    ui.setMode('live');
+    leaveEditor();
   } catch (error) {
     Dialog.create({
       title: 'Error',
@@ -310,15 +426,21 @@ const saveAndExport = () => {
 };
 
 const discardChanges = () => {
-  Dialog.create({
-    title: 'Discard Changes',
-    message: 'Are you sure you want to discard all unsaved changes?',
-    cancel: true,
-    persistent: true
-  }).onOk(() => {
+  if (hasUnsavedChanges.value) {
+    Dialog.create({
+      title: 'Discard Changes',
+      message: 'Are you sure you want to discard all unsaved changes?',
+      cancel: true,
+      persistent: true
+    }).onOk(() => {
+      isEditing.value = false;
+      hasUnsavedChanges.value = false;
+      leaveEditor();
+    });
+  } else {
     isEditing.value = false;
-    hasUnsavedChanges.value = false;
-  });
+    leaveEditor();
+  }
 };
 
 // Computed helpers
@@ -346,7 +468,7 @@ const availableFixturesForGroup = computed(() => {
 });
 
 const getFixtureDefinition = (fixtureId: string): FixtureDefinition | undefined => {
-  return dmx.Fixtures.find(f => f.id === fixtureId);
+  return lookupFixture(fixtureId);
 };
 
 // Helper function to calculate channel ranges for fixtures
@@ -387,6 +509,14 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 
 <template>
   <div class="showfile-editor">
+    <input
+      type="file"
+      ref="fileInput"
+      accept=".yml,.yaml"
+      style="display: none"
+      @change="onFilePicked"
+    />
+
     <!-- Main Editor View -->
     <div v-if="isEditing" class="editor-container">
       <!-- Header -->
@@ -415,8 +545,14 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
             @click="saveShowfile"
             color="primary"
             icon="save"
-            label="Load Showfile"
+            label="Save & Load"
             :disable="!isValidShowfile"
+          />
+          <q-btn
+            @click="loadFromFileInEditor"
+            color="accent"
+            icon="file_upload"
+            label="Load from File"
           />
           <q-btn
             @click="saveAndExport"
@@ -593,7 +729,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
             </q-input>
 
             <q-btn
-              @click="showAddGroupDialog = true"
+              @click="openAddGroupDialog"
               color="primary"
               icon="add"
               label="Add Group"
@@ -606,11 +742,20 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
               v-for="(group, index) in filteredGroups"
               :key="index"
               class="group-card"
+              :class="{ 'has-group-color': !!group.color }"
+              :style="groupColorStyle(group.color)"
             >
               <q-card-section>
                 <div class="group-header">
                   <div class="group-info">
-                    <div class="group-name">{{ group.name }}</div>
+                    <div class="group-name-row">
+                      <span
+                        v-if="group.color"
+                        class="group-color-dot"
+                        :style="{ background: group.color }"
+                      />
+                      <div class="group-name">{{ group.name }}</div>
+                    </div>
                     <div class="group-fixtures">{{ group.names.length }} fixtures</div>
                   </div>
 
@@ -643,8 +788,8 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
                     :key="fixtureName"
                     :label="fixtureName"
                     size="sm"
-                    color="primary"
                     outline
+                    :style="group.color ? { color: group.color, borderColor: group.color } : undefined"
                   />
                 </div>
               </q-card-section>
@@ -702,17 +847,45 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
               label="Edit Current Showfile"
               size="lg"
               class="start-btn"
-              :disable="!dmx.showfile"
+              :disable="!showStore.document.fixtures.length"
+            />
+
+            <q-btn
+              @click="triggerFilePicker"
+              color="accent"
+              icon="file_upload"
+              label="Load Showfile"
+              size="lg"
+              class="start-btn"
+            />
+
+            <q-btn
+              v-if="showStore.document.fixtures.length"
+              @click="showStore.downloadShow()"
+              color="positive"
+              icon="download"
+              label="Save & Export Current"
+              size="lg"
+              class="start-btn"
+            />
+
+            <q-btn
+              @click="leaveEditor"
+              color="grey-7"
+              icon="arrow_back"
+              label="Back to Workspace"
+              size="lg"
+              class="start-btn"
             />
           </div>
 
-          <div v-if="dmx.showfile" class="current-showfile-info">
+          <div v-if="showStore.document.fixtures.length" class="current-showfile-info">
             <q-separator class="q-my-md" />
             <div class="text-caption text-grey-6">Current Showfile</div>
-            <div class="text-body1">{{ dmx.showfile.name }}</div>
+            <div class="text-body1">{{ showStore.document.meta.name }}</div>
             <div class="text-caption">
-              {{ dmx.showfile.fixtures.length }} fixtures,
-              {{ dmx.showfile.linkedGroups?.length || 0 }} groups
+              {{ showStore.document.fixtures.length }} fixtures,
+              {{ showStore.document.groups.length }} groups
             </div>
           </div>
         </q-card-section>
@@ -838,10 +1011,38 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
             map-options
             class="q-mt-md"
           />
+
+          <div class="group-color-picker q-mt-md">
+            <div class="text-caption text-grey-6 q-mb-sm">Group Color</div>
+            <div class="color-swatch-row q-mb-sm">
+              <button
+                v-for="color in GROUP_COLOR_PALETTE"
+                :key="color"
+                type="button"
+                class="color-swatch"
+                :class="{ active: newGroupColor === color }"
+                :style="{ background: color }"
+                :aria-label="`Use color ${color}`"
+                @click="newGroupColor = color"
+              />
+            </div>
+            <q-input
+              v-model="newGroupColor"
+              label="Color (hex)"
+              dense
+            >
+              <template #prepend>
+                <span
+                  class="group-color-dot"
+                  :style="{ background: newGroupColor }"
+                />
+              </template>
+            </q-input>
+          </div>
         </q-card-section>
 
         <q-card-actions align="right">
-          <q-btn flat label="Cancel" v-close-popup />
+          <q-btn flat label="Cancel" v-close-popup @click="resetGroupDialog" />
           <q-btn
             color="primary"
             :label="editingGroupIndex !== null ? 'Update' : 'Add'"
@@ -857,12 +1058,14 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 <style scoped lang="scss">
 .showfile-editor {
   height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
 .editor-container {
   height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
 }
@@ -872,8 +1075,8 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
   justify-content: space-between;
   align-items: center;
   padding: 16px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--sdmx-color-border);
+  background: var(--sdmx-color-border-faint);
 
   .header-info {
     display: flex;
@@ -898,7 +1101,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 
       .stats {
         font-size: 12px;
-        color: rgba(255, 255, 255, 0.7);
+        color: var(--sdmx-color-text-muted);
       }
     }
   }
@@ -918,12 +1121,25 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 }
 
 .editor-tabs {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--sdmx-color-border-faint);
 }
 
 .editor-panels {
   flex: 1;
+  min-height: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
+
+  :deep(.q-tab-panels) {
+    flex: 1;
+    min-height: 0;
+  }
+
+  :deep(.q-panel) {
+    min-height: 0;
+    overflow: auto;
+  }
 }
 
 .basic-panel {
@@ -939,19 +1155,19 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
     gap: 16px;
 
     .stat-card {
-      background: rgba(255, 255, 255, 0.08);
+      background: var(--sdmx-color-border-subtle);
       text-align: center;
       min-width: 100px;
 
       .stat-number {
         font-size: 2rem;
         font-weight: 600;
-        color: var(--q-primary);
+        color: var(--sdmx-color-primary);
       }
 
       .stat-label {
         font-size: 12px;
-        color: rgba(255, 255, 255, 0.7);
+        color: var(--sdmx-color-text-muted);
         text-transform: uppercase;
         letter-spacing: 0.5px;
       }
@@ -971,7 +1187,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
     align-items: center;
     padding: 16px;
     gap: 16px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    border-bottom: 1px solid var(--sdmx-color-border);
 
     .search-input {
       flex: 1;
@@ -991,7 +1207,11 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 
   .fixture-card,
   .group-card {
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--sdmx-color-border-subtle);
+
+    &.has-group-color {
+      border-left: 4px solid var(--fixture-group-color);
+    }
 
     .fixture-header,
     .group-header {
@@ -1009,18 +1229,18 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 
         .fixture-type,
         .group-fixtures {
-          color: var(--q-primary);
+          color: var(--sdmx-color-primary);
           font-size: 12px;
           margin: 2px 0;
         }
 
         .fixture-details {
-          color: rgba(255, 255, 255, 0.7);
+          color: var(--sdmx-color-text-muted);
           font-size: 11px;
         }
 
         .fixture-starting-channel {
-          color: var(--q-primary);
+          color: var(--sdmx-color-primary);
           font-size: 10px;
           font-weight: 600;
           margin-top: 2px;
@@ -1049,7 +1269,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
     align-items: center;
     justify-content: center;
     text-align: center;
-    color: rgba(255, 255, 255, 0.5);
+    color: var(--sdmx-color-text-faint);
 
     .empty-message {
       font-size: 18px;
@@ -1058,7 +1278,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 
     .empty-hint {
       font-size: 14px;
-      color: rgba(255, 255, 255, 0.3);
+      color: var(--sdmx-color-text-faint);
     }
   }
 }
@@ -1067,7 +1287,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
   padding: 16px;
 
   .yaml-preview {
-    background: rgba(0, 0, 0, 0.3);
+    background: var(--sdmx-color-shadow);
     margin-top: 16px;
 
     pre {
@@ -1092,6 +1312,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 
 .start-screen {
   flex: 1;
+  min-height: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1099,7 +1320,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 
   .start-card {
     max-width: 500px;
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--sdmx-color-border-subtle);
 
     h5 {
       margin: 16px 0 8px;
@@ -1119,6 +1340,40 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
     .current-showfile-info {
       text-align: center;
     }
+  }
+}
+
+.group-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.group-color-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  border: 1px solid color-mix(in srgb, var(--sdmx-color-text) 20%, transparent);
+}
+
+.color-swatch-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.color-swatch {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 2px solid transparent;
+  cursor: pointer;
+  padding: 0;
+
+  &.active {
+    border-color: var(--sdmx-color-text);
+    box-shadow: 0 0 0 1px var(--sdmx-color-surface);
   }
 }
 </style>

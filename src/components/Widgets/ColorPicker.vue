@@ -5,39 +5,46 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
-<!--
-  Purpose: Color Picker Widget
--->
 <script setup lang="ts">
 import { ColorPickerModel } from './ColorPicker';
+import { useChannelBinding } from 'src/composables/useChannelBinding';
 
-const val = defineModel<ColorPickerModel>({ required: true })
+const val = defineModel<ColorPickerModel>({ required: true });
+
+const red = useChannelBinding(val.value.redChannel, 'color');
+const green = useChannelBinding(val.value.greenChannel, 'color');
+const blue = useChannelBinding(val.value.blueChannel, 'color');
 
 const previewColor = computed(() => {
-  const { redChannel, greenChannel, blueChannel } = val.value
-  return `rgb(${redChannel.reference.value}, ${greenChannel.reference.value}, ${blueChannel.reference.value})`
-})
+  return `rgb(${red.value}, ${green.value}, ${blue.value})`;
+});
 
 const color = computed({
   get() {
     return previewColor.value;
   },
   set(value: string) {
-    // deconstruct the RGB values from the input string
-    const [r, g, b] = value.match(/\d+/g)?.map(Number) || [0, 0, 0];
-    // update the model values
-    val.value.redChannel.reference.value = r ?? 0;
-    val.value.greenChannel.reference.value = g ?? 0;
-    val.value.blueChannel.reference.value = b ?? 0;
-  }
-})
+    if (value.startsWith('#')) {
+      const hex = value.replace('#', '');
+      const full = hex.length === 3
+        ? hex.split('').map((c) => c + c).join('')
+        : hex.padEnd(6, '0').slice(0, 6);
+      red.value = parseInt(full.slice(0, 2), 16);
+      green.value = parseInt(full.slice(2, 4), 16);
+      blue.value = parseInt(full.slice(4, 6), 16);
+      return;
+    }
 
+    const [r, g, b] = value.match(/\d+/g)?.map(Number) || [0, 0, 0];
+    red.value = r ?? 0;
+    green.value = g ?? 0;
+    blue.value = b ?? 0;
+  },
+});
 </script>
 
 <template>
   <div class="color-picker-widget">
-    <q-color v-model="color" no-header-tabs no-header no-footer />
+    <q-color v-model="color" format-model="rgb" no-header-tabs no-header no-footer />
   </div>
 </template>
-
-<style scoped lang="scss"></style>

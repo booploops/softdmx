@@ -1,0 +1,68 @@
+id: VRSL_Spotlight_Compact
+name: VRSL Spotlight Compact (9ch)
+channels:
+  - name: Pan
+    type: position
+    minValue: 0
+    maxValue: 255
+    defaultValue: 127
+  - name: Tilt
+    type: position
+    minValue: 0
+    maxValue: 255
+    defaultValue: 127
+  - name: Dimmer
+    type: intensity
+    minValue: 0
+    maxValue: 255
+    defaultValue: 255
+  - name: Strobe
+    type: effect
+    minValue: 0
+    maxValue: 255
+    defaultValue: 0
+  - name: Red
+    type: color
+    minValue: 0
+    maxValue: 255
+    defaultValue: 255
+  - name: Green
+    type: color
+    minValue: 0
+    maxValue: 255
+    defaultValue: 255
+  - name: Blue
+    type: color
+    minValue: 0
+    maxValue: 255
+    defaultValue: 255
+  - name: White
+    type: color
+    minValue: 0
+    maxValue: 255
+    defaultValue: 128
+  - name: Macro
+    type: effect
+    minValue: 0
+    maxValue: 255
+    defaultValue: 0
+widgets:
+  - type: lightMover
+    name: Pan/Tilt Control
+    channels:
+      panChannel: Pan
+      tiltChannel: Tilt
+  - type: colorPicker
+    name: RGB Color
+    channels:
+      redChannel: Red
+      greenChannel: Green
+      blueChannel: Blue
+  - type: dimmerSlider
+    name: Intensity
+    channels:
+      dimmerChannel: Dimmer
+  - type: strobe
+    name: Strobe Effect
+    channels:
+      strobeChannel: Strobe

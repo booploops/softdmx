@@ -1,0 +1,9 @@
+{
+  "id": "vrsl-pack",
+  "version": "1.0.0",
+  "fixtures": [
+    "fixtures/vrsl-spotlight-compact.yaml",
+    "fixtures/vrsl-wash-5ch.yaml",
+    "fixtures/vrsl-beam-12ch.yaml"
+  ]
+}

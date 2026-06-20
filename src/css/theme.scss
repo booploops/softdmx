@@ -1,0 +1,255 @@
+/*
+ * Copyright (C) 2025-Present booploops and contributors
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+:root {
+  --sdmx-color-bg-page: #121212;
+  --sdmx-color-bg-surface: #1d1d1d;
+  --sdmx-color-bg-elevated: #242424;
+  --sdmx-color-bg-toolbar: #1d1d1d;
+  --sdmx-color-bg-drawer: #161616;
+  --sdmx-color-border: rgba(255, 255, 255, 0.12);
+  --sdmx-color-border-subtle: rgba(255, 255, 255, 0.08);
+  --sdmx-color-text: #ffffff;
+  --sdmx-color-text-muted: rgba(255, 255, 255, 0.7);
+  --sdmx-color-text-faint: rgba(255, 255, 255, 0.45);
+  --sdmx-color-primary: #1976d2;
+  --sdmx-color-secondary: #26a69a;
+  --sdmx-color-accent: #9c27b0;
+  --sdmx-color-positive: #21ba45;
+  --sdmx-color-negative: #c10015;
+  --sdmx-color-warning: #f2c037;
+  --sdmx-color-info: #31ccec;
+  --sdmx-color-overlay: rgba(0, 0, 0, 0.55);
+  --sdmx-color-selected: rgba(25, 118, 210, 0.18);
+  --sdmx-color-hover: rgba(255, 255, 255, 0.08);
+  --sdmx-color-scratch: #e65100;
+  --sdmx-color-gm: #ff9800;
+  --sdmx-font-family: "Roboto Flex Variable", sans-serif;
+  --sdmx-font-weight: 500;
+  --sdmx-radius-sm: 6px;
+  --sdmx-radius-md: 10px;
+  --sdmx-radius-lg: 12px;
+  --sdmx-radius-button: 30px;
+  --sdmx-layout-toolbar-height: 48px;
+
+  --sdmx-color-bg-inset: color-mix(in srgb, var(--sdmx-color-text) 3%, transparent);
+  --sdmx-color-bg-muted: color-mix(in srgb, var(--sdmx-color-text) 5%, transparent);
+  --sdmx-color-bg-hover-strong: color-mix(in srgb, var(--sdmx-color-text) 8%, transparent);
+  --sdmx-color-bg-active: color-mix(in srgb, var(--sdmx-color-text) 12%, transparent);
+  --sdmx-color-border-faint: color-mix(in srgb, var(--sdmx-color-text) 5%, transparent);
+  --sdmx-color-border-strong: color-mix(in srgb, var(--sdmx-color-text) 15%, transparent);
+  --sdmx-color-primary-soft: color-mix(in srgb, var(--sdmx-color-primary) 20%, transparent);
+  --sdmx-color-primary-ring: color-mix(in srgb, var(--sdmx-color-primary) 60%, transparent);
+  --sdmx-color-primary-strong: color-mix(in srgb, var(--sdmx-color-primary) 80%, transparent);
+  --sdmx-color-secondary-ring: color-mix(in srgb, var(--sdmx-color-secondary) 75%, transparent);
+  --sdmx-color-negative-soft: color-mix(in srgb, var(--sdmx-color-negative) 10%, transparent);
+  --sdmx-color-negative-border: color-mix(in srgb, var(--sdmx-color-negative) 30%, transparent);
+  --sdmx-color-negative-strong: color-mix(in srgb, var(--sdmx-color-negative) 85%, transparent);
+  --sdmx-color-warning-ring: color-mix(in srgb, var(--sdmx-color-warning) 60%, transparent);
+  --sdmx-color-shadow: color-mix(in srgb, #000 30%, transparent);
+  --sdmx-color-shadow-strong: color-mix(in srgb, #000 40%, transparent);
+  --sdmx-color-canvas-bg: color-mix(in srgb, var(--sdmx-color-bg-page) 88%, #000);
+  --sdmx-color-canvas-grid: var(--sdmx-color-border-subtle);
+  --sdmx-gradient-surface: linear-gradient(
+    to bottom,
+    var(--sdmx-color-bg-elevated),
+    var(--sdmx-color-bg-surface)
+  );
+  --sdmx-gradient-widget: linear-gradient(
+    135deg,
+    var(--sdmx-color-bg-page),
+    var(--sdmx-color-bg-elevated)
+  );
+  --sdmx-gradient-keyframe: linear-gradient(
+    135deg,
+    var(--sdmx-color-accent),
+    var(--sdmx-color-info)
+  );
+  --sdmx-gradient-keyframe-disabled: linear-gradient(
+    135deg,
+    var(--sdmx-color-bg-elevated),
+    var(--sdmx-color-text-muted)
+  );
+}
+
+html,
+body,
+#q-app {
+  background-color: var(--sdmx-color-bg-page);
+  color: var(--sdmx-color-text);
+  font-family: var(--sdmx-font-family);
+  font-weight: var(--sdmx-font-weight);
+  height: var(--sdmx-app-height, 100%);
+  max-height: var(--sdmx-app-height, 100dvh);
+  overflow: hidden;
+}
+
+#q-app {
+  display: flex;
+  flex-direction: column;
+}
+
+#q-app > .q-layout-container {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.body--dark {
+  .text-grey-3 { color: var(--sdmx-color-text) !important; }
+  .text-grey-4 { color: var(--sdmx-color-text-muted) !important; }
+  .text-grey-5,
+  .text-grey-6 { color: var(--sdmx-color-text-faint) !important; }
+  .bg-dark { background: var(--sdmx-color-bg-surface) !important; }
+  .bg-grey-8 { background: var(--sdmx-color-bg-elevated) !important; }
+  .bg-grey-9 { background: var(--sdmx-color-bg-drawer) !important; }
+}
+
+.sdmx-surface {
+  background-color: var(--sdmx-color-bg-surface);
+  color: var(--sdmx-color-text);
+}
+
+.sdmx-elevated {
+  background-color: var(--sdmx-color-bg-elevated);
+  color: var(--sdmx-color-text);
+}
+
+.sdmx-inset {
+  background-color: var(--sdmx-color-bg-inset);
+}
+
+.sdmx-muted {
+  background-color: var(--sdmx-color-bg-muted);
+}
+
+.sdmx-toolbar {
+  background-color: var(--sdmx-color-bg-toolbar);
+  border-bottom: 1px solid var(--sdmx-color-border-subtle);
+  min-height: var(--sdmx-layout-toolbar-height);
+}
+
+.sdmx-drawer {
+  background-color: var(--sdmx-color-bg-drawer);
+}
+
+.sdmx-dialog-card {
+  width: min(800px, 96vw);
+  max-width: 96vw;
+  background-color: var(--sdmx-color-bg-surface);
+  color: var(--sdmx-color-text);
+  border-radius: var(--sdmx-radius-lg);
+}
+
+.sdmx-dialog-card--narrow {
+  width: min(560px, 96vw);
+}
+
+.sdmx-panel {
+  background-color: var(--sdmx-color-bg-surface);
+  color: var(--sdmx-color-text);
+}
+
+.sdmx-panel--inset {
+  background-color: var(--sdmx-color-bg-inset);
+  border: 1px solid var(--sdmx-color-border-subtle);
+}
+
+.sdmx-widget {
+  background-color: var(--sdmx-color-bg-surface);
+  border: 1px solid var(--sdmx-color-border);
+  border-radius: var(--sdmx-radius-sm);
+}
+
+.sdmx-widget--selected {
+  border-color: var(--sdmx-color-primary);
+  box-shadow: 0 0 0 1px var(--sdmx-color-primary-ring);
+}
+
+.sdmx-border-bottom {
+  border-bottom: 1px solid var(--sdmx-color-border);
+}
+
+.sdmx-border-top {
+  border-top: 1px solid var(--sdmx-color-border);
+}
+
+.sdmx-border-right {
+  border-right: 1px solid var(--sdmx-color-border);
+}
+
+.sdmx-border-subtle {
+  border: 1px solid var(--sdmx-color-border-subtle);
+}
+
+.sdmx-text-muted {
+  color: var(--sdmx-color-text-muted);
+}
+
+.sdmx-text-faint {
+  color: var(--sdmx-color-text-faint);
+}
+
+.sdmx-list-item {
+  border-radius: var(--sdmx-radius-sm);
+  background-color: var(--sdmx-color-bg-inset);
+  transition: background-color 0.2s ease;
+}
+
+.sdmx-list-item:hover {
+  background-color: var(--sdmx-color-hover);
+}
+
+.sdmx-list-item--active {
+  background-color: var(--sdmx-color-selected);
+}
+
+.sdmx-scratch-bar {
+  background-color: var(--sdmx-color-scratch);
+  border-bottom: 1px solid var(--sdmx-color-border-subtle);
+}
+
+.sdmx-panel-footer {
+  background-color: var(--sdmx-color-bg-toolbar);
+  border-top: 1px solid var(--sdmx-color-border-subtle);
+}
+
+.sdmx-advanced-panel {
+  border-top: 1px solid var(--sdmx-color-border-faint);
+  background: var(--sdmx-color-bg-inset);
+}
+
+.sdmx-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+}
+
+.sdmx-empty-state {
+  border: 1px dashed var(--sdmx-color-border-strong);
+}
+
+.sdmx-canvas-wrap {
+  border: 1px solid var(--sdmx-color-border);
+  border-radius: var(--sdmx-radius-sm);
+}
+
+.sdmx-remote-page {
+  background: var(--sdmx-color-bg-page);
+  color: var(--sdmx-color-text);
+}
+
+.sdmx-remote-card {
+  background: var(--sdmx-color-bg-elevated);
+  border: 1px solid var(--sdmx-color-border-subtle);
+}
+
+.sdmx-titlebar {
+  background-color: var(--sdmx-color-bg-drawer);
+}

@@ -6,6 +6,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import { BrowserWindow } from "electron";
+import { Server } from "socket.io";
+
 export const AppState = {
   port: 5353,
-}
+  artnetWindow: null as BrowserWindow | null,
+  io: null as Server | null,
+};
+

@@ -6,52 +6,127 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import GridConfig from 'src/components/GridConfig.vue';
-import GridNode from 'src/components/GridNode.vue';
-import GridToolbar from 'src/components/GridToolbar.vue';
-import CueControlPanel from 'src/components/CueControlPanel.vue';
-import { TestShowfile } from 'src/shows/TestShowfile';
+import { useRemoteAPI } from 'src/composables/useRemoteAPI';
 import { useDMXStore } from 'src/stores/dmx';
+import { useExecutorStore } from 'src/stores/executor';
+import { useOutputEngineStore } from 'src/stores/output-engine';
+import { useDeskViewStore } from 'src/stores/desk-view';
+import { useUIStore } from 'src/stores/ui';
+import { useChannelControl } from 'src/composables/useChannelControl';
+import MasterBar from 'src/components/desk/MasterBar.vue';
+import DeskShell from 'src/components/desk/DeskShell.vue';
+import CueEditor from 'src/components/CueEditor.vue';
 
+useRemoteAPI();
 const dmx = useDMXStore();
+const executor = useExecutorStore();
+const output = useOutputEngineStore();
+const deskView = useDeskViewStore();
+const ui = useUIStore();
+const { clearScratch } = useChannelControl();
+
+function shouldIgnoreShortcut(event: KeyboardEvent): boolean {
+  const target = event.target as HTMLElement | null;
+  if (!target) return false;
+  const tag = target.tagName.toLowerCase();
+  return tag === 'input' || tag === 'textarea' || target.isContentEditable;
+}
+
+function onKeydown(event: KeyboardEvent) {
+  if (shouldIgnoreShortcut(event)) return;
+
+  if (event.code === 'Space') {
+    event.preventDefault();
+    executor.goActive();
+    return;
+  }
+  if (event.code === 'Escape') {
+    event.preventDefault();
+    if (ui.dialogs.cueEditor) {
+      ui.closeDialog('cueEditor');
+      return;
+    }
+    executor.stopAll();
+    return;
+  }
+  if (event.code === 'PageUp') {
+    event.preventDefault();
+    executor.previousPage();
+    return;
+  }
+  if (event.code === 'PageDown') {
+    event.preventDefault();
+    executor.nextPage();
+    return;
+  }
+  if (event.code === 'KeyB') {
+    event.preventDefault();
+    output.setBlackout(!output.blackout);
+    return;
+  }
+  if (event.code === 'Delete' && ui.isLive && !ui.dialogs.cueEditor) {
+    event.preventDefault();
+    clearScratch();
+    return;
+  }
+  if (event.ctrlKey && event.shiftKey && event.code === 'KeyL') {
+    event.preventDefault();
+    ui.toggleOperateLock();
+    return;
+  }
+  if (event.ctrlKey && event.code.startsWith('Digit')) {
+    const index = Number(event.code.replace('Digit', '')) - 1;
+    if (index >= 0 && index < 5) {
+      event.preventDefault();
+      deskView.setActiveViewByIndex(index);
+    }
+  }
+}
 
 onMounted(() => {
-  dmx.loadShowfile(TestShowfile);
-  // @ts-ignore
-  window.$dmx = dmx; // Expose DMX store globally for debugging
-})
+  // @ts-ignore debug
+  window.$dmx = dmx;
+  window.addEventListener('keydown', onKeydown);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('keydown', onKeydown);
+});
 </script>
 
-
 <template>
-  <q-page class="">
-    <div class="main-view">
-      <GridToolbar />
-      <GridConfig />
-      <CueControlPanel />
+  <q-page class="index-page column no-wrap">
+    <MasterBar />
+    <div class="index-page-body">
+      <CueEditor v-if="ui.dialogs.cueEditor" class="cue-editor-panel" @close="ui.closeDialog('cueEditor')" />
+      <DeskShell v-else />
     </div>
   </q-page>
 </template>
 
 <style scoped>
-.grid-node-container {
-  text-align: center;
+.index-page {
+  flex: 1 1 0;
+  min-height: 0;
+  max-height: 100%;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  overflow: hidden;
-  overflow-x: scroll;
 }
 
-.main-view {
+.index-page-body {
+  flex: 1 1 0;
+  min-height: 0;
+  min-width: 0;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  position: absolute;
-  inset: 0;
 }
 
-.config-view {
+.cue-editor-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
   overflow: hidden;
 }
 </style>

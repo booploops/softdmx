@@ -6,6 +6,61 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import { contextBridge, ipcRenderer } from 'electron';
+
+contextBridge.exposeInMainWorld('electronVideo', {
+  listSenders: (): Promise<Array<{ name: string; appName?: string }>> =>
+    ipcRenderer.invoke('video-list-senders'),
+  connect: (config: {
+    kind: 'syphon' | 'spout';
+    senderName: string;
+    fps: number;
+  }): Promise<boolean> => ipcRenderer.invoke('video-connect', config),
+  disconnect: (): Promise<void> => ipcRenderer.invoke('video-disconnect'),
+  getStatus: (): Promise<{ connected: boolean; platform: string }> =>
+    ipcRenderer.invoke('video-status'),
+  onFrame: (callback: (payload: { width: number; height: number; data: ArrayBuffer }) => void) => {
+    ipcRenderer.on('video-frame', (_event, payload) => callback(payload));
+  },
+  removeFrameListener: () => {
+    ipcRenderer.removeAllListeners('video-frame');
+  },
+});
+
+contextBridge.exposeInMainWorld('electronAPI', {
+  onOscMessage: (callback: (event: any, data: { address: string; args: any[] }) => void) => {
+    ipcRenderer.on('osc-received', callback);
+  },
+  removeOscListener: () => {
+    ipcRenderer.removeAllListeners('osc-received');
+  }
+});
+
+contextBridge.exposeInMainWorld('electronGridNode', {
+  setVisible: (visible: boolean) => {
+    ipcRenderer.send('gridnode-overlay-set', visible);
+  },
+  getVisible: (): Promise<boolean> => ipcRenderer.invoke('gridnode-overlay-get'),
+  onChanged: (callback: (event: Electron.IpcRendererEvent, visible: boolean) => void) => {
+    ipcRenderer.on('gridnode-overlay-changed', callback);
+  },
+});
+
+contextBridge.exposeInMainWorld('electronLink', {
+  onTick: (callback: (event: any, data: any) => void) => {
+    ipcRenderer.on('link-tick', callback);
+  },
+  onPeersChanged: (callback: (event: any, numPeers: number) => void) => {
+    ipcRenderer.on('link-peers-changed', callback);
+  },
+  setBpm: (bpm: number) => {
+    ipcRenderer.send('link-set-bpm', bpm);
+  },
+  setEnabled: (enabled: boolean) => {
+    ipcRenderer.send('link-set-enabled', enabled);
+  }
+});
+
 /**
  * This file is used specifically for security reasons.
  * Here you can access Nodejs stuff and inject functionality into

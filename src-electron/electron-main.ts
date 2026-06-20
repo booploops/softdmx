@@ -7,49 +7,90 @@
  */
 import { app, BrowserWindow } from 'electron';
 import path from 'path';
-import os from 'os';
-import { fileURLToPath } from 'url'
+import { fileURLToPath } from 'url';
 import { startServer } from './server';
 import { createArtnetWindow } from './artnet-window';
 import { AppState } from './state/main';
 import { getDevUrl, isDev } from './utils';
 import { Paths } from './utils/paths';
-
-// needed in case process is undefined under Linux
-const platform = process.platform || os.platform();
+import { setupOscListener, closeOscListener } from './output/electron-osc';
+import { setupAbletonLink, closeAbletonLink } from './output/electron-link';
+import { setupGridNodeOverlayIpc, closeGridNodeOverlayIpc } from './output/electron-gridnode';
+import { applyGridNodeOverlayWindowState } from './output/gridnode-overlay';
+import { setupVideoIpc, closeVideoIpc } from './video/electron-video';
+import {
+  buildOutputNodeUrl,
+  configureOutputNodeWindow,
+  isOutputNodeMode,
+} from './output/output-node';
+import { setBackupPrimaryWindow } from './output/backup-coordinator';
 
 app.setPath('userData', Paths.appData);
 
 const currentDir = fileURLToPath(new URL('.', import.meta.url));
 
 let mainWindow: BrowserWindow | undefined;
+let shutdownStarted = false;
+let shutdownComplete = false;
+
+function destroyAuxiliaryWindows() {
+  if (AppState.artnetWindow && !AppState.artnetWindow.isDestroyed()) {
+    AppState.artnetWindow.destroy();
+  }
+  AppState.artnetWindow = null;
+}
+
+function runShutdownCleanup() {
+  closeOscListener();
+  closeAbletonLink();
+  closeGridNodeOverlayIpc();
+  void closeVideoIpc();
+  destroyAuxiliaryWindows();
+}
+
+async function shutdownAndQuit() {
+  if (shutdownStarted) return;
+  shutdownStarted = true;
+
+  runShutdownCleanup();
+
+  // Give native ThreadSafeFunction callbacks a tick to drain before exit.
+  await new Promise((resolve) => setTimeout(resolve, 50));
+
+  shutdownComplete = true;
+  app.quit();
+}
 
 async function createWindow() {
   startServer();
+  setupGridNodeOverlayIpc();
 
-  /**
-   * Initial window options
-   */
+  const outputNode = isOutputNodeMode();
+
   mainWindow = new BrowserWindow({
-    icon: path.resolve(currentDir, 'icons/icon.png'), // tray icon
-    width: 1000,
-    height: 600,
+    icon: path.resolve(currentDir, 'icons/icon.png'),
+    width: outputNode ? 360 : 1000,
+    height: outputNode ? 240 : 600,
+    show: !outputNode,
     useContentSize: true,
     backgroundColor: '#1D1D1D',
-    resizable: true,
-    maximizable: true,
-    titleBarOverlay: {
-      color: '#1D1D1D',
-      symbolColor: '#FFFFFF',
-    },
-    trafficLightPosition: {
-      x: 12,
-      y: 16,
-    },
-    titleBarStyle: 'hidden',
+    resizable: !outputNode,
+    maximizable: !outputNode,
+    titleBarOverlay: outputNode
+      ? undefined
+      : {
+          color: '#1D1D1D',
+          symbolColor: '#FFFFFF',
+        },
+    trafficLightPosition: outputNode
+      ? undefined
+      : {
+          x: 12,
+          y: 16,
+        },
+    titleBarStyle: outputNode ? 'default' : 'hidden',
     webPreferences: {
       contextIsolation: true,
-      // More info: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/electron-preload-script
       preload: path.resolve(
         currentDir,
         path.join(process.env.QUASAR_ELECTRON_PRELOAD_FOLDER, 'electron-preload' + process.env.QUASAR_ELECTRON_PRELOAD_EXTENSION)
@@ -57,29 +98,47 @@ async function createWindow() {
     },
   });
 
-  if (isDev()) {
-    await mainWindow.loadURL(getDevUrl());
-  } else {
-    await mainWindow.loadURL(`http://127.0.0.1:${AppState.port}/app/`);
+  if (outputNode) {
+    configureOutputNodeWindow(mainWindow);
   }
 
-  if (process.env.DEBUGGING) {
-    // if on DEV or Production with debug enabled
+  setupVideoIpc(mainWindow);
+  setBackupPrimaryWindow(mainWindow);
+
+  const appBase = isDev() ? getDevUrl() : `http://127.0.0.1:${AppState.port}/app/`;
+  const loadUrl = outputNode ? buildOutputNodeUrl(appBase) : appBase;
+  await mainWindow.loadURL(loadUrl);
+
+  if (process.env.DEBUGGING && !outputNode) {
     mainWindow.webContents.openDevTools();
   }
-  let artnetWindow: BrowserWindow | undefined = await createArtnetWindow();
-  artnetWindow.show();
+
+  if (!outputNode) {
+    AppState.artnetWindow = await createArtnetWindow();
+    applyGridNodeOverlayWindowState();
+  }
+
+  setupOscListener(mainWindow);
+  setupAbletonLink(mainWindow);
+
   mainWindow.on('closed', () => {
     mainWindow = undefined;
-    // close the app
-    app.quit();
+    void shutdownAndQuit();
   });
 }
 
 void app.whenReady().then(createWindow);
 
 app.on('window-all-closed', () => {
-  app.quit();
+  void shutdownAndQuit();
+});
+
+app.on('before-quit', (event) => {
+  if (shutdownComplete) return;
+  if (!shutdownStarted) {
+    event.preventDefault();
+    void shutdownAndQuit();
+  }
 });
 
 app.on('activate', () => {

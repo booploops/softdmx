@@ -1,0 +1,85 @@
+id: VRSL_Beam_12CH
+name: VRSL Beam (12ch)
+channels:
+  - name: Pan
+    type: position
+    minValue: 0
+    maxValue: 255
+    defaultValue: 127
+  - name: Pan fine
+    type: position
+    minValue: 0
+    maxValue: 255
+    defaultValue: 128
+  - name: Tilt
+    type: position
+    minValue: 0
+    maxValue: 255
+    defaultValue: 127
+  - name: Tilt fine
+    type: position
+    minValue: 0
+    maxValue: 255
+    defaultValue: 128
+  - name: Dimmer
+    type: intensity
+    minValue: 0
+    maxValue: 255
+    defaultValue: 255
+  - name: Strobe
+    type: effect
+    minValue: 0
+    maxValue: 255
+    defaultValue: 0
+  - name: Red
+    type: color
+    minValue: 0
+    maxValue: 255
+    defaultValue: 255
+  - name: Green
+    type: color
+    minValue: 0
+    maxValue: 255
+    defaultValue: 255
+  - name: Blue
+    type: color
+    minValue: 0
+    maxValue: 255
+    defaultValue: 255
+  - name: White
+    type: color
+    minValue: 0
+    maxValue: 255
+    defaultValue: 255
+  - name: Color Macro
+    type: effect
+    minValue: 0
+    maxValue: 255
+    defaultValue: 0
+  - name: Beam Focus
+    type: effect
+    minValue: 0
+    maxValue: 255
+    defaultValue: 127
+widgets:
+  - type: lightMover
+    name: Pan/Tilt Control
+    channels:
+      panChannel: Pan
+      panFineChannel: Pan fine
+      tiltChannel: Tilt
+      tiltFineChannel: Tilt fine
+  - type: colorPicker
+    name: RGB Color
+    channels:
+      redChannel: Red
+      greenChannel: Green
+      blueChannel: Blue
+  - type: dimmerSlider
+    name: Intensity
+    channels:
+      dimmerChannel: Dimmer
+  - type: strobe
+    name: Strobe Effect
+    channels:
+      strobeChannel: Strobe

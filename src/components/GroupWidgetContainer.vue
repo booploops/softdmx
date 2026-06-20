@@ -9,13 +9,16 @@
   Purpose: Container component for displaying widgets for a linked group of fixtures
 -->
 <script setup lang="ts">
-import type { ShowfileFixtureMapped, ShowfileLinkedGroup } from 'src/types';
+import type { ShowfileFixtureMapped } from 'src/types';
 import { useDMXStore } from 'src/stores/dmx';
+import { useSelectionStore } from 'src/stores/selection';
 import WidgetRenderer from './Widgets/WidgetRenderer.vue';
 
 const dmx = useDMXStore();
+const selection = useSelectionStore();
+type LinkedGroup = { name: string; names: string[] };
 const props = defineProps<{
-  group: ShowfileLinkedGroup;
+  group: LinkedGroup;
 }>();
 
 // Get all fixtures in this group
@@ -33,45 +36,47 @@ const firstFixture = computed(() => {
 // Create a control fixture that's a copy of the first fixture
 const controlFixture = ref<ShowfileFixtureMapped | null>(null);
 
-// Initialize the control fixture
+// Initialize the control fixture when group membership changes
 watch(firstFixture, (newFixture) => {
-  if (!newFixture) return;
-  // Deep clone the first fixture to use as control
-  controlFixture.value = JSON.parse(JSON.stringify(newFixture));
-  // Update the fixture name to indicate it's a group control
-  if (controlFixture.value) {
-    controlFixture.value.fixtureName = `${props.group.name} (Group Control)`;
+  if (!newFixture) {
+    controlFixture.value = null;
+    return;
   }
+
+  const encodedGroupName = encodeURIComponent(props.group.name);
+  controlFixture.value = {
+    ...newFixture,
+    fixtureName: `${props.group.name} (Group Control)`,
+    def: {
+      ...newFixture.def,
+      channels: newFixture.def.channels.map((channel) => ({
+        ...channel,
+        reference: {
+          ...channel.reference,
+          path: `group://${encodedGroupName}/${encodeURIComponent(channel.name)}`,
+        },
+      })),
+    },
+  };
 }, {
   immediate: true,
-});
-
-// Watch for changes in the control fixture and propagate to all fixtures in the group
-watch(controlFixture, (newControlFixture) => {
-  if (!newControlFixture) return;
-
-  // Update all fixtures in the group with the control fixture's values
-  allFixtures.value.forEach((fixture) => {
-    fixture.def.channels.forEach((channel, index) => {
-      if (newControlFixture.def.channels[index] && channel.reference) {
-        channel.reference.value = newControlFixture.def.channels[index].reference.value;
-      }
-    });
-  });
-}, {
-  immediate: true,
-  deep: true
 });
 
 // Get widgets from the first fixture definition (all fixtures in group should be same type)
 const widgets = computed(() => {
   return firstFixture.value?.def.widgets || [];
 });
+
+const isSelected = computed(() => selection.isGroupSelected(props.group.name));
+
+function toggleGroupSelection() {
+  selection.toggleGroup(props.group.name);
+}
 </script>
 
 <template>
-  <div class="group-widget-container">
-    <div class="group-header">
+  <div class="group-widget-container" :class="{ selected: isSelected }">
+    <div class="group-header" @click="toggleGroupSelection">
       <h6 class="group-name">{{ group.name }}</h6>
       <div class="group-info">
         <span class="fixture-count">{{ allFixtures.length }} fixtures</span>
@@ -114,8 +119,8 @@ const widgets = computed(() => {
 
 <style scoped lang="scss">
 .group-widget-container {
-  background: var(--q-dark);
-  border: 2px solid var(--q-primary);
+  background: var(--sdmx-color-bg-surface);
+  border: 2px solid var(--sdmx-color-primary);
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
@@ -123,18 +128,24 @@ const widgets = computed(() => {
   min-width: 320px;
 
   // Visual distinction for group containers
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 4px 12px var(--sdmx-color-shadow);
+
+  &.selected {
+    border-color: var(--sdmx-color-accent);
+    box-shadow: 0 0 0 1px var(--sdmx-color-secondary-ring), 0 4px 12px var(--sdmx-color-shadow);
+  }
 }
 
 .group-header {
   margin-bottom: 16px;
-  border-bottom: 2px solid var(--q-primary);
+  border-bottom: 2px solid var(--sdmx-color-primary);
   padding-bottom: 12px;
+  cursor: pointer;
 
   .group-name {
     margin: 0 0 4px 0;
     font-weight: 700;
-    color: var(--q-primary);
+    color: var(--sdmx-color-primary);
     font-size: 1.1rem;
 
     // Add group indicator icon
@@ -152,16 +163,16 @@ const widgets = computed(() => {
 
     .fixture-count {
       font-size: 12px;
-      color: var(--q-accent);
+      color: var(--sdmx-color-accent);
       font-weight: 600;
-      background: rgba(255, 255, 255, 0.1);
+      background: var(--sdmx-color-border);
       padding: 2px 8px;
       border-radius: 12px;
     }
 
     .fixture-type {
       font-size: 12px;
-      color: rgba(255, 255, 255, 0.6);
+      color: var(--sdmx-color-text-muted);
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
@@ -170,8 +181,8 @@ const widgets = computed(() => {
 
 .no-widgets, .loading-state {
   .info-card {
-    background: rgba(255, 255, 255, 0.05);
-    border-color: rgba(255, 255, 255, 0.1);
+    background: var(--sdmx-color-border-faint);
+    border-color: var(--sdmx-color-border);
   }
 }
 

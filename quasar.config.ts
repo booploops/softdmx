@@ -20,10 +20,10 @@ export default defineConfig((ctx) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ["i18n", "defaults"],
+    boot: ["viewport-height", "i18n", "theme", "defaults", "show", "services", "audio", "timecode"],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
-    css: ["app.scss"],
+    css: ["app.scss", "desk.scss"],
 
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
@@ -43,7 +43,7 @@ export default defineConfig((ctx) => {
     build: {
       target: {
         browser: ["es2022", "firefox115", "chrome115", "safari14"],
-        node: "node20",
+        node: "node22",
       },
 
       typescript: {
@@ -199,7 +199,14 @@ export default defineConfig((ctx) => {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/developing-electron-apps/configuring-electron
     electron: {
-      // extendElectronMainConf (esbuildConf) {},
+      extendElectronMainConf(esbuildConf) {
+        esbuildConf.external = [
+          ...(esbuildConf.external || []),
+          "serialport",
+          "abletonlink",
+          "@napolab/texture-bridge",
+        ];
+      },
       // extendElectronPreloadConf (esbuildConf) {},
 
       // extendPackageJson (json) {},
@@ -228,8 +235,15 @@ export default defineConfig((ctx) => {
         // https://www.electron.build/configuration/configuration
 
         appId: "softdmx",
-        // unpack index.html, assets/, favicon.ico
-        asarUnpack: ["index.html", "assets/**/*", "favicon.ico", "site.webmanifest", "*.png"],
+        npmRebuild: true,
+        asarUnpack: [
+          "index.html",
+          "assets/**/*",
+          "favicon.ico",
+          "site.webmanifest",
+          "*.png",
+          "**/*.node",
+        ],
         win: {
           target: ['dir']
         },
