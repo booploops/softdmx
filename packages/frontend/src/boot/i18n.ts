@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { defineBoot } from '#q-app';
+import { boot } from 'quasar/wrappers';
 import { createI18n } from 'vue-i18n';
 
 import messages from 'src/i18n';
@@ -28,7 +28,7 @@ declare module 'vue-i18n' {
 }
 /* eslint-enable @typescript-eslint/no-empty-object-type */
 
-export default defineBoot(({ app }) => {
+export default boot(({ app }) => {
   const i18n = createI18n<{ message: MessageSchema }, MessageLanguages>({
     locale: 'en-US',
     legacy: false,

@@ -24,7 +24,7 @@
     "test:coverage": "yarn workspace @softdmx/frontend test:coverage",
     "test:all": "yarn test",
     "cli": "node packages/client/scripts/softdmx-cli.mjs",
-    "postinstall": "yarn workspace @softdmx/client postinstall:client && yarn workspace @softdmx/frontend prepare:quasar"
+    "postinstall": "yarn workspace @softdmx/client postinstall:client"
   },
   "devDependencies": {
     "concurrently": "^10.0.3"

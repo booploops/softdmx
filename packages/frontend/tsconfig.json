@@ -1,6 +1,18 @@
 {
-  "extends": "./.quasar/tsconfig.json",
   "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "jsx": "preserve",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "noEmit": true,
+    "baseUrl": ".",
     "noImplicitOverride": false,
     "paths": {
       "src/*": ["./src/*"],
@@ -12,16 +24,8 @@
       "components/*": ["./src/components/*"],
       "assets/*": ["./src/assets/*"],
       "boot/*": ["./src/boot/*"],
-      "#q-app": ["./node_modules/@quasar/app-vite/types/index.d.ts"],
-      "#q-app/client": ["./node_modules/@quasar/app-vite/exports/client/client.d.ts"],
-      "#q-app/bex/background": ["./node_modules/@quasar/app-vite/types/bex/entrypoints/background.d.ts"],
-      "#q-app/bex/content": ["./node_modules/@quasar/app-vite/types/bex/entrypoints/content.d.ts"],
-      "#q-app/bex/private/bex-bridge": ["./node_modules/@quasar/app-vite/types/bex/bex-bridge.d.ts"],
-      "#q-app/electron/main": ["./node_modules/@quasar/app-vite/exports/electron/main-runtime.d.ts"],
-      "#q-app/electron/preload": ["./node_modules/@quasar/app-vite/exports/electron/preload-runtime.d.ts"],
-      "#q-app/testing": ["./node_modules/@quasar/app-vite/exports/testing/testing.d.ts"],
-      "#q-app/capacitor": ["./node_modules/@quasar/app-vite/exports/capacitor/capacitor.d.ts"],
       "electron": ["../client/src-electron/node_modules/electron"]
     }
-  }
+  },
+  "include": ["src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"]
 }
