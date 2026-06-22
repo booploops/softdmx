@@ -25,7 +25,7 @@ export default defineConfig([
     platform: 'node',
     resolve: {
       alias: {
-        'src': path.resolve(__dirname, './src'),
+        'src': path.resolve(__dirname, '../frontend/src'),
       },
     },
   },
@@ -39,7 +39,7 @@ export default defineConfig([
     platform: 'node',
     resolve: {
       alias: {
-        'src': path.resolve(__dirname, './src'),
+        'src': path.resolve(__dirname, '../frontend/src'),
       },
     },
   }

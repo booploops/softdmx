@@ -4,7 +4,7 @@
     "noImplicitOverride": false,
     "paths": {
       "src/*": ["./src/*"],
-      "src-electron/*": ["./src-electron/*"],
+      "src-electron/*": ["../client/src-electron/*"],
       "@": ["./src"],
       "@/*": ["./src/*"],
       "layouts/*": ["./src/layouts/*"],
@@ -21,7 +21,7 @@
       "#q-app/electron/preload": ["./node_modules/@quasar/app-vite/exports/electron/preload-runtime.d.ts"],
       "#q-app/testing": ["./node_modules/@quasar/app-vite/exports/testing/testing.d.ts"],
       "#q-app/capacitor": ["./node_modules/@quasar/app-vite/exports/capacitor/capacitor.d.ts"],
-      "electron": ["./src-electron/node_modules/electron"]
+      "electron": ["../client/src-electron/node_modules/electron"]
     }
   }
 }

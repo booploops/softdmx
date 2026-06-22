@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "noImplicitOverride": false,
+    "paths": {
+      "src/*": ["../frontend/src/*"],
+      "src-electron/*": ["./src-electron/*"],
+      "electron": ["./node_modules/electron"]
+    }
+  },
+  "include": [
+    "./src-electron/**/*"
+  ]
+}

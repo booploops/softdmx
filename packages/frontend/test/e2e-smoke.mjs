@@ -15,7 +15,7 @@ import { mergeLayers } from '../src/engine/types.ts';
 import { scratchToLayer } from '../src/engine/layers/scratch.ts';
 
 test('smoke: cli help is available', () => {
-  const result = spawnSync(process.execPath, ['scripts/softdmx-cli.mjs', 'help'], {
+  const result = spawnSync(process.execPath, ['../client/scripts/softdmx-cli.mjs', 'help'], {
     cwd: process.cwd(),
     encoding: 'utf8',
   });

@@ -14,7 +14,7 @@ try {
   process.exit(1);
 }
 
-const appUrl = process.env.APP_URL || 'http://localhost:9000';
+const appUrl = process.env.APP_URL || 'http://127.0.0.1:9000';
 
 async function waitForUrl(url, timeoutMs = 60000) {
   const parsedUrl = new URL(url);
@@ -30,7 +30,7 @@ async function waitForUrl(url, timeoutMs = 60000) {
       await new Promise((resolve, reject) => {
         const req = http.request({
           method: 'GET',
-          hostname: parsedUrl.hostname,
+          hostname: parsedUrl.hostname === 'localhost' ? '127.0.0.1' : parsedUrl.hostname,
           port: parsedUrl.port || 80,
           path: parsedUrl.pathname,
           timeout: 1000,
