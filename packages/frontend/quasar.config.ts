@@ -66,7 +66,7 @@ export default defineConfig((ctx) => {
       // ignorePublicFolder: true,
       // minify: false,
       // polyfillModulePreload: true,
-      // distDir
+      distDir: '../client/dist/spa',
 
       extendViteConf (viteConf) {
         viteConf.resolve = viteConf.resolve || {};

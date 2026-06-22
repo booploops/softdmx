@@ -1992,7 +1992,7 @@ __metadata:
     "@softdmx/frontend": "workspace:*"
     "@types/node": "npm:^22.15.0"
     abletonlink: "npm:^0.2.0-beta.0"
-    electron: "npm:^40.0.0"
+    electron: "npm:40.10.4"
     electron-builder: "npm:^26.15.5"
     fast-xml-parser: "npm:^5.9.3"
     fastify: "npm:^5.8.5"
@@ -3845,7 +3845,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"electron@npm:^40.0.0":
+"electron@npm:40.10.4":
   version: 40.10.4
   resolution: "electron@npm:40.10.4"
   dependencies:

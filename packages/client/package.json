@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "node scripts/run-electron.mjs",
     "build": "rolldown -c rolldown.config.js",
+    "dist": "electron-builder",
     "postinstall:client": "node scripts/patch-abletonlink.mjs && node scripts/rebuild-native.mjs"
   },
   "dependencies": {
@@ -29,7 +30,7 @@
     "@electron/rebuild": "^4.0.4",
     "@softdmx/frontend": "workspace:*",
     "@types/node": "^22.15.0",
-    "electron": "^40.0.0",
+    "electron": "40.10.4",
     "electron-builder": "^26.15.5",
     "rolldown": "^1.1.1",
     "typescript": "~6.0.3"
