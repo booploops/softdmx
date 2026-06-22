@@ -8,7 +8,7 @@
   "scripts": {
     "dev:frontend": "yarn workspace @softdmx/frontend dev",
     "dev:electron": "yarn workspace @softdmx/client dev",
-    "dev": "concurrently \"yarn dev:frontend\" \"yarn dev:electron\"",
+    "dev": "concurrently -k \"yarn dev:frontend\" \"yarn dev:electron\"",
     "build:frontend": "yarn workspace @softdmx/frontend build",
     "build:electron": "yarn workspace @softdmx/client build",
     "build": "yarn build:frontend && yarn build:electron",

@@ -9,7 +9,7 @@
   "scripts": {
     "dev": "node scripts/run-electron.mjs",
     "build": "rolldown -c rolldown.config.js",
-    "dist": "electron-builder",
+    "dist": "electron-builder --config electron-builder.config.js",
     "postinstall:client": "node scripts/patch-abletonlink.mjs && node scripts/rebuild-native.mjs"
   },
   "dependencies": {
