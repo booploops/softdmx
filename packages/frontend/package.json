@@ -5,7 +5,7 @@
   "productName": "SoftDMX",
   "author": "booploops <49113086+booploops@users.noreply.github.com>",
   "type": "module",
-  "private": true,
+  "license": "MPL-2.0",
   "scripts": {
     "test": "node --import ./test/helpers/register-src-alias.mjs --experimental-strip-types --test 'test/**/*.test.ts' 'test/e2e/**/*.mjs' test/e2e-smoke.mjs",
     "test:unit": "node --import ./test/helpers/register-src-alias.mjs --experimental-strip-types --test 'test/*.test.ts' 'test/unit/**/*.test.ts' 'test/helpers/**/*.test.ts' 'test/fixtures/**/*.test.ts' 'test/fuzz/**/*.test.ts'",

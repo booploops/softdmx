@@ -2165,6 +2165,12 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@softdmx/engine@workspace:packages/engine":
+  version: 0.0.0-use.local
+  resolution: "@softdmx/engine@workspace:packages/engine"
+  languageName: unknown
+  linkType: soft
+
 "@softdmx/frontend@workspace:*, @softdmx/frontend@workspace:packages/frontend":
   version: 0.0.0-use.local
   resolution: "@softdmx/frontend@workspace:packages/frontend"
