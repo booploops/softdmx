@@ -13,6 +13,8 @@
     "paths": {
       "@softdmx/engine": ["../engine/src/index.ts"],
       "@softdmx/engine/*": ["../engine/src/*"],
+      "@softdmx/wasm": ["../wasm/src/index.ts"],
+      "@softdmx/wasm/*": ["../wasm/src/*"],
       "src/*": ["../frontend/src/*"],
       "src-electron/*": ["./src-electron/*"],
       "electron": ["./node_modules/electron"]

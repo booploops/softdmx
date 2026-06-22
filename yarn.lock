@@ -2155,6 +2155,7 @@ __metadata:
     "@quasar/vite-plugin": "npm:^1.9.0"
     "@softdmx/client": "workspace:*"
     "@softdmx/engine": "workspace:*"
+    "@softdmx/wasm": "workspace:*"
     "@types/lodash-es": "npm:^4.17.12"
     "@types/node": "npm:^22.15.0"
     "@vitejs/plugin-vue": "npm:^5.2.1"
@@ -2178,6 +2179,12 @@ __metadata:
     vue-i18n: "npm:^11.4.6"
     vue-router: "npm:^5.1.0"
     yaml: "npm:^2.9.0"
+  languageName: unknown
+  linkType: soft
+
+"@softdmx/wasm@workspace:*, @softdmx/wasm@workspace:packages/wasm":
+  version: 0.0.0-use.local
+  resolution: "@softdmx/wasm@workspace:packages/wasm"
   languageName: unknown
   linkType: soft
 

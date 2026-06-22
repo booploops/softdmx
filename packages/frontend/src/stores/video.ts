@@ -9,14 +9,11 @@
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import type { PixelColor } from '@softdmx/engine';
-import {
-  drawVideoToMapCanvas,
-  sampleFrameToPixelGrid,
-} from '@softdmx/engine';
 import type { PixelMapDefinition, ShowVideoConfig, VideoInputKind } from '@softdmx/engine';
 import { useShowStore } from './show';
 import { useOutputEngineStore } from './output-playback';
-import { normalizeVideoFps, resolveVideoPixelMapIds } from '@softdmx/engine';
+import { normalizeVideoFps, resolveVideoPixelMapIds, sampleRgbGridBuffer } from '@softdmx/engine';
+import VideoSamplerWorker from '../workers/video-sampler.worker.ts?worker';
 
 export interface VideoSenderInfo {
   name: string;
@@ -62,6 +59,7 @@ export const useVideoStore = defineStore('video', () => {
   let previewFrameCounter = 0;
   let lastFpsAt = performance.now();
   let previewHost: HTMLDivElement | null = null;
+  let samplerWorker: Worker | null = null;
 
   const isElectron = computed(() => Boolean(window.electronVideo));
   const canUseWebcam = computed(
@@ -190,6 +188,10 @@ export const useVideoStore = defineStore('video', () => {
       URL.revokeObjectURL(previewUrl.value);
       previewUrl.value = null;
     }
+    if (samplerWorker) {
+      samplerWorker.terminate();
+      samplerWorker = null;
+    }
   }
 
   function markPreviewFrame(sourceWidth: number, sourceHeight: number) {
@@ -253,23 +255,35 @@ export const useVideoStore = defineStore('video', () => {
     useOutputEngineStore().requestMerge();
   }
 
-  function rgbaFrameToPixelGrid(
-    frame: { data: Uint8ClampedArray | Uint8Array; width: number; height: number },
-    map: PixelMapDefinition
-  ): PixelColor[][] {
-    return Array.from({ length: map.height }, (_, y) =>
-      Array.from({ length: map.width }, (_, x) => {
-        const offset = (y * map.width + x) * 4;
-        return {
-          r: frame.data[offset] ?? 0,
-          g: frame.data[offset + 1] ?? 0,
-          b: frame.data[offset + 2] ?? 0,
-        };
-      })
-    );
+  function initWorker() {
+    if (samplerWorker) return;
+
+    const worker = new VideoSamplerWorker();
+    worker.onmessage = (e) => {
+      if (e.data.type === 'sampled') {
+        const { samples, source } = e.data;
+        const samplesMap = new Map<string, PixelColor[][]>();
+        for (const [id, item] of Object.entries(samples) as [string, { width: number; height: number; buffer: ArrayBuffer }][]) {
+          const grid = sampleRgbGridBuffer(
+            new Uint8Array(item.buffer),
+            item.width,
+            item.height
+          );
+          samplesMap.set(id, grid);
+        }
+        publishSampledPixels(samplesMap, source);
+      } else if (e.data.type === 'error') {
+        console.error('Video Sampler Worker Error:', e.data.error);
+      }
+    };
+    worker.postMessage({ type: 'init' });
+    samplerWorker = worker;
   }
 
-  function sampleMapFromVideoElement(map: PixelMapDefinition): PixelColor[][] | null {
+  function sampleAllMapsFromVideoElement() {
+    const maps = activePixelMaps.value;
+    if (maps.length === 0) return;
+
     const video = videoElement.value;
     const canvas = sampleCanvas.value;
     if (!video || !canvas || video.readyState < 2) return;
@@ -278,48 +292,49 @@ export const useVideoStore = defineStore('video', () => {
     const sourceHeight = video.videoHeight;
     if (sourceWidth <= 0 || sourceHeight <= 0) return;
 
-    const frame = drawVideoToMapCanvas(video, canvas, map, sourceWidth, sourceHeight, false);
-    if (!frame) return null;
+    canvas.width = sourceWidth;
+    canvas.height = sourceHeight;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
 
-    return rgbaFrameToPixelGrid(frame, map);
-  }
+    ctx.drawImage(video, 0, 0, sourceWidth, sourceHeight);
+    const imageData = ctx.getImageData(0, 0, sourceWidth, sourceHeight);
+    const frameData = imageData.data.buffer;
 
-  function sampleAllMapsFromVideoElement() {
-    const maps = activePixelMaps.value;
-    if (maps.length === 0) return;
-
-    const video = videoElement.value;
-    if (!video || video.readyState < 2) return;
-
-    const sourceWidth = video.videoWidth;
-    const sourceHeight = video.videoHeight;
-    if (sourceWidth <= 0 || sourceHeight <= 0) return;
-
-    const samples = new Map<string, PixelColor[][]>();
-    for (const map of maps) {
-      const pixels = sampleMapFromVideoElement(map);
-      if (pixels) samples.set(map.id, pixels);
-    }
-
-    if (samples.size > 0) {
-      publishSampledPixels(samples, { width: sourceWidth, height: sourceHeight });
-    }
+    initWorker();
+    samplerWorker!.postMessage({
+      type: 'sample',
+      frameWidth: sourceWidth,
+      frameHeight: sourceHeight,
+      frameData,
+      maps: maps.map(m => ({
+        id: m.id,
+        width: m.width,
+        height: m.height,
+        region: m.sampleRegion ?? { x: 0, y: 0, width: 1, height: 1 },
+        flipY: false
+      }))
+    }, [frameData]);
   }
 
   function sampleAllMapsFromNativeFrame(payload: { width: number; height: number; data: ArrayBuffer }) {
     const maps = activePixelMaps.value;
     if (maps.length === 0) return;
 
-    const rgba = new Uint8Array(payload.data);
-    const frame = { width: payload.width, height: payload.height, data: rgba };
-    const samples = new Map<string, PixelColor[][]>();
-
-    for (const map of maps) {
-      const pixels = sampleFrameToPixelGrid(frame, map);
-      samples.set(map.id, pixels);
-    }
-
-    publishSampledPixels(samples, { width: payload.width, height: payload.height });
+    initWorker();
+    samplerWorker!.postMessage({
+      type: 'sample',
+      frameWidth: payload.width,
+      frameHeight: payload.height,
+      frameData: payload.data,
+      maps: maps.map(m => ({
+        id: m.id,
+        width: m.width,
+        height: m.height,
+        region: m.sampleRegion ?? { x: 0, y: 0, width: 1, height: 1 },
+        flipY: false
+      }))
+    }, [payload.data]);
   }
 
   async function startWebcam(config: ShowVideoConfig) {

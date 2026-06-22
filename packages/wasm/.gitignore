@@ -1,0 +1,8 @@
+# Zig build cache and artifacts
+zig-cache/
+*.o
+*.a
+*.wasm
+
+# Compiled JS distribution
+dist/
