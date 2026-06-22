@@ -15,6 +15,7 @@ import { quasar, transformAssetUrls } from "@quasar/vite-plugin";
 import VueDevTools from "vite-plugin-vue-devtools";
 
 export default defineConfig({
+  base: "./",
   plugins: [
     VueDevTools(),
     vue({

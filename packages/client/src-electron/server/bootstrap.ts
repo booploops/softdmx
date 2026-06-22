@@ -8,6 +8,7 @@
 
 import { fastifyStatic } from '@fastify/static';
 import { join } from 'path';
+import { fileURLToPath } from 'node:url';
 import { getDevUrl, isDev } from '../runtime/env';
 import { AppState } from '../state/main';
 import { registerRemoteRestRoutes } from './api/remote-rest';
@@ -17,8 +18,8 @@ import { registerSettingsHandlers } from './socket/settings';
 import { createRemoteContext, httpServer, io, outputManager } from './context';
 
 export function startServer() {
-  const __dirname = new URL('.', import.meta.url).pathname;
-  const assetsPath = join(__dirname, '../app.asar.unpacked');
+  const __dirname = fileURLToPath(new URL('.', import.meta.url));
+  const assetsPath = join(__dirname, '../dist/spa');
 
   AppState.io = io;
 
