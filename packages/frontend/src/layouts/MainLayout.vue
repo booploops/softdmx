@@ -84,6 +84,7 @@ const $q = useQuasar();
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.02em;
+  -webkit-app-region: drag;
 }
 
 .app-page-container {
