@@ -8,7 +8,7 @@
 
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import type { ShowfileFixtureMapped, WidgetConfiguration } from 'src/types';
+import type { ShowfileFixtureMapped, WidgetConfiguration } from '@softdmx/engine';
 import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
 import { useProgrammerStore } from 'src/stores/programmer';

@@ -18,8 +18,8 @@ import { useShowStore } from 'src/stores/show';
 import { useDMXStore } from 'src/stores/dmx';
 import { useChannelControl } from 'src/composables/useChannelControl';
 import { filterScratchEntries } from 'src/utils/programmer-filter';
-import { applyWingOffset, wingScaleForIndex } from 'src/engine/align-wings';
-import type { AlignMode, WingDirection } from 'src/engine/align-wings';
+import { applyWingOffset, wingScaleForIndex } from '@softdmx/engine';
+import type { AlignMode, WingDirection } from '@softdmx/engine';
 
 const scratch = useScratchStore();
 const cueStore = useCueStore();

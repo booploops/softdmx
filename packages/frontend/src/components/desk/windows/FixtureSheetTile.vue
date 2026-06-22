@@ -6,11 +6,11 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import type { ShowfileFixtureMapped } from 'src/types';
+import type { ShowfileFixtureMapped } from '@softdmx/engine';
 import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
 import { useGroupColors } from 'src/composables/useGroupColors';
-import { groupColorStyle } from 'src/utils/group-colors';
+import { groupColorStyle } from '@softdmx/engine';
 import { useChannelControl } from 'src/composables/useChannelControl';
 
 const props = defineProps<{

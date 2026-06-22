@@ -7,9 +7,9 @@
  */
 
 import type { FastifyInstance } from 'fastify';
-import type { ShowAudioMapping, ShowDocument } from 'src/show/document';
+import type { ShowAudioMapping, ShowDocument } from '@softdmx/engine';
 import type { RemoteContext } from '../context';
-import { isSupportedShowVersion } from 'src/show/version';
+import { isSupportedShowVersion } from '@softdmx/engine';
 import {
   extractTokenFromHeaders,
   getRequiredRemoteApiToken,

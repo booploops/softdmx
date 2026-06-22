@@ -7,7 +7,7 @@
  */
 
 import type { BrowserWindow } from 'electron';
-import type { ActiveChannel } from 'src/types';
+import type { ActiveChannel } from '@softdmx/engine';
 
 let primaryWindow: BrowserWindow | null = null;
 let standbyActive = false;

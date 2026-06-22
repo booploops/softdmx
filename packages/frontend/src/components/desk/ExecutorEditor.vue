@@ -7,7 +7,7 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { ExecutorSlot } from 'src/types';
+import type { ExecutorSlot } from '@softdmx/engine';
 import { useCueStore } from 'src/stores/cue';
 import { useExecutorStore } from 'src/stores/executor';
 import { useOutputEngineStore } from 'src/stores/output-playback';

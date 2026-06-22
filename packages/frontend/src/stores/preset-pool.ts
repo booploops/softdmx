@@ -12,7 +12,7 @@ import { useShowStore } from './show';
 import {
   resolvePresetIdFromPoolSlot,
   resolvePresetPool,
-} from 'src/utils/preset-pool';
+} from '@softdmx/engine';
 
 export const usePresetPoolStore = defineStore('preset-pool', () => {
   const showStore = useShowStore();

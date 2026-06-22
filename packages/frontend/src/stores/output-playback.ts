@@ -8,38 +8,38 @@
 
 import { ref, watch } from 'vue';
 import { defineStore } from 'pinia';
-import type { ActiveChannel, Cue, CuePlaybackState } from 'src/types';
-import type { LayerContribution } from 'src/engine/types';
-import { mergeLayers, scalesWithIntensityMaster } from 'src/engine/types';
-import { scratchToLayer } from 'src/engine/layers/scratch';
-import { evaluateTimelineCueAtTime, getCueTotalDuration } from 'src/engine/cue-playback';
-import { getActiveTimelineCuesAtTimecode } from 'src/engine/timecode-set-playback';
-import { evaluateStackCueAtTime, initStackPlayback, advanceStackStep } from 'src/engine/stack-playback';
-import { evaluateAllEffects } from 'src/engine/effects/evaluator';
+import type { ActiveChannel, Cue, CuePlaybackState } from '@softdmx/engine';
+import type { LayerContribution } from '@softdmx/engine';
+import { mergeLayers, scalesWithIntensityMaster } from '@softdmx/engine';
+import { scratchToLayer } from '@softdmx/engine';
+import { evaluateTimelineCueAtTime, getCueTotalDuration } from '@softdmx/engine';
+import { getActiveTimelineCuesAtTimecode } from '@softdmx/engine';
+import { evaluateStackCueAtTime, initStackPlayback, advanceStackStep } from '@softdmx/engine';
+import { evaluateAllEffects } from '@softdmx/engine';
 import {
   createAudioMappingEvalState,
   evaluateAudioMappings,
-} from 'src/engine/audio-mapping';
+} from '@softdmx/engine';
 import {
   createVideoMappingEvalState,
   evaluateVideoMapping,
-} from 'src/engine/video-mapping';
-import { presetToChannels } from 'src/engine/preset-resolver';
+} from '@softdmx/engine';
+import { presetToChannels } from '@softdmx/engine';
 import { useShowStore } from './show';
 import { useScratchStore } from './scratch';
 import { useDMXStore } from './dmx';
 import { useLinkStore } from './link';
 import { useAudioStore } from './audio';
 import { useVideoStore } from './video';
-import { clampDmx } from 'src/engine/types';
+import { clampDmx } from '@softdmx/engine';
 import {
   clampUnit,
   computeCuePlaybackIntensity,
   resolveCueSubmasterScale,
-} from 'src/engine/playback-masters';
-import type { ShowDocument } from 'src/show/document';
-import { resolveVideoPixelMapIds } from 'src/utils/video-defaults';
-import { resolvePresetIdFromPoolSlot } from 'src/utils/preset-pool';
+} from '@softdmx/engine';
+import type { ShowDocument } from '@softdmx/engine';
+import { resolveVideoPixelMapIds } from '@softdmx/engine';
+import { resolvePresetIdFromPoolSlot } from '@softdmx/engine';
 
 interface CuePlayOptions {
   intensity?: number;

@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ThemeDefinition } from '../types';
+import type { ThemeDefinition } from '../types.ts';
 import { defaultDarkTheme } from './default-dark';
 import { studioBlueTheme } from './studio-blue';
 

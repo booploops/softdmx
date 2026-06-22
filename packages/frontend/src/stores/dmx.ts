@@ -13,12 +13,12 @@ import type {
   FixtureDefinition,
   FixtureChannelWithReference,
   ShowfileFixtureMapped,
-} from 'src/types';
-import type { ShowDocument } from 'src/show/document';
-import { validateShowDocument } from 'src/show/io';
+} from '@softdmx/engine';
+import type { ShowDocument } from '@softdmx/engine';
+import { validateShowDocument } from '@softdmx/engine';
 import { getFixtureDefinition, getAllFixtures } from 'src/fixture-library/registry';
-import { resolveFixtureChannelsForMode } from 'src/fixture-library/gdtf/gdtf-to-fixture';
-import { buildChannelMap } from 'src/engine/preset-resolver';
+import { resolveFixtureChannelsForMode } from '@softdmx/engine';
+import { buildChannelMap } from '@softdmx/engine';
 import { useIOClient } from 'src/lib/io-client';
 
 export const useDMXStore = defineStore('dmx', () => {

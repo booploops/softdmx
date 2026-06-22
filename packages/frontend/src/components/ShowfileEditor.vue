@@ -16,10 +16,10 @@ import {
   getFixtureDefinition as lookupFixture,
   pluginRegistryVersion,
 } from 'src/fixture-library/registry';
-import type { ShowDocument } from 'src/show/document';
-import { createEmptyShow } from 'src/show/document';
+import type { ShowDocument } from '@softdmx/engine';
+import { createEmptyShow } from '@softdmx/engine';
 import { ref, computed, watch, onMounted } from 'vue';
-import type { ShowfileFixture, FixtureDefinition } from 'src/types';
+import type { ShowfileFixture, FixtureDefinition } from '@softdmx/engine';
 import { Dialog } from 'quasar';
 import * as YAML from 'yaml';
 import FixtureBrowser from './FixtureBrowser.vue';
@@ -28,7 +28,7 @@ import {
   defaultGroupColorForIndex,
   groupColorStyle,
   normalizeGroupColor,
-} from 'src/utils/group-colors';
+} from '@softdmx/engine';
 
 const showStore = useShowStore();
 const ui = useUIStore();

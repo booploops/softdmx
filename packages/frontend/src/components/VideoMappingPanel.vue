@@ -10,14 +10,14 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useShowStore } from 'src/stores/show';
 import { useVideoStore } from 'src/stores/video';
-import type { PixelMapDefinition, VideoInputKind, VideoSampleFps, VideoSampleRegion } from 'src/show/document';
+import type { PixelMapDefinition, VideoInputKind, VideoSampleFps, VideoSampleRegion } from '@softdmx/engine';
 import {
   FULL_VIDEO_SAMPLE_REGION,
   normalizeSampleRegion,
   resolvePixelMapVideoGain,
   resolvePixelMapVideoSmoothingMs,
   resolveVideoPixelMapIds,
-} from 'src/utils/video-defaults';
+} from '@softdmx/engine';
 
 const ROI_COLORS = ['#1976d2', '#e53935', '#43a047', '#fb8c00', '#8e24aa', '#00acc1'];
 

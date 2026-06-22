@@ -6,10 +6,10 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import type { TouchControl, TouchPage } from 'src/types/desk';
+import type { TouchControl, TouchPage } from '@softdmx/engine';
 import { useIOClient } from 'src/lib/io-client';
 import { useShowStore } from 'src/stores/show';
-import { createDefaultTouchConfig } from 'src/utils/desk-defaults';
+import { createDefaultTouchConfig } from '@softdmx/engine';
 
 type AudioMetersPayload = {
   rms?: number;

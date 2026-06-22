@@ -8,8 +8,8 @@
 
 import { computed, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
-import type { ExecutorSlot, ShowExecutor } from 'src/types';
-import type { ShowDocument } from 'src/show/document';
+import type { ExecutorSlot, ShowExecutor } from '@softdmx/engine';
+import type { ShowDocument } from '@softdmx/engine';
 import { useShowStore } from './show';
 import { useOutputEngineStore } from './output-playback';
 

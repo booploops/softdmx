@@ -10,7 +10,7 @@ import { useScratchStore } from 'src/stores/scratch';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
-import { inferAttributeFeature } from 'src/engine/attributes';
+import { inferAttributeFeature } from '@softdmx/engine';
 
 export function useChannelControl() {
   const scratch = useScratchStore();
@@ -26,7 +26,7 @@ export function useChannelControl() {
     attributeType: string;
     attributeName?: string;
     attributeId?: string;
-    feature?: import('src/types/attributes').AttributeFeature;
+    feature?: import('@softdmx/engine').AttributeFeature;
   };
 
   function parseGroupPath(path: string): GroupPath | null {

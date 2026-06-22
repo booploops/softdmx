@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { getAllFixtures, pluginRegistryVersion, registerRuntimeFixtureFromYaml } from 'src/fixture-library/registry';
 import { ref, computed } from 'vue';
-import type { FixtureDefinition } from 'src/types';
+import type { FixtureDefinition } from '@softdmx/engine';
 import { Dialog, Notify } from 'quasar';
 
 const searchText = ref('');

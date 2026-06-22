@@ -8,8 +8,8 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, computed } from 'vue';
 import { useIOClient } from 'src/lib/io-client';
-import type { ShowDocument } from 'src/show/document';
-import { isSupportedShowVersion } from 'src/show/version';
+import type { ShowDocument } from '@softdmx/engine';
+import { isSupportedShowVersion } from '@softdmx/engine';
 import TouchSurface from 'src/components/touch/TouchSurface.vue';
 
 const socket = useIOClient();

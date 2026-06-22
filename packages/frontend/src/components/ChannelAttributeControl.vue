@@ -6,14 +6,14 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import type { FixtureChannelDefinition } from 'src/types';
+import type { FixtureChannelDefinition } from '@softdmx/engine';
 import { useChannelControl } from 'src/composables/useChannelControl';
 import {
   dmxToIndex,
   getIndexedSelectOptions,
   indexToDmx,
   isIndexedChannel,
-} from 'src/engine/indexed-channel';
+} from '@softdmx/engine';
 
 const props = defineProps<{
   channel: FixtureChannelDefinition;

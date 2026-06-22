@@ -9,7 +9,7 @@
 import { useShowStore } from 'src/stores/show';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useDMXStore } from 'src/stores/dmx';
-import type { EffectDefinition } from 'src/types/effects';
+import type { EffectDefinition } from '@softdmx/engine';
 
 const showStore = useShowStore();
 const engine = useOutputEngineStore();

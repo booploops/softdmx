@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { DeepPartial } from '../types';
+import type { DeepPartial } from './types.ts';
 
 export function deepMerge<T extends Record<string, unknown>>(base: T, patch?: DeepPartial<T>): T {
   if (!patch) return { ...base };

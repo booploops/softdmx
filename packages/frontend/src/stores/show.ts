@@ -8,15 +8,15 @@
 
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import type { ShowDocument } from 'src/show/document';
-import { createEmptyShow } from 'src/show/document';
+import type { ShowDocument } from '@softdmx/engine';
+import { createEmptyShow } from '@softdmx/engine';
 import {
   parseShowDocument,
   serializeShowDocument,
   downloadShowDocument,
   loadShowDocumentFromFile,
   validateShowDocument,
-} from 'src/show/io';
+} from '@softdmx/engine';
 import { writeCrashSnapshot, clearCrashSnapshot, readCrashSnapshot } from 'src/utils/crash-snapshot';
 import { readLastShow, writeLastShow } from 'src/utils/last-show';
 import { useIOClient } from 'src/lib/io-client';

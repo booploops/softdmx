@@ -12,8 +12,8 @@
 import { useCueStore } from 'src/stores/cue';
 import { useShowStore } from 'src/stores/show';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
-import type { CueLayer, RecordedFrame, StackStep } from 'src/types';
-import { formatSmpte, parseSmpteInput } from 'src/utils/timecode-format';
+import type { CueLayer, RecordedFrame, StackStep } from '@softdmx/engine';
+import { formatSmpte, parseSmpteInput } from '@softdmx/engine';
 
 const cueStore = useCueStore();
 const showStore = useShowStore();

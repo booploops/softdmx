@@ -8,9 +8,9 @@
 
 import { computed, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
-import type { TouchControl, TouchPage } from 'src/types/desk';
+import type { TouchControl, TouchPage } from '@softdmx/engine';
 import { useShowStore } from './show';
-import { createDefaultTouchConfig } from 'src/utils/desk-defaults';
+import { createDefaultTouchConfig } from '@softdmx/engine';
 
 function newControlId(prefix: string) {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;

@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { FixtureChannelWithReference } from 'src/types';
+import type { FixtureChannelWithReference } from '@softdmx/engine';
 
 export type IndexedSelectModel = {
   channel: FixtureChannelWithReference;

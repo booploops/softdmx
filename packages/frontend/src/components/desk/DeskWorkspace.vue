@@ -6,8 +6,8 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import type { DeskPane } from 'src/types/desk';
-import { DESK_GRID_COLS, buildDeskRowBands, deskPaneGridPlacement } from 'src/utils/desk-defaults';
+import type { DeskPane } from '@softdmx/engine';
+import { DESK_GRID_COLS, buildDeskRowBands, deskPaneGridPlacement } from '@softdmx/engine';
 import { DESK_WINDOW_META } from 'src/desk/workspace-modes';
 import DeskWindowHost from './DeskWindowHost.vue';
 import { useDeskViewStore } from 'src/stores/desk-view';

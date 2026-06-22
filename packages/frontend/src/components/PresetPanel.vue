@@ -11,7 +11,7 @@ import { useCueStore } from 'src/stores/cue';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useAudioStore } from 'src/stores/audio';
 import { useDMXStore } from 'src/stores/dmx';
-import type { ShowAudioMapping } from 'src/show/document';
+import type { ShowAudioMapping } from '@softdmx/engine';
 import { computed, reactive, ref } from 'vue';
 import PresetEditor from './PresetEditor.vue';
 import EffectEditor from './EffectEditor.vue';

@@ -8,9 +8,9 @@
 
 import { computed, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
-import type { DeskPane, DeskView } from 'src/types/desk';
+import type { DeskPane, DeskView } from '@softdmx/engine';
 import { useShowStore } from './show';
-import { createDefaultDeskConfig, DEFAULT_DESK_VIEWS } from 'src/utils/desk-defaults';
+import { createDefaultDeskConfig, DEFAULT_DESK_VIEWS } from '@softdmx/engine';
 
 export const useDeskViewStore = defineStore('desk-view', () => {
   const showStore = useShowStore();

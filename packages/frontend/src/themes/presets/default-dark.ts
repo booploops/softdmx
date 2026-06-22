@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ThemeDefinition } from '../types';
+import type { ThemeDefinition } from '../types.ts';
 
 export const defaultDarkTheme: ThemeDefinition = {
   id: 'default-dark',

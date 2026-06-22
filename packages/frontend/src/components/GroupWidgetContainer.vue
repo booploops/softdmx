@@ -9,8 +9,8 @@
   Purpose: Container component for displaying widgets for a linked group of fixtures
 -->
 <script setup lang="ts">
-import type { ShowfileFixtureMapped } from 'src/types';
-import type { ShowGroup } from 'src/show/document';
+import type { ShowfileFixtureMapped } from '@softdmx/engine';
+import type { ShowGroup } from '@softdmx/engine';
 import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
 import WidgetRenderer from './widgets/WidgetRenderer.vue';

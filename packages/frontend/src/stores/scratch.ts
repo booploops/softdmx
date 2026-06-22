@@ -8,7 +8,7 @@
 
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import type { ScratchEntry } from 'src/engine/layers/scratch';
+import type { ScratchEntry } from '@softdmx/engine';
 import { writeCrashSnapshot } from 'src/utils/crash-snapshot';
 
 const HISTORY_LIMIT = 100;

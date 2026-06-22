@@ -1,4 +1,4 @@
-import { FixtureChannelWithReference } from "src/types"
+import { FixtureChannelWithReference } from '@softdmx/engine'
 
 export type LightMoverModel = {
   panChannel: FixtureChannelWithReference;

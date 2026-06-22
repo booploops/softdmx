@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ActiveChannel, ShowDocument } from "src/types";
+import type { ActiveChannel, ShowDocument } from '@softdmx/engine';
 import { DmxOutputDriver } from "./drivers/dmx-output-driver";
 import { GridNodeDriver } from "./drivers/gridnode-driver";
 import { ArtNetDriver } from "./drivers/artnet-driver";
@@ -15,8 +15,7 @@ import { DmxUsbProDriver } from "./drivers/dmx-usb-pro-driver";
 import { ConfigFile } from "../server/app-settings";
 import { setHasGridnodeDestination } from "../windows/gridnode-overlay";
 import { getFixtureDefinitionFromDisk } from "../fixture-lookup";
-import type { UniverseHealthStatus } from "src/types/output-health";
-import { createInitialHealth, updateHealthAfterSend } from "src/utils/output-health";
+import { type UniverseHealthStatus, createInitialHealth, updateHealthAfterSend } from '@softdmx/engine';
 
 interface FixturePatch {
   destinationId: string;

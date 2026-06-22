@@ -6,13 +6,15 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-export { serializeFixtureYaml, downloadFixtureYaml } from './fixture-serialize.ts';
 export {
+  serializeFixtureYaml,
+  downloadFixtureYaml,
   downloadFixtureGdtf,
   exportFixtureGdtfBytes,
   fixtureToGdtfDescriptionXml,
-} from './gdtf/fixture-to-gdtf.ts';
-export { loadFixtureFromGdtf, resolveFixtureChannelsForMode } from './gdtf/gdtf-to-fixture.ts';
+  loadFixtureFromGdtf,
+  resolveFixtureChannelsForMode,
+} from '@softdmx/engine';
 
 export {
   initPluginRegistry,

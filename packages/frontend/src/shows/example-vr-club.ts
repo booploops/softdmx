@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowDocument } from 'src/show/document';
+import type { ShowDocument } from '@softdmx/engine';
 
 const fixtureNames = {
   stageSideLeft: ['Stage Side Left 1', 'Stage Side Left 2', 'Stage Side Left 3', 'Stage Side Left 4'],

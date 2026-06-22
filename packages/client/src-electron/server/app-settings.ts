@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { OutputDestination } from "src/types";
+import type { OutputDestination } from '@softdmx/engine';
 
 export class ConfigFile {
   Port: number = 5353;

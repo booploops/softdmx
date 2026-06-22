@@ -6,14 +6,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { FixtureDefinition } from 'src/types/fixture';
+import type { FixtureDefinition } from '@softdmx/engine';
 import {
   loadFixtureYaml,
   parsePluginManifest,
   type PluginManifest,
-} from './fixture-yaml';
+} from '@softdmx/engine';
 
-export type { PluginManifest } from './fixture-yaml';
+export type { PluginManifest } from '@softdmx/engine';
 
 let bundledManifestRaw: Record<string, string> | undefined;
 let bundledFixtureRaw: Record<string, string> | undefined;
@@ -113,7 +113,7 @@ function buildPathCandidates(path: string): string[] {
   ];
 }
 
-export { loadFixtureYaml } from './fixture-yaml';
+export { loadFixtureYaml } from '@softdmx/engine';
 
 export function loadPluginManifest(path: string): PluginManifest {
   const manifestKey = buildPathCandidates(path).find(

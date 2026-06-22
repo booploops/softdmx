@@ -14,7 +14,7 @@ import { exampleVrClubShow } from 'src/shows/example-vr-club';
 import { simpleWashShow } from 'src/shows/simple-wash';
 import { laserDemoShow } from 'src/shows/laser-demo';
 import { formatLastShowSavedAt, readLastShow } from 'src/utils/last-show';
-import type { ShowDocument } from 'src/show/document';
+import type { ShowDocument } from '@softdmx/engine';
 
 const showStore = useShowStore();
 const scratch = useScratchStore();

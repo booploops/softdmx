@@ -10,7 +10,7 @@ import { computed, ref } from 'vue';
 import { useShowStore } from 'src/stores/show';
 import { useMidiStore } from 'src/stores/midi';
 import { useOscStore } from 'src/stores/osc';
-import type { BindingTarget, BindingTargetType, MidiMapping, OscMapping } from 'src/types';
+import type { BindingTarget, BindingTargetType, MidiMapping, OscMapping } from '@softdmx/engine';
 
 const emit = defineEmits(['close']);
 

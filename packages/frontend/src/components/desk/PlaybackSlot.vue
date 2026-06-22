@@ -6,7 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import type { ExecutorSlot } from 'src/types';
+import type { ExecutorSlot } from '@softdmx/engine';
 import { useExecutorStore } from 'src/stores/executor';
 
 const props = defineProps<{ slot: ExecutorSlot }>();

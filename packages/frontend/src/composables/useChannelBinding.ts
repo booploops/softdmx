@@ -8,7 +8,7 @@
 
 import { computed, toValue, type MaybeRefOrGetter } from 'vue';
 import { storeToRefs } from 'pinia';
-import type { ActiveChannel, FixtureChannelWithReference } from 'src/types';
+import type { ActiveChannel, FixtureChannelWithReference } from '@softdmx/engine';
 import { useScratchStore } from 'src/stores/scratch';
 import { useChannelControl } from './useChannelControl';
 import { useDMXStore } from 'src/stores/dmx';

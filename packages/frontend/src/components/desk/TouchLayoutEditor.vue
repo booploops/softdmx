@@ -6,7 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import type { TouchControlType } from 'src/types/desk';
+import type { TouchControlType } from '@softdmx/engine';
 import { useTouchLayoutStore } from 'src/stores/touch-layout';
 import { useShowStore } from 'src/stores/show';
 

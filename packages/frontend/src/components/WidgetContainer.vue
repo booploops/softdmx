@@ -9,7 +9,7 @@
   Purpose: Container component for displaying all widgets for a fixture
 -->
 <script setup lang="ts">
-import type { ShowfileFixtureMapped } from 'src/types';
+import type { ShowfileFixtureMapped } from '@softdmx/engine';
 import WidgetRenderer from './widgets/WidgetRenderer.vue';
 import { useSelectionStore } from 'src/stores/selection';
 

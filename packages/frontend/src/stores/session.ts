@@ -9,7 +9,7 @@
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
 import { useShowStore } from './show';
-import { shouldApplySessionEpoch } from 'src/utils/session-epoch';
+import { shouldApplySessionEpoch } from '@softdmx/engine';
 
 export const useSessionStore = defineStore('session', () => {
   const userName = ref('local');

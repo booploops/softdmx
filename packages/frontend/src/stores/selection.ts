@@ -8,7 +8,7 @@
 
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
-import type { AlignMode, WingDirection } from 'src/engine/align-wings';
+import type { AlignMode, WingDirection } from '@softdmx/engine';
 
 export const useSelectionStore = defineStore('selection', () => {
   const selectedFixtures = ref<Set<string>>(new Set());

@@ -9,7 +9,7 @@
 import { useDMXStore } from 'src/stores/dmx';
 import { storeToRefs } from 'pinia';
 import { useIOClient } from 'src/lib/io-client';
-import { ActiveChannel } from 'src/types';
+import { ActiveChannel } from '@softdmx/engine';
 
 /**
  * DMX (Digital Multiplex) Grid Node Display

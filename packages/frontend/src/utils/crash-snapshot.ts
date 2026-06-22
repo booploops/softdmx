@@ -6,8 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ScratchEntry } from 'src/engine/layers/scratch';
-import type { ShowDocument } from 'src/show/document';
+import type { ScratchEntry } from '@softdmx/engine';
+import type { ShowDocument } from '@softdmx/engine';
 
 const CRASH_SNAPSHOT_KEY = 'softdmx.crash-snapshot.v1';
 

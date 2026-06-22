@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowDocument } from 'src/show/document';
+import type { ShowDocument } from '@softdmx/engine';
 
 export const laserDemoShow: ShowDocument = {
   version: '1.1',

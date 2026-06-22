@@ -6,8 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { SoftDMXPlugin } from '../types';
-import type { FixtureDefinition } from 'src/types/fixture';
+import type { SoftDMXPlugin } from '@softdmx/engine';
+import type { FixtureDefinition } from '@softdmx/engine';
 
 export const VRSL_Spotlight: FixtureDefinition = {
   id: 'VRSL_Spotlight',

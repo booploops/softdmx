@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { Cue, CueLayer, RecordedFrame } from 'src/types';
+import type { Cue, CueLayer, RecordedFrame } from '@softdmx/engine';
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import { cloneDeep } from 'lodash-es';
@@ -14,12 +14,12 @@ import { useShowStore } from './show';
 import { useDMXStore } from './dmx';
 import { useOutputEngineStore } from './output-playback';
 import { useScratchStore } from './scratch';
-import { getCueTotalDuration } from 'src/engine/cue-playback';
-import type { AttributeFeature } from 'src/types/attributes';
+import { getCueTotalDuration } from '@softdmx/engine';
+import type { AttributeFeature } from '@softdmx/engine';
 import type { ProgrammerStoreMode } from './programmer';
 import { applyProgrammerStoreMode, captureScratchPreset } from 'src/utils/programmer-capture';
 import { filterScratchEntries } from 'src/utils/programmer-filter';
-import { resolvePresetIdFromPoolSlot } from 'src/utils/preset-pool';
+import { resolvePresetIdFromPoolSlot } from '@softdmx/engine';
 
 export const useCueStore = defineStore('cue', () => {
   const showStore = useShowStore();

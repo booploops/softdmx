@@ -6,8 +6,8 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import type { FixturePosition } from 'src/types';
-import { resolveFixturePosition } from 'src/utils/pan-tilt-aim';
+import type { FixturePosition } from '@softdmx/engine';
+import { resolveFixturePosition } from '@softdmx/engine';
 import { useThemeStore } from 'src/stores/theme';
 import { readThemeCanvasPalette } from 'src/utils/theme-css';
 

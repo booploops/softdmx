@@ -10,7 +10,7 @@ import { defineStore } from 'pinia';
 import { ref } from 'vue';
 import { useShowStore } from './show';
 import { useOutputEngineStore } from './output-playback';
-import { compensateLinkPhase } from 'src/utils/sync-compensation';
+import { compensateLinkPhase } from '@softdmx/engine';
 
 export const useLinkStore = defineStore('link', () => {
   const isEnabled = ref(false);

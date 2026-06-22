@@ -15,9 +15,9 @@ import { useUIStore } from 'src/stores/ui';
 import {
   getCueTimecodeInSeconds,
   getCueTimecodeOutSeconds,
-} from 'src/engine/timecode-set-playback';
-import { getCueTotalDuration } from 'src/engine/cue-playback';
-import { formatSmpte, formatTimelineSeconds, msToSeconds, parseSmpteInput, secondsToMs } from 'src/utils/timecode-format';
+} from '@softdmx/engine';
+import { getCueTotalDuration } from '@softdmx/engine';
+import { formatSmpte, formatTimelineSeconds, msToSeconds, parseSmpteInput, secondsToMs } from '@softdmx/engine';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 
 const props = withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false });

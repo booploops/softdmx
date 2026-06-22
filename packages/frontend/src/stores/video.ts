@@ -8,15 +8,15 @@
 
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
-import type { PixelColor } from 'src/engine/pixel-mapper';
+import type { PixelColor } from '@softdmx/engine';
 import {
   drawVideoToMapCanvas,
   sampleFrameToPixelGrid,
-} from 'src/engine/video-sampler';
-import type { PixelMapDefinition, ShowVideoConfig, VideoInputKind } from 'src/show/document';
+} from '@softdmx/engine';
+import type { PixelMapDefinition, ShowVideoConfig, VideoInputKind } from '@softdmx/engine';
 import { useShowStore } from './show';
 import { useOutputEngineStore } from './output-playback';
-import { normalizeVideoFps, resolveVideoPixelMapIds } from 'src/utils/video-defaults';
+import { normalizeVideoFps, resolveVideoPixelMapIds } from '@softdmx/engine';
 
 export interface VideoSenderInfo {
   name: string;

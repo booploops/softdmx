@@ -8,7 +8,7 @@
 
 import { ref } from 'vue';
 import { defineStore } from 'pinia';
-import type { AttributeFeature } from 'src/types/attributes';
+import type { AttributeFeature } from '@softdmx/engine';
 
 export type ProgrammerFeatureGroup = AttributeFeature | 'all';
 export type ProgrammerStoreMode = 'store' | 'update' | 'merge' | 'remove';

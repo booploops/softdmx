@@ -6,8 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { WidgetConfiguration, ShowfileFixtureMapped } from 'src/types';
-import type { ProgrammerFeatureGroup } from 'src/stores/programmer';
+import type { WidgetConfiguration, ShowfileFixtureMapped } from '@softdmx/engine';
+import type { ProgrammerFeatureGroup } from '../stores/programmer';
 
 export function widgetMatchesFeatureGroup(
   widget: WidgetConfiguration,

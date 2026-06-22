@@ -13,7 +13,7 @@ import { useAudioStore } from 'src/stores/audio';
 import { useGridNodeOverlayStore } from 'src/stores/gridnode-overlay';
 import { useTimecodeStore } from 'src/stores/timecode';
 import { useLtcTimecodeStore } from 'src/stores/ltc-timecode';
-import type { OutputDestination, TimecodeSource } from 'src/types';
+import type { OutputDestination, TimecodeSource } from '@softdmx/engine';
 
 const socket = useIOClient();
 const showStore = useShowStore();

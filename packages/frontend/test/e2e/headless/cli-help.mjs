@@ -11,7 +11,7 @@ import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 
 test('headless: cli help is available', () => {
-  const result = spawnSync(process.execPath, ['scripts/softdmx-cli.mjs', 'help'], {
+  const result = spawnSync(process.execPath, ['../client/scripts/softdmx-cli.mjs', 'help'], {
     cwd: process.cwd(),
     encoding: 'utf8',
   });

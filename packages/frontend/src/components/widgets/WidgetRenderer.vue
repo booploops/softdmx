@@ -10,7 +10,7 @@
 -->
 <script setup lang="ts">
 import { computed } from 'vue';
-import type { WidgetConfiguration, ShowfileFixtureMapped } from 'src/types';
+import type { WidgetConfiguration, ShowfileFixtureMapped } from '@softdmx/engine';
 import ColorPicker from './ColorPicker.vue';
 import LightMover from './LightMover.vue';
 import DimmerSlider from './DimmerSlider.vue';

@@ -11,8 +11,8 @@ import { defineStore } from 'pinia';
 import { useShowStore } from './show';
 import { useTimecodeStore } from './timecode';
 import { useOutputEngineStore } from './output-playback';
-import { computeSetTimelineDurationMs } from 'src/engine/timecode-set-playback';
-import { msToSeconds, secondsToMs } from 'src/utils/timecode-format';
+import { computeSetTimelineDurationMs } from '@softdmx/engine';
+import { msToSeconds, secondsToMs } from '@softdmx/engine';
 
 export const useTimelineEditorStore = defineStore('timeline-editor', () => {
   const showStore = useShowStore();

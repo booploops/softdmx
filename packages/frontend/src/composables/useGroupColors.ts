@@ -12,7 +12,7 @@ import {
   buildFixtureGroupLookup,
   resolveGroupColor,
   type FixtureGroupInfo,
-} from 'src/utils/group-colors';
+} from '@softdmx/engine';
 
 export function useGroupColors() {
   const showStore = useShowStore();

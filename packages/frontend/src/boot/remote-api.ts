@@ -15,8 +15,8 @@ import { useCueStore } from 'src/stores/cue';
 import { useExecutorStore } from 'src/stores/executor';
 import { useShowStore } from 'src/stores/show';
 import { useAudioStore } from 'src/stores/audio';
-import type { ShowAudioMapping, ShowDocument } from 'src/show/document';
-import { isSupportedShowVersion } from 'src/show/version';
+import type { ShowAudioMapping, ShowDocument } from '@softdmx/engine';
+import { isSupportedShowVersion } from '@softdmx/engine';
 
 export default boot(() => {
   const socket = useIOClient();

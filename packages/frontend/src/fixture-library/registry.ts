@@ -6,8 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { FixtureDefinition } from 'src/types/fixture';
-import type { SoftDMXPlugin } from './types';
+import type { FixtureDefinition } from '@softdmx/engine';
+import type { SoftDMXPlugin } from '@softdmx/engine';
 import { builtinPlugin } from './builtin/index.ts';
 import { ref } from 'vue';
 import {
@@ -17,7 +17,7 @@ import {
   loadPluginManifest,
   loadFixtureYaml,
 } from './loader';
-import { loadFixtureFromGdtf } from './gdtf/gdtf-to-fixture.ts';
+import { loadFixtureFromGdtf } from '@softdmx/engine';
 
 const plugins = new Map<string, SoftDMXPlugin>();
 const runtimePluginId = 'runtime-imports';
@@ -52,7 +52,7 @@ export function loadPluginsFromIds(pluginIds: string[]): void {
     }
 
     const manifest = loadPluginManifest(manifestPath);
-    const fixtures = manifest.fixtures.map((fixturePath) =>
+    const fixtures = manifest.fixtures.map((fixturePath: string) =>
       loadBundledFixtureYaml(manifestPath, fixturePath)
     );
 
@@ -77,7 +77,7 @@ function registerRuntimeFixture(fixture: FixtureDefinition): FixtureDefinition {
   };
 
   const fixtures = runtimePlugin.fixtures ?? [];
-  const existingIndex = fixtures.findIndex((f) => f.id === fixture.id);
+  const existingIndex = fixtures.findIndex((f: FixtureDefinition) => f.id === fixture.id);
   if (existingIndex >= 0) {
     fixtures[existingIndex] = fixture;
   } else {
@@ -100,13 +100,13 @@ export function registerRuntimeFixtureFromYaml(yaml: string): FixtureDefinition 
 export function getFixtureDefinition(fixtureId: string): FixtureDefinition | undefined {
   const runtimeFixture = plugins
     .get(runtimePluginId)
-    ?.fixtures?.find((fixture) => fixture.id === fixtureId);
+    ?.fixtures?.find((fixture: FixtureDefinition) => fixture.id === fixtureId);
   if (runtimeFixture) {
     return runtimeFixture;
   }
 
   for (const plugin of plugins.values()) {
-    const fixture = plugin.fixtures?.find((f) => f.id === fixtureId);
+    const fixture = plugin.fixtures?.find((f: FixtureDefinition) => f.id === fixtureId);
     if (fixture) return fixture;
   }
   return undefined;

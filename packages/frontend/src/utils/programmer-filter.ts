@@ -6,9 +6,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { AttributeFeature } from '../types/attributes.ts';
-import type { ScratchEntry } from '../engine/layers/scratch.ts';
-import { inferAttributeFeature } from '../engine/attributes.ts';
+import type { AttributeFeature } from '@softdmx/engine';
+import type { ScratchEntry } from '@softdmx/engine';
+import { inferAttributeFeature } from '@softdmx/engine';
 
 export function scratchEntryMatchesFeature(
   entry: ScratchEntry,

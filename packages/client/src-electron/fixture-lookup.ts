@@ -9,9 +9,7 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import type { FixtureDefinition } from 'src/types';
-import { builtinPlugin } from 'src/fixture-library/builtin/fixtures';
-import { loadFixtureYaml, parsePluginManifest } from 'src/fixture-library/fixture-yaml';
+import { type FixtureDefinition, builtinPlugin, loadFixtureYaml, parsePluginManifest } from '@softdmx/engine';
 
 const fixturesById = new Map<string, FixtureDefinition>();
 let initialized = false;

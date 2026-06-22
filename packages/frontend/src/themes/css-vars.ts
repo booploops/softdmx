@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ThemeTokens } from '../types';
+import type { ThemeTokens } from './types.ts';
 
 export function themeTokensToCssVars(tokens: ThemeTokens): Record<string, string> {
   const { colors, typography, radius, layout } = tokens;

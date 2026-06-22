@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { ipcMain, type BrowserWindow } from 'electron';
+import { ipcMain, type BrowserWindow, type IpcMainInvokeEvent } from 'electron';
 import {
   connectTextureBridge,
   disconnectTextureBridge,
@@ -19,7 +19,7 @@ let connected = false;
 
 function registerVideoHandler<T extends unknown[], R>(
   channel: string,
-  handler: (...args: T) => R | Promise<R>
+  handler: (event: IpcMainInvokeEvent, ...args: T) => R | Promise<R>
 ) {
   ipcMain.removeHandler(channel);
   ipcMain.handle(channel, handler);

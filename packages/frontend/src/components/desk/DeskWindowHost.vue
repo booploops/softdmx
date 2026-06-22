@@ -6,7 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import type { DeskPane } from 'src/types/desk';
+import type { DeskPane } from '@softdmx/engine';
 import FixtureSheetWindow from './windows/FixtureSheetWindow.vue';
 import GroupWindow from './windows/GroupWindow.vue';
 import WidgetWindow from './windows/WidgetWindow.vue';

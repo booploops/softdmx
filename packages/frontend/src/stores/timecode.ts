@@ -10,9 +10,9 @@ import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import { useShowStore } from './show';
 import { useOutputEngineStore } from './output-playback';
-import type { TimecodeSource } from 'src/show/document';
+import type { TimecodeSource } from '@softdmx/engine';
 
-import { applyTimecodeCompensation } from 'src/utils/sync-compensation';
+import { applyTimecodeCompensation } from '@softdmx/engine';
 
 export const DEFAULT_TIMECODE_FPS = 30;
 

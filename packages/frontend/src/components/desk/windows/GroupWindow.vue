@@ -10,7 +10,7 @@ import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
 import { useProgrammerStore } from 'src/stores/programmer';
 import { useGroupColors } from 'src/composables/useGroupColors';
-import { groupColorStyle } from 'src/utils/group-colors';
+import { groupColorStyle } from '@softdmx/engine';
 import { useChannelControl } from 'src/composables/useChannelControl';
 
 const dmx = useDMXStore();

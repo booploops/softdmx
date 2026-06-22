@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useShowStore } from 'src/stores/show';
-import type { PixelMapDefinition, PixelMapFixtureChannel } from 'src/types';
+import type { PixelMapDefinition, PixelMapFixtureChannel } from '@softdmx/engine';
 
 const showStore = useShowStore();
 const selectedPixelMapId = ref<string>('');

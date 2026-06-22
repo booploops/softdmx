@@ -6,10 +6,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { AttributeFeature } from '../types/attributes.ts';
-import type { Preset, PresetTarget } from 'src/show/document';
-import type { ScratchEntry } from '../engine/layers/scratch.ts';
-import type { ShowfileFixtureMapped } from '../types/index.ts';
+import type { AttributeFeature } from '@softdmx/engine';
+import type { Preset, PresetTarget } from '@softdmx/engine';
+import type { ScratchEntry } from '@softdmx/engine';
+import type { ShowfileFixtureMapped } from '@softdmx/engine';
 import { filterScratchEntries } from './programmer-filter.ts';
 import type { ProgrammerStoreMode } from '../stores/programmer.ts';
 

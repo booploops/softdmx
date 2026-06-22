@@ -33,7 +33,7 @@ export default defineConfig([
     input: 'src-electron/electron-preload.ts',
     output: {
       file: 'dist-electron/preload.js',
-      format: 'esm',
+      format: 'cjs',
     },
     external,
     platform: 'node',

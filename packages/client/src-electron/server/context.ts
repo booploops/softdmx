@@ -8,7 +8,7 @@
 
 import fastify from 'fastify';
 import { Server } from 'socket.io';
-import type { ShowDocument } from 'src/show/document';
+import type { ShowDocument } from '@softdmx/engine';
 import { OutputManager } from '../output/output-manager';
 import { ConfigFile } from './app-settings';
 import {

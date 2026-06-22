@@ -1,14 +1,18 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitOverride": false,
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
     "paths": {
+      "@softdmx/engine": ["../engine/src/index.ts"],
+      "@softdmx/engine/*": ["../engine/src/*"],
       "src/*": ["../frontend/src/*"],
       "src-electron/*": ["./src-electron/*"],
       "electron": ["./node_modules/electron"]
