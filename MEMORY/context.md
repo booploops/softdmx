@@ -14,6 +14,10 @@ Welcome! This folder houses memory files designed to help developer agents and h
 2. **[Snippets & Utilities](./snippets.md)**
    * *(Reserved)* A repository for frequently used code templates, configuration blocks, and script commands.
 
+3. **[WASM Usage Guide](./wasm-usage.md)**
+   * Outlines when and how to use the `@softdmx/wasm` (Zig) package for computationally intensive realtime lighting console tasks.
+   * Explains the zero-copy memory transfer pattern and describes running WebAssembly safely within browser Web Workers.
+
 ---
 
 ## Monorepo Architecture Quick Pointers
