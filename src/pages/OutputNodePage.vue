@@ -7,17 +7,12 @@
 -->
 <script setup lang="ts">
 import { onMounted } from 'vue';
-import { useRemoteAPI } from 'src/composables/useRemoteAPI';
-import { useOutputEngineStore } from 'src/stores/output-engine';
-import { useDMXStore } from 'src/stores/dmx';
+import { useOutputEngineStore } from 'src/stores/output-playback';
 
-useRemoteAPI();
 const output = useOutputEngineStore();
-const dmx = useDMXStore();
 
 onMounted(() => {
   output.startEngine();
-  dmx.init();
 });
 </script>
 

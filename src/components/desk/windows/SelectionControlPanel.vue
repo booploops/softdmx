@@ -6,7 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import WidgetRenderer from 'src/components/Widgets/WidgetRenderer.vue';
+import WidgetRenderer from 'src/components/widgets/WidgetRenderer.vue';
 import { useSelectionControl } from 'src/composables/useSelectionControl';
 import { useProgrammerStore } from 'src/stores/programmer';
 

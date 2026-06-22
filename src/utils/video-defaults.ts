@@ -11,7 +11,7 @@ import type {
   VideoInputKind,
   VideoSampleFps,
   VideoSampleRegion,
-} from '../types/show-document.ts';
+} from 'src/show/document';
 
 export const FULL_VIDEO_SAMPLE_REGION: VideoSampleRegion = {
   x: 0,

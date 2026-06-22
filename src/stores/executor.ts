@@ -9,9 +9,9 @@
 import { computed, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
 import type { ExecutorSlot, ShowExecutor } from 'src/types';
-import type { ShowDocumentV1 } from 'src/types/show-document';
+import type { ShowDocument } from 'src/show/document';
 import { useShowStore } from './show';
-import { useOutputEngineStore } from './output-engine';
+import { useOutputEngineStore } from './output-playback';
 
 interface SlotRuntimeState {
   activeCueId?: string;
@@ -39,7 +39,7 @@ function buildFallbackExecutor(): ShowExecutor {
   };
 }
 
-export const useExecutorStore = defineStore('executor-store', () => {
+export const useExecutorStore = defineStore('executor', () => {
   const showStore = useShowStore();
   const output = useOutputEngineStore();
 
@@ -68,7 +68,7 @@ export const useExecutorStore = defineStore('executor-store', () => {
     { immediate: true }
   );
 
-  function ensureRootExecutor(doc: ShowDocumentV1) {
+  function ensureRootExecutor(doc: ShowDocument) {
     doc.executors = doc.executors ?? [];
     if (!doc.executors[0]) {
       doc.executors[0] = buildFallbackExecutor();

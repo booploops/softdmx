@@ -7,13 +7,13 @@
  */
 
 import type { ScratchEntry } from 'src/engine/layers/scratch';
-import type { ShowDocumentV1 } from 'src/types/show-document';
+import type { ShowDocument } from 'src/show/document';
 
 const CRASH_SNAPSHOT_KEY = 'softdmx.crash-snapshot.v1';
 
 export interface CrashSnapshot {
   savedAt: string;
-  document?: ShowDocumentV1;
+  document?: ShowDocument;
   scratch?: ScratchEntry[];
 }
 
@@ -34,7 +34,7 @@ export function readCrashSnapshot(): CrashSnapshot | null {
   }
 }
 
-export function writeCrashSnapshot(partial: { document?: ShowDocumentV1; scratch?: ScratchEntry[] }) {
+export function writeCrashSnapshot(partial: { document?: ShowDocument; scratch?: ScratchEntry[] }) {
   if (!canUseLocalStorage()) return;
 
   const current = readCrashSnapshot() ?? { savedAt: new Date().toISOString() };

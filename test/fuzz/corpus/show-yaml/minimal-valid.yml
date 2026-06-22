@@ -1,0 +1,19 @@
+version: "1.5"
+meta:
+  name: Corpus Seed
+  created: 2026-01-01T00:00:00.000Z
+  modified: 2026-01-01T00:00:00.000Z
+plugins:
+  - builtin
+destinations:
+  - id: default-gridnode
+    name: Default GridNode Overlay
+    type: gridnode
+    settings: {}
+fixtures:
+  - name: Light 1
+    fixtureId: VRSL_Light5CH
+groups: []
+presets: []
+effects: []
+cues: []

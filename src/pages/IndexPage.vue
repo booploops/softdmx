@@ -6,10 +6,9 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { useRemoteAPI } from 'src/composables/useRemoteAPI';
 import { useDMXStore } from 'src/stores/dmx';
 import { useExecutorStore } from 'src/stores/executor';
-import { useOutputEngineStore } from 'src/stores/output-engine';
+import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useDeskViewStore } from 'src/stores/desk-view';
 import { useUIStore } from 'src/stores/ui';
 import { useChannelControl } from 'src/composables/useChannelControl';
@@ -17,7 +16,6 @@ import MasterBar from 'src/components/desk/MasterBar.vue';
 import DeskShell from 'src/components/desk/DeskShell.vue';
 import CueEditor from 'src/components/CueEditor.vue';
 
-useRemoteAPI();
 const dmx = useDMXStore();
 const executor = useExecutorStore();
 const output = useOutputEngineStore();

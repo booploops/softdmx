@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import {
   createInitialHealth,
   updateHealthAfterSend,
-} from '../src-electron/output/output-health.ts';
+} from '../src/utils/output-health.ts';
 
 const health = createInitialHealth('dest-1', 'artnet', 1, 'primary');
 assert.equal(health.online, false);

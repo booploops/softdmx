@@ -10,9 +10,10 @@ import { Notify } from 'quasar';
 import {
   registerRuntimeFixtureFromGdtf,
   registerRuntimeFixtureFromYaml,
-} from 'src/plugins/registry';
-import { downloadFixtureGdtf, downloadFixtureYaml } from 'src/plugins/fixture-export';
-import { getFixtureDefinition } from 'src/plugins/registry';
+  downloadFixtureGdtf,
+  downloadFixtureYaml,
+  getFixtureDefinition,
+} from 'src/fixture-library';
 
 async function readFileBytes(file: File): Promise<Uint8Array> {
   const buffer = await file.arrayBuffer();

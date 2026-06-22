@@ -16,7 +16,7 @@ const dmx = useDMXStore();
 const ui = useUIStore();
 const selection = useSelectionStore();
 
-const groups = computed(() => dmx.showfile?.linkedGroups || []);
+const groups = computed(() => dmx.showfile?.groups || []);
 const hasFixtures = computed(() => dmx.showfileFixturesMapped.length > 0);
 
 const showGroupWidgets = computed(
@@ -24,7 +24,7 @@ const showGroupWidgets = computed(
 );
 
 const ungroupedFixtures = computed(() => {
-  const grouped = new Set(groups.value.flatMap((g) => g.names));
+  const grouped = new Set(groups.value.flatMap((g) => g.fixtures));
   return dmx.showfileFixturesMapped.filter((f) => !grouped.has(f.fixtureName));
 });
 

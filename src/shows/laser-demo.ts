@@ -6,9 +6,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowDocumentV1 } from 'src/types/show-document';
+import type { ShowDocument } from 'src/show/document';
 
-export const laserDemoShow: ShowDocumentV1 = {
+export const laserDemoShow: ShowDocument = {
   version: '1.1',
   meta: {
     name: 'Laser Demo',

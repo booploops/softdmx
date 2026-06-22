@@ -9,7 +9,7 @@
 import {
   SETUP_SECTION_META,
   type SetupSection,
-} from 'src/utils/workspace-modes';
+} from 'src/desk/workspace-modes';
 import { useUIStore } from 'src/stores/ui';
 
 const ui = useUIStore();

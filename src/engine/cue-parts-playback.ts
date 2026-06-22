@@ -7,13 +7,13 @@
  */
 
 import type { ActiveChannel, Cue, CuePlaybackState } from 'src/types';
-import type { ShowDocumentV1 } from 'src/types/show-document';
+import type { ShowDocument } from 'src/show/document';
 import { presetToChannels } from './preset-resolver';
 import { clampDmx } from './types';
 import { computePartFadeProgress, resolveCueParts } from './cue-parts';
 
 export function evaluateCuePartsAtTime(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   cue: Cue,
   state: CuePlaybackState,
   baseChannels: ActiveChannel[],

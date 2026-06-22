@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowDocumentV1 } from '../types/show-document.ts';
+import type { ShowDocument } from 'src/show/document';
 import {
   resolvePixelMapVideoGain,
   resolvePixelMapVideoSmoothingMs,
@@ -63,7 +63,7 @@ function smoothStateKey(mapId: string, path: string): string {
 }
 
 export function evaluateVideoMapping(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   pixelsByMapId: Map<string, PixelColor[][]> | null,
   state: VideoMappingEvalState,
   nowMs = performance.now()

@@ -13,9 +13,9 @@ import {
   drawVideoToMapCanvas,
   sampleFrameToPixelGrid,
 } from 'src/engine/video-sampler';
-import type { PixelMapDefinition, ShowVideoConfig, VideoInputKind } from 'src/types/show-document';
+import type { PixelMapDefinition, ShowVideoConfig, VideoInputKind } from 'src/show/document';
 import { useShowStore } from './show';
-import { useOutputEngineStore } from './output-engine';
+import { useOutputEngineStore } from './output-playback';
 import { normalizeVideoFps, resolveVideoPixelMapIds } from 'src/utils/video-defaults';
 
 export interface VideoSenderInfo {

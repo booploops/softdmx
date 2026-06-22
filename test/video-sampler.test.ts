@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { sampleFrameToPixelGrid } from '../src/engine/video-sampler.ts';
-import type { PixelMapDefinition } from '../src/types/show-document.ts';
+import type { PixelMapDefinition } from '../src/show/document.ts';
 
 const map: PixelMapDefinition = {
   id: 'm1',

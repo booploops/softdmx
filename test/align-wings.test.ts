@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { createEmptyShow } from '../src/types/show-document.ts';
+import { createEmptyShow } from '../src/show/document.ts';
 import {
   alignValueForFixture,
   applyWingOffset,

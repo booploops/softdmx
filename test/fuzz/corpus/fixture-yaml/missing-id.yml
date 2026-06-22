@@ -1,0 +1,4 @@
+name: Missing Id
+channels:
+  - name: Dimmer
+    attributeType: intensity

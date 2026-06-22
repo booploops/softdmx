@@ -7,7 +7,7 @@
  */
 
 import type { ActiveChannel } from './index';
-import type { PresetTarget } from './show-document';
+import type { PresetTarget } from '../show/document.ts';
 
 export type EasingType =
   | 'linear'

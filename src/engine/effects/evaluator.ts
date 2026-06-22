@@ -7,10 +7,10 @@
  */
 
 import type { EffectDefinition } from 'src/types/effects';
-import type { ShowDocumentV1 } from 'src/types/show-document';
+import type { ShowDocument } from 'src/show/document';
 import { resolveEffectTargets } from '../preset-resolver';
 import { clampDmx } from '../types';
-import { phaseToTheta, thetaToLfoValue } from 'src/utils/link-helper';
+import { phaseToTheta, thetaToLfoValue } from 'src/utils/link-lfo';
 import { computeSpreadPhase, waveformValue } from './spread';
 
 export interface EffectEvalContext {
@@ -29,7 +29,7 @@ function hashToUnit(value: string): number {
 }
 
 export function evaluateEffect(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   effect: EffectDefinition,
   ctx: EffectEvalContext
 ): Map<string, number> {
@@ -120,7 +120,7 @@ export function evaluateEffect(
 }
 
 export function evaluateAllEffects(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   ctx: EffectEvalContext
 ): Map<string, number> {
   const merged = new Map<string, number>();

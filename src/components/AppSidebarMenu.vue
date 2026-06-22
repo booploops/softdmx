@@ -17,7 +17,7 @@ import {
   WORKSPACE_MODE_META,
   type SetupSection,
   type ProgramSection,
-} from 'src/utils/workspace-modes';
+} from 'src/desk/workspace-modes';
 import { exampleVrClubShow } from 'src/shows/example-vr-club';
 import { simpleWashShow } from 'src/shows/simple-wash';
 import { laserDemoShow } from 'src/shows/laser-demo';
@@ -89,11 +89,6 @@ function openDialog(name: 'cueEditor' | 'settings' | 'interface' | 'theme' | 'au
 
 <template>
   <div class="sidebar-menu">
-    <q-item-label header class="sidebar-header">
-      <div class="show-title">{{ showStore.name }}</div>
-      <div v-if="showStore.isDirty" class="show-dirty">Unsaved changes</div>
-    </q-item-label>
-
     <q-list padding dense>
       <q-item-label header>Workspace</q-item-label>
       <q-item
@@ -104,7 +99,7 @@ function openDialog(name: 'cueEditor' | 'settings' | 'interface' | 'theme' | 'au
       >
         <q-item-section avatar><q-icon :name="WORKSPACE_MODE_META[mode].icon" /></q-item-section>
         <q-item-section>{{ WORKSPACE_MODE_META[mode].label }}</q-item-section>
-        <q-item-section side v-if="ui.mode === mode"><q-icon name="check" color="primary" /></q-item-section>
+        <q-item-section v-if="ui.mode === mode" side><q-icon name="check" color="primary" /></q-item-section>
       </q-item>
 
       <template v-if="ui.isProgram">
@@ -213,8 +208,5 @@ function openDialog(name: 'cueEditor' | 'settings' | 'interface' | 'theme' | 'au
 
 <style scoped lang="scss">
 .sidebar-menu { min-height: 100%; }
-.sidebar-header { padding-top: 8px; }
-.show-title { font-size: 15px; font-weight: 600; line-height: 1.3; word-break: break-word; }
-.show-dirty { font-size: 11px; color: var(--sdmx-color-warning); margin-top: 2px; }
 .sidebar-active { background: var(--sdmx-color-selected); }
 </style>

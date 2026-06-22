@@ -9,8 +9,8 @@
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import { useShowStore } from './show';
-import { useOutputEngineStore } from './output-engine';
-import type { TimecodeSource } from 'src/types/show-document';
+import { useOutputEngineStore } from './output-playback';
+import type { TimecodeSource } from 'src/show/document';
 
 import { applyTimecodeCompensation } from 'src/utils/sync-compensation';
 

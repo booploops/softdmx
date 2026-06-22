@@ -7,7 +7,7 @@
 -->
 <script setup lang="ts">
 import { useShowStore } from 'src/stores/show';
-import { useOutputEngineStore } from 'src/stores/output-engine';
+import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useDMXStore } from 'src/stores/dmx';
 import type { EffectDefinition } from 'src/types/effects';
 

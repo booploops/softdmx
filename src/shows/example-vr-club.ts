@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowDocumentV1 } from 'src/types/show-document';
+import type { ShowDocument } from 'src/show/document';
 
 const fixtureNames = {
   stageSideLeft: ['Stage Side Left 1', 'Stage Side Left 2', 'Stage Side Left 3', 'Stage Side Left 4'],
@@ -18,7 +18,7 @@ const fixtureNames = {
 
 const allFixtures = Object.values(fixtureNames).flat();
 
-export const exampleVrClubShow: ShowDocumentV1 = {
+export const exampleVrClubShow: ShowDocument = {
   version: '1.0',
   meta: {
     name: 'Example VR Club',

@@ -8,12 +8,12 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, computed } from 'vue';
 import { useIOClient } from 'src/lib/io-client';
-import type { ShowDocumentV1 } from 'src/types/show-document';
-import { isSupportedShowVersion } from 'src/utils/show-version';
+import type { ShowDocument } from 'src/show/document';
+import { isSupportedShowVersion } from 'src/show/version';
 import TouchSurface from 'src/components/touch/TouchSurface.vue';
 
 const socket = useIOClient();
-const showDoc = ref<ShowDocumentV1 | null>(null);
+const showDoc = ref<ShowDocument | null>(null);
 const isConnected = ref(socket.connected);
 
 const showName = computed(() => showDoc.value?.meta.name ?? 'Remote');
@@ -32,7 +32,7 @@ function handleDisconnect() {
   isConnected.value = false;
 }
 
-function handleShowState(payload: ShowDocumentV1) {
+function handleShowState(payload: ShowDocument) {
   if (isSupportedShowVersion(payload?.version)) {
     showDoc.value = payload;
   }

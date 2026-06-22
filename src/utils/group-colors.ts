@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowfileGroup } from 'src/types/show-document';
+import type { ShowGroup } from 'src/show/document';
 
 export const GROUP_COLOR_PALETTE = [
   '#e53935',
@@ -38,7 +38,7 @@ export function defaultGroupColorForIndex(index: number): string {
   return palette[index % palette.length] ?? palette[0] ?? '#1e88e5';
 }
 
-export function resolveGroupColor(group: Pick<ShowfileGroup, 'color'>, index: number): string {
+export function resolveGroupColor(group: Pick<ShowGroup, 'color'>, index: number): string {
   return normalizeGroupColor(group.color) ?? defaultGroupColorForIndex(index);
 }
 
@@ -47,7 +47,7 @@ export type FixtureGroupInfo = {
   color: string;
 };
 
-export function buildFixtureGroupLookup(groups: ShowfileGroup[]): Map<string, FixtureGroupInfo> {
+export function buildFixtureGroupLookup(groups: ShowGroup[]): Map<string, FixtureGroupInfo> {
   const lookup = new Map<string, FixtureGroupInfo>();
 
   groups.forEach((group, index) => {

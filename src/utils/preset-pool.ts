@@ -6,14 +6,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowDocumentV1, PresetPool } from 'src/types/show-document';
+import type { ShowDocument, PresetPool } from 'src/show/document';
 
-export function resolvePresetPool(show: ShowDocumentV1, poolId: string): PresetPool | undefined {
+export function resolvePresetPool(show: ShowDocument, poolId: string): PresetPool | undefined {
   return (show.presetPools ?? []).find((pool) => pool.id === poolId);
 }
 
 export function resolvePresetIdFromPoolSlot(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   poolId: string,
   slotIndex: number
 ): string | null {
@@ -23,7 +23,7 @@ export function resolvePresetIdFromPoolSlot(
   return typeof presetId === 'string' && presetId.length > 0 ? presetId : null;
 }
 
-export function ensureDefaultPresetPool(show: ShowDocumentV1): PresetPool[] {
+export function ensureDefaultPresetPool(show: ShowDocument): PresetPool[] {
   const pools = [...(show.presetPools ?? [])];
   if (pools.length === 0) {
     if ((show.presets ?? []).length === 0) {

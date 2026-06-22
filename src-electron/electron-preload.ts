@@ -28,6 +28,10 @@ contextBridge.exposeInMainWorld('electronVideo', {
 });
 
 contextBridge.exposeInMainWorld('electronAPI', {
+  getRemoteApiToken: (): string | undefined => {
+    const token = process.env.SOFTDMX_API_TOKEN?.trim();
+    return token && token.length > 0 ? token : undefined;
+  },
   onOscMessage: (callback: (event: any, data: { address: string; args: any[] }) => void) => {
     ipcRenderer.on('osc-received', callback);
   },

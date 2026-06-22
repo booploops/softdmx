@@ -7,14 +7,14 @@
  */
 
 import type { ScratchEntry } from 'src/engine/layers/scratch';
-import type { ShowDocumentV1 } from 'src/types/show-document';
+import type { ShowDocument } from 'src/show/document';
 import { readCrashSnapshot } from './crash-snapshot.ts';
 
 const LAST_SHOW_KEY = 'softdmx.last-show.v1';
 
 export interface LastShowSession {
   savedAt: string;
-  document: ShowDocumentV1;
+  document: ShowDocument;
   scratch?: ScratchEntry[];
   filePath?: string | null;
 }

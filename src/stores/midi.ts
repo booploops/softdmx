@@ -11,7 +11,7 @@ import { ref, computed } from 'vue';
 import type { BindingTarget, MidiMapping } from 'src/types';
 import { useShowStore } from './show';
 import { useCueStore } from './cue';
-import { useOutputEngineStore } from './output-engine';
+import { useOutputEngineStore } from './output-playback';
 import { useChannelControl } from 'src/composables/useChannelControl';
 import { parseMidiMessage, parseMidiShowControl, scaleMidiToDmx } from '../utils/midi-parser';
 import { MtcAssembler, parseMtcQuarterFrame } from '../engine/mtc-parser';

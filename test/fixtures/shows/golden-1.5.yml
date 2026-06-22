@@ -1,0 +1,115 @@
+version: "1.5"
+meta:
+  name: Golden 1.5
+  created: 2020-01-01T00:00:00.000Z
+  modified: 2020-01-01T00:00:00.000Z
+plugins:
+  - builtin
+destinations:
+  - id: default-gridnode
+    name: Default GridNode Overlay
+    type: gridnode
+    settings: {}
+fixtures: []
+groups: []
+presets: []
+presetPools:
+  - id: default-pool
+    name: All
+    kind: all
+    slots: []
+    pageSize: 25
+effects: []
+cues: []
+bindings:
+  midi: []
+  osc: []
+timecode:
+  enabled: false
+  fps: 30
+  source: osc
+  ltcChannel: mono
+  ltcGain: 1
+  latencyMs: 0
+  globalOffsetMs: 0
+link:
+  outputLatencyMs: 0
+  phaseOffset: 0
+oscSync:
+  mediaLatencyMs: 0
+  mediaOffsetMs: 0
+timeline:
+  durationMs: 300000
+  fps: 30
+  syncMode: free
+  primaryAudioAssetId: null
+  audioAssets: []
+audioMappings: []
+executors:
+  - id: main-executor
+    name: Main
+    pages: 1
+    activePage: 1
+    defaultReleaseMs: 400
+    slots:
+      - id: main-executor-slot-1
+        name: Slot 1
+        page: 1
+        index: 0
+        mode: go
+      - id: main-executor-slot-2
+        name: Slot 2
+        page: 1
+        index: 1
+        mode: go
+      - id: main-executor-slot-3
+        name: Slot 3
+        page: 1
+        index: 2
+        mode: go
+      - id: main-executor-slot-4
+        name: Slot 4
+        page: 1
+        index: 3
+        mode: go
+      - id: main-executor-slot-5
+        name: Slot 5
+        page: 1
+        index: 4
+        mode: go
+      - id: main-executor-slot-6
+        name: Slot 6
+        page: 1
+        index: 5
+        mode: go
+      - id: main-executor-slot-7
+        name: Slot 7
+        page: 1
+        index: 6
+        mode: go
+      - id: main-executor-slot-8
+        name: Slot 8
+        page: 1
+        index: 7
+        mode: go
+submasters: []
+playback:
+  busMaster: 1
+  cueLevels: {}
+pixelMaps: []
+video:
+  enabled: false
+  pixelMapIds: []
+  inputKind: none
+  deviceId: null
+  senderName: null
+  gain: 1
+  smoothingMs: 80
+  blackLevel: 0
+  followDimmer: false
+  fps: 30
+backup:
+  enabled: false
+  role: primary
+  takeoverMode: manual
+  heartbeatMs: 500

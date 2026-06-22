@@ -10,7 +10,7 @@ import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import { useShowStore } from './show';
 import { useTimecodeStore } from './timecode';
-import { useOutputEngineStore } from './output-engine';
+import { useOutputEngineStore } from './output-playback';
 import { computeSetTimelineDurationMs } from 'src/engine/timecode-set-playback';
 import { msToSeconds, secondsToMs } from 'src/utils/timecode-format';
 

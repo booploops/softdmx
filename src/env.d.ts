@@ -8,6 +8,7 @@ declare namespace NodeJS {
 
 interface Window {
   electronAPI?: {
+    getRemoteApiToken?: () => string | undefined;
     onOscMessage: (callback: (event: any, data: { address: string; args: any[] }) => void) => void;
     removeOscListener: () => void;
   };

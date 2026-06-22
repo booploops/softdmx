@@ -6,9 +6,9 @@ on:
       - '**'
 
 jobs:
-  test-and-build-spa:
+  test:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
 
     steps:
       - name: Checkout
@@ -17,12 +17,12 @@ jobs:
       - name: Enable Corepack
         run: |
           corepack enable
-          corepack prepare yarn@4.9.2 --activate
+          corepack prepare yarn@4.17.0 --activate
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: package.json
           cache: yarn
           corepack: true
 
@@ -32,16 +32,21 @@ jobs:
       - name: Install dependencies
         run: yarn install --immutable
 
-      - name: Run tests
-        run: yarn test
+      - name: Run tests with coverage
+        run: yarn test:coverage
 
-      - name: Build SPA
-        run: yarn build:spa
+      - name: Upload coverage
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage
+          path: coverage/
+          retention-days: 14
 
-  electron-build:
-    runs-on: macos-latest
-    timeout-minutes: 30
-    needs: test-and-build-spa
+  build-spa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: test
 
     steps:
       - name: Checkout
@@ -50,12 +55,39 @@ jobs:
       - name: Enable Corepack
         run: |
           corepack enable
-          corepack prepare yarn@4.9.2 --activate
+          corepack prepare yarn@4.17.0 --activate
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version-file: package.json
+          cache: yarn
+          corepack: true
+
+      - name: Install dependencies
+        run: yarn install --immutable
+
+      - name: Build SPA
+        run: yarn build:spa
+
+  electron-build:
+    runs-on: macos-latest
+    timeout-minutes: 30
+    needs: build-spa
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable Corepack
+        run: |
+          corepack enable
+          corepack prepare yarn@4.17.0 --activate
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: package.json
           cache: yarn
           corepack: true
 

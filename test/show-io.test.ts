@@ -9,8 +9,8 @@
 import assert from 'node:assert/strict';
 import { mergeLayers } from '../src/engine/types.ts';
 import { scratchToLayer } from '../src/engine/layers/scratch.ts';
-import { parseShowDocument, serializeShowDocument } from '../src/utils/show-io.ts';
-import { createEmptyShow } from '../src/types/show-document.ts';
+import { parseShowDocument, serializeShowDocument } from '../src/show/io.ts';
+import { createEmptyShow } from '../src/show/document.ts';
 
 console.log('Running test: show-io round-trip');
 const show = createEmptyShow('Test');

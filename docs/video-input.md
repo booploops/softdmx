@@ -43,6 +43,6 @@ Configure under **Setup → Video**.
 | Black level | Global — subtract from RGB before output |
 | Sample FPS | Global target sample rate (15–60 Hz; 44 = DMX max universe rate) |
 
-## Electron 40+
+## Electron desktop
 
-Syphon/Spout uses native `@napolab/texture-bridge` in the main process. Frames are downscaled to pixel-map size before IPC. Requires Electron desktop build (`yarn dev` / `yarn build`).
+Syphon/Spout uses `@napolab/texture-bridge` in the main process. Requires Electron **42+** (`yarn dev` / `yarn build`).

@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { PixelMapDefinition, VideoSampleRegion } from '../types/show-document.ts';
+import type { PixelMapDefinition, VideoSampleRegion } from 'src/show/document';
 import type { PixelColor } from './pixel-mapper.ts';
 import { FULL_VIDEO_SAMPLE_REGION } from '../utils/video-defaults.ts';
 

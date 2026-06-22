@@ -9,7 +9,7 @@
 import {
   PROGRAM_SECTION_META,
   type ProgramSection,
-} from 'src/utils/workspace-modes';
+} from 'src/desk/workspace-modes';
 import { useUIStore } from 'src/stores/ui';
 
 const ui = useUIStore();

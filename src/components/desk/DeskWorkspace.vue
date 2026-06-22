@@ -8,7 +8,7 @@
 <script setup lang="ts">
 import type { DeskPane } from 'src/types/desk';
 import { DESK_GRID_COLS, buildDeskRowBands, deskPaneGridPlacement } from 'src/utils/desk-defaults';
-import { DESK_WINDOW_META } from 'src/utils/workspace-modes';
+import { DESK_WINDOW_META } from 'src/desk/workspace-modes';
 import DeskWindowHost from './DeskWindowHost.vue';
 import { useDeskViewStore } from 'src/stores/desk-view';
 import { useQuasar } from 'quasar';

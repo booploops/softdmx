@@ -9,7 +9,7 @@
   Purpose: Display available fixture definitions with their channels and capabilities
 -->
 <script setup lang="ts">
-import { getAllFixtures, pluginRegistryVersion, registerRuntimeFixtureFromYaml } from 'src/plugins/registry';
+import { getAllFixtures, pluginRegistryVersion, registerRuntimeFixtureFromYaml } from 'src/fixture-library/registry';
 import { ref, computed } from 'vue';
 import type { FixtureDefinition } from 'src/types';
 import { Dialog, Notify } from 'quasar';

@@ -32,6 +32,7 @@
       v-model="ui.leftDrawerOpen"
       bordered
       class="no-app-drag sdmx-drawer"
+      :class="{ 'sdmx-drawer--mac': $q.platform.is.mac }"
       :width="280"
       overlay
       behavior="mobile"
@@ -53,8 +54,10 @@ import AppSidebarMenu from 'src/components/AppSidebarMenu.vue';
 import AppDialogs from 'src/components/AppDialogs.vue';
 import ShowStartupDialog from 'src/components/ShowStartupDialog.vue';
 import { useUIStore } from 'src/stores/ui';
+import { useQuasar } from 'quasar';
 
 const ui = useUIStore();
+const $q = useQuasar();
 </script>
 
 <style lang="scss" scoped>
@@ -68,7 +71,7 @@ const ui = useUIStore();
   -webkit-app-region: drag;
 
   &.is-mac {
-    padding-left: 64px;
+    padding-left: var(--sdmx-mac-titlebar-inset-left);
   }
 }
 
@@ -104,5 +107,10 @@ const ui = useUIStore();
 <style lang="scss">
 .no-app-drag {
   -webkit-app-region: no-drag;
+}
+
+.sdmx-drawer--mac :deep(.q-drawer__content) {
+  padding-top: var(--sdmx-mac-titlebar-inset-top);
+  padding-left: var(--sdmx-mac-titlebar-inset-left);
 }
 </style>

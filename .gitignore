@@ -1,36 +1,43 @@
+# OS
 .DS_Store
 .thumbs.db
+
+# Dependencies
 node_modules
 .yarn/install-state.gz
 
-# Quasar core related directories
+# Environment (secrets — do not commit tokens)
+.env
+.env.local
+.env.*.local
+
+# Quasar / Vite / Electron builds
 .quasar
 /dist
 /quasar.config.*.temporary.compiled*
 
-# Cordova related directories and files
-/src-cordova/node_modules
-/src-cordova/platforms
-/src-cordova/plugins
-/src-cordova/www
+# Test and tooling output
+/coverage
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
 
-# Capacitor related directories and files
-/src-capacitor/www
-/src-capacitor/node_modules
+# Local scratch
+/temp
 
-# Log files
+# graphify local analysis output
+/graphify-out
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+pnpm-debug.log*
 
-# Editor directories and files
+# Editors (shared .vscode/* is tracked intentionally)
 .idea
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
-
-# local .env files
-.env.local*
-
-/temp

@@ -4,10 +4,10 @@ import {
   createVideoMappingEvalState,
   evaluateVideoMapping,
 } from '../src/engine/video-mapping.ts';
-import type { ShowDocumentV1 } from '../src/types/show-document.ts';
-import { createEmptyShow } from '../src/types/show-document.ts';
+import type { ShowDocument } from '../src/show/document.ts';
+import { createEmptyShow } from '../src/show/document.ts';
 
-function baseShow(): ShowDocumentV1 {
+function baseShow(): ShowDocument {
   return {
     ...createEmptyShow('Video test'),
     pixelMaps: [

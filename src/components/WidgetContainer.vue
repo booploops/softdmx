@@ -10,7 +10,7 @@
 -->
 <script setup lang="ts">
 import type { ShowfileFixtureMapped } from 'src/types';
-import WidgetRenderer from './Widgets/WidgetRenderer.vue';
+import WidgetRenderer from './widgets/WidgetRenderer.vue';
 import { useSelectionStore } from 'src/stores/selection';
 
 const props = defineProps<{

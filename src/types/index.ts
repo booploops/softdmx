@@ -10,8 +10,8 @@ export type {
   OutputDestination,
   ShowMeta,
   FixturePosition,
-  ShowfileFixture,
-  ShowfileGroup,
+  ShowFixture,
+  ShowGroup,
   PresetTarget,
   Preset,
   ShowAudioConfig,
@@ -33,8 +33,16 @@ export type {
   VideoSampleRegion,
   ShowVideoConfig,
   ShowDocumentVersion,
-  ShowDocumentV1,
-} from './show-document';
+  ShowDocument,
+} from '../show/document.ts';
+
+/** @deprecated Use ShowDocument */
+export type ShowDocumentV1 = ShowDocument;
+/** @deprecated Use ShowFixture */
+export type ShowfileFixture = ShowFixture;
+/** @deprecated Use ShowGroup */
+export type ShowfileGroup = ShowGroup;
+
 export type {
   DeskWindowType,
   DeskPane,
@@ -45,7 +53,7 @@ export type {
   TouchPage,
   ShowTouchConfig,
 } from './desk';
-export { createEmptyShow } from './show-document';
+export { createEmptyShow } from '../show/document.ts';
 
 export type {
   EasingType,
@@ -75,67 +83,15 @@ export type {
   ShowBindings,
 } from './bindings';
 
-export type ActiveChannel = {
-  id: number;
-  universe?: string;
-  path: string;
-  value: number;
-  attributeType?: string;
-};
+export type {
+  ActiveChannel,
+  FixtureChannelDefinition,
+  FixtureSource,
+  WidgetConfiguration,
+  FixtureDefinition,
+  FixtureChannelWithReference,
+  MappedShowFixture,
+} from './fixture';
 
-export type FixtureChannelDefinition = {
-  name: string;
-  type: 'intensity' | 'color' | 'effect' | 'position' | (string & {});
-  minValue: number;
-  maxValue: number;
-  defaultValue: number;
-  attributeId?: string;
-  dmxOffset?: number;
-  /** Continuous DMX slider (default) or discrete indexed slots (gobo, color wheel, etc.). */
-  controlMode?: 'dmx' | 'indexed';
-  /** Number of discrete slots when controlMode is indexed. */
-  indexedSlots?: number;
-  /** Optional labels for each slot (length must match indexedSlots). */
-  indexedLabels?: string[];
-  reference?: ActiveChannel;
-};
-
-export type FixtureSource = 'yaml' | 'gdtf';
-
-export type WidgetConfiguration = {
-  type: 'lightMover' | 'colorPicker' | 'dimmerSlider' | 'strobe' | 'indexedSelect' | (string & {});
-  name: string;
-  channels: {
-    [key: string]: string;
-  };
-};
-
-export type FixtureDefinition = {
-  id: string;
-  name: string;
-  channels: FixtureChannelDefinition[];
-  widgets?: WidgetConfiguration[];
-  attributes?: import('./attributes.ts').AttributeDefinition[];
-  modes?: import('./attributes.ts').FixtureModeDefinition[];
-  defaultModeId?: string;
-  source?: FixtureSource;
-  gdtfMeta?: import('./attributes.ts').FixtureGdtfMeta;
-};
-
-export type FixtureChannelWithReference = FixtureChannelDefinition & {
-  reference: ActiveChannel;
-};
-
-export type ShowfileFixtureMapped = {
-  fixtureName: string;
-  def: FixtureDefinition & {
-    channels: FixtureChannelWithReference[];
-  };
-};
-
-/** @deprecated Use ShowDocumentV1 */
-export type Showfile = {
-  name: string;
-  fixtures: import('./show-document').ShowfileFixture[];
-  linkedGroups?: { name: string; names: string[] }[];
-};
+/** @deprecated Use MappedShowFixture */
+export type ShowfileFixtureMapped = import('./fixture').MappedShowFixture;

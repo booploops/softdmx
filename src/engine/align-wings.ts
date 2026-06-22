@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowDocumentV1 } from 'src/types/show-document';
+import type { ShowDocument } from 'src/show/document';
 
 export type AlignMode = 'none' | 'pan' | 'tilt' | 'x' | 'y';
 export type WingDirection = 'out' | 'in' | 'alternate';
@@ -38,7 +38,7 @@ export function wingScaleForIndex(
 }
 
 export function alignValueForFixture(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   fixtureName: string,
   alignMode: AlignMode
 ): number | null {

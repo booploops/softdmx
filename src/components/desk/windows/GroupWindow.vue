@@ -19,7 +19,7 @@ const programmer = useProgrammerStore();
 const { groupColor } = useGroupColors();
 const { setChannel, setGroupChannels, getDisplayValue } = useChannelControl();
 
-const groups = computed(() => dmx.showfile?.linkedGroups || []);
+const groups = computed(() => dmx.showfile?.groups || []);
 
 function groupChannelPath(groupName: string, channelName: string): string {
   return `group://${encodeURIComponent(groupName)}/${encodeURIComponent(channelName)}`;
@@ -27,7 +27,7 @@ function groupChannelPath(groupName: string, channelName: string): string {
 
 function findGroupChannel(groupName: string, matcher: (name: string, type: string) => boolean) {
   const group = groups.value.find((entry) => entry.name === groupName);
-  const fixtureName = group?.names[0];
+  const fixtureName = group?.fixtures[0];
   if (!fixtureName) return undefined;
   const fixture = dmx.showfileFixturesMapped.find((entry) => entry.fixtureName === fixtureName);
   return fixture?.def.channels.find((channel) => matcher(channel.name, channel.type));

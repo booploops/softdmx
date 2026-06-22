@@ -9,21 +9,21 @@ import { app, BrowserWindow } from 'electron';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { startServer } from './server';
-import { createArtnetWindow } from './artnet-window';
+import { createArtnetWindow } from './windows/artnet-window';
 import { AppState } from './state/main';
-import { getDevUrl, isDev } from './utils';
-import { Paths } from './utils/paths';
-import { setupOscListener, closeOscListener } from './output/electron-osc';
-import { setupAbletonLink, closeAbletonLink } from './output/electron-link';
-import { setupGridNodeOverlayIpc, closeGridNodeOverlayIpc } from './output/electron-gridnode';
-import { applyGridNodeOverlayWindowState } from './output/gridnode-overlay';
-import { setupVideoIpc, closeVideoIpc } from './video/electron-video';
+import { getDevUrl, isDev } from './runtime/env';
+import { Paths } from './runtime/paths';
+import { setupOscListener, closeOscListener } from './ipc/osc-ipc';
+import { setupAbletonLink, closeAbletonLink } from './ipc/link-ipc';
+import { setupGridNodeOverlayIpc, closeGridNodeOverlayIpc } from './ipc/gridnode-ipc';
+import { applyGridNodeOverlayWindowState } from './windows/gridnode-overlay';
+import { setupVideoIpc, closeVideoIpc } from './ipc/video-ipc';
 import {
   buildOutputNodeUrl,
   configureOutputNodeWindow,
   isOutputNodeMode,
-} from './output/output-node';
-import { setBackupPrimaryWindow } from './output/backup-coordinator';
+} from './modes/output-node';
+import { setBackupPrimaryWindow } from './backup/coordinator';
 
 app.setPath('userData', Paths.appData);
 
@@ -142,7 +142,7 @@ app.on('before-quit', (event) => {
 });
 
 app.on('activate', () => {
-  // if (mainWindow === undefined) {
-    // void createWindow();
-  // }
+  if (BrowserWindow.getAllWindows().length === 0) {
+    void createWindow();
+  }
 });
