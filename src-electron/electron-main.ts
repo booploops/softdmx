@@ -91,10 +91,7 @@ async function createWindow() {
     titleBarStyle: outputNode ? 'default' : 'hidden',
     webPreferences: {
       contextIsolation: true,
-      preload: path.resolve(
-        currentDir,
-        path.join(process.env.QUASAR_ELECTRON_PRELOAD_FOLDER, 'electron-preload' + process.env.QUASAR_ELECTRON_PRELOAD_EXTENSION)
-      ),
+      preload: path.resolve(currentDir, 'preload.js'),
     },
   });
 

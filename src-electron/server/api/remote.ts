@@ -8,7 +8,7 @@
 
 import type { Server, Socket } from 'socket.io';
 import type { ShowAudioMapping, ShowDocumentV1 } from 'src/types/show-document';
-import type { OutputManager } from '../output/OutputManager';
+import type { OutputManager } from '../../output/OutputManager';
 import { isSupportedShowVersion } from 'src/utils/show-version';
 
 export interface RemoteContext {

@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { defineBoot } from '#q-app/wrappers';
+import { defineBoot } from '#q-app';
 import { createI18n } from 'vue-i18n';
 
 import messages from 'src/i18n';

@@ -29,20 +29,14 @@ export async function createArtnetWindow(): Promise<BrowserWindow> {
     show: false,
     webPreferences: {
       contextIsolation: true,
-      preload: path.resolve(
-        currentDir,
-        path.join(
-          process.env.QUASAR_ELECTRON_PRELOAD_FOLDER,
-          "electron-preload" + process.env.QUASAR_ELECTRON_PRELOAD_EXTENSION
-        )
-      ),
+      preload: path.resolve(currentDir, 'preload.js'),
     },
   });
 
   if (process.env.DEV) {
     await win.loadURL(process.env.APP_URL + "/#/artnet");
   } else {
-    await win.loadFile("index.html", {
+    await win.loadFile(path.join(currentDir, "../dist/spa/index.html"), {
       hash: "#/artnet",
     });
   }

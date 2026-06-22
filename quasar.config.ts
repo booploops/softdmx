@@ -9,7 +9,7 @@
 // Configuration for your app
 // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file
 
-import { defineConfig } from "#q-app/wrappers";
+import { defineConfig } from "#q-app";
 import { fileURLToPath } from "node:url";
 
 export default defineConfig((ctx) => {
@@ -29,7 +29,7 @@ export default defineConfig((ctx) => {
     extras: [
       "ionicons-v4",
       "mdi-v7",
-      "fontawesome-v6",
+      "fontawesome-v7",
       // 'eva-icons',
       // 'themify',
       // 'line-awesome',
@@ -68,7 +68,25 @@ export default defineConfig((ctx) => {
       // polyfillModulePreload: true,
       // distDir
 
-      // extendViteConf (viteConf) {},
+      extendViteConf (viteConf) {
+        viteConf.resolve = viteConf.resolve || {};
+        viteConf.resolve.alias = viteConf.resolve.alias || {};
+        const srcPath = fileURLToPath(new URL('./src', import.meta.url));
+        Object.assign(viteConf.resolve.alias, {
+          'src': srcPath,
+          'layouts': `${srcPath}/layouts`,
+          'pages': `${srcPath}/pages`,
+          'components': `${srcPath}/components`,
+          'assets': `${srcPath}/assets`,
+          'boot': `${srcPath}/boot`,
+        });
+        viteConf.define = viteConf.define || {};
+        Object.assign(viteConf.define, {
+          'process.env.SERVER': 'false',
+          'process.env.VUE_ROUTER_MODE': '"hash"',
+          'process.env.VUE_ROUTER_BASE': '""',
+        });
+      },
       // viteVuePluginOptions: {},
 
       vitePlugins: [
