@@ -36,6 +36,9 @@
   --sdmx-radius-lg: 12px;
   --sdmx-radius-button: 30px;
   --sdmx-layout-toolbar-height: 48px;
+  --sdmx-mac-titlebar-band-height: 36px;
+  --sdmx-mac-titlebar-inset-top: var(--sdmx-mac-titlebar-band-height);
+  --sdmx-mac-titlebar-inset-left: 64px;
 
   --sdmx-color-bg-inset: color-mix(in srgb, var(--sdmx-color-text) 3%, transparent);
   --sdmx-color-bg-muted: color-mix(in srgb, var(--sdmx-color-text) 5%, transparent);

@@ -11,7 +11,7 @@ import {
   createAudioMappingEvalState,
   evaluateAudioMappings,
 } from '../src/engine/audio-mapping.ts';
-import { createEmptyShow } from '../src/types/show-document.ts';
+import { createEmptyShow } from '../src/show/document.ts';
 
 console.log('Running test: fixture RMS mapping');
 const fixtureShow = createEmptyShow('Audio Fixture Mapping');

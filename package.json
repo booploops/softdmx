@@ -13,9 +13,25 @@
     "build:electron": "yarn workspace @softdmx/client build",
     "build": "yarn build:frontend && yarn build:electron",
     "test": "yarn workspace @softdmx/frontend test",
+    "test:unit": "yarn workspace @softdmx/frontend test:unit",
+    "test:property": "yarn workspace @softdmx/frontend test:property",
+    "test:integration": "yarn workspace @softdmx/frontend test:integration",
+    "test:e2e": "yarn workspace @softdmx/frontend test:e2e",
+    "test:fuzz": "yarn workspace @softdmx/frontend test:fuzz",
+    "test:fuzz:ci": "yarn workspace @softdmx/frontend test:fuzz:ci",
+    "test:playwright": "yarn workspace @softdmx/frontend test:playwright",
+    "test:playwright:electron": "yarn workspace @softdmx/frontend test:playwright:electron",
+    "test:coverage": "yarn workspace @softdmx/frontend test:coverage",
+    "test:all": "yarn test",
+    "cli": "node packages/client/scripts/softdmx-cli.mjs",
     "postinstall": "yarn workspace @softdmx/client postinstall:client && yarn workspace @softdmx/frontend prepare:quasar"
   },
   "devDependencies": {
     "concurrently": "^10.0.3"
+  },
+  "engines": {
+    "node": "22.23.0",
+    "npm": ">= 6.13.4",
+    "yarn": ">= 4.17.0"
   }
 }

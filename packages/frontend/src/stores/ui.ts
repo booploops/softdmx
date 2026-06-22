@@ -8,7 +8,7 @@
 
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import type { ProgramSection, SetupSection, WorkspaceMode } from 'src/utils/workspace-modes';
+import type { ProgramSection, SetupSection, WorkspaceMode } from 'src/desk/workspace-modes';
 
 export type AppDialog = 'cueEditor' | 'settings' | 'interface' | 'theme' | 'audio' | 'bindings';
 
@@ -21,7 +21,7 @@ function readOperateLocked(): boolean {
   return stored === 'true';
 }
 
-export const useUIStore = defineStore('ui-store', () => {
+export const useUIStore = defineStore('ui', () => {
   const mode = ref<WorkspaceMode>('live');
   const setupSection = ref<SetupSection>('patch');
   const programSection = ref<ProgramSection>('executors');

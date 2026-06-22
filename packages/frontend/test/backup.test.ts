@@ -5,7 +5,7 @@ import {
   markPrimaryHeartbeat,
   publishPrimaryState,
   setStandbyActive,
-} from '../../client/src-electron/output/backup-coordinator.ts';
+} from '../../client/src-electron/backup/coordinator.ts';
 
 markPrimaryHeartbeat(1000);
 assert.equal(isPrimaryAlive(500, 1200), true);

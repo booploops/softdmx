@@ -6,10 +6,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowDocumentV1, Preset, ShowfileGroup } from 'src/types/show-document';
-import type { ActiveChannel } from 'src/types';
-import { getFixtureDefinition } from 'src/plugins/registry';
-import { resolveFixtureChannelsForMode } from 'src/plugins/gdtf/gdtf-to-fixture';
+import type { ShowDocument, Preset, ShowGroup } from 'src/show/document';
+import type { ActiveChannel } from 'src/types/fixture';
+import { getFixtureDefinition } from 'src/fixture-library/registry';
+import { resolveFixtureChannelsForMode } from 'src/fixture-library/gdtf/gdtf-to-fixture';
 
 export interface ResolvedChannelTarget {
   path: string;
@@ -18,7 +18,7 @@ export interface ResolvedChannelTarget {
 }
 
 export function resolveGroupFixtures(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   groupName: string
 ): string[] {
   const group = show.groups.find((g) => g.name === groupName);
@@ -26,7 +26,7 @@ export function resolveGroupFixtures(
 }
 
 export function resolvePresetTargets(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   preset: Preset
 ): ResolvedChannelTarget[] {
   const results: ResolvedChannelTarget[] = [];
@@ -58,7 +58,7 @@ export function resolvePresetTargets(
 }
 
 export function presetToChannels(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   preset: Preset
 ): Map<string, { value: number; attributeType: string }> {
   const map = new Map<string, { value: number; attributeType: string }>();
@@ -90,7 +90,7 @@ export function presetToChannels(
 }
 
 export function resolveEffectTargets(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   target: { fixtures?: string[]; group?: string; attr: string }
 ): { path: string; attributeType: string; fixtureIndex: number }[] {
   const fixtureNames = target.fixtures ?? (target.group ? resolveGroupFixtures(show, target.group) : []);
@@ -116,7 +116,7 @@ export function resolveEffectTargets(
   return results;
 }
 
-export function buildChannelMap(show: ShowDocumentV1): ActiveChannel[] {
+export function buildChannelMap(show: ShowDocument): ActiveChannel[] {
   const channels: ActiveChannel[] = [];
   const destinationIndices = new Map<string, number>();
 
@@ -145,6 +145,6 @@ export function buildChannelMap(show: ShowDocumentV1): ActiveChannel[] {
   return channels;
 }
 
-export function getGroupForFixture(show: ShowDocumentV1, fixtureName: string): ShowfileGroup | undefined {
+export function getGroupForFixture(show: ShowDocument, fixtureName: string): ShowGroup | undefined {
   return show.groups.find((g) => g.fixtures.includes(fixtureName));
 }

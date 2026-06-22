@@ -12,9 +12,9 @@ import {
   computeCuePlaybackIntensity,
   resolveCueSubmasterScale,
 } from '../src/engine/playback-masters.ts';
-import type { ShowDocumentV1 } from '../src/types/show-document.ts';
+import type { ShowDocument } from '../src/show/document.ts';
 
-function baseShow(overrides: Partial<ShowDocumentV1> = {}): ShowDocumentV1 {
+function baseShow(overrides: Partial<ShowDocument> = {}): ShowDocument {
   return {
     version: '1.1',
     meta: { name: 'Test', created: '2026-01-01T00:00:00.000Z', modified: '2026-01-01T00:00:00.000Z' },

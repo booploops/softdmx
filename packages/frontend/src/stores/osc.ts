@@ -11,7 +11,7 @@ import { ref, computed } from 'vue';
 import type { BindingTarget, OscMapping } from 'src/types';
 import { useShowStore } from './show';
 import { useCueStore } from './cue';
-import { useOutputEngineStore } from './output-engine';
+import { useOutputEngineStore } from './output-playback';
 import { useTimecodeStore } from './timecode';
 import { useChannelControl } from 'src/composables/useChannelControl';
 import { parseDirectOscAddress, parseOscValue } from '../utils/osc-parser';

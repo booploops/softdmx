@@ -1,0 +1,5 @@
+id: tiny
+name: Tiny
+channels:
+  - name: Dimmer
+    attributeType: intensity

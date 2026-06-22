@@ -15,9 +15,9 @@ import {
   getAllFixtures,
   getFixtureDefinition as lookupFixture,
   pluginRegistryVersion,
-} from 'src/plugins/registry';
-import type { ShowDocumentV1 } from 'src/types/show-document';
-import { createEmptyShow } from 'src/types/show-document';
+} from 'src/fixture-library/registry';
+import type { ShowDocument } from 'src/show/document';
+import { createEmptyShow } from 'src/show/document';
 import { ref, computed, watch, onMounted } from 'vue';
 import type { ShowfileFixture, FixtureDefinition } from 'src/types';
 import { Dialog } from 'quasar';
@@ -47,7 +47,7 @@ type EditorShowfile = {
   linkedGroups: ShowfileLinkedGroup[];
 };
 
-function docToEditor(doc: ShowDocumentV1): EditorShowfile {
+function docToEditor(doc: ShowDocument): EditorShowfile {
   return {
     name: doc.meta.name,
     fixtures: doc.fixtures,
@@ -59,7 +59,7 @@ function docToEditor(doc: ShowDocumentV1): EditorShowfile {
   };
 }
 
-function editorToDoc(editor: EditorShowfile): ShowDocumentV1 {
+function editorToDoc(editor: EditorShowfile): ShowDocument {
   return {
     ...showStore.document,
     meta: { ...showStore.document.meta, name: editor.name, modified: new Date().toISOString() },

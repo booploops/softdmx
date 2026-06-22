@@ -9,10 +9,35 @@ import { io, type Socket } from 'socket.io-client';
 
 const SOCKET_GLOBAL_KEY = '__softdmx_io_client__';
 const DEFAULT_SOCKET_URL = 'http://127.0.0.1:5353';
+const REMOTE_API_TOKEN_STORAGE_KEY = 'softdmx-api-token';
 
 function isElectronRenderer(): boolean {
   if (typeof window === 'undefined') return false;
   return Boolean(window.electronAPI || window.electronGridNode || window.electronLink);
+}
+
+function resolveRemoteApiToken(): string | undefined {
+  if (typeof window === 'undefined') {
+    return undefined;
+  }
+
+  const fromElectron = window.electronAPI?.getRemoteApiToken?.();
+  if (typeof fromElectron === 'string' && fromElectron.length > 0) {
+    return fromElectron;
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const fromQuery = params.get('token')?.trim();
+  if (fromQuery) {
+    return fromQuery;
+  }
+
+  const fromStorage = window.localStorage.getItem(REMOTE_API_TOKEN_STORAGE_KEY)?.trim();
+  if (fromStorage) {
+    return fromStorage;
+  }
+
+  return undefined;
 }
 
 function resolveSocketUrl(): string | null {
@@ -34,6 +59,7 @@ function resolveSocketUrl(): string | null {
 
 function createClient(): Socket {
   const url = resolveSocketUrl();
+  const token = resolveRemoteApiToken();
   const socket = io(url ?? DEFAULT_SOCKET_URL, {
     autoConnect: false,
     transports: ['websocket'],
@@ -41,6 +67,8 @@ function createClient(): Socket {
     reconnectionAttempts: 5,
     reconnectionDelay: 1000,
     reconnectionDelayMax: 5000,
+    auth: token ? { token } : undefined,
+    extraHeaders: token ? { 'x-api-token': token } : undefined,
   });
 
   if (!url) {

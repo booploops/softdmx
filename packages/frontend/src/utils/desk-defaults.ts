@@ -14,7 +14,7 @@ import type {
   TouchControl,
   TouchPage,
 } from '../types/desk.ts';
-import type { ShowDocumentV1 } from '../types/show-document.ts';
+import type { ShowDocument } from 'src/show/document';
 
 export const DESK_GRID_COLS = 12;
 
@@ -157,7 +157,7 @@ export function deskPaneGridPlacement(pane: DeskPane, bands: DeskRowBand[]): { r
   };
 }
 
-function defaultTouchControls(doc: ShowDocumentV1): TouchControl[] {
+function defaultTouchControls(doc: ShowDocument): TouchControl[] {
   const controls: TouchControl[] = [
     {
       id: 'touch-gm',
@@ -209,7 +209,7 @@ function defaultTouchControls(doc: ShowDocumentV1): TouchControl[] {
   return controls;
 }
 
-export function createDefaultTouchConfig(doc: ShowDocumentV1): ShowTouchConfig {
+export function createDefaultTouchConfig(doc: ShowDocument): ShowTouchConfig {
   const page: TouchPage = {
     id: 'main',
     name: 'Main',

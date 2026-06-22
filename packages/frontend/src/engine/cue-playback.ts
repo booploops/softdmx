@@ -7,7 +7,7 @@
  */
 
 import type { ActiveChannel, Cue, CueLayer, RecordedFrame } from 'src/types';
-import type { ShowDocumentV1 } from 'src/types/show-document';
+import type { ShowDocument } from 'src/show/document';
 import { presetToChannels } from './preset-resolver';
 import { clampDmx } from './types';
 
@@ -65,7 +65,7 @@ function interpolateChannels(
 }
 
 function resolveFrameChannels(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   frame: RecordedFrame,
   baseChannels: ActiveChannel[],
   holdChannels: ActiveChannel[]
@@ -139,7 +139,7 @@ function blendLayerOutputs(
 }
 
 function evaluateLayerAtTime(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   layer: CueLayer,
   timeMs: number,
   baseChannels: ActiveChannel[]
@@ -176,7 +176,7 @@ function evaluateLayerAtTime(
 }
 
 export function evaluateTimelineCueAtTime(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   cue: Cue,
   timeMs: number,
   baseChannels: ActiveChannel[]

@@ -8,34 +8,34 @@
 
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import type { ShowDocumentV1 } from 'src/types/show-document';
-import { createEmptyShow } from 'src/types/show-document';
+import type { ShowDocument } from 'src/show/document';
+import { createEmptyShow } from 'src/show/document';
 import {
   parseShowDocument,
   serializeShowDocument,
   downloadShowDocument,
   loadShowDocumentFromFile,
   validateShowDocument,
-} from 'src/utils/show-io';
+} from 'src/show/io';
 import { writeCrashSnapshot, clearCrashSnapshot, readCrashSnapshot } from 'src/utils/crash-snapshot';
 import { readLastShow, writeLastShow } from 'src/utils/last-show';
 import { useIOClient } from 'src/lib/io-client';
 import { useDMXStore } from './dmx';
-import { useOutputEngineStore } from './output-engine';
+import { useOutputEngineStore } from './output-playback';
 import { useScratchStore } from './scratch';
 
 const HISTORY_LIMIT = 100;
 
-function cloneDocument(doc: ShowDocumentV1): ShowDocumentV1 {
-  return JSON.parse(JSON.stringify(doc)) as ShowDocumentV1;
+function cloneDocument(doc: ShowDocument): ShowDocument {
+  return JSON.parse(JSON.stringify(doc)) as ShowDocument;
 }
 
 export const useShowStore = defineStore('show', () => {
-  const document = ref<ShowDocumentV1>(validateShowDocument(createEmptyShow()));
+  const document = ref<ShowDocument>(validateShowDocument(createEmptyShow()));
   const isDirty = ref(false);
   const filePath = ref<string | null>(null);
-  const undoStack = ref<ShowDocumentV1[]>([]);
-  const redoStack = ref<ShowDocumentV1[]>([]);
+  const undoStack = ref<ShowDocument[]>([]);
+  const redoStack = ref<ShowDocument[]>([]);
 
   const name = computed(() => document.value.meta.name);
   const canUndo = computed(() => undoStack.value.length > 0);
@@ -83,7 +83,7 @@ export const useShowStore = defineStore('show', () => {
     });
   }
 
-  function applyDocument(nextDoc: ShowDocumentV1, options?: { sync?: boolean; resetPlayback?: boolean }) {
+  function applyDocument(nextDoc: ShowDocument, options?: { sync?: boolean; resetPlayback?: boolean }) {
     document.value = nextDoc;
 
     const dmx = useDMXStore();
@@ -101,7 +101,7 @@ export const useShowStore = defineStore('show', () => {
     }
   }
 
-  function loadShow(doc: ShowDocumentV1, options?: { sync?: boolean; persist?: boolean }) {
+  function loadShow(doc: ShowDocument, options?: { sync?: boolean; persist?: boolean }) {
     document.value = validateShowDocument(doc);
     isDirty.value = false;
     resetHistory();
@@ -157,7 +157,7 @@ export const useShowStore = defineStore('show', () => {
     return downloadShowDocument(document.value, filename);
   }
 
-  function updateDocument(mutator: (doc: ShowDocumentV1) => void) {
+  function updateDocument(mutator: (doc: ShowDocument) => void) {
     pushUndoSnapshot();
     mutator(document.value);
     markDirty();

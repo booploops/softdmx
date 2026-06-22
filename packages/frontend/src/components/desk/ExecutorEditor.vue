@@ -10,7 +10,7 @@ import { computed } from 'vue';
 import type { ExecutorSlot } from 'src/types';
 import { useCueStore } from 'src/stores/cue';
 import { useExecutorStore } from 'src/stores/executor';
-import { useOutputEngineStore } from 'src/stores/output-engine';
+import { useOutputEngineStore } from 'src/stores/output-playback';
 
 const cueStore = useCueStore();
 const executorStore = useExecutorStore();

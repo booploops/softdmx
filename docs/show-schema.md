@@ -1,7 +1,6 @@
-# Show Schema (`ShowDocumentV1.5`)
+# Show schema (1.5)
 
-This document describes the persisted show file structure used by SoftDMX.
-Show files are serialized as YAML and validated by the app at load time.
+YAML show files validated at load time. Older versions migrate to `1.5` automatically.
 
 ## Top-level object
 

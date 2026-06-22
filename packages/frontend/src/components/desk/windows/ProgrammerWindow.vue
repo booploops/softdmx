@@ -9,7 +9,7 @@
 import SelectionControlPanel from './SelectionControlPanel.vue';
 import { useScratchStore } from 'src/stores/scratch';
 import { useCueStore } from 'src/stores/cue';
-import { useOutputEngineStore } from 'src/stores/output-engine';
+import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useSelectionStore } from 'src/stores/selection';
 import { useUIStore } from 'src/stores/ui';
 import { useProgrammerStore, PROGRAMMER_FEATURE_GROUPS } from 'src/stores/programmer';

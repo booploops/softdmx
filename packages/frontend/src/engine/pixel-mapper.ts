@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { PixelMapDefinition } from 'src/types/show-document';
+import type { PixelMapDefinition } from 'src/show/document';
 
 type PixelComponent = 'r' | 'g' | 'b';
 

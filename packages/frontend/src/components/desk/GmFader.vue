@@ -6,7 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { useOutputEngineStore } from 'src/stores/output-engine';
+import { useOutputEngineStore } from 'src/stores/output-playback';
 
 const props = defineProps<{
   modelValue: number;

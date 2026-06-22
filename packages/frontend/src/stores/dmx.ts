@@ -14,16 +14,17 @@ import type {
   FixtureChannelWithReference,
   ShowfileFixtureMapped,
 } from 'src/types';
-import type { ShowDocumentV1 } from 'src/types/show-document';
-import { getFixtureDefinition, getAllFixtures } from 'src/plugins/registry';
-import { resolveFixtureChannelsForMode } from 'src/plugins/gdtf/gdtf-to-fixture';
+import type { ShowDocument } from 'src/show/document';
+import { validateShowDocument } from 'src/show/io';
+import { getFixtureDefinition, getAllFixtures } from 'src/fixture-library/registry';
+import { resolveFixtureChannelsForMode } from 'src/fixture-library/gdtf/gdtf-to-fixture';
 import { buildChannelMap } from 'src/engine/preset-resolver';
 import { useIOClient } from 'src/lib/io-client';
 
 export const useDMXStore = defineStore('dmx', () => {
   const baseChannels = shallowRef<ActiveChannel[]>([]);
   const channels = ref<ActiveChannel[]>([]);
-  const showDocument = ref<ShowDocumentV1 | null>(null);
+  const showDocument = ref<ShowDocument | null>(null);
 
   const Fixtures = computed(() => getAllFixtures());
 
@@ -32,10 +33,7 @@ export const useDMXStore = defineStore('dmx', () => {
     return {
       name: showDocument.value.meta.name,
       fixtures: showDocument.value.fixtures,
-      linkedGroups: showDocument.value.groups.map((g) => ({
-        name: g.name,
-        names: g.fixtures,
-      })),
+      groups: showDocument.value.groups,
     };
   });
 
@@ -69,7 +67,7 @@ export const useDMXStore = defineStore('dmx', () => {
     }).filter((f): f is ShowfileFixtureMapped => f !== null);
   });
 
-  function rebuildFromShow(doc: ShowDocumentV1) {
+  function rebuildFromShow(doc: ShowDocument) {
     showDocument.value = doc;
     const built = buildChannelMap(doc);
     baseChannels.value = built.map((ch) => ({ ...ch }));
@@ -101,28 +99,29 @@ export const useDMXStore = defineStore('dmx', () => {
   };
 
   /** @deprecated Use show store loadShow */
-  function loadShowfile(doc: ShowDocumentV1 | { name: string; fixtures: ShowDocumentV1['fixtures']; linkedGroups?: { name: string; names: string[] }[] }) {
+  function loadShowfile(doc: ShowDocument | { name: string; fixtures: ShowDocument['fixtures']; linkedGroups?: { name: string; names: string[] }[] }) {
     if ('version' in doc) {
-      rebuildFromShow(doc as ShowDocumentV1);
+      rebuildFromShow(validateShowDocument(doc));
       return;
     }
-    const migrated: ShowDocumentV1 = {
-      version: '1.1',
-      meta: { name: doc.name, created: new Date().toISOString(), modified: new Date().toISOString() },
-      destinations: [
-        { id: 'default-gridnode', name: 'Default GridNode Overlay', type: 'gridnode', settings: {} },
-      ],
-      fixtures: doc.fixtures,
-      groups: (doc.linkedGroups ?? []).map((g) => ({ name: g.name, fixtures: g.names })),
-      presets: [],
-      effects: [],
-      cues: [],
-      bindings: { midi: [], osc: [] },
-      audioMappings: [],
-      executors: [],
-      submasters: [],
-    };
-    rebuildFromShow(migrated);
+    rebuildFromShow(
+      validateShowDocument({
+        version: '1.1',
+        meta: { name: doc.name, created: new Date().toISOString(), modified: new Date().toISOString() },
+        destinations: [
+          { id: 'default-gridnode', name: 'Default GridNode Overlay', type: 'gridnode', settings: {} },
+        ],
+        fixtures: doc.fixtures,
+        groups: (doc.linkedGroups ?? []).map((g) => ({ name: g.name, fixtures: g.names })),
+        presets: [],
+        effects: [],
+        cues: [],
+        bindings: { midi: [], osc: [] },
+        audioMappings: [],
+        executors: [],
+        submasters: [],
+      })
+    );
   }
 
   return {

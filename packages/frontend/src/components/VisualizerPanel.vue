@@ -7,7 +7,7 @@
 -->
 <script setup lang="ts">
 import type { FixturePosition } from 'src/types';
-import { resolveFixturePosition } from 'src/utils/focus-helper';
+import { resolveFixturePosition } from 'src/utils/pan-tilt-aim';
 import { useThemeStore } from 'src/stores/theme';
 import { readThemeCanvasPalette } from 'src/utils/theme-css';
 
@@ -28,18 +28,31 @@ const canvasRef = ref<HTMLCanvasElement | null>(null);
 const themeStore = useThemeStore();
 let resizeObserver: ResizeObserver | null = null;
 
+function readCanvasCssSize(): { width: number; height: number } | null {
+  const container = containerRef.value;
+  if (!container) return null;
+
+  const rect = container.getBoundingClientRect();
+  const width = Math.floor(rect.width);
+  const height = Math.floor(rect.height);
+  if (width < 1) return null;
+
+  if (props.compact) {
+    if (height < 1) return null;
+    return { width, height };
+  }
+
+  return { width, height: Math.max(280, height || 280) };
+}
+
 function render() {
   const canvas = canvasRef.value;
-  const container = containerRef.value;
-  if (!canvas || !container) return;
+  const size = readCanvasCssSize();
+  if (!canvas || !size) return;
 
+  const { width, height } = size;
   const palette = readThemeCanvasPalette();
 
-  const width = Math.max(1, Math.floor(container.clientWidth));
-  const measuredHeight = Math.floor(container.clientHeight);
-  const height = props.compact
-    ? Math.max(1, measuredHeight)
-    : Math.max(280, measuredHeight || 280);
   if (canvas.width !== width || canvas.height !== height) {
     canvas.width = width;
     canvas.height = height;
@@ -145,17 +158,20 @@ watch(
   { deep: true }
 );
 
-onMounted(() => {
+onMounted(async () => {
+  await nextTick();
   render();
   if (!containerRef.value) return;
   resizeObserver = new ResizeObserver(() => {
     render();
   });
   resizeObserver.observe(containerRef.value);
+  window.addEventListener('resize', render);
 });
 
 onBeforeUnmount(() => {
   resizeObserver?.disconnect();
+  window.removeEventListener('resize', render);
 });
 
 function onCanvasClick(event: MouseEvent) {
@@ -166,9 +182,6 @@ function onCanvasClick(event: MouseEvent) {
   const rect = canvas.getBoundingClientRect();
   const clickX = ((event.clientX - rect.left) / rect.width) * canvas.width;
   const clickY = ((event.clientY - rect.top) / rect.height) * canvas.height;
-
-  const palette = readThemeCanvasPalette();
-  void palette;
 
   const resolved = props.fixtures.map((fixture, index) => ({
     name: fixture.name,
@@ -221,33 +234,44 @@ function onCanvasClick(event: MouseEvent) {
         </div>
       </q-card-section>
     </q-card>
-    <div v-else ref="containerRef" class="visualizer-canvas-wrap visualizer-canvas-wrap--fill">
-      <canvas ref="canvasRef" class="visualizer-canvas visualizer-canvas--fill" @click="onCanvasClick" />
+    <div v-else ref="containerRef" class="visualizer-stage">
+      <canvas ref="canvasRef" class="visualizer-canvas" @click="onCanvasClick" />
     </div>
   </div>
 </template>
 
 <style scoped>
 .visualizer-root--compact {
-  height: 100%;
+  flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.visualizer-stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  overflow: hidden;
+}
+
+.visualizer-stage .visualizer-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
 }
 
 .visualizer-canvas-wrap {
   width: 100%;
 }
 
-.visualizer-canvas-wrap--fill {
-  flex: 1 1 auto;
-  height: 100%;
-  min-height: 0;
-}
-
 .visualizer-canvas {
-  width: 100%;
-  height: 280px;
   border-radius: var(--sdmx-radius-sm);
   border: 1px solid var(--sdmx-color-border);
   background: var(--sdmx-color-canvas-bg);
@@ -255,8 +279,8 @@ function onCanvasClick(event: MouseEvent) {
   display: block;
 }
 
-.visualizer-canvas--fill {
-  height: 100%;
-  min-height: 0;
+.visualizer-canvas-wrap .visualizer-canvas {
+  width: 100%;
+  height: 280px;
 }
 </style>

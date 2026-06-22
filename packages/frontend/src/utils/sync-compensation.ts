@@ -10,7 +10,7 @@ import type {
   ShowLinkSyncConfig,
   ShowOscSyncConfig,
   ShowTimecodeConfig,
-} from 'src/types/show-document';
+} from 'src/show/document';
 
 export function normalizeLatencyMs(value: number | undefined): number {
   if (!Number.isFinite(value) || value === undefined) return 0;

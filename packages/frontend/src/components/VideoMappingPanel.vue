@@ -10,7 +10,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { useQuasar } from 'quasar';
 import { useShowStore } from 'src/stores/show';
 import { useVideoStore } from 'src/stores/video';
-import type { PixelMapDefinition, VideoInputKind, VideoSampleFps, VideoSampleRegion } from 'src/types/show-document';
+import type { PixelMapDefinition, VideoInputKind, VideoSampleFps, VideoSampleRegion } from 'src/show/document';
 import {
   FULL_VIDEO_SAMPLE_REGION,
   normalizeSampleRegion,

@@ -1,0 +1,11 @@
+id: corpus-fixture
+name: Corpus Wash
+channels:
+  - name: Dimmer
+    attributeType: intensity
+  - name: Red
+    attributeType: color
+  - name: Green
+    attributeType: color
+  - name: Blue
+    attributeType: color

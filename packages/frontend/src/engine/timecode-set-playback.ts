@@ -7,7 +7,7 @@
  */
 
 import type { Cue } from 'src/types';
-import type { ShowTimelineConfig } from 'src/types/show-document';
+import type { ShowTimelineConfig } from 'src/show/document';
 
 function cueDurationMs(cue: Cue): number {
   if (cue.view === 'stack' && cue.stack?.length) {

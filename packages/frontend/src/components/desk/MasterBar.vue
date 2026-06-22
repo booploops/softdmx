@@ -7,7 +7,7 @@
 -->
 <script setup lang="ts">
 import { useShowStore } from 'src/stores/show';
-import { useOutputEngineStore } from 'src/stores/output-engine';
+import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useScratchStore } from 'src/stores/scratch';
 import { useLinkStore } from 'src/stores/link';
 import { useAudioStore } from 'src/stores/audio';
@@ -16,7 +16,7 @@ import { useUIStore } from 'src/stores/ui';
 import {
   QUICK_ACCESS_WORKSPACE_MODES,
   WORKSPACE_MODE_META,
-} from 'src/utils/workspace-modes';
+} from 'src/desk/workspace-modes';
 import ViewSwitcher from './ViewSwitcher.vue';
 import GmFader from './GmFader.vue';
 

@@ -20,7 +20,7 @@ export default defineConfig((ctx) => {
     // app boot file (/src/boot)
     // --> boot files are part of "main.js"
     // https://v2.quasar.dev/quasar-cli-vite/boot-files
-    boot: ["viewport-height", "i18n", "theme", "defaults", "show", "services", "audio", "timecode"],
+    boot: ["viewport-height", "i18n", "theme", "quasar-overrides", "show", "device-io-init", "remote-api", "audio", "timecode"],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: ["app.scss", "desk.scss"],
@@ -156,10 +156,11 @@ export default defineConfig((ctx) => {
     animations: [],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#sourcefiles
-    // sourceFiles: {
+    sourceFiles: {
+      store: 'src/stores/pinia',
+    },
     //   rootComponent: 'src/App.vue',
     //   router: 'src/router/index',
-    //   store: 'src/store/index',
     //   pwaRegisterServiceWorker: 'src-pwa/register-service-worker',
     //   pwaServiceWorker: 'src-pwa/custom-service-worker',
     //   pwaManifestFile: 'src-pwa/manifest.json',

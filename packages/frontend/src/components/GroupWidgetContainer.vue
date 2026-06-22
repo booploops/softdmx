@@ -10,21 +10,21 @@
 -->
 <script setup lang="ts">
 import type { ShowfileFixtureMapped } from 'src/types';
+import type { ShowGroup } from 'src/show/document';
 import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
-import WidgetRenderer from './Widgets/WidgetRenderer.vue';
+import WidgetRenderer from './widgets/WidgetRenderer.vue';
 
 const dmx = useDMXStore();
 const selection = useSelectionStore();
-type LinkedGroup = { name: string; names: string[] };
 const props = defineProps<{
-  group: LinkedGroup;
+  group: ShowGroup;
 }>();
 
 // Get all fixtures in this group
 const allFixtures = computed(() => {
   return dmx.showfileFixturesMapped.filter(
-    (fixture) => props.group.names.includes(fixture.fixtureName)
+    (fixture) => props.group.fixtures.includes(fixture.fixtureName)
   );
 });
 

@@ -1,12 +1,14 @@
 # SoftDMX Remote API
 
-Socket.io server (default port 5353).
+Socket.IO and REST on port **5353** by default.
+
+OpenAPI spec: [`openapi/remote-api.yaml`](../openapi/remote-api.yaml).
 
 ## Read events (server → client)
 
 | Event | Payload | Description |
 |---|---|---|
-| `show:state` | `ShowDocumentV1` | Full show document |
+| `show:state` | Show document (schema 1.5) | Full show document |
 | `channels:state` | `ActiveChannel[]` | Merged DMX output |
 | `settings:current` | App config | Port and app prefs |
 
@@ -15,8 +17,8 @@ Socket.io server (default port 5353).
 | Event | Payload | Description |
 |---|---|---|
 | `show:get` | — | Request current show |
-| `show:load` | `ShowDocumentV1` | Load show |
-| `show:state` | `ShowDocumentV1` | Broadcast show update |
+| `show:load` | Show document (schema 1.5) | Load show |
+| `show:state` | Show document (schema 1.5) | Broadcast show update |
 | `scratch:set` | `{ path, value }` or `{ channels: [...] }` | Set live scratch channels |
 | `scratch:clear` | — | Clear scratch layer |
 | `preset:fire` | `{ presetId, fade? }` | Fire preset with optional fade ms |
@@ -64,16 +66,17 @@ If a message includes two numeric args and the first is `0-1`, SoftDMX treats it
 
 Base URL: `http://127.0.0.1:5353/api/v1/remote`
 
-Optional auth:
+Optional auth (REST and Socket.IO):
 
-- Set `SOFTDMX_API_TOKEN` in the server environment to require auth for all REST routes.
-- Send token in `Authorization: Bearer <token>` or `x-api-token: <token>`.
-- If token auth is enabled and missing/invalid, routes return `401 Unauthorized`.
+- Set `SOFTDMX_API_TOKEN` in the server environment to require auth for all REST routes and Socket.IO connections.
+- Send token in `Authorization: Bearer <token>`, `x-api-token: <token>`, or Socket.IO `auth: { token: '<token>' }` on connect.
+- Electron passes the env token automatically; browser clients may use `?token=` or `localStorage['softdmx-api-token']`.
+- If token auth is enabled and missing/invalid, REST returns `401 Unauthorized` and Socket.IO connections are rejected.
 
 | Method | Route | Body | Description |
 |---|---|---|---|
 | `GET` | `/show` | — | Get current show document |
-| `POST` | `/show` | `ShowDocumentV1` | Load full show document |
+| `POST` | `/show` | Show document (schema 1.5) | Load full show document |
 | `POST` | `/scratch/set` | `{ path, value, attributeType? }` or `{ channels: [...] }` | Set live scratch values |
 | `POST` | `/scratch/clear` | — | Clear scratch layer |
 | `POST` | `/preset/fire` | `{ presetId, fade? }` | Fire preset |

@@ -8,7 +8,7 @@
 
 import assert from 'node:assert/strict';
 import { performance } from 'node:perf_hooks';
-import { createEmptyShow } from '../src/types/show-document.ts';
+import { createEmptyShow } from '../src/show/document.ts';
 import { mergeLayers, type LayerContribution } from '../src/engine/types.ts';
 import { scratchToLayer } from '../src/engine/layers/scratch.ts';
 

@@ -14,7 +14,7 @@ import { exampleVrClubShow } from 'src/shows/example-vr-club';
 import { simpleWashShow } from 'src/shows/simple-wash';
 import { laserDemoShow } from 'src/shows/laser-demo';
 import { formatLastShowSavedAt, readLastShow } from 'src/utils/last-show';
-import type { ShowDocumentV1 } from 'src/types/show-document';
+import type { ShowDocument } from 'src/show/document';
 
 const showStore = useShowStore();
 const scratch = useScratchStore();
@@ -104,7 +104,7 @@ function backToChoose() {
   step.value = 'choose';
 }
 
-function loadDemo(show: ShowDocumentV1) {
+function loadDemo(show: ShowDocument) {
   showStore.loadShow(show);
   scratch.clear();
   finishStartup();

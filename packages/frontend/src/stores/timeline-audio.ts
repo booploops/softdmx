@@ -17,7 +17,7 @@ import {
   saveTimelineAudioAsset,
   type StoredTimelineAudioAsset,
 } from 'src/utils/timeline-audio-storage';
-import type { ShowTimelineAudioAsset } from 'src/types/show-document';
+import type { ShowTimelineAudioAsset } from 'src/show/document';
 
 export const useTimelineAudioStore = defineStore('timeline-audio', () => {
   const showStore = useShowStore();

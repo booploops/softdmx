@@ -14,8 +14,8 @@ import {
   buildDeskRowBands,
   deskPaneGridPlacement,
 } from '../src/utils/desk-defaults.ts';
-import { migrateShowDocument } from '../src/utils/show-migrate.ts';
-import { createEmptyShow } from '../src/types/show-document.ts';
+import { migrateShowDocument } from '../src/show/migrate.ts';
+import { createEmptyShow } from '../src/show/document.ts';
 
 console.log('Running test: desk-defaults views are valid');
 for (const view of DEFAULT_DESK_VIEWS) {

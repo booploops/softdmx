@@ -7,7 +7,7 @@
 -->
 <script setup lang="ts">
 import { useShowStore } from 'src/stores/show';
-import { useOutputEngineStore } from 'src/stores/output-engine';
+import { useOutputEngineStore } from 'src/stores/output-playback';
 
 const showStore = useShowStore();
 const engine = useOutputEngineStore();

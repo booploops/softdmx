@@ -7,7 +7,7 @@
  */
 
 import { useScratchStore } from 'src/stores/scratch';
-import { useOutputEngineStore } from 'src/stores/output-engine';
+import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
 import { inferAttributeFeature } from 'src/engine/attributes';

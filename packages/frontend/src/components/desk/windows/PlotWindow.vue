@@ -33,8 +33,9 @@ function onFixtureSelect(name: string) {
 
 <style scoped>
 .plot-window {
-  height: 100%;
+  flex: 1 1 auto;
   min-height: 0;
+  min-width: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;

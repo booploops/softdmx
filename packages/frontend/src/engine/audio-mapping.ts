@@ -6,12 +6,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowAudioMapping, ShowDocumentV1 } from '../types/show-document.ts';
+import type { ShowAudioMapping, ShowDocument } from '../show/document.ts';
 import {
   LC_LatrixLasers,
   VRSL_Light5CH,
   VRSL_Spotlight,
-} from '../plugins/builtin/fixtures.ts';
+} from '../fixture-library/builtin/fixtures.ts';
 import { clampDmx } from './types.ts';
 
 type MappingTarget = {
@@ -90,7 +90,7 @@ function smoothValue(
 }
 
 function resolveFixtureTarget(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   fixtureName: string,
   attribute: string
 ): MappingTarget[] {
@@ -108,7 +108,7 @@ function resolveFixtureTarget(
   }];
 }
 
-function resolveMappingTargets(show: ShowDocumentV1, mapping: ShowAudioMapping): MappingTarget[] {
+function resolveMappingTargets(show: ShowDocument, mapping: ShowAudioMapping): MappingTarget[] {
   const attribute = mapping.attribute;
   if (!attribute) return [];
 
@@ -133,7 +133,7 @@ function resolveMappingTargets(show: ShowDocumentV1, mapping: ShowAudioMapping):
 }
 
 export function evaluateAudioMappings(
-  show: ShowDocumentV1,
+  show: ShowDocument,
   levels: AudioSnapshot,
   state: AudioMappingEvalState,
   nowMs = Date.now()

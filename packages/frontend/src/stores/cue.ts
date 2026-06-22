@@ -12,16 +12,16 @@ import { defineStore } from 'pinia';
 import { cloneDeep } from 'lodash-es';
 import { useShowStore } from './show';
 import { useDMXStore } from './dmx';
-import { useOutputEngineStore } from './output-engine';
+import { useOutputEngineStore } from './output-playback';
 import { useScratchStore } from './scratch';
 import { getCueTotalDuration } from 'src/engine/cue-playback';
 import type { AttributeFeature } from 'src/types/attributes';
 import type { ProgrammerStoreMode } from './programmer';
-import { applyProgrammerStoreMode, captureScratchPreset } from 'src/utils/programmer-store';
+import { applyProgrammerStoreMode, captureScratchPreset } from 'src/utils/programmer-capture';
 import { filterScratchEntries } from 'src/utils/programmer-filter';
 import { resolvePresetIdFromPoolSlot } from 'src/utils/preset-pool';
 
-export const useCueStore = defineStore('cue-store', () => {
+export const useCueStore = defineStore('cue', () => {
   const showStore = useShowStore();
   const dmx = useDMXStore();
   const engine = useOutputEngineStore();
