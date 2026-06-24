@@ -25,8 +25,7 @@
     "test:playwright:electron": "yarn workspace @softdmx/frontend test:playwright:electron",
     "test:coverage": "yarn workspace @softdmx/frontend test:coverage",
     "test:all": "yarn test",
-    "cli": "node packages/client/scripts/softdmx-cli.mjs",
-    "install:frontend": "yarn workspaces focus @softdmx/frontend"
+    "cli": "node packages/client/scripts/softdmx-cli.mjs"
   },
   "devDependencies": {
     "concurrently": "^10.0.3"

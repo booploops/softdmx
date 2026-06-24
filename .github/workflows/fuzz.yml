@@ -28,7 +28,7 @@ jobs:
           corepack: true
 
       - name: Install dependencies
-        run: yarn install:frontend
+        run: yarn workspaces focus @softdmx/frontend
 
       - name: Run fuzz harnesses
         run: yarn test:fuzz:ci
