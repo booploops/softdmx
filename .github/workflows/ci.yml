@@ -67,6 +67,11 @@ jobs:
       - name: Install dependencies
         run: yarn workspaces focus @softdmx/frontend
 
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
       - name: Build SPA
         run: yarn build:frontend
 
@@ -93,6 +98,11 @@ jobs:
 
       - name: Install dependencies
         run: yarn install --immutable
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
 
       - name: Build Electron
         run: |
