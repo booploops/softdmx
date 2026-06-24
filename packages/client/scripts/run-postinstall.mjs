@@ -13,23 +13,14 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const yarnCmd = process.platform === 'win32' ? 'yarn.cmd' : 'yarn';
 
-const modules = ['abletonlink', 'serialport'];
+for (const script of ['patch-abletonlink.mjs', 'rebuild-native.mjs']) {
+  const result = spawnSync(process.execPath, [join(root, 'scripts', script)], {
+    cwd: root,
+    stdio: 'inherit',
+  });
 
-function runRebuild() {
-  const rebuild = spawnSync(
-    yarnCmd,
-    ['exec', 'electron-rebuild', '-f', '-w', modules.join(',')],
-    { cwd: root, stdio: 'inherit' }
-  );
-
-  if (rebuild.status !== 0) {
-    console.error('rebuild-native: electron-rebuild failed');
-    process.exit(rebuild.status ?? 1);
+  if (result.status !== 0) {
+    process.exit(result.status ?? 1);
   }
-
-  console.log('rebuild-native: native modules rebuilt');
 }
-
-runRebuild();

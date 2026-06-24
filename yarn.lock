@@ -1919,7 +1919,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@softdmx/client@workspace:*, @softdmx/client@workspace:packages/client":
+"@softdmx/client@workspace:packages/client":
   version: 0.0.0-use.local
   resolution: "@softdmx/client@workspace:packages/client"
   dependencies:
@@ -1953,6 +1953,10 @@ __metadata:
       optional: true
     "@napolab/texture-bridge-win32-x64-msvc":
       optional: true
+    abletonlink:
+      built: false
+    serialport:
+      built: false
   languageName: unknown
   linkType: soft
 
@@ -1962,6 +1966,8 @@ __metadata:
   dependencies:
     "@types/node": "npm:^22.15.0"
     alien-signals: "npm:^3.2.1"
+    fast-xml-parser: "npm:^5.9.3"
+    fflate: "npm:^0.8.3"
     typescript: "npm:~6.0.3"
     yaml: "npm:^2.9.0"
   languageName: unknown
@@ -1978,7 +1984,6 @@ __metadata:
     "@playwright/test": "npm:^1.61.0"
     "@quasar/extras": "npm:^2.0.1"
     "@quasar/vite-plugin": "npm:^1.12.0"
-    "@softdmx/client": "workspace:*"
     "@softdmx/engine": "workspace:*"
     "@softdmx/wasm": "workspace:*"
     "@types/lodash-es": "npm:^4.17.12"
@@ -1988,6 +1993,7 @@ __metadata:
     alien-signals: "npm:^3.2.1"
     autoprefixer: "npm:^10.5.0"
     fast-check: "npm:^4.8.0"
+    fastify: "npm:^5.8.5"
     fflate: "npm:^0.8.3"
     idb-keyval: "npm:^6.2.5"
     lodash-es: "npm:^4.18.1"
