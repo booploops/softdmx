@@ -30,6 +30,29 @@
   "devDependencies": {
     "concurrently": "^10.0.3"
   },
+  "resolutions": {
+    "@xmldom/xmldom": "0.8.13",
+    "ajv": "8.18.0",
+    "brace-expansion@npm:^1.1.7": "1.1.13",
+    "brace-expansion@npm:^2.0.1": "2.0.3",
+    "fast-uri": "3.1.2",
+    "glob": "10.5.0",
+    "ip-address": "10.1.1",
+    "js-yaml": "4.2.0",
+    "lodash": "4.18.0",
+    "minimatch@npm:^3.0.4": "3.1.4",
+    "minimatch@npm:^3.0.5": "3.1.4",
+    "minimatch@npm:^5.0.1": "5.1.8",
+    "minimatch@npm:^9.0.3": "9.0.7",
+    "minimatch@npm:^9.0.4": "9.0.7",
+    "picomatch@npm:^2.3.1": "2.3.2",
+    "picomatch@npm:^4.0.2": "4.0.4",
+    "socket.io-parser": "4.2.6",
+    "tar": "7.5.16",
+    "tmp": "0.2.6",
+    "ws": "8.21.0",
+    "yaml@npm:^2.0.0": "2.8.3"
+  },
   "engines": {
     "node": "22.23.0",
     "npm": ">= 6.13.4",
