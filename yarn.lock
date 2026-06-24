@@ -2001,6 +2001,7 @@ __metadata:
     postcss: "npm:^8.4.49"
     quasar: "npm:^2.20.1"
     sass: "npm:^1.81.0"
+    socket.io: "npm:^4.8.3"
     socket.io-client: "npm:^4.8.3"
     typescript: "npm:~6.0.3"
     unplugin-auto-import: "npm:^21.0.0"
