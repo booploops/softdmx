@@ -12,6 +12,7 @@ on:
 permissions:
   contents: read
   security-events: write
+  actions: read
 
 jobs:
   osv-scanner:
@@ -23,6 +24,7 @@ jobs:
     permissions:
       contents: read
       security-events: write
+      actions: read
 
   codeql:
     runs-on: ubuntu-latest
