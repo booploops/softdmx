@@ -30,6 +30,9 @@ yarn-error.log*
 *.njsproj
 *.sln
 
+# Test coverage (NODE_V8_COVERAGE=./coverage)
+coverage
+
 # local .env files
 .env.local*
 
