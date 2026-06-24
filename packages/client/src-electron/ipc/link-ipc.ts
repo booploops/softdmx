@@ -92,6 +92,8 @@ export function closeAbletonLink() {
     console.error('Error shutting down Ableton Link:', error);
   }
 
+  link = null;
+
   if (ipcRegistered) {
     ipcMain.removeListener('link-set-bpm', onSetBpm);
     ipcMain.removeListener('link-set-enabled', onSetEnabled);

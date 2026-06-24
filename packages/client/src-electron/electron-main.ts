@@ -54,8 +54,8 @@ async function shutdownAndQuit() {
 
   runShutdownCleanup();
 
-  // Give native ThreadSafeFunction callbacks a tick to drain before exit.
-  await new Promise((resolve) => setTimeout(resolve, 50));
+  // Give native ThreadSafeFunction callbacks and the Link worker thread time to drain.
+  await new Promise((resolve) => setTimeout(resolve, 200));
 
   shutdownComplete = true;
   app.quit();
