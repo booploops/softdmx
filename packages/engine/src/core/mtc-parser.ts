@@ -19,7 +19,9 @@ export type ParsedMtcFrame = {
 
 const MTC_FRAME_RATES: MtcFrameRate[] = [24, 25, 29.97, 30];
 
-export function parseMtcQuarterFrame(data: Uint8Array | number[]): number | null {
+export function parseMtcQuarterFrame(
+  data: Uint8Array | number[],
+): number | null {
   if (!data || data.length < 2) return null;
   if (data[0] !== 0xf1) return null;
   const value = data[1];
@@ -28,7 +30,7 @@ export function parseMtcQuarterFrame(data: Uint8Array | number[]): number | null
 }
 
 export class MtcAssembler {
-  private parts = new Array<number>(8).fill(0);
+  private parts = Array.from({ length: 8 }, () => 0);
 
   reset(): void {
     this.parts.fill(0);
@@ -44,7 +46,7 @@ export class MtcAssembler {
     const frames = (this.parts[0] ?? 0) | ((this.parts[1] ?? 0) << 4);
     const seconds = (this.parts[2] ?? 0) | ((this.parts[3] ?? 0) << 4);
     const minutes = (this.parts[4] ?? 0) | ((this.parts[5] ?? 0) << 4);
-    const hours = (this.parts[6] ?? 0) | ((this.parts[7] ?? 0) & 0x01) << 4;
+    const hours = (this.parts[6] ?? 0) | (((this.parts[7] ?? 0) & 0x01) << 4);
     const rateBits = ((this.parts[7] ?? 0) >> 1) & 0x03;
     const frameRate = MTC_FRAME_RATES[rateBits] ?? 30;
     const dropFrame = rateBits === 2;

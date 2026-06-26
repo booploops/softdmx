@@ -28,7 +28,9 @@
     "cli": "node packages/client/scripts/softdmx-cli.mjs"
   },
   "devDependencies": {
-    "concurrently": "^10.0.3"
+    "concurrently": "^10.0.3",
+    "oxfmt": "^0.56.0",
+    "oxlint": "^1.71.0"
   },
   "resolutions": {
     "@xmldom/xmldom": "0.8.13",
