@@ -18,6 +18,10 @@ Welcome! This folder houses memory files designed to help developer agents and h
    * Outlines when and how to use the `@softdmx/wasm` (Zig) package for computationally intensive realtime lighting console tasks.
    * Explains the zero-copy memory transfer pattern and describes running WebAssembly safely within browser Web Workers.
 
+4. **[Testing & Contribution Guide](./testing.md)**
+   * Outlines how the testing suite is structured in `packages/tests` (`@softdmx/tests`).
+   * Explains how to run unit, integration, and property-based tests, and how the custom Node ESM loader hook handles path alias resolution.
+
 ---
 
 ## Monorepo Architecture Quick Pointers
