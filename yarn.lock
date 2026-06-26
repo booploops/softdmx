@@ -3014,6 +3014,8 @@ __metadata:
     "@vueuse/core": "npm:^14.3.0"
     alien-signals: "npm:^3.2.1"
     autoprefixer: "npm:^10.5.0"
+    dockview-core: "npm:^7.0.2"
+    dockview-vue: "npm:^7.0.2"
     fast-check: "npm:^4.8.0"
     fastify: "npm:^5.8.5"
     fflate: "npm:^0.8.3"
@@ -5291,6 +5293,33 @@ __metadata:
     fs-extra: "npm:^10.1.0"
     js-yaml: "npm:^4.1.0"
   checksum: 10c0/2f8aa18cb1addda3879ddcc9c43e5d1d74b8dd231d876d2baa07629854263257e7b883575f8351ae2aae252b470f49b7935dfb5014ce671c5031fc6ce8fd3afa
+  languageName: node
+  linkType: hard
+
+"dockview-core@npm:^7.0.2":
+  version: 7.0.2
+  resolution: "dockview-core@npm:7.0.2"
+  checksum: 10c0/b577d25ef5868dce4e91e082cdd10037cb59f7f53b80bef75649245322f4d3df7aee4750d59ee000e7d3993b1b6223fb57b7674b20726c4929ae7895c6dd61e9
+  languageName: node
+  linkType: hard
+
+"dockview-vue@npm:^7.0.2":
+  version: 7.0.2
+  resolution: "dockview-vue@npm:7.0.2"
+  dependencies:
+    dockview: "npm:^7.0.2"
+  peerDependencies:
+    vue: ^3.4.0
+  checksum: 10c0/7b6fe9d473016ea7dc55a8c31f860b6753f0216721c65303bb715be5a2719d16ec84f46096036bb9475f5e58ac025233d2c10a6c75729a2437e11957997cff4d
+  languageName: node
+  linkType: hard
+
+"dockview@npm:^7.0.2":
+  version: 7.0.2
+  resolution: "dockview@npm:7.0.2"
+  dependencies:
+    dockview-core: "npm:^7.0.2"
+  checksum: 10c0/f482da9e809e01c9d93b3d235467c266f3212cba5a948c5c13b711cffec41402e6a2ca58dbfd6bcb7abe9e12b64b2ede62a76187ea1feba4f116b10a56c9c1dc
   languageName: node
   linkType: hard
 

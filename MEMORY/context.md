@@ -29,3 +29,35 @@ Welcome! This folder houses memory files designed to help developer agents and h
 * **Run dev environment**: `yarn dev` from the root directory boots the entire setup (Frontend + Electron).
 * **Build all packages**: `yarn build` compiles the packages sequentially under correct dependency priorities.
 * **Run test suites**: `yarn test` runs tests across the workspace. All test loaders map engine imports cleanly.
+
+All code files *must* contain the following MPL v2.0 header:
+```html
+<!--
+  Copyright (C) 2025-Present booploops and contributors
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+-->
+```
+
+```ts
+/*
+ * Copyright (C) 2025-Present booploops and contributors
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+```
+
+
+```zig
+///
+/// Copyright (C) 2025-Present booploops and contributors
+///
+/// This Source Code Form is subject to the terms of the Mozilla Public
+/// License, v. 2.0. If a copy of the MPL was not distributed with this
+/// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+///
+```

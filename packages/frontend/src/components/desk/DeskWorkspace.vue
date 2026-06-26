@@ -7,96 +7,116 @@
 -->
 <script setup lang="ts">
 import type { DeskPane } from '@softdmx/engine';
-import { DESK_GRID_COLS, buildDeskRowBands, deskPaneGridPlacement } from '@softdmx/engine';
 import { DESK_WINDOW_META } from 'src/desk/workspace-modes';
-import DeskWindowHost from './DeskWindowHost.vue';
-import DeskPaneResizeHandle from './DeskPaneResizeHandle.vue';
+import DeskDockviewPanel from './DeskDockviewPanel.vue';
 import { useDeskViewStore } from 'src/stores/desk-view';
 import { useUIStore } from 'src/stores/ui';
-import { SdmxWindowChrome } from 'src/components/ui';
 import { useQuasar } from 'quasar';
+import { DockviewVue, type DockviewApi, type DockviewReadyEvent } from 'dockview-vue';
+import 'dockview-core/dist/styles/dockview.css';
 
 const deskView = useDeskViewStore();
 const ui = useUIStore();
 const $q = useQuasar();
-const mobilePaneIndex = ref(0);
 
-const isNarrow = computed(() => $q.screen.width < 900);
-const editLayout = computed(() => ui.isLive && !ui.operateLocked);
+let dockviewApi: DockviewApi | undefined;
+
+const components = {
+  default: DeskDockviewPanel as any,
+};
 
 const panes = computed(() => deskView.activePanes);
-const rowBands = computed(() => buildDeskRowBands(panes.value));
-
-const gridStyle = computed(() => ({
-  gridTemplateColumns: isNarrow.value ? '1fr' : `repeat(${DESK_GRID_COLS}, minmax(0, 1fr))`,
-  gridTemplateRows: isNarrow.value
-    ? '1fr'
-    : rowBands.value.map((band) => `${Math.max(1, band.height)}fr`).join(' '),
-}));
-
-const visiblePanes = computed(() => {
-  if (!isNarrow.value) return panes.value;
-  const pane = panes.value[mobilePaneIndex.value];
-  return pane ? [pane] : [];
-});
-
-function paneStyle(pane: DeskPane) {
-  if (isNarrow.value) {
-    return { gridColumn: '1 / -1', gridRow: '1 / -1' };
-  }
-  const placement = deskPaneGridPlacement(pane, rowBands.value);
-  return {
-    gridColumn: placement.column,
-    gridRow: placement.row,
-  };
-}
 
 function paneMeta(pane: DeskPane) {
   return DESK_WINDOW_META[pane.windowType];
 }
 
+function initializeLayout(api: DockviewApi) {
+  api.clear();
+
+  if (panes.value.length === 0) return;
+
+  // Simple layout translation:
+  // We'll group panels by row based on `rect.y`
+  const rows = new Map<number, DeskPane[]>();
+  for (const pane of panes.value) {
+    const row = rows.get(pane.rect.y) || [];
+    row.push(pane);
+    rows.set(pane.rect.y, row);
+  }
+
+  // Sort rows by y
+  const sortedY = Array.from(rows.keys()).sort((a, b) => a - b);
+
+  let firstPanelIdInPrevRow: string | undefined;
+
+  sortedY.forEach((y, rowIndex) => {
+    const rowPanes = rows.get(y)!.sort((a, b) => a.rect.x - b.rect.x);
+    let firstPanelIdInThisRow: string | undefined;
+
+    rowPanes.forEach((pane, colIndex) => {
+      const panelId = pane.id;
+
+      const title = paneMeta(pane)?.label ?? pane.windowType;
+
+      if (rowIndex === 0 && colIndex === 0) {
+        // First ever panel
+        api.addPanel({
+          id: panelId,
+          component: 'default',
+          title: title,
+          params: { pane: toRaw(pane) },
+        });
+        firstPanelIdInThisRow = panelId;
+      } else if (colIndex === 0) {
+        // First panel in a new row -> dock below the root layout to span full width
+        api.addPanel({
+          id: panelId,
+          component: 'default',
+          title: title,
+          position: { direction: 'below' },
+          params: { pane: toRaw(pane) },
+        });
+        firstPanelIdInThisRow = panelId;
+      } else {
+        // Subsequent panels in the same row -> dock to the right
+        api.addPanel({
+          id: panelId,
+          component: 'default',
+          title: title,
+          position: { direction: 'right', referencePanel: rowPanes[colIndex - 1].id },
+          params: { pane: toRaw(pane) },
+        });
+      }
+    });
+
+    firstPanelIdInPrevRow = firstPanelIdInThisRow;
+  });
+}
+
+function onReady(event: DockviewReadyEvent) {
+  dockviewApi = event.api;
+  initializeLayout(event.api);
+}
+
+// Watch for view changes to re-initialize layout
 watch(
   () => deskView.activeViewId,
   () => {
-    mobilePaneIndex.value = 0;
+    if (dockviewApi) {
+      initializeLayout(dockviewApi);
+    }
   }
 );
 </script>
 
 <template>
   <div class="desk-workspace-root">
-    <div v-if="isNarrow && panes.length > 1" class="desk-pane-mobile-tabs">
-      <button
-        v-for="(pane, index) in panes"
-        :key="pane.id"
-        type="button"
-        class="desk-pane-mobile-tab sdmx-focus-ring"
-        :class="{ 'desk-pane-mobile-tab--active': mobilePaneIndex === index }"
-        @click="mobilePaneIndex = index"
-      >
-        {{ paneMeta(pane)?.label ?? pane.windowType }}
-      </button>
-    </div>
-    <div class="desk-pane-grid" :class="{ 'desk-pane-grid--edit': editLayout }" :style="gridStyle">
-      <div
-        v-for="pane in visiblePanes"
-        :key="pane.id"
-        class="desk-window"
-        :class="{ 'desk-window--edit': editLayout }"
-        :style="paneStyle(pane)"
-      >
-        <SdmxWindowChrome
-          :title="paneMeta(pane)?.label ?? pane.windowType"
-          :icon="paneMeta(pane)?.icon"
-          :info="`Desk window: ${paneMeta(pane)?.label ?? pane.windowType}`"
-        >
-          <template v-if="editLayout" #actions>
-            <DeskPaneResizeHandle :pane="pane" />
-          </template>
-          <DeskWindowHost :pane="pane" />
-        </SdmxWindowChrome>
-      </div>
-    </div>
+    <DockviewVue
+      class="dockview-theme-dark sdmx-dockview"
+      :components="components"
+      @ready="onReady"
+    />
   </div>
 </template>
 
@@ -110,35 +130,16 @@ watch(
   overflow: hidden;
 }
 
-.desk-pane-grid {
-  flex: 1 1 0;
-  min-height: 0;
-}
-
-.desk-pane-grid--edit {
-  outline: 1px dashed var(--sdmx-color-border-strong);
-  outline-offset: -1px;
-}
-
-.desk-window--edit {
-  outline: 1px dashed var(--sdmx-color-info);
-  outline-offset: -1px;
-}
-
-.desk-pane-mobile-tab {
-  flex-shrink: 0;
-  padding: var(--sdmx-space-xs) var(--sdmx-space-sm);
-  border: none;
-  border-radius: var(--sdmx-radius-sm);
-  background: transparent;
-  color: var(--sdmx-color-text-muted);
-  font-size: var(--sdmx-font-size-label);
-  cursor: pointer;
-  min-height: var(--sdmx-space-touch);
-}
-
-.desk-pane-mobile-tab--active {
-  background: var(--sdmx-color-primary-soft);
-  color: var(--sdmx-color-primary);
+.sdmx-dockview {
+  width: 100%;
+  height: 100%;
+  --dv-activegroup-visiblepanel-tab-background-color: var(--sdmx-color-bg-elevated);
+  --dv-inactivegroup-visiblepanel-tab-background-color: var(--sdmx-color-bg-surface);
+  --dv-group-view-background-color: var(--sdmx-color-bg-surface);
+  --dv-tabs-and-actions-container-background-color: var(--sdmx-color-bg-subtle);
+  --dv-activegroup-visiblepanel-tab-color: var(--sdmx-color-text);
+  --dv-inactivegroup-visiblepanel-tab-color: var(--sdmx-color-text-muted);
+  --dv-tab-divider-color: var(--sdmx-color-border-subtle);
+  --dv-pane-divider-color: var(--sdmx-color-border-strong);
 }
 </style>

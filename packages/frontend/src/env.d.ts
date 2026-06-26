@@ -49,3 +49,8 @@ declare module '*?worker' {
   export default workerConstructor;
 }
 
+declare module '*.css' {}
+declare module '*.scss' {}
+declare module '*.sass' {}
+
+
