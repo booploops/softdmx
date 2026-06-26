@@ -6,20 +6,20 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { ipcMain, type BrowserWindow, type IpcMainInvokeEvent } from 'electron';
+import { ipcMain, type BrowserWindow, type IpcMainInvokeEvent } from "electron";
 import {
   connectTextureBridge,
   disconnectTextureBridge,
   listTextureSenders,
   setTextureBridgeWindow,
   type TextureBridgeConnectConfig,
-} from '../video/texture-bridge-service';
+} from "../video/texture-bridge-service";
 
 let connected = false;
 
 function registerVideoHandler<T extends unknown[], R>(
   channel: string,
-  handler: (event: IpcMainInvokeEvent, ...args: T) => R | Promise<R>
+  handler: (event: IpcMainInvokeEvent, ...args: T) => R | Promise<R>,
 ) {
   ipcMain.removeHandler(channel);
   ipcMain.handle(channel, handler);
@@ -28,22 +28,19 @@ function registerVideoHandler<T extends unknown[], R>(
 export function setupVideoIpc(mainWindow: BrowserWindow) {
   setTextureBridgeWindow(mainWindow);
 
-  registerVideoHandler('video-list-senders', async () => listTextureSenders());
+  registerVideoHandler("video-list-senders", async () => listTextureSenders());
 
-  registerVideoHandler(
-    'video-connect',
-    async (_event, config: TextureBridgeConnectConfig) => {
-      connected = await connectTextureBridge(config);
-      return connected;
-    }
-  );
+  registerVideoHandler("video-connect", async (_event, config: TextureBridgeConnectConfig) => {
+    connected = await connectTextureBridge(config);
+    return connected;
+  });
 
-  registerVideoHandler('video-disconnect', async () => {
+  registerVideoHandler("video-disconnect", async () => {
     await disconnectTextureBridge();
     connected = false;
   });
 
-  registerVideoHandler('video-status', async () => ({
+  registerVideoHandler("video-status", async () => ({
     connected,
     platform: process.platform,
   }));

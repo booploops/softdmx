@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { BrowserWindow } from 'electron';
+import type { BrowserWindow } from "electron";
 
 export interface TextureSenderInfo {
   name: string;
@@ -14,7 +14,7 @@ export interface TextureSenderInfo {
 }
 
 export interface TextureBridgeConnectConfig {
-  kind: 'syphon' | 'spout';
+  kind: "syphon" | "spout";
   senderName: string;
   fps: number;
 }
@@ -29,7 +29,7 @@ type BridgeModule = {
 };
 
 let bridgeModule: BridgeModule | null | undefined;
-let receiver: InstanceType<BridgeModule['TextureReceiver']> | null = null;
+let receiver: InstanceType<BridgeModule["TextureReceiver"]> | null = null;
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let activeConfig: TextureBridgeConnectConfig | null = null;
 let mainWindow: BrowserWindow | null = null;
@@ -37,9 +37,9 @@ let mainWindow: BrowserWindow | null = null;
 async function loadBridge(): Promise<BridgeModule | null> {
   if (bridgeModule !== undefined) return bridgeModule;
   try {
-    bridgeModule = (await import('@napolab/texture-bridge')) as BridgeModule;
+    bridgeModule = (await import("@napolab/texture-bridge")) as BridgeModule;
   } catch (error) {
-    console.warn('texture-bridge unavailable:', error);
+    console.warn("texture-bridge unavailable:", error);
     bridgeModule = null;
   }
   return bridgeModule;
@@ -47,7 +47,7 @@ async function loadBridge(): Promise<BridgeModule | null> {
 
 function emitFrame(width: number, height: number, data: Buffer) {
   if (!mainWindow || mainWindow.isDestroyed()) return;
-  mainWindow.webContents.send('video-frame', {
+  mainWindow.webContents.send("video-frame", {
     width,
     height,
     data: data.buffer.slice(data.byteOffset, data.byteOffset + data.byteLength),
@@ -97,7 +97,7 @@ export async function connectTextureBridge(config: TextureBridgeConnectConfig): 
 
     return true;
   } catch (error) {
-    console.warn('connectTextureBridge failed:', error);
+    console.warn("connectTextureBridge failed:", error);
     await disconnectTextureBridge();
     return false;
   }

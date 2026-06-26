@@ -17,50 +17,50 @@ export interface EffectDefinitionBase {
   name: string;
   enabled: boolean;
   target: EffectTarget;
-  sync?: 'free' | 'link';
+  sync?: "free" | "link";
 }
 
 export interface SineEffect extends EffectDefinitionBase {
-  type: 'sine';
+  type: "sine";
   rate: number;
   depth: number;
   offset?: number;
 }
 
 export interface SawEffect extends EffectDefinitionBase {
-  type: 'saw';
+  type: "saw";
   rate: number;
   min: number;
   max: number;
 }
 
 export interface StepEffect extends EffectDefinitionBase {
-  type: 'step';
+  type: "step";
   rate: number;
   steps: number[];
 }
 
 export interface ChaseEffect extends EffectDefinitionBase {
-  type: 'chase';
+  type: "chase";
   rate: number;
   width: number;
-  direction: 'forward' | 'reverse';
+  direction: "forward" | "reverse";
   wings?: number;
 }
 
 export interface PhaserEffect extends EffectDefinitionBase {
-  type: 'phaser';
+  type: "phaser";
   rate: number;
   depth: number;
   offset?: number;
   phaseSpread?: number;
-  waveform?: 'sine' | 'triangle' | 'square';
+  waveform?: "sine" | "triangle" | "square";
   wings?: number;
-  spread?: 'linear' | 'random' | 'reverse';
+  spread?: "linear" | "random" | "reverse";
 }
 
 export interface RandomHoldEffect extends EffectDefinitionBase {
-  type: 'random_hold';
+  type: "random_hold";
   rate: number;
   min: number;
   max: number;

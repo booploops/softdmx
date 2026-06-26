@@ -6,39 +6,44 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { AttributeFeature } from '../../types/attributes';
+import type { AttributeFeature } from "../../types/attributes";
 
 const FEATURE_PREFIXES: Array<[RegExp, AttributeFeature]> = [
-  [/^Dimmer/i, 'dimmer'],
-  [/Dimmer/i, 'dimmer'],
-  [/Color/i, 'color'],
-  [/PanTilt|Position/i, 'position'],
-  [/Gobo|Beam|Focus|Zoom|Iris|Prism/i, 'beam'],
-  [/Shutter|Strobe/i, 'shutter'],
-  [/Control|Effect|Speed|Macro/i, 'control'],
+  [/^Dimmer/i, "dimmer"],
+  [/Dimmer/i, "dimmer"],
+  [/Color/i, "color"],
+  [/PanTilt|Position/i, "position"],
+  [/Gobo|Beam|Focus|Zoom|Iris|Prism/i, "beam"],
+  [/Shutter|Strobe/i, "shutter"],
+  [/Control|Effect|Speed|Macro/i, "control"],
 ];
 
-export function mapGdtfFeatureToAttributeFeature(feature: string | undefined, name: string): AttributeFeature {
-  const haystack = `${feature ?? ''} ${name}`;
+export function mapGdtfFeatureToAttributeFeature(
+  feature: string | undefined,
+  name: string,
+): AttributeFeature {
+  const haystack = `${feature ?? ""} ${name}`;
   for (const [pattern, mapped] of FEATURE_PREFIXES) {
     if (pattern.test(haystack)) return mapped;
   }
-  return 'generic';
+  return "generic";
 }
 
-export function inferMergeForFeature(feature: AttributeFeature): 'htp' | 'ltp' {
-  return feature === 'dimmer' || feature === 'color' ? 'htp' : 'ltp';
+export function inferMergeForFeature(feature: AttributeFeature): "htp" | "ltp" {
+  return feature === "dimmer" || feature === "color" ? "htp" : "ltp";
 }
 
 export function sanitizeFixtureId(value: string): string {
-  return value
-    .trim()
-    .replace(/[^a-zA-Z0-9_-]+/g, '_')
-    .replace(/^_+|_+$/g, '')
-    .slice(0, 64) || 'Fixture';
+  return (
+    value
+      .trim()
+      .replace(/[^a-zA-Z0-9_-]+/g, "_")
+      .replace(/^_+|_+$/g, "")
+      .slice(0, 64) || "Fixture"
+  );
 }
 
 export function sanitizeModeId(name: string, index: number): string {
   const base = sanitizeFixtureId(name).toLowerCase();
-  return `${base || 'mode'}-${index + 1}`;
+  return `${base || "mode"}-${index + 1}`;
 }

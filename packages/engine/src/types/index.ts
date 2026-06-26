@@ -34,7 +34,7 @@ import type {
   ShowVideoConfig,
   ShowDocumentVersion,
   ShowDocument,
-} from '../show/document.ts';
+} from "../show/document.ts";
 
 export type {
   OutputDestination,
@@ -82,8 +82,8 @@ export type {
   TouchControl,
   TouchPage,
   ShowTouchConfig,
-} from './desk';
-export { createEmptyShow } from '../show/document.ts';
+} from "./desk";
+export { createEmptyShow } from "../show/document.ts";
 
 export type {
   EasingType,
@@ -93,7 +93,7 @@ export type {
   Cue,
   CuePlaybackState,
   CuePart,
-} from './cue';
+} from "./cue";
 
 export type {
   EffectTarget,
@@ -104,7 +104,7 @@ export type {
   ChaseEffect,
   PhaserEffect,
   RandomHoldEffect,
-} from './effects';
+} from "./effects";
 
 export type {
   BindingTargetType,
@@ -112,7 +112,7 @@ export type {
   MidiMapping,
   OscMapping,
   ShowBindings,
-} from './bindings';
+} from "./bindings";
 
 export type {
   ActiveChannel,
@@ -122,7 +122,7 @@ export type {
   FixtureDefinition,
   FixtureChannelWithReference,
   MappedShowFixture,
-} from './fixture';
+} from "./fixture";
 
 export type {
   AttributeFeature,
@@ -130,9 +130,9 @@ export type {
   AttributeId,
   AttributeDefinition,
   FixtureModeDefinition,
-} from './attributes';
+} from "./attributes";
 
-export type { UniverseHealthStatus } from './output-health';
+export type { UniverseHealthStatus } from "./output-health";
 
 /** @deprecated Use MappedShowFixture */
-export type ShowfileFixtureMapped = import('./fixture').MappedShowFixture;
+export type ShowfileFixtureMapped = import("./fixture").MappedShowFixture;

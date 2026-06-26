@@ -6,4 +6,4 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-export { builtinPlugin } from './fixtures.ts';
+export { builtinPlugin } from "./fixtures.ts";

@@ -6,34 +6,34 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { strToU8, zipSync } from 'fflate';
-import type { FixtureDefinition } from '../../types/fixture';
-import { inferMergeForFeature, mapGdtfFeatureToAttributeFeature } from './feature-map.ts';
-import { resolveFixtureChannelsForMode } from './gdtf-to-fixture.ts';
+import { strToU8, zipSync } from "fflate";
+import type { FixtureDefinition } from "../../types/fixture";
+import { inferMergeForFeature, mapGdtfFeatureToAttributeFeature } from "./feature-map.ts";
+import { resolveFixtureChannelsForMode } from "./gdtf-to-fixture.ts";
 
 function escapeXml(value: string): string {
   return value
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 function featureForAttribute(name: string, feature?: string): string {
   const mapped = feature ?? mapGdtfFeatureToAttributeFeature(undefined, name);
   switch (mapped) {
-    case 'dimmer':
-      return 'Dimmer.Dimmer';
-    case 'color':
-      return 'Color.RGB.Red';
-    case 'position':
-      return name.toLowerCase().includes('tilt') ? 'Position.PanTilt.Tilt' : 'Position.PanTilt.Pan';
-    case 'beam':
-      return 'Beam.Beam';
-    case 'shutter':
-      return 'Shutter.Strobe';
+    case "dimmer":
+      return "Dimmer.Dimmer";
+    case "color":
+      return "Color.RGB.Red";
+    case "position":
+      return name.toLowerCase().includes("tilt") ? "Position.PanTilt.Tilt" : "Position.PanTilt.Pan";
+    case "beam":
+      return "Beam.Beam";
+    case "shutter":
+      return "Shutter.Strobe";
     default:
-      return 'Control.Control';
+      return "Control.Control";
   }
 }
 
@@ -50,16 +50,16 @@ export function fixtureToGdtfDescriptionXml(fixture: FixtureDefinition): string 
   const attributeXml = attributes
     .map(
       (attribute) =>
-        `<Attribute Name="${escapeXml(attribute.id)}" Feature="${escapeXml(featureForAttribute(attribute.id, attribute.feature))}" />`
+        `<Attribute Name="${escapeXml(attribute.id)}" Feature="${escapeXml(featureForAttribute(attribute.id, attribute.feature))}" />`,
     )
-    .join('\n        ');
+    .join("\n        ");
 
   const modes = fixture.modes?.length
     ? fixture.modes
     : [
         {
-          id: 'mode-1',
-          name: 'Default',
+          id: "mode-1",
+          name: "Default",
           channelNames: fixture.channels.map((channel) => channel.name),
           channels: fixture.channels,
         },
@@ -74,15 +74,15 @@ export function fixtureToGdtfDescriptionXml(fixture: FixtureDefinition): string 
         .map((channel, index) => {
           const offset = channel.dmxOffset ?? index + 1;
           const sets =
-            channel.controlMode === 'indexed' && channel.indexedLabels?.length
+            channel.controlMode === "indexed" && channel.indexedLabels?.length
               ? channel.indexedLabels
                   .map(
                     (label, slotIndex) =>
                       `<ChannelSet Name="${escapeXml(label)}" DMXFrom="${slotIndex}/${
                         channel.indexedLabels!.length
-                      }" />`
+                      }" />`,
                   )
-                  .join('\n                ')
+                  .join("\n                ")
               : '<ChannelSet Name="Min" DMXFrom="0/1" />';
           return `<DMXChannel Offset="${offset}">
             <LogicalChannel Attribute="${escapeXml(channel.attributeId ?? channel.name)}">
@@ -92,14 +92,14 @@ export function fixtureToGdtfDescriptionXml(fixture: FixtureDefinition): string 
             </LogicalChannel>
           </DMXChannel>`;
         })
-        .join('\n          ');
+        .join("\n          ");
       return `<DMXMode Name="${escapeXml(mode.name)}">
         <DMXChannels>
           ${channelXml}
         </DMXChannels>
       </DMXMode>`;
     })
-    .join('\n      ');
+    .join("\n      ");
 
   return `<?xml version="1.0" encoding="UTF-8"?>
 <GDTF DataVersion="1.2">
@@ -118,11 +118,11 @@ export function fixtureToGdtfDescriptionXml(fixture: FixtureDefinition): string 
 
 export function exportFixtureGdtfBytes(fixture: FixtureDefinition): Uint8Array {
   const descriptionXml =
-    fixture.gdtfMeta?.descriptionXml && fixture.source === 'gdtf'
+    fixture.gdtfMeta?.descriptionXml && fixture.source === "gdtf"
       ? fixture.gdtfMeta.descriptionXml
       : fixtureToGdtfDescriptionXml(fixture);
   const zipEntries: Record<string, Uint8Array> = {
-    'description.xml': strToU8(descriptionXml),
+    "description.xml": strToU8(descriptionXml),
   };
   return zipSync(zipEntries);
 }
@@ -130,18 +130,18 @@ export function exportFixtureGdtfBytes(fixture: FixtureDefinition): Uint8Array {
 export function downloadFixtureGdtf(fixture: FixtureDefinition, filename?: string): boolean {
   try {
     const bytes = exportFixtureGdtfBytes(fixture);
-    const blob = new Blob([bytes as any], { type: 'application/octet-stream' });
+    const blob = new Blob([bytes as any], { type: "application/octet-stream" });
     const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
+    const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = filename ?? `${fixture.id.replace(/\s+/g, '_')}.gdtf`;
+    anchor.download = filename ?? `${fixture.id.replace(/\s+/g, "_")}.gdtf`;
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
     URL.revokeObjectURL(url);
     return true;
   } catch (error) {
-    console.error('Failed to export fixture GDTF:', error);
+    console.error("Failed to export fixture GDTF:", error);
     return false;
   }
 }

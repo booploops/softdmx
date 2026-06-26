@@ -6,18 +6,18 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ActiveChannel, Cue, CuePlaybackState } from '../types';
-import type { ShowDocument } from '../show/document';
-import { presetToChannels } from './preset-resolver';
-import { clampDmx } from './types';
-import { computePartFadeProgress, resolveCueParts } from './cue-parts';
+import type { ActiveChannel, Cue, CuePlaybackState } from "../types";
+import type { ShowDocument } from "../show/document";
+import { presetToChannels } from "./preset-resolver";
+import { clampDmx } from "./types";
+import { computePartFadeProgress, resolveCueParts } from "./cue-parts";
 
 export function evaluateCuePartsAtTime(
   show: ShowDocument,
   cue: Cue,
   state: CuePlaybackState,
   baseChannels: ActiveChannel[],
-  previousCueOutput?: Map<string, number>
+  previousCueOutput?: Map<string, number>,
 ): ActiveChannel[] {
   const parts = resolveCueParts(cue);
   if (parts.length === 0) {

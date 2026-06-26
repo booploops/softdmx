@@ -12,12 +12,15 @@ export interface ScratchEntry {
   attributeType: string;
   attributeName?: string;
   attributeId?: string;
-  feature?: import('../../types/attributes').AttributeFeature;
+  feature?: import("../../types/attributes").AttributeFeature;
   touchedAt: number;
 }
 
 export function scratchToLayer(entries: ScratchEntry[]) {
-  const channels = new Map<string, { path: string; value: number; attributeType: string; priority: number; source: 'scratch' }>();
+  const channels = new Map<
+    string,
+    { path: string; value: number; attributeType: string; priority: number; source: "scratch" }
+  >();
 
   for (const entry of entries) {
     channels.set(entry.path, {
@@ -25,9 +28,9 @@ export function scratchToLayer(entries: ScratchEntry[]) {
       value: entry.value,
       attributeType: entry.attributeType,
       priority: 100,
-      source: 'scratch',
+      source: "scratch",
     });
   }
 
-  return { source: 'scratch' as const, priority: 100, channels };
+  return { source: "scratch" as const, priority: 100, channels };
 }

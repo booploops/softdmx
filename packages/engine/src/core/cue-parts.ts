@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { Cue, CuePart, CuePlaybackState } from '../types';
+import type { Cue, CuePart, CuePlaybackState } from "../types";
 
 export function resolveCueParts(cue: Cue): CuePart[] {
   if (cue.parts && cue.parts.length > 0) return cue.parts;
@@ -14,7 +14,7 @@ export function resolveCueParts(cue: Cue): CuePart[] {
     id: step.id,
     label: step.label,
     fadeIn: step.fadeIn,
-    delay: step.follow === 'timed' ? step.followTime : 0,
+    delay: step.follow === "timed" ? step.followTime : 0,
     presetId: step.presetId,
     effectIds: step.effectIds,
   }));

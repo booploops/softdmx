@@ -15,15 +15,15 @@ export function extractBearerOrHeaderToken(
   authorization: unknown,
   apiTokenHeader: unknown,
 ): string | null {
-  const bearerHeader = typeof authorization === 'string' ? authorization.trim() : '';
+  const bearerHeader = typeof authorization === "string" ? authorization.trim() : "";
   if (bearerHeader.length > 0) {
-    if (bearerHeader.toLowerCase().startsWith('bearer ')) {
+    if (bearerHeader.toLowerCase().startsWith("bearer ")) {
       return bearerHeader.slice(7).trim();
     }
     return bearerHeader;
   }
 
-  if (typeof apiTokenHeader === 'string' && apiTokenHeader.trim().length > 0) {
+  if (typeof apiTokenHeader === "string" && apiTokenHeader.trim().length > 0) {
     return apiTokenHeader.trim();
   }
 
@@ -31,7 +31,7 @@ export function extractBearerOrHeaderToken(
 }
 
 export function extractTokenFromHeaders(headers: Record<string, unknown>): string | null {
-  return extractBearerOrHeaderToken(headers.authorization, headers['x-api-token']);
+  return extractBearerOrHeaderToken(headers.authorization, headers["x-api-token"]);
 }
 
 export function extractTokenFromSocketHandshake(handshake: {
@@ -39,15 +39,15 @@ export function extractTokenFromSocketHandshake(handshake: {
   headers?: Record<string, unknown>;
 }): string | null {
   const auth = handshake.auth;
-  if (auth && typeof auth === 'object') {
+  if (auth && typeof auth === "object") {
     const token = (auth as { token?: unknown }).token;
-    if (typeof token === 'string' && token.trim().length > 0) {
+    if (typeof token === "string" && token.trim().length > 0) {
       return token.trim();
     }
   }
 
   const headers = handshake.headers ?? {};
-  return extractBearerOrHeaderToken(headers.authorization, headers['x-api-token']);
+  return extractBearerOrHeaderToken(headers.authorization, headers["x-api-token"]);
 }
 
 export function isRemoteApiTokenAuthorized(

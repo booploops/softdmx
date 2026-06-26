@@ -6,14 +6,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-export type SpreadMode = 'linear' | 'random' | 'reverse';
+export type SpreadMode = "linear" | "random" | "reverse";
 
 export function computeSpreadPhase(
   index: number,
   count: number,
   spread = 1,
   wings = 0,
-  mode: SpreadMode = 'linear'
+  mode: SpreadMode = "linear",
 ): number {
   if (count <= 0) return 0;
   const safeSpread = Math.max(0, spread);
@@ -29,26 +29,23 @@ export function computeSpreadPhase(
     phase = (withinWing / wingSpan) * safeSpread * wingDirection;
   }
 
-  if (mode === 'reverse') {
+  if (mode === "reverse") {
     phase = safeSpread - phase;
-  } else if (mode === 'random') {
+  } else if (mode === "random") {
     phase = hashUnit(`${index}:${count}:${safeSpread}`) * safeSpread;
   }
 
   return phase;
 }
 
-export function waveformValue(
-  waveform: 'sine' | 'triangle' | 'square',
-  phase: number
-): number {
+export function waveformValue(waveform: "sine" | "triangle" | "square", phase: number): number {
   const t = phase % 1;
   switch (waveform) {
-    case 'triangle':
+    case "triangle":
       return t < 0.5 ? t * 2 : 2 - t * 2;
-    case 'square':
+    case "square":
       return t < 0.5 ? 1 : 0;
-    case 'sine':
+    case "sine":
     default:
       return (Math.sin(t * Math.PI * 2) + 1) / 2;
   }

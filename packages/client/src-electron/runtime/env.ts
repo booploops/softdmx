@@ -11,5 +11,5 @@ export function isDev() {
 }
 
 export function getDevUrl() {
-  return process.env.APP_URL || 'http://127.0.0.1:9000';
+  return process.env.APP_URL || "http://127.0.0.1:9000";
 }

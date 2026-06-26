@@ -6,14 +6,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowDocument } from '../show/document';
+import type { ShowDocument } from "../show/document";
 import {
   resolvePixelMapVideoGain,
   resolvePixelMapVideoSmoothingMs,
   resolveVideoPixelMapIds,
-} from '../utils/video-defaults.ts';
-import { flattenPixelMatrixToChannels, type PixelColor } from './pixel-mapper.ts';
-import { clampDmx } from './types.ts';
+} from "../utils/video-defaults.ts";
+import { flattenPixelMatrixToChannels, type PixelColor } from "./pixel-mapper.ts";
+import { clampDmx } from "./types.ts";
 
 export interface VideoMappingEvalState {
   smoothedByPath: Map<string, number>;
@@ -40,7 +40,7 @@ function smoothValue(
   target: number,
   smoothingMs: number,
   nowMs: number,
-  state: VideoMappingEvalState
+  state: VideoMappingEvalState,
 ): number {
   const prev = state.smoothedByPath.get(stateKey);
   if (prev === undefined || smoothingMs <= 0) {
@@ -66,7 +66,7 @@ export function evaluateVideoMapping(
   show: ShowDocument,
   pixelsByMapId: Map<string, PixelColor[][]> | null,
   state: VideoMappingEvalState,
-  nowMs = performance.now()
+  nowMs = performance.now(),
 ): Map<string, number> {
   const results = new Map<string, number>();
   const video = show.video;
@@ -90,7 +90,7 @@ export function evaluateVideoMapping(
     const smoothingMs = resolvePixelMapVideoSmoothingMs(pixelMap, video);
 
     const adjusted = pixels.map((row) =>
-      row.map((pixel) => applyGainAndBlack(pixel, gain, blackLevel))
+      row.map((pixel) => applyGainAndBlack(pixel, gain, blackLevel)),
     );
 
     const mapped = flattenPixelMatrixToChannels(pixelMap, adjusted);

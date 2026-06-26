@@ -6,10 +6,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { Socket } from 'socket.io';
-import type { ShowAudioMapping, ShowDocument } from '@softdmx/engine';
-import { isSupportedShowVersion } from '@softdmx/engine';
-import type { RemoteContext } from '../context';
+import type { Socket } from "socket.io";
+import type { ShowAudioMapping, ShowDocument } from "@softdmx/engine";
+import { isSupportedShowVersion } from "@softdmx/engine";
+import type { RemoteContext } from "../context";
 
 type RemoteHandler = (socket: Socket, payload: unknown, ctx: RemoteContext) => void;
 type AudioMappingMutationPayload =
@@ -17,89 +17,88 @@ type AudioMappingMutationPayload =
   | { id: string; mapping: Partial<ShowAudioMapping> };
 
 const handlers: Record<string, RemoteHandler> = {
-  'show:get': (socket, _payload, ctx) => {
+  "show:get": (socket, _payload, ctx) => {
     const show = ctx.getShow();
-    if (show) socket.emit('show:state', show);
+    if (show) socket.emit("show:state", show);
   },
 
-  'show:load': (socket, payload, ctx) => {
+  "show:load": (socket, payload, ctx) => {
     const show = payload as ShowDocument;
     if (isSupportedShowVersion(show?.version)) {
       ctx.setShow(show);
       ctx.outputManager.setShowfile(show);
-      ctx.io.emit('show:state', show);
+      ctx.io.emit("show:state", show);
     }
   },
 
-  'scratch:set': (_socket, payload, ctx) => {
-    ctx.io.emit('remote:scratch:set', payload);
+  "scratch:set": (_socket, payload, ctx) => {
+    ctx.io.emit("remote:scratch:set", payload);
   },
 
-  'scratch:clear': (_socket, _payload, ctx) => {
-    ctx.io.emit('remote:scratch:clear');
+  "scratch:clear": (_socket, _payload, ctx) => {
+    ctx.io.emit("remote:scratch:clear");
   },
 
-  'preset:fire': (_socket, payload, ctx) => {
-    ctx.io.emit('remote:preset:fire', payload);
+  "preset:fire": (_socket, payload, ctx) => {
+    ctx.io.emit("remote:preset:fire", payload);
   },
 
-  'cue:play': (_socket, payload, ctx) => {
-    ctx.io.emit('remote:cue:play', payload);
+  "cue:play": (_socket, payload, ctx) => {
+    ctx.io.emit("remote:cue:play", payload);
   },
 
-  'cue:stop': (_socket, payload, ctx) => {
-    ctx.io.emit('remote:cue:stop', payload);
+  "cue:stop": (_socket, payload, ctx) => {
+    ctx.io.emit("remote:cue:stop", payload);
   },
 
-  'cue:stack:go': (_socket, payload, ctx) => {
-    ctx.io.emit('remote:cue:stack:go', payload);
+  "cue:stack:go": (_socket, payload, ctx) => {
+    ctx.io.emit("remote:cue:stack:go", payload);
   },
 
-  'blackout': (_socket, payload, ctx) => {
-    ctx.io.emit('remote:blackout', payload);
+  blackout: (_socket, payload, ctx) => {
+    ctx.io.emit("remote:blackout", payload);
   },
 
-  'grandmaster': (_socket, payload, ctx) => {
-    ctx.io.emit('remote:grandmaster', payload);
+  grandmaster: (_socket, payload, ctx) => {
+    ctx.io.emit("remote:grandmaster", payload);
   },
 
-  'playbackbus': (_socket, payload, ctx) => {
-    ctx.io.emit('remote:playbackbus', payload);
+  playbackbus: (_socket, payload, ctx) => {
+    ctx.io.emit("remote:playbackbus", payload);
   },
 
-  'executor:trigger': (_socket, payload, ctx) => {
-    ctx.io.emit('remote:executor:trigger', payload);
+  "executor:trigger": (_socket, payload, ctx) => {
+    ctx.io.emit("remote:executor:trigger", payload);
   },
 
-  'effect:set': (_socket, payload, ctx) => {
-    ctx.io.emit('remote:effect:set', payload);
+  "effect:set": (_socket, payload, ctx) => {
+    ctx.io.emit("remote:effect:set", payload);
   },
 
-  'audio:setEnabled': (_socket, payload, ctx) => {
-    const enabled = typeof payload === 'boolean'
-      ? payload
-      : Boolean((payload as { enabled?: boolean })?.enabled);
-    ctx.io.emit('remote:audio:setEnabled', { enabled });
+  "audio:setEnabled": (_socket, payload, ctx) => {
+    const enabled =
+      typeof payload === "boolean" ? payload : Boolean((payload as { enabled?: boolean })?.enabled);
+    ctx.io.emit("remote:audio:setEnabled", { enabled });
   },
 
-  'audio:mappings:create': (_socket, payload, ctx) => {
+  "audio:mappings:create": (_socket, payload, ctx) => {
     const body = payload as AudioMappingMutationPayload | null;
-    if (body && typeof body === 'object' && 'mapping' in body) {
-      ctx.io.emit('remote:audio:mappings:create', body);
+    if (body && typeof body === "object" && "mapping" in body) {
+      ctx.io.emit("remote:audio:mappings:create", body);
     }
   },
 
-  'audio:mappings:update': (_socket, payload, ctx) => {
+  "audio:mappings:update": (_socket, payload, ctx) => {
     const body = payload as AudioMappingMutationPayload | null;
-    if (body && typeof body === 'object' && 'id' in body) {
-      ctx.io.emit('remote:audio:mappings:update', body);
+    if (body && typeof body === "object" && "id" in body) {
+      ctx.io.emit("remote:audio:mappings:update", body);
     }
   },
 
-  'audio:mappings:delete': (_socket, payload, ctx) => {
+  "audio:mappings:delete": (_socket, payload, ctx) => {
     const id = (payload as { id?: string })?.id;
-    if (typeof id === 'string' && id.length > 0) {
-      ctx.io.emit('remote:audio:mappings:delete', { id });
+    if (typeof id === "string" && id.length > 0) {
+      ctx.io.emit("remote:audio:mappings:delete", { id });
     }
   },
 };

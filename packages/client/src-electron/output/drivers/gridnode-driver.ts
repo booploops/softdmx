@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { AppState } from '../../state/main';
+import { AppState } from "../../state/main";
 import { DmxOutputDriver } from "./dmx-output-driver";
 
 export class GridNodeDriver implements DmxOutputDriver {

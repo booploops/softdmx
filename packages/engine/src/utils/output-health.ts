@@ -6,13 +6,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { UniverseHealthStatus } from '../types/output-health';
+import type { UniverseHealthStatus } from "../types/output-health";
 
 export function createInitialHealth(
   destinationId: string,
-  protocol: UniverseHealthStatus['protocol'],
+  protocol: UniverseHealthStatus["protocol"],
   universe: number,
-  role: UniverseHealthStatus['role'] = 'primary'
+  role: UniverseHealthStatus["role"] = "primary",
 ): UniverseHealthStatus {
   return {
     destinationId,
@@ -32,7 +32,7 @@ export function updateHealthAfterSend(
   health: UniverseHealthStatus,
   channelCount: number,
   overflow: boolean,
-  nowMs = Date.now()
+  nowMs = Date.now(),
 ): UniverseHealthStatus {
   const elapsed = health.lastSendMs > 0 ? nowMs - health.lastSendMs : 0;
   const sendFps = elapsed > 0 ? Math.round(1000 / elapsed) : health.sendFps;

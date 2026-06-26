@@ -20,7 +20,7 @@ export class ArtNetDriver implements DmxOutputDriver {
       Universe: number;
       Net: number;
       Subnet: number;
-    }
+    },
   ) {}
 
   async initialize(): Promise<void> {
@@ -36,9 +36,18 @@ export class ArtNetDriver implements DmxOutputDriver {
     const net = this.config.Net & 0x7f;
 
     const header = Buffer.from([
-      0x41, 0x72, 0x74, 0x2d, 0x4e, 0x65, 0x74, 0x00, // ID: "Art-Net\0"
-      0x00, 0x50, // OpCode: ArtDmx (0x5000, transmitted low byte first)
-      0x00, 0x0e, // Protocol Version 14 (transmitted high byte first)
+      0x41,
+      0x72,
+      0x74,
+      0x2d,
+      0x4e,
+      0x65,
+      0x74,
+      0x00, // ID: "Art-Net\0"
+      0x00,
+      0x50, // OpCode: ArtDmx (0x5000, transmitted low byte first)
+      0x00,
+      0x0e, // Protocol Version 14 (transmitted high byte first)
       this.sequence, // Sequence (0x01 to 0xFF, 0x00 to disable)
       0x00, // Physical port that sent the data
       subUni, // Subnet/Universe address
@@ -49,18 +58,11 @@ export class ArtNetDriver implements DmxOutputDriver {
 
     const packet = Buffer.concat([header, dmxBuffer]);
 
-    this.socket.send(
-      packet,
-      0,
-      packet.length,
-      this.config.Port,
-      this.config.Host,
-      (err) => {
-        if (err) {
-          console.error("Art-Net send error:", err);
-        }
+    this.socket.send(packet, 0, packet.length, this.config.Port, this.config.Host, (err) => {
+      if (err) {
+        console.error("Art-Net send error:", err);
       }
-    );
+    });
 
     // Sequence increments 1-255
     this.sequence = (this.sequence + 1) % 256 || 1;

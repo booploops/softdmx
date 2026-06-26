@@ -6,10 +6,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowDocument } from './document.ts';
-import { createDefaultDeskConfig, createDefaultTouchConfig } from '../utils/desk-defaults.ts';
-import { createDefaultVideoConfig } from '../utils/video-defaults.ts';
-import { ensureDefaultPresetPool } from '../utils/preset-pool.ts';
+import type { ShowDocument } from "./document.ts";
+import { createDefaultDeskConfig, createDefaultTouchConfig } from "../utils/desk-defaults.ts";
+import { createDefaultVideoConfig } from "../utils/video-defaults.ts";
+import { ensureDefaultPresetPool } from "../utils/preset-pool.ts";
 
 type LegacyGroup = {
   name: string;
@@ -30,7 +30,7 @@ function normalizeLegacyGroups(doc: LegacyShowDocument): Partial<ShowDocument> {
     ? doc.groups
     : hasLinkedGroups
       ? doc.linkedGroups
-      : doc.groups ?? doc.linkedGroups;
+      : (doc.groups ?? doc.linkedGroups);
 
   if (!sourceGroups) {
     return doc;
@@ -49,14 +49,14 @@ function normalizeLegacyGroups(doc: LegacyShowDocument): Partial<ShowDocument> {
 function migrateV1_0ToV1_1(doc: Partial<ShowDocument>): Partial<ShowDocument> {
   return {
     ...doc,
-    version: '1.1',
+    version: "1.1",
     audio: doc.audio,
     timecode: {
       enabled: doc.timecode?.enabled === true,
       fps: doc.timecode?.fps ?? 30,
-      source: doc.timecode?.source ?? 'osc',
+      source: doc.timecode?.source ?? "osc",
       ltcInputDeviceId: doc.timecode?.ltcInputDeviceId,
-      ltcChannel: doc.timecode?.ltcChannel ?? 'mono',
+      ltcChannel: doc.timecode?.ltcChannel ?? "mono",
       ltcGain: doc.timecode?.ltcGain ?? 1,
       latencyMs: doc.timecode?.latencyMs ?? 0,
       globalOffsetMs: doc.timecode?.globalOffsetMs ?? 0,
@@ -85,7 +85,7 @@ function migrateV1_0ToV1_1(doc: Partial<ShowDocument>): Partial<ShowDocument> {
 }
 
 function migrateV1_1ToV1_2(doc: Partial<ShowDocument>): Partial<ShowDocument> {
-  const base = { ...doc, version: '1.2' as const };
+  const base = { ...doc, version: "1.2" as const };
   const asShow = base as ShowDocument;
   return {
     ...base,
@@ -97,7 +97,7 @@ function migrateV1_1ToV1_2(doc: Partial<ShowDocument>): Partial<ShowDocument> {
 function migrateV1_2ToV1_3(doc: Partial<ShowDocument>): Partial<ShowDocument> {
   return {
     ...doc,
-    version: '1.3',
+    version: "1.3",
     video: doc.video ?? createDefaultVideoConfig(),
     pixelMaps: (doc.pixelMaps ?? []).map((map) => ({
       ...map,
@@ -111,13 +111,13 @@ function migrateV1_3ToV1_4(doc: Partial<ShowDocument>): Partial<ShowDocument> {
   const pixelMapIds =
     Array.isArray(video.pixelMapIds) && video.pixelMapIds.length > 0
       ? video.pixelMapIds
-      : typeof video.pixelMapId === 'string' && video.pixelMapId.length > 0
+      : typeof video.pixelMapId === "string" && video.pixelMapId.length > 0
         ? [video.pixelMapId]
         : [];
 
   return {
     ...doc,
-    version: '1.4',
+    version: "1.4",
     video: {
       ...video,
       pixelMapIds,
@@ -135,16 +135,25 @@ function migrateV1_4ToV1_5(doc: Partial<ShowDocument>): Partial<ShowDocument> {
 
   return {
     ...doc,
-    version: '1.5',
+    version: "1.5",
     meta: {
-      ...(doc.meta ?? { name: 'Untitled Show', created: new Date().toISOString(), modified: new Date().toISOString() }),
+      ...(doc.meta ?? {
+        name: "Untitled Show",
+        created: new Date().toISOString(),
+        modified: new Date().toISOString(),
+      }),
       sessionEpoch: doc.meta?.sessionEpoch ?? 0,
     },
     presetPools,
-    backup: doc.backup ?? { enabled: false, role: 'primary', takeoverMode: 'manual', heartbeatMs: 500 },
+    backup: doc.backup ?? {
+      enabled: false,
+      role: "primary",
+      takeoverMode: "manual",
+      heartbeatMs: 500,
+    },
     destinations: (doc.destinations ?? []).map((dest) => ({
       ...dest,
-      role: dest.role ?? 'primary',
+      role: dest.role ?? "primary",
     })),
     cues: (doc.cues ?? []).map((cue) => ({
       ...cue,
@@ -154,7 +163,7 @@ function migrateV1_4ToV1_5(doc: Partial<ShowDocument>): Partial<ShowDocument> {
           id: step.id,
           label: step.label,
           fadeIn: step.fadeIn,
-          delay: step.follow === 'timed' ? step.followTime : 0,
+          delay: step.follow === "timed" ? step.followTime : 0,
           presetId: step.presetId,
           effectIds: step.effectIds,
         })),
@@ -165,19 +174,19 @@ function migrateV1_4ToV1_5(doc: Partial<ShowDocument>): Partial<ShowDocument> {
 export function migrateShowDocument(doc: Partial<ShowDocument>): Partial<ShowDocument> {
   const normalized = normalizeLegacyGroups(doc as LegacyShowDocument);
 
-  if (normalized.version === '1.0') {
+  if (normalized.version === "1.0") {
     return migrateShowDocument(migrateV1_0ToV1_1(normalized));
   }
-  if (normalized.version === '1.1') {
+  if (normalized.version === "1.1") {
     return migrateShowDocument(migrateV1_1ToV1_2(normalized));
   }
-  if (normalized.version === '1.2') {
+  if (normalized.version === "1.2") {
     return migrateShowDocument(migrateV1_2ToV1_3(normalized));
   }
-  if (normalized.version === '1.3') {
+  if (normalized.version === "1.3") {
     return migrateShowDocument(migrateV1_3ToV1_4(normalized));
   }
-  if (normalized.version === '1.4') {
+  if (normalized.version === "1.4") {
     return migrateShowDocument(migrateV1_4ToV1_5(normalized));
   }
   return normalized;

@@ -8,28 +8,27 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { spawnSync } from 'node:child_process';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { spawnSync } from "node:child_process";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const root = join(dirname(fileURLToPath(import.meta.url)), '..');
-const yarnCmd = process.platform === 'win32' ? 'yarn.cmd' : 'yarn';
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const yarnCmd = process.platform === "win32" ? "yarn.cmd" : "yarn";
 
-const modules = ['abletonlink', 'serialport'];
+const modules = ["abletonlink", "serialport"];
 
 function runRebuild() {
-  const rebuild = spawnSync(
-    yarnCmd,
-    ['exec', 'electron-rebuild', '-f', '-w', modules.join(',')],
-    { cwd: root, stdio: 'inherit' }
-  );
+  const rebuild = spawnSync(yarnCmd, ["exec", "electron-rebuild", "-f", "-w", modules.join(",")], {
+    cwd: root,
+    stdio: "inherit",
+  });
 
   if (rebuild.status !== 0) {
-    console.error('rebuild-native: electron-rebuild failed');
+    console.error("rebuild-native: electron-rebuild failed");
     process.exit(rebuild.status ?? 1);
   }
 
-  console.log('rebuild-native: native modules rebuilt');
+  console.log("rebuild-native: native modules rebuilt");
 }
 
 runRebuild();

@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { FixturePosition } from '../types';
+import type { FixturePosition } from "../types";
 
 export type Point3D = {
   x: number;
@@ -37,7 +37,11 @@ function to16BitComponents(value16: number): { coarse: number; fine: number } {
   };
 }
 
-export function getDefaultFixturePosition(index: number, totalFixtures: number, spacing = 2): Point3D {
+export function getDefaultFixturePosition(
+  index: number,
+  totalFixtures: number,
+  spacing = 2,
+): Point3D {
   const safeTotal = Math.max(1, totalFixtures);
   const columns = Math.max(1, Math.ceil(Math.sqrt(safeTotal)));
   const rows = Math.max(1, Math.ceil(safeTotal / columns));
@@ -54,7 +58,7 @@ export function getDefaultFixturePosition(index: number, totalFixtures: number, 
 export function resolveFixturePosition(
   position: FixturePosition | undefined,
   index: number,
-  totalFixtures: number
+  totalFixtures: number,
 ): Point3D {
   const fallback = getDefaultFixturePosition(index, totalFixtures);
   return {
@@ -64,7 +68,10 @@ export function resolveFixturePosition(
   };
 }
 
-export function computeAimPanTilt16Bit(source: Point3D, target: Point3D = { x: 0, y: 0, z: 0 }): FocusAimResult | null {
+export function computeAimPanTilt16Bit(
+  source: Point3D,
+  target: Point3D = { x: 0, y: 0, z: 0 },
+): FocusAimResult | null {
   const dx = target.x - source.x;
   const dy = target.y - source.y;
   const dz = target.z - source.z;
@@ -78,8 +85,8 @@ export function computeAimPanTilt16Bit(source: Point3D, target: Point3D = { x: 0
   const horizontalDistance = Math.hypot(dx, dz);
   const pitch = Math.atan2(dy, horizontalDistance);
 
-  const pan16 = Math.round((clamp((yaw + Math.PI) / (2 * Math.PI), 0, 1)) * 65535);
-  const tilt16 = Math.round((clamp((pitch + Math.PI / 2) / Math.PI, 0, 1)) * 65535);
+  const pan16 = Math.round(clamp((yaw + Math.PI) / (2 * Math.PI), 0, 1) * 65535);
+  const tilt16 = Math.round(clamp((pitch + Math.PI / 2) / Math.PI, 0, 1) * 65535);
 
   const panParts = to16BitComponents(pan16);
   const tiltParts = to16BitComponents(tilt16);

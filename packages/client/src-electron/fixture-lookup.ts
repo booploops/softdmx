@@ -6,10 +6,15 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { existsSync, readFileSync, readdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { type FixtureDefinition, builtinPlugin, loadFixtureYaml, parsePluginManifest } from '@softdmx/engine';
+import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import {
+  type FixtureDefinition,
+  builtinPlugin,
+  loadFixtureYaml,
+  parsePluginManifest,
+} from "@softdmx/engine";
 
 const fixturesById = new Map<string, FixtureDefinition>();
 let initialized = false;
@@ -17,11 +22,11 @@ let initialized = false;
 function scanDirectory(
   dir: string,
   virtualPrefix: string,
-  onFile: (virtualPath: string, absolutePath: string) => void
+  onFile: (virtualPath: string, absolutePath: string) => void,
 ): void {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     const absolutePath = join(dir, entry.name);
-    const virtualPath = `${virtualPrefix}/${entry.name}`.replace(/\\/g, '/');
+    const virtualPath = `${virtualPrefix}/${entry.name}`.replace(/\\/g, "/");
 
     if (entry.isDirectory()) {
       scanDirectory(absolutePath, virtualPath, onFile);
@@ -34,11 +39,11 @@ function scanDirectory(
 
 function resolvePluginsRoot(): string | undefined {
   const candidates = [
-    join(process.cwd(), 'src/fixture-library'),
-    join(dirname(fileURLToPath(import.meta.url)), '../src/fixture-library'),
+    join(process.cwd(), "src/fixture-library"),
+    join(dirname(fileURLToPath(import.meta.url)), "../src/fixture-library"),
   ];
 
-  return candidates.find((candidate) => existsSync(join(candidate, 'bundled')));
+  return candidates.find((candidate) => existsSync(join(candidate, "bundled")));
 }
 
 function registerFixture(fixture: FixtureDefinition): void {
@@ -49,19 +54,19 @@ function loadBundledFixturesFromDisk(): void {
   const pluginsRoot = resolvePluginsRoot();
   if (!pluginsRoot) return;
 
-  const bundledRoot = join(pluginsRoot, 'bundled');
+  const bundledRoot = join(pluginsRoot, "bundled");
   if (!existsSync(bundledRoot)) return;
 
-  scanDirectory(bundledRoot, 'bundled', (virtualPath, absolutePath) => {
-    if (!virtualPath.endsWith('/plugin.json')) return;
+  scanDirectory(bundledRoot, "bundled", (virtualPath, absolutePath) => {
+    if (!virtualPath.endsWith("/plugin.json")) return;
 
-    const manifest = parsePluginManifest(readFileSync(absolutePath, 'utf8'));
+    const manifest = parsePluginManifest(readFileSync(absolutePath, "utf8"));
     const manifestDir = dirname(absolutePath);
 
     for (const fixturePath of manifest.fixtures) {
       const fixtureFile = join(manifestDir, fixturePath);
       if (!existsSync(fixtureFile)) continue;
-      registerFixture(loadFixtureYaml(readFileSync(fixtureFile, 'utf8')));
+      registerFixture(loadFixtureYaml(readFileSync(fixtureFile, "utf8")));
     }
   });
 }

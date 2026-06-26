@@ -6,17 +6,17 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ActiveChannel, Cue, CueLayer, RecordedFrame } from '../types';
-import type { ShowDocument } from '../show/document';
-import { presetToChannels } from './preset-resolver';
-import { clampDmx } from './types';
+import type { ActiveChannel, Cue, CueLayer, RecordedFrame } from "../types";
+import type { ShowDocument } from "../show/document";
+import { presetToChannels } from "./preset-resolver";
+import { clampDmx } from "./types";
 
 const easingFunctions: Record<string, (t: number) => number> = {
   linear: (t) => t,
   ease: (t) => t * t * (3.0 - 2.0 * t),
-  'ease-in': (t) => t * t,
-  'ease-out': (t) => t * (2.0 - t),
-  'ease-in-out': (t) => (t < 0.5 ? 2.0 * t * t : -1.0 + (4.0 - 2.0 * t) * t),
+  "ease-in": (t) => t * t,
+  "ease-out": (t) => t * (2.0 - t),
+  "ease-in-out": (t) => (t < 0.5 ? 2.0 * t * t : -1.0 + (4.0 - 2.0 * t) * t),
   bounce: (t) => {
     if (t < 1 / 2.75) return 7.5625 * t * t;
     if (t < 2 / 2.75) return 7.5625 * (t -= 1.5 / 2.75) * t + 0.75;
@@ -28,7 +28,7 @@ const easingFunctions: Record<string, (t: number) => number> = {
     if (t === 1) return 1;
     const p = 0.3;
     const s = p / 4;
-    return -(Math.pow(2, 10 * (t -= 1)) * Math.sin((t - s) * (2 * Math.PI) / p));
+    return -(Math.pow(2, 10 * (t -= 1)) * Math.sin(((t - s) * (2 * Math.PI)) / p));
   },
 };
 
@@ -36,7 +36,7 @@ function interpolateChannels(
   from: ActiveChannel[],
   to: ActiveChannel[],
   progress: number,
-  easing = 'linear'
+  easing = "linear",
 ): ActiveChannel[] {
   const easingFn = easingFunctions[easing] ?? easingFunctions.linear!;
   const t = easingFn(progress);
@@ -68,13 +68,13 @@ function resolveFrameChannels(
   show: ShowDocument,
   frame: RecordedFrame,
   baseChannels: ActiveChannel[],
-  holdChannels: ActiveChannel[]
+  holdChannels: ActiveChannel[],
 ): ActiveChannel[] {
-  if (frame.type === 'delay') {
+  if (frame.type === "delay") {
     return holdChannels.map((ch) => ({ ...ch }));
   }
 
-  if (frame.type === 'preset' && frame.presetId) {
+  if (frame.type === "preset" && frame.presetId) {
     const preset = show.presets.find((p) => p.id === frame.presetId);
     if (!preset) return holdChannels.map((ch) => ({ ...ch }));
 
@@ -100,7 +100,7 @@ function resolveFrameChannels(
 }
 
 function blendLayerOutputs(
-  outputs: { channels: ActiveChannel[]; opacity: number; blendMode: string }[]
+  outputs: { channels: ActiveChannel[]; opacity: number; blendMode: string }[],
 ): ActiveChannel[] {
   if (outputs.length === 0) return [];
   if (outputs.length === 1) return outputs[0]!.channels;
@@ -117,13 +117,13 @@ function blendLayerOutputs(
 
       if (existing) {
         switch (layer.blendMode) {
-          case 'add':
+          case "add":
             existing.value = clampDmx(existing.value + layerValue);
             break;
-          case 'multiply':
+          case "multiply":
             existing.value = clampDmx((existing.value * layerValue) / 255);
             break;
-          case 'screen':
+          case "screen":
             existing.value = clampDmx(255 - ((255 - existing.value) * (255 - layerValue)) / 255);
             break;
           default:
@@ -142,7 +142,7 @@ function evaluateLayerAtTime(
   show: ShowDocument,
   layer: CueLayer,
   timeMs: number,
-  baseChannels: ActiveChannel[]
+  baseChannels: ActiveChannel[],
 ): ActiveChannel[] {
   if (layer.frames.length === 0) return baseChannels.map((ch) => ({ ...ch }));
 
@@ -163,7 +163,7 @@ function evaluateLayerAtTime(
       const nextChannels = resolveFrameChannels(show, nextFrame, baseChannels, frameChannels);
       const progress = (timeMs - currentTime) / duration;
 
-      return interpolateChannels(frameChannels, nextChannels, progress, frame.easing ?? 'linear');
+      return interpolateChannels(frameChannels, nextChannels, progress, frame.easing ?? "linear");
     }
 
     holdChannels = frameChannels.map((ch) => ({ ...ch }));
@@ -179,7 +179,7 @@ export function evaluateTimelineCueAtTime(
   show: ShowDocument,
   cue: Cue,
   timeMs: number,
-  baseChannels: ActiveChannel[]
+  baseChannels: ActiveChannel[],
 ): ActiveChannel[] {
   const layers = cue.layers ?? [];
   const enabledLayers = layers.filter((l) => l.enabled && !l.solo);
@@ -200,7 +200,7 @@ export function evaluateTimelineCueAtTime(
 }
 
 export function getCueTotalDuration(cue: Cue): number {
-  if (cue.view === 'stack' && cue.stack?.length) {
+  if (cue.view === "stack" && cue.stack?.length) {
     return cue.stack.reduce((acc, step) => acc + step.fadeIn + (step.followTime ?? 0), 0);
   }
 
@@ -209,8 +209,8 @@ export function getCueTotalDuration(cue: Cue): number {
 
   return Math.max(
     ...layers.map((layer) =>
-      layer.frames.reduce((acc, frame) => acc + (frame.duration ?? 1000), 0)
+      layer.frames.reduce((acc, frame) => acc + (frame.duration ?? 1000), 0),
     ),
-    0
+    0,
   );
 }

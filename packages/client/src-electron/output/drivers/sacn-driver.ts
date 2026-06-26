@@ -10,7 +10,9 @@ import dgram from "node:dgram";
 import { randomBytes } from "node:crypto";
 import { DmxOutputDriver } from "./dmx-output-driver";
 
-const ACN_PID = Buffer.from([0x41, 0x53, 0x43, 0x2d, 0x45, 0x31, 0x2e, 0x31, 0x37, 0x00, 0x00, 0x00]);
+const ACN_PID = Buffer.from([
+  0x41, 0x53, 0x43, 0x2d, 0x45, 0x31, 0x2e, 0x31, 0x37, 0x00, 0x00, 0x00,
+]);
 
 function pduFlagsAndLength(length: number): Buffer {
   return Buffer.from([0x70 | ((length >> 8) & 0x0f), length & 0xff]);
@@ -34,7 +36,7 @@ export class SacnDriver implements DmxOutputDriver {
       Port: number;
       Universe: number;
       SourceName?: string;
-    }
+    },
   ) {}
 
   async initialize(): Promise<void> {
@@ -72,7 +74,8 @@ export class SacnDriver implements DmxOutputDriver {
       sourceNameField,
       Buffer.from([
         100, // Priority
-        0x00, 0x00, // Synchronization Address
+        0x00,
+        0x00, // Synchronization Address
         this.sequence & 0xff, // Sequence Number
         0x00, // Options
         (universe >> 8) & 0xff,
@@ -85,8 +88,10 @@ export class SacnDriver implements DmxOutputDriver {
       Buffer.from([
         0x02, // Set Property
         0xa1, // Address & data type
-        0x00, 0x00, // First property address
-        0x00, 0x01, // Address increment
+        0x00,
+        0x00, // First property address
+        0x00,
+        0x01, // Address increment
         (propertyValueCount >> 8) & 0xff,
         propertyValueCount & 0xff,
       ]),

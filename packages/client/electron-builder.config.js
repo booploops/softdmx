@@ -2,31 +2,21 @@
  * @type {import('electron-builder').Configuration}
  */
 export default {
-  appId: 'softdmx',
-  productName: 'SoftDMX',
+  appId: "softdmx",
+  productName: "SoftDMX",
   directories: {
-    output: 'dist/electron'
+    output: "dist/electron",
   },
-  files: [
-    'dist/spa/**/*',
-    'dist-electron/**/*',
-    'package.json'
-  ],
+  files: ["dist/spa/**/*", "dist-electron/**/*", "package.json"],
   asar: true,
-  asarUnpack: [
-    '**/*.node'
-  ],
+  asarUnpack: ["**/*.node"],
   mac: {
     identity: null,
-    icon: 'src-electron/icons/icon.icns',
-    target: [
-      'dir'
-    ]
+    icon: "src-electron/icons/icon.icns",
+    target: ["dir"],
   },
   win: {
-    icon: 'src-electron/icons/icon.ico',
-    target: [
-      'dir'
-    ]
-  }
+    icon: "src-electron/icons/icon.ico",
+    target: ["dir"],
+  },
 };

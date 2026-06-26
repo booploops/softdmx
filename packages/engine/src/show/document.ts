@@ -6,16 +6,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowBindings } from '../types/bindings';
-import type { Cue } from '../types/cue';
-import type { ShowDeskConfig, ShowTouchConfig } from '../types/desk';
-import type { EffectDefinition } from '../types/effects';
+import type { ShowBindings } from "../types/bindings";
+import type { Cue } from "../types/cue";
+import type { ShowDeskConfig, ShowTouchConfig } from "../types/desk";
+import type { EffectDefinition } from "../types/effects";
 
 export interface OutputDestination {
   id: string;
   name: string;
-  type: 'gridnode' | 'artnet' | 'sacn' | 'dmx_usb';
-  role?: 'primary' | 'standby';
+  type: "gridnode" | "artnet" | "sacn" | "dmx_usb";
+  role?: "primary" | "standby";
   failoverGroup?: string;
   settings: {
     Host?: string;
@@ -36,7 +36,7 @@ export interface ShowMeta {
   lock?: {
     holder: string;
     expires: string;
-    scope: 'show' | 'patch' | 'cues';
+    scope: "show" | "patch" | "cues";
   };
 }
 
@@ -78,7 +78,7 @@ export interface Preset {
   slotIndex?: number;
 }
 
-export type PresetPoolKind = 'all' | 'position' | 'color' | 'beam' | 'custom';
+export type PresetPoolKind = "all" | "position" | "color" | "beam" | "custom";
 
 export interface PresetPool {
   id: string;
@@ -90,9 +90,9 @@ export interface PresetPool {
 
 export interface ShowBackupConfig {
   enabled?: boolean;
-  role?: 'primary' | 'standby';
+  role?: "primary" | "standby";
   partnerHost?: string;
-  takeoverMode?: 'manual' | 'auto';
+  takeoverMode?: "manual" | "auto";
   heartbeatMs?: number;
 }
 
@@ -103,14 +103,14 @@ export interface ShowAudioConfig {
   latencyMs?: number;
 }
 
-export type TimecodeSource = 'osc' | 'ltc' | 'mtc';
+export type TimecodeSource = "osc" | "ltc" | "mtc";
 
 export interface ShowTimecodeConfig {
   enabled?: boolean;
   fps?: number;
   source?: TimecodeSource;
   ltcInputDeviceId?: string;
-  ltcChannel?: 'left' | 'right' | 'mono';
+  ltcChannel?: "left" | "right" | "mono";
   ltcGain?: number;
   latencyMs?: number;
   globalOffsetMs?: number;
@@ -135,7 +135,7 @@ export interface ShowTimelineAudioAsset {
   volume?: number;
 }
 
-export type TimelineSyncMode = 'free' | 'timecode';
+export type TimelineSyncMode = "free" | "timecode";
 
 export interface ShowTimelineConfig {
   durationMs?: number;
@@ -147,9 +147,9 @@ export interface ShowTimelineConfig {
 
 export interface ShowAudioMapping {
   id: string;
-  source: 'rms' | 'peak' | 'beat' | 'band';
+  source: "rms" | "peak" | "beat" | "band";
   bandIndex?: 0 | 1 | 2 | 3;
-  targetType: 'fixture' | 'group' | 'effect' | 'executor' | 'submaster';
+  targetType: "fixture" | "group" | "effect" | "executor" | "submaster";
   targetId: string;
   attribute?: string;
   gain?: number;
@@ -182,7 +182,7 @@ export interface ExecutorSlot {
   page: number;
   index: number;
   cueId?: string;
-  mode?: 'go' | 'toggle' | 'flash' | 'latch' | (string & {});
+  mode?: "go" | "toggle" | "flash" | "latch" | (string & {});
   fadeMs?: number;
   releaseMs?: number;
   level?: number;
@@ -193,13 +193,13 @@ export interface ShowSubmaster {
   id: string;
   name: string;
   value: number;
-  mode?: 'cue-intensity' | 'group-intensity' | (string & {});
+  mode?: "cue-intensity" | "group-intensity" | (string & {});
   targets?: string[];
   min?: number;
   max?: number;
 }
 
-export type PixelChannelOrder = 'rgb' | 'rbg' | 'grb' | 'gbr' | 'brg' | 'bgr';
+export type PixelChannelOrder = "rgb" | "rbg" | "grb" | "gbr" | "brg" | "bgr";
 
 export interface VideoSampleRegion {
   /** Normalized 0..1 top-left X in source frame */
@@ -234,7 +234,7 @@ export interface PixelMapDefinition {
   videoSmoothingMs?: number;
 }
 
-export type VideoInputKind = 'none' | 'webcam' | 'syphon' | 'spout';
+export type VideoInputKind = "none" | "webcam" | "syphon" | "spout";
 
 export type VideoSampleFps = 15 | 24 | 30 | 44 | 60;
 
@@ -256,7 +256,7 @@ export interface ShowVideoConfig {
   fps?: VideoSampleFps;
 }
 
-export type ShowDocumentVersion = '1.0' | '1.1' | '1.2' | '1.3' | '1.4' | '1.5';
+export type ShowDocumentVersion = "1.0" | "1.1" | "1.2" | "1.3" | "1.4" | "1.5";
 
 export interface ShowDocument {
   version: ShowDocumentVersion;
@@ -286,17 +286,17 @@ export interface ShowDocument {
   touch?: ShowTouchConfig;
 }
 
-export function createEmptyShow(name = 'Untitled Show'): ShowDocument {
+export function createEmptyShow(name = "Untitled Show"): ShowDocument {
   const now = new Date().toISOString();
   const doc: ShowDocument = {
-    version: '1.5',
+    version: "1.5",
     meta: { name, created: now, modified: now },
-    plugins: ['builtin'],
+    plugins: ["builtin"],
     destinations: [
       {
-        id: 'default-gridnode',
-        name: 'Default GridNode Overlay',
-        type: 'gridnode',
+        id: "default-gridnode",
+        name: "Default GridNode Overlay",
+        type: "gridnode",
         settings: {},
       },
     ],
@@ -305,9 +305,9 @@ export function createEmptyShow(name = 'Untitled Show'): ShowDocument {
     presets: [],
     presetPools: [
       {
-        id: 'default-pool',
-        name: 'All',
-        kind: 'all',
+        id: "default-pool",
+        name: "All",
+        kind: "all",
         slots: [],
         pageSize: 25,
       },
@@ -318,8 +318,8 @@ export function createEmptyShow(name = 'Untitled Show'): ShowDocument {
     timecode: {
       enabled: false,
       fps: 30,
-      source: 'osc',
-      ltcChannel: 'mono',
+      source: "osc",
+      ltcChannel: "mono",
       ltcGain: 1,
       latencyMs: 0,
       globalOffsetMs: 0,
@@ -335,15 +335,15 @@ export function createEmptyShow(name = 'Untitled Show'): ShowDocument {
     timeline: {
       durationMs: 300_000,
       fps: 30,
-      syncMode: 'free',
+      syncMode: "free",
       primaryAudioAssetId: null,
       audioAssets: [],
     },
     audioMappings: [],
     executors: [
       {
-        id: 'main-executor',
-        name: 'Main',
+        id: "main-executor",
+        name: "Main",
         pages: 1,
         activePage: 1,
         defaultReleaseMs: 400,
@@ -352,7 +352,7 @@ export function createEmptyShow(name = 'Untitled Show'): ShowDocument {
           name: `Slot ${index + 1}`,
           page: 1,
           index,
-          mode: 'go',
+          mode: "go",
         })),
       },
     ],
@@ -365,7 +365,7 @@ export function createEmptyShow(name = 'Untitled Show'): ShowDocument {
     video: {
       enabled: false,
       pixelMapIds: [],
-      inputKind: 'none',
+      inputKind: "none",
       deviceId: null,
       senderName: null,
       gain: 1,
@@ -376,8 +376,8 @@ export function createEmptyShow(name = 'Untitled Show'): ShowDocument {
     },
     backup: {
       enabled: false,
-      role: 'primary',
-      takeoverMode: 'manual',
+      role: "primary",
+      takeoverMode: "manual",
       heartbeatMs: 500,
     },
   };

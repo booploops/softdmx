@@ -6,8 +6,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import * as YAML from 'yaml';
-import type { FixtureDefinition, FixtureChannelDefinition, WidgetConfiguration } from '../types/fixture';
+import * as YAML from "yaml";
+import type {
+  FixtureDefinition,
+  FixtureChannelDefinition,
+  WidgetConfiguration,
+} from "../types/fixture";
 
 export type PluginManifest = {
   id: string;
@@ -16,14 +20,14 @@ export type PluginManifest = {
 };
 
 function ensureRecord(value: unknown, context: string): Record<string, unknown> {
-  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
     throw new Error(`${context} must be an object`);
   }
   return value as Record<string, unknown>;
 }
 
 function ensureString(value: unknown, context: string): string {
-  if (typeof value !== 'string' || !value.trim()) {
+  if (typeof value !== "string" || !value.trim()) {
     throw new Error(`${context} must be a non-empty string`);
   }
   return value.trim();
@@ -31,7 +35,7 @@ function ensureString(value: unknown, context: string): string {
 
 function ensureNumber(value: unknown, context: number | string): number {
   const contextLabel = String(context);
-  if (typeof value !== 'number' || Number.isNaN(value)) {
+  if (typeof value !== "number" || Number.isNaN(value)) {
     throw new Error(`${contextLabel} must be a number`);
   }
   return value;
@@ -51,10 +55,10 @@ function validateChannel(channel: unknown, index: number): FixtureChannelDefinit
     throw new Error(`channel[${index}] defaultValue must be in range`);
   }
 
-  let controlMode: FixtureChannelDefinition['controlMode'];
+  let controlMode: FixtureChannelDefinition["controlMode"];
   if (obj.controlMode !== undefined) {
     const mode = ensureString(obj.controlMode, `channel[${index}].controlMode`);
-    if (mode !== 'dmx' && mode !== 'indexed') {
+    if (mode !== "dmx" && mode !== "indexed") {
       throw new Error(`channel[${index}].controlMode must be "dmx" or "indexed"`);
     }
     controlMode = mode;
@@ -74,14 +78,14 @@ function validateChannel(channel: unknown, index: number): FixtureChannelDefinit
       throw new Error(`channel[${index}].indexedLabels must be an array`);
     }
     indexedLabels = obj.indexedLabels.map((label, labelIndex) =>
-      ensureString(label, `channel[${index}].indexedLabels[${labelIndex}]`)
+      ensureString(label, `channel[${index}].indexedLabels[${labelIndex}]`),
     );
     if (indexedSlots !== undefined && indexedLabels.length !== indexedSlots) {
       throw new Error(`channel[${index}].indexedLabels length must match indexedSlots`);
     }
   }
 
-  if (controlMode === 'indexed' && indexedSlots === undefined) {
+  if (controlMode === "indexed" && indexedSlots === undefined) {
     throw new Error(`channel[${index}] indexedSlots is required when controlMode is indexed`);
   }
 
@@ -91,8 +95,8 @@ function validateChannel(channel: unknown, index: number): FixtureChannelDefinit
     minValue,
     maxValue,
     defaultValue,
-    ...(typeof obj.attributeId === 'string' ? { attributeId: obj.attributeId.trim() } : {}),
-    ...(typeof obj.dmxOffset === 'number' ? { dmxOffset: obj.dmxOffset } : {}),
+    ...(typeof obj.attributeId === "string" ? { attributeId: obj.attributeId.trim() } : {}),
+    ...(typeof obj.dmxOffset === "number" ? { dmxOffset: obj.dmxOffset } : {}),
     ...(controlMode ? { controlMode } : {}),
     ...(indexedSlots !== undefined ? { indexedSlots } : {}),
     ...(indexedLabels ? { indexedLabels } : {}),
@@ -117,10 +121,10 @@ function validateWidget(widget: unknown, index: number): WidgetConfiguration {
 
 export function loadFixtureYaml(source: string): FixtureDefinition {
   const parsed = YAML.parse(source) as unknown;
-  const obj = ensureRecord(parsed, 'fixture');
+  const obj = ensureRecord(parsed, "fixture");
 
   if (!Array.isArray(obj.channels) || obj.channels.length === 0) {
-    throw new Error('fixture.channels must be a non-empty array');
+    throw new Error("fixture.channels must be a non-empty array");
   }
 
   const channels = obj.channels.map((channel, index) => validateChannel(channel, index));
@@ -128,20 +132,26 @@ export function loadFixtureYaml(source: string): FixtureDefinition {
   let widgets: WidgetConfiguration[] | undefined;
   if (obj.widgets !== undefined) {
     if (!Array.isArray(obj.widgets)) {
-      throw new Error('fixture.widgets must be an array when provided');
+      throw new Error("fixture.widgets must be an array when provided");
     }
     widgets = obj.widgets.map((widget, index) => validateWidget(widget, index));
   }
 
   let attributes;
   if (obj.attributes !== undefined) {
-    if (!Array.isArray(obj.attributes)) throw new Error('fixture.attributes must be an array');
+    if (!Array.isArray(obj.attributes)) throw new Error("fixture.attributes must be an array");
     attributes = obj.attributes.map((attribute, index) => {
       const record = ensureRecord(attribute, `attributes[${index}]`);
       return {
         id: ensureString(record.id, `attributes[${index}].id`),
-        feature: ensureString(record.feature, `attributes[${index}].feature`) as import('../types/attributes').AttributeFeature,
-        merge: ensureString(record.merge, `attributes[${index}].merge`) as import('../types/attributes').AttributeMerge,
+        feature: ensureString(
+          record.feature,
+          `attributes[${index}].feature`,
+        ) as import("../types/attributes").AttributeFeature,
+        merge: ensureString(
+          record.merge,
+          `attributes[${index}].merge`,
+        ) as import("../types/attributes").AttributeMerge,
         channelName: ensureString(record.channelName, `attributes[${index}].channelName`),
       };
     });
@@ -149,7 +159,7 @@ export function loadFixtureYaml(source: string): FixtureDefinition {
 
   let modes;
   if (obj.modes !== undefined) {
-    if (!Array.isArray(obj.modes)) throw new Error('fixture.modes must be an array');
+    if (!Array.isArray(obj.modes)) throw new Error("fixture.modes must be an array");
     modes = obj.modes.map((mode, index) => {
       const record = ensureRecord(mode, `modes[${index}]`);
       const modeChannels = Array.isArray(record.channels)
@@ -160,7 +170,7 @@ export function loadFixtureYaml(source: string): FixtureDefinition {
         name: ensureString(record.name, `modes[${index}].name`),
         channelNames: Array.isArray(record.channelNames)
           ? record.channelNames.map((name, nameIndex) =>
-              ensureString(name, `modes[${index}].channelNames[${nameIndex}]`)
+              ensureString(name, `modes[${index}].channelNames[${nameIndex}]`),
             )
           : [],
         ...(modeChannels ? { channels: modeChannels } : {}),
@@ -170,29 +180,26 @@ export function loadFixtureYaml(source: string): FixtureDefinition {
 
   let gdtfMeta;
   if (obj.gdtfMeta !== undefined) {
-    const record = ensureRecord(obj.gdtfMeta, 'fixture.gdtfMeta');
+    const record = ensureRecord(obj.gdtfMeta, "fixture.gdtfMeta");
     gdtfMeta = {
-      fixtureTypeId: typeof record.fixtureTypeId === 'string' ? record.fixtureTypeId : undefined,
-      manufacturer: typeof record.manufacturer === 'string' ? record.manufacturer : undefined,
-      originalFileName: typeof record.originalFileName === 'string' ? record.originalFileName : undefined,
+      fixtureTypeId: typeof record.fixtureTypeId === "string" ? record.fixtureTypeId : undefined,
+      manufacturer: typeof record.manufacturer === "string" ? record.manufacturer : undefined,
+      originalFileName:
+        typeof record.originalFileName === "string" ? record.originalFileName : undefined,
     };
   }
 
   const fixtureSource =
-    obj.source === 'gdtf' || obj.source === 'yaml'
-      ? obj.source
-      : gdtfMeta
-        ? 'gdtf'
-        : 'yaml';
+    obj.source === "gdtf" || obj.source === "yaml" ? obj.source : gdtfMeta ? "gdtf" : "yaml";
 
   return {
-    id: ensureString(obj.id, 'fixture.id'),
-    name: ensureString(obj.name, 'fixture.name'),
+    id: ensureString(obj.id, "fixture.id"),
+    name: ensureString(obj.name, "fixture.name"),
     channels,
     ...(widgets ? { widgets } : {}),
     ...(attributes ? { attributes } : {}),
     ...(modes ? { modes } : {}),
-    ...(typeof obj.defaultModeId === 'string' ? { defaultModeId: obj.defaultModeId } : {}),
+    ...(typeof obj.defaultModeId === "string" ? { defaultModeId: obj.defaultModeId } : {}),
     source: fixtureSource,
     ...(gdtfMeta ? { gdtfMeta } : {}),
   };
@@ -200,17 +207,17 @@ export function loadFixtureYaml(source: string): FixtureDefinition {
 
 export function parsePluginManifest(source: string): PluginManifest {
   const parsed = JSON.parse(source) as unknown;
-  const obj = ensureRecord(parsed, 'plugin manifest');
+  const obj = ensureRecord(parsed, "plugin manifest");
 
   if (!Array.isArray(obj.fixtures)) {
-    throw new Error('plugin manifest fixtures must be an array');
+    throw new Error("plugin manifest fixtures must be an array");
   }
 
   return {
-    id: ensureString(obj.id, 'plugin manifest id'),
-    version: ensureString(obj.version, 'plugin manifest version'),
+    id: ensureString(obj.id, "plugin manifest id"),
+    version: ensureString(obj.version, "plugin manifest version"),
     fixtures: obj.fixtures.map((fixture, index) =>
-      ensureString(fixture, `plugin manifest fixtures[${index}]`)
+      ensureString(fixture, `plugin manifest fixtures[${index}]`),
     ),
   };
 }

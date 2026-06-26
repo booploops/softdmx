@@ -21,7 +21,5 @@
       "electron": ["./node_modules/electron"]
     }
   },
-  "include": [
-    "./src-electron/**/*"
-  ]
+  "include": ["./src-electron/**/*"]
 }

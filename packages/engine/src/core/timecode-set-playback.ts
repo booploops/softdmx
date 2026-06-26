@@ -6,11 +6,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { Cue } from '../types';
-import type { ShowTimelineConfig } from '../show/document';
+import type { Cue } from "../types";
+import type { ShowTimelineConfig } from "../show/document";
 
 function cueDurationMs(cue: Cue): number {
-  if (cue.view === 'stack' && cue.stack?.length) {
+  if (cue.view === "stack" && cue.stack?.length) {
     return cue.stack.reduce((acc, step) => acc + step.fadeIn + (step.followTime ?? 0), 0);
   }
 
@@ -19,9 +19,9 @@ function cueDurationMs(cue: Cue): number {
 
   return Math.max(
     ...layers.map((layer) =>
-      layer.frames.reduce((acc, frame) => acc + (frame.duration ?? 1000), 0)
+      layer.frames.reduce((acc, frame) => acc + (frame.duration ?? 1000), 0),
     ),
-    0
+    0,
   );
 }
 
@@ -31,12 +31,12 @@ export type ActiveSetCue = {
 };
 
 export function getCueTimecodeInSeconds(cue: Cue): number | null {
-  if (typeof cue.timecodeIn !== 'number' || !Number.isFinite(cue.timecodeIn)) return null;
+  if (typeof cue.timecodeIn !== "number" || !Number.isFinite(cue.timecodeIn)) return null;
   return Math.max(0, cue.timecodeIn);
 }
 
 export function getCueTimecodeOutSeconds(cue: Cue): number | null {
-  if (typeof cue.timecodeOut === 'number' && Number.isFinite(cue.timecodeOut)) {
+  if (typeof cue.timecodeOut === "number" && Number.isFinite(cue.timecodeOut)) {
     return Math.max(0, cue.timecodeOut);
   }
 
@@ -47,12 +47,15 @@ export function getCueTimecodeOutSeconds(cue: Cue): number | null {
   return timecodeIn + Math.max(0, durationSec);
 }
 
-export function getActiveTimelineCuesAtTimecode(cues: Cue[], timecodeSeconds: number): ActiveSetCue[] {
+export function getActiveTimelineCuesAtTimecode(
+  cues: Cue[],
+  timecodeSeconds: number,
+): ActiveSetCue[] {
   const position = Math.max(0, timecodeSeconds);
   const active: ActiveSetCue[] = [];
 
   for (const cue of cues) {
-    if (cue.view !== 'timeline') continue;
+    if (cue.view !== "timeline") continue;
 
     const timecodeIn = getCueTimecodeInSeconds(cue);
     if (timecodeIn === null) continue;
@@ -67,17 +70,19 @@ export function getActiveTimelineCuesAtTimecode(cues: Cue[], timecodeSeconds: nu
     });
   }
 
-  return active.sort((a, b) => (getCueTimecodeInSeconds(a.cue) ?? 0) - (getCueTimecodeInSeconds(b.cue) ?? 0));
+  return active.sort(
+    (a, b) => (getCueTimecodeInSeconds(a.cue) ?? 0) - (getCueTimecodeInSeconds(b.cue) ?? 0),
+  );
 }
 
 export function computeSetTimelineDurationMs(cues: Cue[], timeline?: ShowTimelineConfig): number {
   const configured = timeline?.durationMs;
-  if (typeof configured === 'number' && configured > 0) return configured;
+  if (typeof configured === "number" && configured > 0) return configured;
 
   let maxEndMs = 60_000;
 
   for (const cue of cues) {
-    if (cue.view !== 'timeline') continue;
+    if (cue.view !== "timeline") continue;
     const timecodeIn = getCueTimecodeInSeconds(cue);
     if (timecodeIn === null) continue;
     const endSec = getCueTimecodeOutSeconds(cue) ?? timecodeIn;

@@ -6,18 +6,18 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ActiveChannel } from '../types';
+import type { ActiveChannel } from "../types";
 
 export interface ChannelValue {
   path: string;
   value: number;
   attributeType: string;
   priority: number;
-  source: 'scratch' | 'cue' | 'effect' | 'audio' | 'video' | 'base';
+  source: "scratch" | "cue" | "effect" | "audio" | "video" | "base";
 }
 
 export interface LayerContribution {
-  source: 'scratch' | 'cue' | 'effect' | 'audio' | 'video' | 'base';
+  source: "scratch" | "cue" | "effect" | "audio" | "video" | "base";
   priority: number;
   channels: Map<string, ChannelValue>;
 }
@@ -40,18 +40,18 @@ export function clampDmx(value: number): number {
 }
 
 export function isHtpAttribute(type: string): boolean {
-  return type === 'intensity' || type === 'color';
+  return type === "intensity" || type === "color";
 }
 
 /** Intensity masters (GM, playback bus, group subs) affect dimmer/color only — not pan/tilt. */
 export function scalesWithIntensityMaster(type: string): boolean {
-  return type === 'intensity' || type === 'color';
+  return type === "intensity" || type === "color";
 }
 
 export function mergeLayers(
   baseChannels: ActiveChannel[],
   layers: LayerContribution[],
-  options: MergeOptions
+  options: MergeOptions,
 ): ActiveChannel[] {
   if (options.blackout) {
     return baseChannels.map((ch) => ({ ...ch, value: 0 }));
@@ -77,7 +77,7 @@ export function mergeLayers(
         continue;
       }
 
-      const scratchOverride = channelValue.source === 'scratch';
+      const scratchOverride = channelValue.source === "scratch";
 
       if (isHtpAttribute(channelValue.attributeType) && !scratchOverride) {
         existing.value = clampDmx(Math.max(existing.value, channelValue.value));
@@ -89,12 +89,10 @@ export function mergeLayers(
 
   const grandMaster = options.grandMaster;
   return Array.from(resultMap.values()).map((ch) => {
-    const attributeType = ch.attributeType ?? 'generic';
+    const attributeType = ch.attributeType ?? "generic";
     return {
       ...ch,
-      value: scalesWithIntensityMaster(attributeType)
-        ? clampDmx(ch.value * grandMaster)
-        : ch.value,
+      value: scalesWithIntensityMaster(attributeType) ? clampDmx(ch.value * grandMaster) : ch.value,
     };
   });
 }

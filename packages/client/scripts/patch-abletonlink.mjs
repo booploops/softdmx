@@ -8,17 +8,20 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { createRequire } from 'node:module';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { createRequire } from "node:module";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 
-const clientRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
-const require = createRequire(join(clientRoot, 'package.json'));
+const clientRoot = join(dirname(fileURLToPath(import.meta.url)), "..");
+const require = createRequire(join(clientRoot, "package.json"));
 
 let headerPath;
 try {
-  headerPath = join(dirname(require.resolve('abletonlink/package.json')), 'src/napi-abletonlink.hpp');
+  headerPath = join(
+    dirname(require.resolve("abletonlink/package.json")),
+    "src/napi-abletonlink.hpp",
+  );
 } catch {
   process.exit(0);
 }
@@ -27,22 +30,22 @@ if (!existsSync(headerPath)) {
   process.exit(0);
 }
 
-let source = readFileSync(headerPath, 'utf8');
-const marker = 'shutdown_callback_thread';
+let source = readFileSync(headerPath, "utf8");
+const marker = "shutdown_callback_thread";
 
 if (source.includes(marker)) {
-  console.log('patch-abletonlink: shutdown patch already applied');
+  console.log("patch-abletonlink: shutdown patch already applied");
   process.exit(0);
 }
 
 // Older patch detached the worker thread, which leaves it running through process exit.
 source = source.replace(
-  'callback_thread() = std::thread(callback_handler);\n                callback_thread().detach();\n                b = false;',
-  'callback_thread_running().store(true, std::memory_order_relaxed);\n                callback_thread() = std::thread(callback_handler);\n                b = false;'
+  "callback_thread() = std::thread(callback_handler);\n                callback_thread().detach();\n                b = false;",
+  "callback_thread_running().store(true, std::memory_order_relaxed);\n                callback_thread() = std::thread(callback_handler);\n                b = false;",
 );
 
-if (!source.includes('#include <atomic>')) {
-  source = source.replace('#include <mutex>', '#include <mutex>\n#include <atomic>');
+if (!source.includes("#include <atomic>")) {
+  source = source.replace("#include <mutex>", "#include <mutex>\n#include <atomic>");
 }
 
 source = source.replace(
@@ -122,7 +125,7 @@ source = source.replace(
         static std::thread &callback_thread() {
             static std::thread th;
             return th;
-        }`
+        }`,
 );
 
 source = source.replace(
@@ -136,7 +139,7 @@ source = source.replace(
                 callback_thread_running().store(true, std::memory_order_relaxed);
                 callback_thread() = std::thread(callback_handler);
                 b = false;
-            }`
+            }`,
 );
 
 source = source.replace(
@@ -156,13 +159,13 @@ source = source.replace(
             }
 
             return exports;
-        }`
+        }`,
 );
 
 if (!source.includes(marker)) {
-  console.error('patch-abletonlink: failed to apply shutdown patch');
+  console.error("patch-abletonlink: failed to apply shutdown patch");
   process.exit(1);
 }
 
 writeFileSync(headerPath, source);
-console.log('patch-abletonlink: applied shutdown patch');
+console.log("patch-abletonlink: applied shutdown patch");

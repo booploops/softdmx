@@ -5,29 +5,29 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { app, BrowserWindow } from 'electron';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { startServer } from './server';
-import { createArtnetWindow } from './windows/artnet-window';
-import { AppState } from './state/main';
-import { getDevUrl, isDev } from './runtime/env';
-import { Paths } from './runtime/paths';
-import { setupOscListener, closeOscListener } from './ipc/osc-ipc';
-import { setupAbletonLink, closeAbletonLink } from './ipc/link-ipc';
-import { setupGridNodeOverlayIpc, closeGridNodeOverlayIpc } from './ipc/gridnode-ipc';
-import { applyGridNodeOverlayWindowState } from './windows/gridnode-overlay';
-import { setupVideoIpc, closeVideoIpc } from './ipc/video-ipc';
+import { app, BrowserWindow } from "electron";
+import path from "path";
+import { fileURLToPath } from "url";
+import { startServer } from "./server";
+import { createArtnetWindow } from "./windows/artnet-window";
+import { AppState } from "./state/main";
+import { getDevUrl, isDev } from "./runtime/env";
+import { Paths } from "./runtime/paths";
+import { setupOscListener, closeOscListener } from "./ipc/osc-ipc";
+import { setupAbletonLink, closeAbletonLink } from "./ipc/link-ipc";
+import { setupGridNodeOverlayIpc, closeGridNodeOverlayIpc } from "./ipc/gridnode-ipc";
+import { applyGridNodeOverlayWindowState } from "./windows/gridnode-overlay";
+import { setupVideoIpc, closeVideoIpc } from "./ipc/video-ipc";
 import {
   buildOutputNodeUrl,
   configureOutputNodeWindow,
   isOutputNodeMode,
-} from './modes/output-node';
-import { setBackupPrimaryWindow } from './backup/coordinator';
+} from "./modes/output-node";
+import { setBackupPrimaryWindow } from "./backup/coordinator";
 
-app.setPath('userData', Paths.appData);
+app.setPath("userData", Paths.appData);
 
-const currentDir = fileURLToPath(new URL('.', import.meta.url));
+const currentDir = fileURLToPath(new URL(".", import.meta.url));
 
 let mainWindow: BrowserWindow | undefined;
 let shutdownStarted = false;
@@ -68,19 +68,19 @@ async function createWindow() {
   const outputNode = isOutputNodeMode();
 
   mainWindow = new BrowserWindow({
-    icon: path.resolve(currentDir, 'icons/icon.png'),
+    icon: path.resolve(currentDir, "icons/icon.png"),
     width: outputNode ? 360 : 1000,
     height: outputNode ? 240 : 600,
     show: !outputNode,
     useContentSize: true,
-    backgroundColor: '#1D1D1D',
+    backgroundColor: "#1D1D1D",
     resizable: !outputNode,
     maximizable: !outputNode,
     titleBarOverlay: outputNode
       ? undefined
       : {
-          color: '#1D1D1D',
-          symbolColor: '#FFFFFF',
+          color: "#1D1D1D",
+          symbolColor: "#FFFFFF",
         },
     trafficLightPosition: outputNode
       ? undefined
@@ -88,10 +88,10 @@ async function createWindow() {
           x: 12,
           y: 16,
         },
-    titleBarStyle: outputNode ? 'default' : 'hidden',
+    titleBarStyle: outputNode ? "default" : "hidden",
     webPreferences: {
       contextIsolation: true,
-      preload: path.resolve(currentDir, 'preload.js'),
+      preload: path.resolve(currentDir, "preload.js"),
     },
   });
 
@@ -118,7 +118,7 @@ async function createWindow() {
   setupOscListener(mainWindow);
   setupAbletonLink(mainWindow);
 
-  mainWindow.on('closed', () => {
+  mainWindow.on("closed", () => {
     mainWindow = undefined;
     void shutdownAndQuit();
   });
@@ -126,11 +126,11 @@ async function createWindow() {
 
 void app.whenReady().then(createWindow);
 
-app.on('window-all-closed', () => {
+app.on("window-all-closed", () => {
   void shutdownAndQuit();
 });
 
-app.on('before-quit', (event) => {
+app.on("before-quit", (event) => {
   if (shutdownComplete) return;
   if (!shutdownStarted) {
     event.preventDefault();
@@ -138,7 +138,7 @@ app.on('before-quit', (event) => {
   }
 });
 
-app.on('activate', () => {
+app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     void createWindow();
   }

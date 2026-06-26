@@ -6,10 +6,10 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowDocument, Preset, ShowGroup } from '../show/document';
-import type { ActiveChannel } from '../types/fixture';
-import { getFixtureDefinition } from '../fixture-library/lookup';
-import { resolveFixtureChannelsForMode } from '../fixture-library/gdtf/gdtf-to-fixture';
+import type { ShowDocument, Preset, ShowGroup } from "../show/document";
+import type { ActiveChannel } from "../types/fixture";
+import { getFixtureDefinition } from "../fixture-library/lookup";
+import { resolveFixtureChannelsForMode } from "../fixture-library/gdtf/gdtf-to-fixture";
 
 export interface ResolvedChannelTarget {
   path: string;
@@ -17,22 +17,17 @@ export interface ResolvedChannelTarget {
   attributeType: string;
 }
 
-export function resolveGroupFixtures(
-  show: ShowDocument,
-  groupName: string
-): string[] {
+export function resolveGroupFixtures(show: ShowDocument, groupName: string): string[] {
   const group = show.groups.find((g) => g.name === groupName);
   return group?.fixtures ?? [];
 }
 
-export function resolvePresetTargets(
-  show: ShowDocument,
-  preset: Preset
-): ResolvedChannelTarget[] {
+export function resolvePresetTargets(show: ShowDocument, preset: Preset): ResolvedChannelTarget[] {
   const results: ResolvedChannelTarget[] = [];
 
   for (const target of preset.targets) {
-    const fixtureNames = target.fixtures ?? (target.group ? resolveGroupFixtures(show, target.group) : []);
+    const fixtureNames =
+      target.fixtures ?? (target.group ? resolveGroupFixtures(show, target.group) : []);
 
     for (const fixtureName of fixtureNames) {
       const fixture = show.fixtures.find((f) => f.name === fixtureName);
@@ -59,12 +54,13 @@ export function resolvePresetTargets(
 
 export function presetToChannels(
   show: ShowDocument,
-  preset: Preset
+  preset: Preset,
 ): Map<string, { value: number; attributeType: string }> {
   const map = new Map<string, { value: number; attributeType: string }>();
 
   for (const target of preset.targets) {
-    const fixtureNames = target.fixtures ?? (target.group ? resolveGroupFixtures(show, target.group) : []);
+    const fixtureNames =
+      target.fixtures ?? (target.group ? resolveGroupFixtures(show, target.group) : []);
 
     for (const fixtureName of fixtureNames) {
       const fixture = show.fixtures.find((f) => f.name === fixtureName);
@@ -91,9 +87,10 @@ export function presetToChannels(
 
 export function resolveEffectTargets(
   show: ShowDocument,
-  target: { fixtures?: string[]; group?: string; attr: string }
+  target: { fixtures?: string[]; group?: string; attr: string },
 ): { path: string; attributeType: string; fixtureIndex: number }[] {
-  const fixtureNames = target.fixtures ?? (target.group ? resolveGroupFixtures(show, target.group) : []);
+  const fixtureNames =
+    target.fixtures ?? (target.group ? resolveGroupFixtures(show, target.group) : []);
   const results: { path: string; attributeType: string; fixtureIndex: number }[] = [];
 
   fixtureNames.forEach((fixtureName, fixtureIndex) => {
@@ -125,7 +122,7 @@ export function buildChannelMap(show: ShowDocument): ActiveChannel[] {
     if (!def) continue;
 
     const modeChannels = resolveFixtureChannelsForMode(def, fixture.modeId);
-    const destId = fixture.outputDestinationId ?? 'default-gridnode';
+    const destId = fixture.outputDestinationId ?? "default-gridnode";
     const autoIndex = destinationIndices.get(destId) ?? 1;
     const startingChannel = fixture.startingChannel ?? autoIndex;
 

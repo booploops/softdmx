@@ -16,4 +16,3 @@ export * from "./video-mapping.ts";
 export * from "./video-sampler.ts";
 export * from "./layers/scratch.ts";
 export * from "./effects/evaluator.ts";
-

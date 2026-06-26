@@ -6,15 +6,15 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { FixtureChannelDefinition } from '../types';
+import type { FixtureChannelDefinition } from "../types";
 
 type IndexedChannel = Pick<
   FixtureChannelDefinition,
-  'minValue' | 'maxValue' | 'indexedSlots' | 'controlMode'
+  "minValue" | "maxValue" | "indexedSlots" | "controlMode"
 >;
 
 export function isIndexedChannel(channel: FixtureChannelDefinition): boolean {
-  return channel.controlMode === 'indexed' && (channel.indexedSlots ?? 0) >= 2;
+  return channel.controlMode === "indexed" && (channel.indexedSlots ?? 0) >= 2;
 }
 
 export function getIndexedSlotCount(channel: FixtureChannelDefinition): number {

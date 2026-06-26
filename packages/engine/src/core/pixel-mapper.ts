@@ -6,9 +6,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { PixelMapDefinition } from '../show/document';
+import type { PixelMapDefinition } from "../show/document";
 
-type PixelComponent = 'r' | 'g' | 'b';
+type PixelComponent = "r" | "g" | "b";
 
 export interface PixelColor {
   r: number;
@@ -25,7 +25,7 @@ export interface MappedChannelValue {
 
 export function flattenPixelMatrixToChannels(
   pixelMap: PixelMapDefinition,
-  pixels: PixelColor[][]
+  pixels: PixelColor[][],
 ): MappedChannelValue[] {
   const channelOrder = parseChannelOrder(pixelMap.channelOrder);
   const flattened: MappedChannelValue[] = [];
@@ -53,21 +53,21 @@ export function flattenPixelMatrixToChannels(
   return flattened;
 }
 
-function parseChannelOrder(order: PixelMapDefinition['channelOrder']): PixelComponent[] {
+function parseChannelOrder(order: PixelMapDefinition["channelOrder"]): PixelComponent[] {
   switch (order) {
-    case 'rbg':
-      return ['r', 'b', 'g'];
-    case 'grb':
-      return ['g', 'r', 'b'];
-    case 'gbr':
-      return ['g', 'b', 'r'];
-    case 'brg':
-      return ['b', 'r', 'g'];
-    case 'bgr':
-      return ['b', 'g', 'r'];
-    case 'rgb':
+    case "rbg":
+      return ["r", "b", "g"];
+    case "grb":
+      return ["g", "r", "b"];
+    case "gbr":
+      return ["g", "b", "r"];
+    case "brg":
+      return ["b", "r", "g"];
+    case "bgr":
+      return ["b", "g", "r"];
+    case "rgb":
     default:
-      return ['r', 'g', 'b'];
+      return ["r", "g", "b"];
   }
 }
 
@@ -75,4 +75,3 @@ function clampDmx(value: number): number {
   if (!Number.isFinite(value)) return 0;
   return Math.max(0, Math.min(255, Math.round(value)));
 }
-

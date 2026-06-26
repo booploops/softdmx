@@ -13,77 +13,77 @@ import type {
   ShowTouchConfig,
   TouchControl,
   TouchPage,
-} from '../types/desk.ts';
-import type { ShowDocument } from '../show/document';
+} from "../types/desk.ts";
+import type { ShowDocument } from "../show/document";
 
 export const DESK_GRID_COLS = 12;
 
 export const DEFAULT_DESK_VIEWS: DeskView[] = [
   {
-    id: 'busking',
-    name: 'Busking',
+    id: "busking",
+    name: "Busking",
     panes: [
       {
-        id: 'busking-fixture-sheet',
-        windowType: 'fixture-sheet',
+        id: "busking-fixture-sheet",
+        windowType: "fixture-sheet",
         rect: { x: 0, y: 0, w: 8, h: 7 },
       },
       {
-        id: 'busking-groups',
-        windowType: 'groups',
+        id: "busking-groups",
+        windowType: "groups",
         rect: { x: 8, y: 0, w: 4, h: 7 },
       },
       {
-        id: 'busking-programmer',
-        windowType: 'programmer',
+        id: "busking-programmer",
+        windowType: "programmer",
         rect: { x: 0, y: 7, w: 12, h: 5 },
       },
     ],
   },
   {
-    id: 'focus',
-    name: 'Focus',
+    id: "focus",
+    name: "Focus",
     panes: [
       {
-        id: 'focus-widgets',
-        windowType: 'widgets',
+        id: "focus-widgets",
+        windowType: "widgets",
         rect: { x: 0, y: 0, w: 8, h: 12 },
       },
       {
-        id: 'focus-programmer',
-        windowType: 'programmer',
+        id: "focus-programmer",
+        windowType: "programmer",
         rect: { x: 8, y: 0, w: 4, h: 12 },
       },
     ],
   },
   {
-    id: 'plot',
-    name: 'Plot',
+    id: "plot",
+    name: "Plot",
     panes: [
       {
-        id: 'plot-view',
-        windowType: 'plot',
+        id: "plot-view",
+        windowType: "plot",
         rect: { x: 0, y: 0, w: 8, h: 12 },
       },
       {
-        id: 'plot-groups',
-        windowType: 'groups',
+        id: "plot-groups",
+        windowType: "groups",
         rect: { x: 8, y: 0, w: 4, h: 12 },
       },
     ],
   },
   {
-    id: 'playback',
-    name: 'Playback',
+    id: "playback",
+    name: "Playback",
     panes: [
       {
-        id: 'playback-presets',
-        windowType: 'presets',
+        id: "playback-presets",
+        windowType: "presets",
         rect: { x: 0, y: 0, w: 7, h: 12 },
       },
       {
-        id: 'playback-fixture-sheet',
-        windowType: 'fixture-sheet',
+        id: "playback-fixture-sheet",
+        windowType: "fixture-sheet",
         rect: { x: 7, y: 0, w: 5, h: 12 },
       },
     ],
@@ -92,7 +92,7 @@ export const DEFAULT_DESK_VIEWS: DeskView[] = [
 
 export function createDefaultDeskConfig(): ShowDeskConfig {
   return {
-    defaultViewId: 'busking',
+    defaultViewId: "busking",
     views: DEFAULT_DESK_VIEWS.map((view) => ({
       ...view,
       panes: view.panes.map((pane) => ({ ...pane, rect: { ...pane.rect } })),
@@ -142,7 +142,10 @@ export function deskPaneBandSpan(pane: DeskPane, bands: DeskRowBand[], bandIndex
   return Math.max(1, span);
 }
 
-export function deskPaneGridPlacement(pane: DeskPane, bands: DeskRowBand[]): { row: string; column: string } {
+export function deskPaneGridPlacement(
+  pane: DeskPane,
+  bands: DeskRowBand[],
+): { row: string; column: string } {
   const bandIndex = bands.findIndex((band) => band.start === pane.rect.y);
   const column = `${pane.rect.x + 1} / span ${pane.rect.w}`;
   if (bandIndex < 0) {
@@ -160,22 +163,22 @@ export function deskPaneGridPlacement(pane: DeskPane, bands: DeskRowBand[]): { r
 function defaultTouchControls(doc: ShowDocument): TouchControl[] {
   const controls: TouchControl[] = [
     {
-      id: 'touch-gm',
-      type: 'grand-master',
+      id: "touch-gm",
+      type: "grand-master",
       rect: { x: 0, y: 0, w: 6, h: 1 },
-      label: 'GM',
+      label: "GM",
     },
     {
-      id: 'touch-blackout',
-      type: 'blackout',
+      id: "touch-blackout",
+      type: "blackout",
       rect: { x: 6, y: 0, w: 3, h: 1 },
-      label: 'Blackout',
+      label: "Blackout",
     },
     {
-      id: 'touch-audio',
-      type: 'audio-meter',
+      id: "touch-audio",
+      type: "audio-meter",
       rect: { x: 9, y: 0, w: 3, h: 1 },
-      label: 'Audio',
+      label: "Audio",
     },
   ];
 
@@ -185,7 +188,7 @@ function defaultTouchControls(doc: ShowDocument): TouchControl[] {
     if (index > 0 && index % 2 === 0) row += 1;
     controls.push({
       id: `touch-preset-${preset.id}`,
-      type: 'preset-button',
+      type: "preset-button",
       presetId: preset.id,
       color: preset.color,
       label: preset.name,
@@ -199,7 +202,7 @@ function defaultTouchControls(doc: ShowDocument): TouchControl[] {
   slots.slice(0, 4).forEach((slot, index) => {
     controls.push({
       id: `touch-slot-${slot.id}`,
-      type: 'executor-button',
+      type: "executor-button",
       slotId: slot.id,
       label: slot.name,
       rect: { x: index * 3, y: row, w: 3, h: 1 },
@@ -211,8 +214,8 @@ function defaultTouchControls(doc: ShowDocument): TouchControl[] {
 
 export function createDefaultTouchConfig(doc: ShowDocument): ShowTouchConfig {
   const page: TouchPage = {
-    id: 'main',
-    name: 'Main',
+    id: "main",
+    name: "Main",
     cols: 12,
     rows: 12,
     controls: defaultTouchControls(doc),

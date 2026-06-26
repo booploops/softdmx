@@ -6,8 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import * as YAML from 'yaml';
-import type { FixtureDefinition } from '../types/fixture';
+import * as YAML from "yaml";
+import type { FixtureDefinition } from "../types/fixture";
 
 export function serializeFixtureYaml(fixture: FixtureDefinition): string {
   const exportDoc = {
@@ -55,7 +55,7 @@ export function serializeFixtureYaml(fixture: FixtureDefinition): string {
   return YAML.stringify(exportDoc);
 }
 
-function serializeChannel(channel: FixtureDefinition['channels'][number]) {
+function serializeChannel(channel: FixtureDefinition["channels"][number]) {
   return {
     name: channel.name,
     type: channel.type,
@@ -73,18 +73,18 @@ function serializeChannel(channel: FixtureDefinition['channels'][number]) {
 export function downloadFixtureYaml(fixture: FixtureDefinition, filename?: string): boolean {
   try {
     const yamlContent = serializeFixtureYaml(fixture);
-    const blob = new Blob([yamlContent], { type: 'text/yaml' });
+    const blob = new Blob([yamlContent], { type: "text/yaml" });
     const url = URL.createObjectURL(blob);
-    const anchor = document.createElement('a');
+    const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = filename ?? `${fixture.id.replace(/\s+/g, '_')}.yaml`;
+    anchor.download = filename ?? `${fixture.id.replace(/\s+/g, "_")}.yaml`;
     document.body.appendChild(anchor);
     anchor.click();
     document.body.removeChild(anchor);
     URL.revokeObjectURL(url);
     return true;
   } catch (error) {
-    console.error('Failed to export fixture YAML:', error);
+    console.error("Failed to export fixture YAML:", error);
     return false;
   }
 }

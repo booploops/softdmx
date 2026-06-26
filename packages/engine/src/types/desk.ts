@@ -7,12 +7,12 @@
  */
 
 export type DeskWindowType =
-  | 'fixture-sheet'
-  | 'groups'
-  | 'widgets'
-  | 'programmer'
-  | 'plot'
-  | 'presets';
+  | "fixture-sheet"
+  | "groups"
+  | "widgets"
+  | "programmer"
+  | "plot"
+  | "presets";
 
 export interface DeskPaneRect {
   x: number;
@@ -40,12 +40,12 @@ export interface ShowDeskConfig {
 }
 
 export type TouchControlType =
-  | 'preset-button'
-  | 'executor-button'
-  | 'grand-master'
-  | 'blackout'
-  | 'cue-go'
-  | 'audio-meter';
+  | "preset-button"
+  | "executor-button"
+  | "grand-master"
+  | "blackout"
+  | "cue-go"
+  | "audio-meter";
 
 export interface TouchControlRect {
   x: number;

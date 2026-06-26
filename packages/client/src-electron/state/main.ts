@@ -14,4 +14,3 @@ export const AppState = {
   artnetWindow: null as BrowserWindow | null,
   io: null as Server | null,
 };
-

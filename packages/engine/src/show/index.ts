@@ -39,15 +39,15 @@ export type {
   ShowVideoConfig,
   ShowDocumentVersion,
   ShowDocument,
-} from './document.ts';
+} from "./document.ts";
 
-export { createEmptyShow } from './document.ts';
-export { CURRENT_SHOW_VERSION, isSupportedShowVersion } from './version.ts';
-export { migrateShowDocument } from './migrate.ts';
+export { createEmptyShow } from "./document.ts";
+export { CURRENT_SHOW_VERSION, isSupportedShowVersion } from "./version.ts";
+export { migrateShowDocument } from "./migrate.ts";
 export {
   validateShowDocument,
   parseShowDocument,
   serializeShowDocument,
   downloadShowDocument,
   loadShowDocumentFromFile,
-} from './io.ts';
+} from "./io.ts";

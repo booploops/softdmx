@@ -7,13 +7,13 @@
  */
 
 export type BindingTargetType =
-  | 'fixture_channel'
-  | 'group_master'
-  | 'cue_trigger'
-  | 'cue_stack_go'
-  | 'preset'
-  | 'blackout'
-  | 'grandmaster';
+  | "fixture_channel"
+  | "group_master"
+  | "cue_trigger"
+  | "cue_stack_go"
+  | "preset"
+  | "blackout"
+  | "grandmaster";
 
 export interface BindingTarget {
   type: BindingTargetType;
@@ -28,7 +28,7 @@ export interface MidiMapping {
   id: string;
   deviceName?: string;
   channel: number;
-  controlType: 'cc' | 'note';
+  controlType: "cc" | "note";
   controlNumber: number;
   target: BindingTarget;
 }

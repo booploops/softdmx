@@ -6,23 +6,23 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { execSync, spawn } from 'child_process';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import http from 'http';
+import { execSync, spawn } from "child_process";
+import path from "path";
+import { fileURLToPath } from "url";
+import http from "http";
 
-const __dirname = fileURLToPath(new URL('.', import.meta.url));
-const rootDir = path.resolve(__dirname, '..');
+const __dirname = fileURLToPath(new URL(".", import.meta.url));
+const rootDir = path.resolve(__dirname, "..");
 
-console.log('Building Electron main and preload scripts...');
+console.log("Building Electron main and preload scripts...");
 try {
-  execSync('npx rolldown -c rolldown.config.js', { cwd: rootDir, stdio: 'inherit' });
+  execSync("npx rolldown -c rolldown.config.js", { cwd: rootDir, stdio: "inherit" });
 } catch (err) {
-  console.error('Failed to build Electron files:', err);
+  console.error("Failed to build Electron files:", err);
   process.exit(1);
 }
 
-const appUrl = process.env.APP_URL || 'http://127.0.0.1:9000';
+const appUrl = process.env.APP_URL || "http://127.0.0.1:9000";
 
 async function waitForUrl(url, timeoutMs = 60000) {
   const parsedUrl = new URL(url);
@@ -36,20 +36,23 @@ async function waitForUrl(url, timeoutMs = 60000) {
 
     try {
       await new Promise((resolve, reject) => {
-        const req = http.request({
-          method: 'GET',
-          hostname: parsedUrl.hostname === 'localhost' ? '127.0.0.1' : parsedUrl.hostname,
-          port: parsedUrl.port || 80,
-          path: parsedUrl.pathname,
-          timeout: 1000,
-        }, (res) => {
-          resolve();
-        });
-        
-        req.on('error', reject);
+        const req = http.request(
+          {
+            method: "GET",
+            hostname: parsedUrl.hostname === "localhost" ? "127.0.0.1" : parsedUrl.hostname,
+            port: parsedUrl.port || 80,
+            path: parsedUrl.pathname,
+            timeout: 1000,
+          },
+          (res) => {
+            resolve();
+          },
+        );
+
+        req.on("error", reject);
         req.end();
       });
-      console.log('Frontend dev server is ready!');
+      console.log("Frontend dev server is ready!");
       break;
     } catch (err) {
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -65,23 +68,23 @@ async function run() {
     process.exit(1);
   }
 
-  console.log('Launching Electron...');
+  console.log("Launching Electron...");
 
   const env = {
     ...process.env,
-    DEV: 'true',
+    DEV: "true",
     APP_URL: appUrl,
   };
 
-  const args = ['electron', 'dist-electron/main.js', ...process.argv.slice(2)];
-  const electronProcess = spawn('npx', args, {
+  const args = ["electron", "dist-electron/main.js", ...process.argv.slice(2)];
+  const electronProcess = spawn("npx", args, {
     cwd: rootDir,
     env,
-    stdio: 'inherit',
+    stdio: "inherit",
     shell: true,
   });
 
-  electronProcess.on('close', (code) => {
+  electronProcess.on("close", (code) => {
     process.exit(code || 0);
   });
 }

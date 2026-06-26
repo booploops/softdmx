@@ -6,14 +6,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { BrowserWindow } from 'electron';
+import type { BrowserWindow } from "electron";
 
 export function isOutputNodeMode(argv = process.argv): boolean {
-  return argv.includes('--output-node');
+  return argv.includes("--output-node");
 }
 
 export function resolveOutputNodeShowPath(argv = process.argv): string | null {
-  const showFlagIndex = argv.indexOf('--show');
+  const showFlagIndex = argv.indexOf("--show");
   if (showFlagIndex >= 0 && argv[showFlagIndex + 1]) {
     return argv[showFlagIndex + 1] ?? null;
   }
@@ -22,8 +22,8 @@ export function resolveOutputNodeShowPath(argv = process.argv): string | null {
 
 export function buildOutputNodeUrl(baseUrl: string): string {
   const url = new URL(baseUrl);
-  url.hash = '#/output-node';
-  url.searchParams.set('outputNode', '1');
+  url.hash = "#/output-node";
+  url.searchParams.set("outputNode", "1");
   return url.toString();
 }
 

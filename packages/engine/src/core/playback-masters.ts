@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowDocument, ShowSubmaster } from '../show/document';
+import type { ShowDocument, ShowSubmaster } from "../show/document";
 
 export function clampUnit(value: number): number {
   return Math.max(0, Math.min(1, value));
@@ -15,20 +15,17 @@ export function clampUnit(value: number): number {
 export function computeCuePlaybackIntensity(
   stateIntensity: number,
   playbackBusMaster: number,
-  cueSubmasterScale: number
+  cueSubmasterScale: number,
 ): number {
   return clampUnit(stateIntensity) * clampUnit(playbackBusMaster) * clampUnit(cueSubmasterScale);
 }
 
-export function resolveCueSubmasterScale(
-  show: ShowDocument,
-  cueId: string
-): number {
+export function resolveCueSubmasterScale(show: ShowDocument, cueId: string): number {
   const submasters = show.submasters ?? [];
   const linkedSubmasterIds = new Set<string>();
 
   for (const submaster of submasters) {
-    if ((submaster.mode ?? 'cue-intensity') !== 'cue-intensity') continue;
+    if ((submaster.mode ?? "cue-intensity") !== "cue-intensity") continue;
     if (submaster.targets?.includes(cueId)) {
       linkedSubmasterIds.add(submaster.id);
     }

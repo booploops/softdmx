@@ -6,8 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { BrowserWindow } from 'electron';
-import type { ActiveChannel } from '@softdmx/engine';
+import type { BrowserWindow } from "electron";
+import type { ActiveChannel } from "@softdmx/engine";
 
 let primaryWindow: BrowserWindow | null = null;
 let standbyActive = false;
@@ -25,7 +25,7 @@ export function markPrimaryHeartbeat(nowMs = Date.now()) {
 export function publishPrimaryState(channels: ActiveChannel[]) {
   lastPrimaryState = channels;
   if (!primaryWindow || primaryWindow.isDestroyed()) return;
-  primaryWindow.webContents.send('backup:state', { channels, at: Date.now() });
+  primaryWindow.webContents.send("backup:state", { channels, at: Date.now() });
 }
 
 export function isStandbyActive() {

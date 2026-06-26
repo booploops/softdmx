@@ -45,7 +45,7 @@ export function smpteToSeconds(parts: SmpteParts, fps = 30): number {
 
 export function formatSmpte(seconds: number, fps = 30): string {
   const parts = secondsToSmpte(seconds, fps);
-  const pad = (value: number) => String(value).padStart(2, '0');
+  const pad = (value: number) => String(value).padStart(2, "0");
   return `${pad(parts.hours)}:${pad(parts.minutes)}:${pad(parts.seconds)}:${pad(parts.frames)}`;
 }
 
@@ -56,24 +56,30 @@ export function formatTimelineSeconds(seconds: number): string {
   const minutes = Math.floor(whole / 60);
   const secs = whole % 60;
   if (minutes > 0) {
-    return `${minutes}:${String(secs).padStart(2, '0')}.${String(millis).padStart(3, '0')}`;
+    return `${minutes}:${String(secs).padStart(2, "0")}.${String(millis).padStart(3, "0")}`;
   }
-  return `${secs}.${String(millis).padStart(3, '0')}s`;
+  return `${secs}.${String(millis).padStart(3, "0")}s`;
 }
 
 export function parseSmpteInput(value: string, fps = 30): number | null {
   const trimmed = value.trim();
   if (!trimmed) return null;
 
-  const parts = trimmed.split(':').map((part) => Number(part.trim()));
+  const parts = trimmed.split(":").map((part) => Number(part.trim()));
   if (parts.some((part) => !Number.isFinite(part))) return null;
 
   if (parts.length === 1) return Math.max(0, parts[0] ?? 0);
   if (parts.length === 2) {
-    return smpteToSeconds({ hours: 0, minutes: parts[0] ?? 0, seconds: parts[1] ?? 0, frames: 0 }, fps);
+    return smpteToSeconds(
+      { hours: 0, minutes: parts[0] ?? 0, seconds: parts[1] ?? 0, frames: 0 },
+      fps,
+    );
   }
   if (parts.length === 3) {
-    return smpteToSeconds({ hours: 0, minutes: parts[0] ?? 0, seconds: parts[1] ?? 0, frames: parts[2] ?? 0 }, fps);
+    return smpteToSeconds(
+      { hours: 0, minutes: parts[0] ?? 0, seconds: parts[1] ?? 0, frames: parts[2] ?? 0 },
+      fps,
+    );
   }
 
   return smpteToSeconds(
@@ -83,7 +89,7 @@ export function parseSmpteInput(value: string, fps = 30): number | null {
       seconds: parts[2] ?? 0,
       frames: parts[3] ?? 0,
     },
-    fps
+    fps,
   );
 }
 

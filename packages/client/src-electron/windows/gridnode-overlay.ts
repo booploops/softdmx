@@ -6,8 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { BrowserWindow } from 'electron';
-import { AppState } from '../state/main';
+import type { BrowserWindow } from "electron";
+import { AppState } from "../state/main";
 
 let overlayVisible = false;
 let hasGridnodeDestination = false;

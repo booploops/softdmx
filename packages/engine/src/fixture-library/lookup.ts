@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { FixtureDefinition } from '../types/fixture';
+import type { FixtureDefinition } from "../types/fixture";
 
 let fixtureLookup: (id: string) => FixtureDefinition | undefined = () => undefined;
 

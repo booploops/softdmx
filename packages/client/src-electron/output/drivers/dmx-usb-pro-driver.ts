@@ -16,7 +16,7 @@ export class DmxUsbProDriver implements DmxOutputDriver {
   constructor(
     private config: {
       PortPath: string;
-    }
+    },
   ) {}
 
   async initialize(): Promise<void> {
@@ -39,7 +39,10 @@ export class DmxUsbProDriver implements DmxOutputDriver {
         this.port.open((openErr) => {
           this.isOpening = false;
           if (openErr) {
-            console.error(`DmxUsbProDriver: Failed to open SerialPort on ${this.config.PortPath}:`, openErr);
+            console.error(
+              `DmxUsbProDriver: Failed to open SerialPort on ${this.config.PortPath}:`,
+              openErr,
+            );
             reject(openErr);
           } else {
             console.log(`DmxUsbProDriver: Successfully opened port ${this.config.PortPath}`);
@@ -48,7 +51,10 @@ export class DmxUsbProDriver implements DmxOutputDriver {
         });
       } catch (err) {
         this.isOpening = false;
-        console.error(`DmxUsbProDriver: Failed to create SerialPort for ${this.config.PortPath}:`, err);
+        console.error(
+          `DmxUsbProDriver: Failed to create SerialPort for ${this.config.PortPath}:`,
+          err,
+        );
         reject(err);
       }
     });

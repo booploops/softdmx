@@ -6,16 +6,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import fastify from 'fastify';
-import { Server } from 'socket.io';
-import type { ShowDocument } from '@softdmx/engine';
-import { OutputManager } from '../output/output-manager';
-import { ConfigFile } from './app-settings';
+import fastify from "fastify";
+import { Server } from "socket.io";
+import type { ShowDocument } from "@softdmx/engine";
+import { OutputManager } from "../output/output-manager";
+import { ConfigFile } from "./app-settings";
 import {
   extractTokenFromSocketHandshake,
   getRequiredRemoteApiToken,
   isRemoteApiTokenAuthorized,
-} from './auth/remote-token';
+} from "./auth/remote-token";
 
 export interface RemoteContext {
   io: Server;
@@ -27,9 +27,9 @@ export interface RemoteContext {
 
 function getIOCors() {
   return {
-    origin: '*',
-    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-api-token'],
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "x-api-token"],
     credentials: true,
   };
 }
@@ -45,7 +45,7 @@ if (requiredRemoteToken) {
   io.use((socket, next) => {
     const token = extractTokenFromSocketHandshake(socket.handshake);
     if (!isRemoteApiTokenAuthorized(token, requiredRemoteToken)) {
-      next(new Error('Unauthorized'));
+      next(new Error("Unauthorized"));
       return;
     }
     next();

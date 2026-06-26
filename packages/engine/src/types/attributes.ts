@@ -6,9 +6,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-export type AttributeFeature = 'dimmer' | 'position' | 'color' | 'beam' | 'control' | 'shutter' | 'generic';
+export type AttributeFeature =
+  | "dimmer"
+  | "position"
+  | "color"
+  | "beam"
+  | "control"
+  | "shutter"
+  | "generic";
 
-export type AttributeMerge = 'htp' | 'ltp';
+export type AttributeMerge = "htp" | "ltp";
 
 export type AttributeId = string;
 
@@ -23,7 +30,7 @@ export interface FixtureModeDefinition {
   id: string;
   name: string;
   channelNames: string[];
-  channels?: import('../types/index.ts').FixtureChannelDefinition[];
+  channels?: import("../types/index.ts").FixtureChannelDefinition[];
 }
 
 export interface FixtureGdtfMeta {

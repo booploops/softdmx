@@ -19,9 +19,7 @@ export type ParsedMtcFrame = {
 
 const MTC_FRAME_RATES: MtcFrameRate[] = [24, 25, 29.97, 30];
 
-export function parseMtcQuarterFrame(
-  data: Uint8Array | number[],
-): number | null {
+export function parseMtcQuarterFrame(data: Uint8Array | number[]): number | null {
   if (!data || data.length < 2) return null;
   if (data[0] !== 0xf1) return null;
   const value = data[1];

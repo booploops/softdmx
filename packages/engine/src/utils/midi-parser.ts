@@ -7,14 +7,14 @@
  */
 
 export interface ParsedMidiMessage {
-  command: number;     // e.g. 0x90 (Note On), 0xB0 (Control Change)
-  channel: number;     // 1-16
-  control: number;     // Note number or CC number
-  value: number;       // Velocity or CC value (0-127)
+  command: number; // e.g. 0x90 (Note On), 0xB0 (Control Change)
+  channel: number; // 1-16
+  control: number; // Note number or CC number
+  value: number; // Velocity or CC value (0-127)
 }
 
 export interface ParsedMidiShowControl {
-  command: 'go' | 'stop' | 'cue';
+  command: "go" | "stop" | "cue";
   cueNumber?: string;
 }
 
@@ -37,7 +37,7 @@ export function parseMidiMessage(data: Uint8Array | number[]): ParsedMidiMessage
     command,
     channel,
     control,
-    value
+    value,
   };
 }
 
@@ -64,13 +64,13 @@ export function parseMidiShowControl(data: Uint8Array | number[]): ParsedMidiSho
   const cueNumber = parseAsciiCueNumber(bytes.slice(5));
 
   if (command === 0x01) {
-    return { command: 'go', cueNumber };
+    return { command: "go", cueNumber };
   }
   if (command === 0x02) {
-    return { command: 'stop', cueNumber };
+    return { command: "stop", cueNumber };
   }
   if (command === 0x06 || command === 0x07) {
-    return { command: 'cue', cueNumber };
+    return { command: "cue", cueNumber };
   }
 
   return null;

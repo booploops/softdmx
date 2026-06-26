@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ActiveChannel, ShowDocument } from '@softdmx/engine';
+import type { ActiveChannel, ShowDocument } from "@softdmx/engine";
 import { DmxOutputDriver } from "./drivers/dmx-output-driver";
 import { GridNodeDriver } from "./drivers/gridnode-driver";
 import { ArtNetDriver } from "./drivers/artnet-driver";
@@ -15,7 +15,11 @@ import { DmxUsbProDriver } from "./drivers/dmx-usb-pro-driver";
 import { ConfigFile } from "../server/app-settings";
 import { setHasGridnodeDestination } from "../windows/gridnode-overlay";
 import { getFixtureDefinitionFromDisk } from "../fixture-lookup";
-import { type UniverseHealthStatus, createInitialHealth, updateHealthAfterSend } from '@softdmx/engine';
+import {
+  type UniverseHealthStatus,
+  createInitialHealth,
+  updateHealthAfterSend,
+} from "@softdmx/engine";
 
 interface FixturePatch {
   destinationId: string;
@@ -36,7 +40,7 @@ export class OutputManager {
     this.initPromise = this.updateDestinations([]);
   }
 
-  async updateDestinations(destinations: ShowDocument['destinations']): Promise<void> {
+  async updateDestinations(destinations: ShowDocument["destinations"]): Promise<void> {
     for (const [id, driver] of this.drivers.entries()) {
       if (!destinations.some((d) => d.id === id)) {
         try {
@@ -100,10 +104,16 @@ export class OutputManager {
           dest.id,
           createInitialHealth(
             dest.id,
-            dest.type === 'artnet' ? 'artnet' : dest.type === 'sacn' ? 'sacn' : dest.type === 'dmx_usb' ? 'dmx_usb' : 'gridnode',
+            dest.type === "artnet"
+              ? "artnet"
+              : dest.type === "sacn"
+                ? "sacn"
+                : dest.type === "dmx_usb"
+                  ? "dmx_usb"
+                  : "gridnode",
             dest.settings.Universe ?? 0,
-            dest.role === 'standby' ? 'standby' : 'primary'
-          )
+            dest.role === "standby" ? "standby" : "primary",
+          ),
         );
         console.log(`OutputManager: Initialized driver for ${dest.id} (${dest.name})`);
       } catch (e) {
@@ -146,7 +156,10 @@ export class OutputManager {
       destinationIndices.set(destId, startChannel + def.channels.length);
     });
 
-    console.log("OutputManager: Re-calculated fixture patches:", Array.from(this.patches.entries()));
+    console.log(
+      "OutputManager: Re-calculated fixture patches:",
+      Array.from(this.patches.entries()),
+    );
   }
 
   handleChannelUpdate(channels: ActiveChannel[]): void {
@@ -195,10 +208,7 @@ export class OutputManager {
         const existing = this.healthByDestination.get(id);
         if (existing) {
           const nonZero = Array.from(buffer).filter((value) => value > 0).length;
-          this.healthByDestination.set(
-            id,
-            updateHealthAfterSend(existing, nonZero, overflow)
-          );
+          this.healthByDestination.set(id, updateHealthAfterSend(existing, nonZero, overflow));
         }
       }
     }

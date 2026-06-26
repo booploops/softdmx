@@ -10,4 +10,3 @@ export * from "./session-epoch.ts";
 export * from "./sync-compensation.ts";
 export * from "./timecode-format.ts";
 export * from "./video-defaults.ts";
-

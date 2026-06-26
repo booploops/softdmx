@@ -6,21 +6,21 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ActiveChannel } from './index';
-import type { PresetTarget } from '../show/document.ts';
+import type { ActiveChannel } from "./index";
+import type { PresetTarget } from "../show/document.ts";
 
 export type EasingType =
-  | 'linear'
-  | 'ease'
-  | 'ease-in'
-  | 'ease-out'
-  | 'ease-in-out'
-  | 'bounce'
-  | 'elastic';
+  | "linear"
+  | "ease"
+  | "ease-in"
+  | "ease-out"
+  | "ease-in-out"
+  | "bounce"
+  | "elastic";
 
 export interface RecordedFrame {
   name: string;
-  type: 'channels' | 'delay' | 'preset';
+  type: "channels" | "delay" | "preset";
   channels?: ActiveChannel[];
   presetId?: string;
   delayDuration?: number;
@@ -34,7 +34,7 @@ export interface CueLayer {
   frames: RecordedFrame[];
   enabled: boolean;
   opacity: number;
-  blendMode: 'replace' | 'add' | 'multiply' | 'screen';
+  blendMode: "replace" | "add" | "multiply" | "screen";
   solo: boolean;
 }
 
@@ -45,7 +45,7 @@ export interface StackStep {
   effectIds?: string[];
   fadeIn: number;
   fadeOut?: number;
-  follow: 'manual' | 'auto' | 'timed';
+  follow: "manual" | "auto" | "timed";
   followTime?: number;
 }
 
@@ -67,7 +67,7 @@ export interface Cue {
   description?: string;
   timecodeIn?: number;
   timecodeOut?: number;
-  view: 'timeline' | 'stack';
+  view: "timeline" | "stack";
   tracking?: boolean;
   block?: boolean;
   mib?: boolean;

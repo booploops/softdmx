@@ -16,14 +16,14 @@ export type ActiveChannel = {
 
 export type FixtureChannelDefinition = {
   name: string;
-  type: 'intensity' | 'color' | 'effect' | 'position' | (string & {});
+  type: "intensity" | "color" | "effect" | "position" | (string & {});
   minValue: number;
   maxValue: number;
   defaultValue: number;
   attributeId?: string;
   dmxOffset?: number;
   /** Continuous DMX slider (default) or discrete indexed slots (gobo, color wheel, etc.). */
-  controlMode?: 'dmx' | 'indexed';
+  controlMode?: "dmx" | "indexed";
   /** Number of discrete slots when controlMode is indexed. */
   indexedSlots?: number;
   /** Optional labels for each slot (length must match indexedSlots). */
@@ -31,10 +31,10 @@ export type FixtureChannelDefinition = {
   reference?: ActiveChannel;
 };
 
-export type FixtureSource = 'yaml' | 'gdtf';
+export type FixtureSource = "yaml" | "gdtf";
 
 export type WidgetConfiguration = {
-  type: 'lightMover' | 'colorPicker' | 'dimmerSlider' | 'strobe' | 'indexedSelect' | (string & {});
+  type: "lightMover" | "colorPicker" | "dimmerSlider" | "strobe" | "indexedSelect" | (string & {});
   name: string;
   channels: {
     [key: string]: string;
@@ -46,11 +46,11 @@ export type FixtureDefinition = {
   name: string;
   channels: FixtureChannelDefinition[];
   widgets?: WidgetConfiguration[];
-  attributes?: import('./attributes.ts').AttributeDefinition[];
-  modes?: import('./attributes.ts').FixtureModeDefinition[];
+  attributes?: import("./attributes.ts").AttributeDefinition[];
+  modes?: import("./attributes.ts").FixtureModeDefinition[];
   defaultModeId?: string;
   source?: FixtureSource;
-  gdtfMeta?: import('./attributes.ts').FixtureGdtfMeta;
+  gdtfMeta?: import("./attributes.ts").FixtureGdtfMeta;
 };
 
 export type FixtureChannelWithReference = FixtureChannelDefinition & {

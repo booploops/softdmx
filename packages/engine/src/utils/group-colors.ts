@@ -6,25 +6,25 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowGroup } from '../show/document';
+import type { ShowGroup } from "../show/document";
 
 export const GROUP_COLOR_PALETTE = [
-  '#e53935',
-  '#1e88e5',
-  '#43a047',
-  '#fb8c00',
-  '#8e24aa',
-  '#00acc1',
-  '#fdd835',
-  '#d81b60',
-  '#6d4c41',
-  '#546e7a',
+  "#e53935",
+  "#1e88e5",
+  "#43a047",
+  "#fb8c00",
+  "#8e24aa",
+  "#00acc1",
+  "#fdd835",
+  "#d81b60",
+  "#6d4c41",
+  "#546e7a",
 ] as const;
 
 const HEX_COLOR_PATTERN = /^#([0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 
 export function isValidGroupColor(color: string | undefined): color is string {
-  return typeof color === 'string' && HEX_COLOR_PATTERN.test(color.trim());
+  return typeof color === "string" && HEX_COLOR_PATTERN.test(color.trim());
 }
 
 export function normalizeGroupColor(color: string | undefined): string | undefined {
@@ -35,10 +35,10 @@ export function normalizeGroupColor(color: string | undefined): string | undefin
 
 export function defaultGroupColorForIndex(index: number): string {
   const palette = GROUP_COLOR_PALETTE;
-  return palette[index % palette.length] ?? palette[0] ?? '#1e88e5';
+  return palette[index % palette.length] ?? palette[0] ?? "#1e88e5";
 }
 
-export function resolveGroupColor(group: Pick<ShowGroup, 'color'>, index: number): string {
+export function resolveGroupColor(group: Pick<ShowGroup, "color">, index: number): string {
   return normalizeGroupColor(group.color) ?? defaultGroupColorForIndex(index);
 }
 
@@ -64,5 +64,5 @@ export function buildFixtureGroupLookup(groups: ShowGroup[]): Map<string, Fixtur
 
 export function groupColorStyle(color: string | undefined): Record<string, string> | undefined {
   if (!color) return undefined;
-  return { '--fixture-group-color': color };
+  return { "--fixture-group-color": color };
 }

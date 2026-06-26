@@ -6,9 +6,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { PixelMapDefinition, VideoSampleRegion } from '../show/document';
-import type { PixelColor } from './pixel-mapper.ts';
-import { FULL_VIDEO_SAMPLE_REGION } from '../utils/video-defaults.ts';
+import type { PixelMapDefinition, VideoSampleRegion } from "../show/document";
+import type { PixelColor } from "./pixel-mapper.ts";
+import { FULL_VIDEO_SAMPLE_REGION } from "../utils/video-defaults.ts";
 
 export interface RgbaFrame {
   width: number;
@@ -24,11 +24,11 @@ export function resolveSampleRegion(map: PixelMapDefinition): VideoSampleRegion 
 export function sampleFrameToPixelGrid(
   frame: RgbaFrame,
   map: PixelMapDefinition,
-  flipY = false
+  flipY = false,
 ): PixelColor[][] {
   const region = resolveSampleRegion(map);
   const grid: PixelColor[][] = Array.from({ length: map.height }, () =>
-    Array.from({ length: map.width }, () => ({ r: 0, g: 0, b: 0 }))
+    Array.from({ length: map.width }, () => ({ r: 0, g: 0, b: 0 })),
   );
 
   for (let py = 0; py < map.height; py += 1) {
@@ -54,10 +54,10 @@ export function sampleFrameToPixelGrid(
 export function sampleRgbGridBuffer(
   rgb: Uint8Array,
   mapWidth: number,
-  mapHeight: number
+  mapHeight: number,
 ): PixelColor[][] {
   const grid: PixelColor[][] = Array.from({ length: mapHeight }, () =>
-    Array.from({ length: mapWidth }, () => ({ r: 0, g: 0, b: 0 }))
+    Array.from({ length: mapWidth }, () => ({ r: 0, g: 0, b: 0 })),
   );
 
   for (let y = 0; y < mapHeight; y += 1) {
@@ -75,7 +75,7 @@ export function sampleRgbGridBuffer(
 }
 
 export function readCanvasFrame(canvas: HTMLCanvasElement): RgbaFrame | null {
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) return null;
   const { width, height } = canvas;
   if (width <= 0 || height <= 0) return null;
@@ -92,9 +92,9 @@ export function drawVideoToMapCanvas(
   map: PixelMapDefinition,
   sourceWidth: number,
   sourceHeight: number,
-  flipY = false
+  flipY = false,
 ): RgbaFrame | null {
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  const ctx = canvas.getContext("2d", { willReadFrequently: true });
   if (!ctx) return null;
 
   canvas.width = map.width;

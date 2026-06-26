@@ -11,7 +11,7 @@ import type {
   VideoInputKind,
   VideoSampleFps,
   VideoSampleRegion,
-} from '../show/document';
+} from "../show/document";
 
 export const FULL_VIDEO_SAMPLE_REGION: VideoSampleRegion = {
   x: 0,
@@ -24,7 +24,7 @@ export function createDefaultVideoConfig(): ShowVideoConfig {
   return {
     enabled: false,
     pixelMapIds: [],
-    inputKind: 'none',
+    inputKind: "none",
     deviceId: null,
     senderName: null,
     gain: 1,
@@ -36,11 +36,13 @@ export function createDefaultVideoConfig(): ShowVideoConfig {
 }
 
 export function normalizeVideoInputKind(value: unknown): VideoInputKind {
-  if (value === 'webcam' || value === 'syphon' || value === 'spout') return value;
-  return 'none';
+  if (value === "webcam" || value === "syphon" || value === "spout") return value;
+  return "none";
 }
 
-export function normalizeSampleRegion(value: Partial<VideoSampleRegion> | undefined): VideoSampleRegion {
+export function normalizeSampleRegion(
+  value: Partial<VideoSampleRegion> | undefined,
+): VideoSampleRegion {
   const x = clamp01(value?.x ?? 0);
   const y = clamp01(value?.y ?? 0);
   const width = clamp01(value?.width ?? 1);
@@ -59,9 +61,9 @@ export function normalizeVideoFps(value: unknown): VideoSampleFps {
 export function resolveVideoPixelMapIds(video: ShowVideoConfig | undefined): string[] {
   if (!video) return [];
   if (Array.isArray(video.pixelMapIds)) {
-    return video.pixelMapIds.filter((id): id is string => typeof id === 'string' && id.length > 0);
+    return video.pixelMapIds.filter((id): id is string => typeof id === "string" && id.length > 0);
   }
-  if (typeof video.pixelMapId === 'string' && video.pixelMapId.length > 0) {
+  if (typeof video.pixelMapId === "string" && video.pixelMapId.length > 0) {
     return [video.pixelMapId];
   }
   return [];
@@ -69,12 +71,12 @@ export function resolveVideoPixelMapIds(video: ShowVideoConfig | undefined): str
 
 export function resolvePixelMapVideoGain(
   map: { videoGain?: number },
-  video?: ShowVideoConfig
+  video?: ShowVideoConfig,
 ): number {
-  if (typeof map.videoGain === 'number' && Number.isFinite(map.videoGain)) {
+  if (typeof map.videoGain === "number" && Number.isFinite(map.videoGain)) {
     return Math.max(0, Math.min(2, map.videoGain));
   }
-  if (typeof video?.gain === 'number' && Number.isFinite(video.gain)) {
+  if (typeof video?.gain === "number" && Number.isFinite(video.gain)) {
     return Math.max(0, Math.min(2, video.gain));
   }
   return 1;
@@ -82,12 +84,12 @@ export function resolvePixelMapVideoGain(
 
 export function resolvePixelMapVideoSmoothingMs(
   map: { videoSmoothingMs?: number },
-  video?: ShowVideoConfig
+  video?: ShowVideoConfig,
 ): number {
-  if (typeof map.videoSmoothingMs === 'number' && Number.isFinite(map.videoSmoothingMs)) {
+  if (typeof map.videoSmoothingMs === "number" && Number.isFinite(map.videoSmoothingMs)) {
     return Math.max(0, map.videoSmoothingMs);
   }
-  if (typeof video?.smoothingMs === 'number' && Number.isFinite(video.smoothingMs)) {
+  if (typeof video?.smoothingMs === "number" && Number.isFinite(video.smoothingMs)) {
     return Math.max(0, video.smoothingMs);
   }
   return 80;

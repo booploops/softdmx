@@ -6,13 +6,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ShowAudioMapping, ShowDocument } from '../show/document.ts';
+import type { ShowAudioMapping, ShowDocument } from "../show/document.ts";
 import {
   LC_LatrixLasers,
   VRSL_Light5CH,
   VRSL_Spotlight,
-} from '../fixture-library/builtin/fixtures.ts';
-import { clampDmx } from './types.ts';
+} from "../fixture-library/builtin/fixtures.ts";
+import { clampDmx } from "./types.ts";
 
 type MappingTarget = {
   path: string;
@@ -50,13 +50,13 @@ function clamp01(value: number): number {
 
 function getSourceValue(mapping: ShowAudioMapping, levels: AudioSnapshot): number {
   switch (mapping.source) {
-    case 'rms':
+    case "rms":
       return clamp01(levels.rms);
-    case 'peak':
+    case "peak":
       return clamp01(levels.peak);
-    case 'beat':
+    case "beat":
       return levels.beatPulse ? 1 : 0;
-    case 'band': {
+    case "band": {
       const index = mapping.bandIndex ?? 0;
       if (index < 0 || index > 3) return 0;
       return clamp01(levels.bands[index] ?? 0);
@@ -68,7 +68,7 @@ function smoothValue(
   mapping: ShowAudioMapping,
   targetValue: number,
   nowMs: number,
-  state: AudioMappingEvalState
+  state: AudioMappingEvalState,
 ): number {
   const prev = state.smoothedById.get(mapping.id);
   if (prev === undefined) {
@@ -92,7 +92,7 @@ function smoothValue(
 function resolveFixtureTarget(
   show: ShowDocument,
   fixtureName: string,
-  attribute: string
+  attribute: string,
 ): MappingTarget[] {
   const fixture = show.fixtures.find((f) => f.name === fixtureName);
   if (!fixture) return [];
@@ -102,21 +102,23 @@ function resolveFixtureTarget(
   const channelIndex = definition.channels.findIndex((channel) => channel.name === attribute);
   if (channelIndex === -1) return [];
 
-  return [{
-    path: `show://${fixtureName}/${channelIndex + 1}`,
-    attributeType: definition.channels[channelIndex]?.type ?? 'generic',
-  }];
+  return [
+    {
+      path: `show://${fixtureName}/${channelIndex + 1}`,
+      attributeType: definition.channels[channelIndex]?.type ?? "generic",
+    },
+  ];
 }
 
 function resolveMappingTargets(show: ShowDocument, mapping: ShowAudioMapping): MappingTarget[] {
   const attribute = mapping.attribute;
   if (!attribute) return [];
 
-  if (mapping.targetType === 'fixture') {
+  if (mapping.targetType === "fixture") {
     return resolveFixtureTarget(show, mapping.targetId, attribute);
   }
 
-  if (mapping.targetType === 'group') {
+  if (mapping.targetType === "group") {
     const group = show.groups.find((entry) => entry.name === mapping.targetId);
     if (!group) return [];
 
@@ -136,7 +138,7 @@ export function evaluateAudioMappings(
   show: ShowDocument,
   levels: AudioSnapshot,
   state: AudioMappingEvalState,
-  nowMs = Date.now()
+  nowMs = Date.now(),
 ): Map<string, number> {
   const results = new Map<string, number>();
   const activeMappingIds = new Set<string>();
@@ -152,7 +154,9 @@ export function evaluateAudioMappings(
 
     activeMappingIds.add(mapping.id);
     const source = getSourceValue(mapping, levels);
-    const transformed = clamp01(((mapping.invert ? 1 - source : source) * (mapping.gain ?? 1)) + (mapping.offset ?? 0));
+    const transformed = clamp01(
+      (mapping.invert ? 1 - source : source) * (mapping.gain ?? 1) + (mapping.offset ?? 0),
+    );
     const min = clampDmx(mapping.min ?? 0);
     const max = clampDmx(mapping.max ?? 255);
     const targetValue = clampDmx(min + transformed * (max - min));

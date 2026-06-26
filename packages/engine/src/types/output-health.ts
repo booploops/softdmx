@@ -8,7 +8,7 @@
 
 export interface UniverseHealthStatus {
   destinationId: string;
-  protocol: 'artnet' | 'sacn' | 'dmx_usb' | 'gridnode';
+  protocol: "artnet" | "sacn" | "dmx_usb" | "gridnode";
   universe: number;
   online: boolean;
   lastSendMs: number;
@@ -16,5 +16,5 @@ export interface UniverseHealthStatus {
   channelCount: number;
   overflow: boolean;
   errors: string[];
-  role?: 'primary' | 'standby';
+  role?: "primary" | "standby";
 }
