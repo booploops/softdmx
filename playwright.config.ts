@@ -11,7 +11,7 @@ import { defineConfig } from '@playwright/test';
 const electronE2eEnabled = process.env.SOFTDMX_E2E === '1';
 
 export default defineConfig({
-  testDir: 'packages/frontend/test/e2e/electron',
+  testDir: 'packages/tests/src/e2e/electron',
   timeout: 120_000,
   retries: electronE2eEnabled ? 1 : 0,
   reporter: [['list']],
