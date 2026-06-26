@@ -10,7 +10,7 @@ import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import type { ProgramSection, SetupSection, WorkspaceMode } from 'src/desk/workspace-modes';
 
-export type AppDialog = 'cueEditor' | 'settings' | 'interface' | 'theme' | 'audio' | 'bindings';
+export type AppDialog = 'cueEditor';
 
 const OPERATE_LOCKED_KEY = 'softdmx-operate-locked';
 
@@ -32,11 +32,6 @@ export const useUIStore = defineStore('ui', () => {
   const cueBarCollapsed = ref(false);
   const dialogs = ref<Record<AppDialog, boolean>>({
     cueEditor: false,
-    settings: false,
-    interface: false,
-    theme: false,
-    audio: false,
-    bindings: false,
   });
 
   const isLive = computed(() => mode.value === 'live');

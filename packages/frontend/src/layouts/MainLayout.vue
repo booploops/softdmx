@@ -44,14 +44,12 @@
       <router-view />
     </q-page-container>
 
-    <AppDialogs />
     <ShowStartupDialog />
   </q-layout>
 </template>
 
 <script setup lang="ts">
 import AppSidebarMenu from 'src/components/AppSidebarMenu.vue';
-import AppDialogs from 'src/components/AppDialogs.vue';
 import ShowStartupDialog from 'src/components/ShowStartupDialog.vue';
 import { useUIStore } from 'src/stores/ui';
 import { useQuasar } from 'quasar';

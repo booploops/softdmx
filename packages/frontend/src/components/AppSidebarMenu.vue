@@ -11,6 +11,13 @@ import { useShowStore } from 'src/stores/show';
 import { useUIStore } from 'src/stores/ui';
 import { useGridNodeOverlayStore } from 'src/stores/gridnode-overlay';
 import {
+  showSettingsDialog,
+  showInterfaceSettingsDialog,
+  showThemeSettingsDialog,
+  showAudioSettingsDialog,
+  showBindingsDialog,
+} from 'src/lib/CommonDialogs';
+import {
   QUICK_ACCESS_WORKSPACE_MODES,
   SETUP_SECTION_META,
   PROGRAM_SECTION_META,
@@ -82,8 +89,34 @@ function importShow() {
   ui.toggleLeftDrawer(false);
 }
 
-function openDialog(name: 'cueEditor' | 'settings' | 'interface' | 'theme' | 'audio' | 'bindings') {
-  ui.openDialog(name);
+function openCueEditor() {
+  ui.openDialog('cueEditor');
+  ui.toggleLeftDrawer(false);
+}
+
+function handleShowSettingsDialog() {
+  ui.toggleLeftDrawer(false);
+  showSettingsDialog();
+}
+
+function handleShowInterfaceSettingsDialog() {
+  ui.toggleLeftDrawer(false);
+  showInterfaceSettingsDialog();
+}
+
+function handleShowThemeSettingsDialog() {
+  ui.toggleLeftDrawer(false);
+  showThemeSettingsDialog();
+}
+
+function handleShowAudioSettingsDialog() {
+  ui.toggleLeftDrawer(false);
+  showAudioSettingsDialog();
+}
+
+function handleShowBindingsDialog() {
+  ui.toggleLeftDrawer(false);
+  showBindingsDialog();
 }
 </script>
 
@@ -159,22 +192,22 @@ function openDialog(name: 'cueEditor' | 'settings' | 'interface' | 'theme' | 'au
 
       <q-separator spaced />
       <q-item-label header>Tools</q-item-label>
-      <q-item clickable @click="openDialog('cueEditor')">
+      <q-item clickable @click="openCueEditor">
         <q-item-section avatar><q-icon name="movie_edit" /></q-item-section>
         <q-item-section>Cue editor</q-item-section>
       </q-item>
-      <q-item clickable @click="openDialog('bindings')">
+      <q-item clickable @click="handleShowBindingsDialog">
         <q-item-section avatar><q-icon name="tune" /></q-item-section>
         <q-item-section>Bindings</q-item-section>
       </q-item>
-      <q-item clickable @click="openDialog('audio')">
+      <q-item clickable @click="handleShowAudioSettingsDialog">
         <q-item-section avatar><q-icon name="graphic_eq" /></q-item-section>
         <q-item-section>Audio analysis</q-item-section>
       </q-item>
 
       <q-separator spaced />
       <q-item-label header>Output</q-item-label>
-      <q-item clickable @click="openDialog('settings')">
+      <q-item clickable @click="handleShowSettingsDialog">
         <q-item-section avatar><q-icon name="settings_input_component" /></q-item-section>
         <q-item-section>Output &amp; sync</q-item-section>
       </q-item>
@@ -194,11 +227,11 @@ function openDialog(name: 'cueEditor' | 'settings' | 'interface' | 'theme' | 'au
 
       <q-separator spaced />
       <q-item-label header>Settings</q-item-label>
-      <q-item clickable @click="openDialog('interface')">
+      <q-item clickable @click="handleShowInterfaceSettingsDialog">
         <q-item-section avatar><q-icon name="dashboard_customize" /></q-item-section>
         <q-item-section>Interface</q-item-section>
       </q-item>
-      <q-item clickable @click="openDialog('theme')">
+      <q-item clickable @click="handleShowThemeSettingsDialog">
         <q-item-section avatar><q-icon name="palette" /></q-item-section>
         <q-item-section>Theme</q-item-section>
       </q-item>

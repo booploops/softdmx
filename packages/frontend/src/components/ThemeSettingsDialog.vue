@@ -6,12 +6,17 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { Dialog } from 'quasar';
+import { Dialog, useDialogPluginComponent } from 'quasar';
 import { useThemeStore } from 'src/stores/theme';
 import { THEME_CSS_VAR_KEYS } from 'src/themes/css-vars';
 
 const themeStore = useThemeStore();
-const emit = defineEmits(['close']);
+
+defineEmits([
+  ...useDialogPluginComponent.emits
+]);
+
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const themeOptions = computed(() =>
   themeStore.availableThemes.map((theme) => ({
@@ -96,15 +101,16 @@ function resetTheme() {
 </script>
 
 <template>
-  <q-card class="sdmx-dialog-card theme-dialog">
-    <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
-      <div>
-        <div class="text-h6 font-weight-bold">Theme</div>
-        <div class="text-caption sdmx-text-muted">Presets, token overrides, and custom CSS</div>
-      </div>
-      <q-space />
-      <q-btn icon="close" flat round dense v-close-popup @click="emit('close')" />
-    </q-card-section>
+  <q-dialog ref="dialogRef" @hide="onDialogHide">
+    <q-card class="sdmx-dialog-card theme-dialog q-dialog-plugin">
+      <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
+        <div>
+          <div class="text-h6 font-weight-bold">Theme</div>
+          <div class="text-caption sdmx-text-muted">Presets, token overrides, and custom CSS</div>
+        </div>
+        <q-space />
+        <q-btn icon="close" flat round dense @click="onDialogCancel" />
+      </q-card-section>
 
     <q-card-section class="q-gutter-y-md dialog-body">
       <q-select
@@ -172,10 +178,11 @@ function resetTheme() {
       </div>
     </q-card-section>
 
-    <q-card-actions align="right" class="q-pa-md sdmx-border-top">
-      <q-btn label="Close" flat color="grey-5" v-close-popup @click="emit('close')" />
-    </q-card-actions>
-  </q-card>
+      <q-card-actions align="right" class="q-pa-md sdmx-border-top">
+        <q-btn label="Close" flat color="grey-5" @click="onDialogOK" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <style scoped>

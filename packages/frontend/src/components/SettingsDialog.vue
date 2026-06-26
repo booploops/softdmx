@@ -7,6 +7,7 @@
 -->
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
+import { useDialogPluginComponent } from 'quasar';
 import { useIOClient } from 'src/lib/io-client';
 import { useShowStore } from 'src/stores/show';
 import { useAudioStore } from 'src/stores/audio';
@@ -71,7 +72,11 @@ const audioDeviceOptions = computed(() =>
   }))
 );
 
-const emit = defineEmits(['close']);
+defineEmits([
+  ...useDialogPluginComponent.emits
+]);
+
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 function loadTimecodeSettings() {
   const tc = showStore.document.timecode;
@@ -217,17 +222,18 @@ function saveSettings() {
     };
   });
   socket.emit('show:state', showStore.document);
-  emit('close');
+  onDialogOK();
 }
 </script>
 
 <template>
-  <q-card class="sdmx-dialog-card settings-card">
-    <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
-      <div class="text-h6 font-weight-bold">Output &amp; Sync</div>
-      <q-space />
-      <q-btn icon="close" flat round dense v-close-popup @click="emit('close')" />
-    </q-card-section>
+  <q-dialog ref="dialogRef" @hide="onDialogHide">
+    <q-card class="sdmx-dialog-card settings-card q-dialog-plugin">
+      <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
+        <div class="text-h6 font-weight-bold">Output &amp; Sync</div>
+        <q-space />
+        <q-btn icon="close" flat round dense @click="onDialogCancel" />
+      </q-card-section>
 
     <q-card-section class="row q-col-gutter-md q-pt-md settings-body">
       <div class="col-4 sdmx-border-right destinations-column">
@@ -527,11 +533,12 @@ function saveSettings() {
       </div>
     </q-card-section>
 
-    <q-card-actions align="right" class="q-pa-md sdmx-border-top">
-      <q-btn label="Cancel" flat color="grey-5" v-close-popup @click="emit('close')" />
-      <q-btn label="Save" color="primary" class="q-px-md" @click="saveSettings" />
-    </q-card-actions>
-  </q-card>
+      <q-card-actions align="right" class="q-pa-md sdmx-border-top">
+        <q-btn label="Cancel" flat color="grey-5" @click="onDialogCancel" />
+        <q-btn label="Save" color="primary" class="q-px-md" @click="saveSettings" />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <style scoped>

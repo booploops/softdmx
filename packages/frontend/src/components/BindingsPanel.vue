@@ -7,12 +7,17 @@
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useDialogPluginComponent } from 'quasar';
 import { useShowStore } from 'src/stores/show';
 import { useMidiStore } from 'src/stores/midi';
 import { useOscStore } from 'src/stores/osc';
 import type { BindingTarget, BindingTargetType, MidiMapping, OscMapping } from '@softdmx/engine';
 
-const emit = defineEmits(['close']);
+defineEmits([
+  ...useDialogPluginComponent.emits
+]);
+
+const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
 
 const showStore = useShowStore();
 const midiStore = useMidiStore();
@@ -124,12 +129,12 @@ function saveBindings() {
     doc.bindings.midi = cloneMidi(midiMappings.value);
     doc.bindings.osc = cloneOsc(oscMappings.value);
   });
-  emit('close');
+  onDialogOK();
 }
 
 function cancel() {
   stopLearning();
-  emit('close');
+  onDialogCancel();
 }
 
 function targetSummary(target: BindingTarget): string {
@@ -153,9 +158,10 @@ function targetSummary(target: BindingTarget): string {
 </script>
 
 <template>
-  <q-card class="sdmx-dialog-card bindings-card">
-    <q-card-section class="row items-center q-pb-sm sdmx-border-bottom">
-      <div class="text-h6">MIDI / OSC Bindings</div>
+  <q-dialog ref="dialogRef" @hide="onDialogHide">
+    <q-card class="sdmx-dialog-card bindings-card q-dialog-plugin">
+      <q-card-section class="row items-center q-pb-sm sdmx-border-bottom">
+        <div class="text-h6">MIDI / OSC Bindings</div>
       <q-space />
       <q-chip v-if="currentLearningLabel" dense color="orange-8" text-color="white">
         {{ currentLearningLabel }}
@@ -356,14 +362,15 @@ function targetSummary(target: BindingTarget): string {
       </q-tab-panels>
     </q-card-section>
 
-    <q-card-actions align="between" class="q-px-md q-pb-md">
-      <q-btn flat color="orange-4" label="Stop Learn" @click="stopLearning" />
-      <div class="row q-gutter-sm">
-        <q-btn flat color="grey-5" label="Cancel" @click="cancel" />
-        <q-btn color="primary" label="Save Bindings" @click="saveBindings" />
-      </div>
-    </q-card-actions>
-  </q-card>
+      <q-card-actions align="between" class="q-px-md q-pb-md">
+        <q-btn flat color="orange-4" label="Stop Learn" @click="stopLearning" />
+        <div class="row q-gutter-sm">
+          <q-btn flat color="grey-5" label="Cancel" @click="cancel" />
+          <q-btn color="primary" label="Save Bindings" @click="saveBindings" />
+        </div>
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
 
 <style scoped>
