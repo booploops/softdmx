@@ -6,6 +6,9 @@
   "license": "MPL-2.0",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
+  "scripts": {
+    "type-check": "tsgo"
+  },
   "exports": {
     ".": {
       "types": "./src/index.ts",
@@ -19,6 +22,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.0",
+    "@typescript/native-preview": "^7.0.0-dev.20260622.1",
     "alien-signals": "^3.2.1",
     "typescript": "~6.0.3"
   }

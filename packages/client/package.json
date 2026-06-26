@@ -11,7 +11,8 @@
     "build": "rolldown -c rolldown.config.js",
     "dist": "electron-builder --config electron-builder.config.js",
     "postinstall": "node scripts/run-postinstall.mjs",
-    "rebuild:native": "node scripts/run-postinstall.mjs"
+    "rebuild:native": "node scripts/run-postinstall.mjs",
+    "type-check": "tsgo"
   },
   "dependenciesMeta": {
     "abletonlink": {
@@ -40,6 +41,7 @@
     "@electron/rebuild": "^4.0.4",
     "@softdmx/frontend": "workspace:*",
     "@types/node": "^22.15.0",
+    "@typescript/native-preview": "^7.0.0-dev.20260622.1",
     "electron": "40.10.4",
     "electron-builder": "^26.15.5",
     "rolldown": "^1.1.1",
