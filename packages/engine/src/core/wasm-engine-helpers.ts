@@ -32,9 +32,9 @@ export async function initWasmEngine(): Promise<SoftDmxWasmExports | null> {
     const pathName = "node:path";
     const urlName = "node:url";
 
-    const fs = (await import(fsName)) as typeof import("node:fs");
-    const path = (await import(pathName)) as typeof import("node:path");
-    const { fileURLToPath } = (await import(urlName)) as typeof import("node:url");
+    const fs = (await import(/* @vite-ignore */ fsName)) as typeof import("node:fs");
+    const path = (await import(/* @vite-ignore */ pathName)) as typeof import("node:path");
+    const { fileURLToPath } = (await import(/* @vite-ignore */ urlName)) as typeof import("node:url");
 
     const currentDir = path.dirname(fileURLToPath(import.meta.url));
     const wasmPath = path.resolve(currentDir, "../../../wasm/dist/softdmx.wasm");
