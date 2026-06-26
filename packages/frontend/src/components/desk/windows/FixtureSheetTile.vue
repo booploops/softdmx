@@ -10,56 +10,20 @@ import type { ShowfileFixtureMapped } from '@softdmx/engine';
 import { useSelectionStore } from 'src/stores/selection';
 import { useGroupColors } from 'src/composables/useGroupColors';
 import { groupColorStyle } from '@softdmx/engine';
-import { useChannelControl } from 'src/composables/useChannelControl';
-import { SdmxValueField } from 'src/components/ui';
 
 const props = defineProps<{
   fixture: ShowfileFixtureMapped;
-  intensity: number;
 }>();
 
 const selection = useSelectionStore();
 const { fixtureGroup } = useGroupColors();
-const { setChannel } = useChannelControl();
 
 const isSelected = computed(() => selection.isFixtureSelected(props.fixture.fixtureName));
 const groupInfo = computed(() => fixtureGroup(props.fixture.fixtureName));
 const cardStyle = computed(() => groupColorStyle(groupInfo.value?.color));
 
-const dimmerPath = computed(() => {
-  const ch = props.fixture.def.channels.find(
-    (c) => c.type === 'intensity' || c.name.toLowerCase().includes('dimmer')
-  );
-  return ch?.reference.path;
-});
-
-const outputStyle = computed(() => ({
-  opacity: Math.max(0.08, props.intensity / 255),
-  background: groupInfo.value?.color ?? 'var(--sdmx-color-text)',
-}));
-
 function toggleSelection() {
   selection.toggleFixture(props.fixture.fixtureName);
-}
-
-function onOutputPointerDown(event: PointerEvent) {
-  if (!dimmerPath.value) return;
-  event.preventDefault();
-  const el = event.currentTarget as HTMLElement;
-  const update = (clientY: number) => {
-    const rect = el.getBoundingClientRect();
-    const ratio = 1 - (clientY - rect.top) / rect.height;
-    const value = Math.round(Math.max(0, Math.min(1, ratio)) * 255);
-    setChannel(dimmerPath.value!, value);
-  };
-  update(event.clientY);
-  const onMove = (e: PointerEvent) => update(e.clientY);
-  const onUp = () => {
-    window.removeEventListener('pointermove', onMove);
-    window.removeEventListener('pointerup', onUp);
-  };
-  window.addEventListener('pointermove', onMove);
-  window.addEventListener('pointerup', onUp);
 }
 </script>
 
@@ -69,10 +33,11 @@ function onOutputPointerDown(event: PointerEvent) {
     :class="{
       selected: isSelected,
       'has-group': !!groupInfo,
-      'sdmx-widget--active': intensity > 0,
     }"
     :style="cardStyle"
     :data-sdmx-info="`Fixture ${fixture.fixtureName}`"
+    role="button"
+    :aria-pressed="isSelected"
     tabindex="0"
     @click="toggleSelection"
     @keydown.enter="toggleSelection"
@@ -80,19 +45,42 @@ function onOutputPointerDown(event: PointerEvent) {
   >
     <div class="fixture-sheet-tile__header">
       <span class="sdmx-text-label ellipsis">{{ fixture.fixtureName }}</span>
-      <q-icon v-if="isSelected" name="check_circle" size="xs" color="primary" />
+      <q-icon
+        :name="isSelected ? 'check_circle' : 'radio_button_unchecked'"
+        size="xs"
+        :class="isSelected ? 'fixture-sheet-tile__state--selected' : 'fixture-sheet-tile__state'"
+      />
     </div>
-    <div class="fixture-sheet-output" :style="outputStyle" @pointerdown.stop="onOutputPointerDown" />
-    <SdmxValueField :value="intensity" size="sm" />
+    <div class="fixture-sheet-tile__meta ellipsis">{{ fixture.def.name }}</div>
   </div>
 </template>
 
 <style scoped>
+.fixture-sheet-tile {
+  display: grid;
+  gap: var(--sdmx-space-2xs);
+  text-align: left;
+}
+
 .fixture-sheet-tile__header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--sdmx-space-xs);
   min-width: 0;
+}
+
+.fixture-sheet-tile__meta {
+  font-size: var(--sdmx-font-size-caption);
+  color: var(--sdmx-color-text-muted);
+}
+
+.fixture-sheet-tile__state {
+  color: var(--sdmx-color-text-muted);
+}
+
+.fixture-sheet-tile__state--selected {
+  color: var(--sdmx-color-primary);
 }
 
 .ellipsis {

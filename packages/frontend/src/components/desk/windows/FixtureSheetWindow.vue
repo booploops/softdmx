@@ -12,17 +12,6 @@ import { useDMXStore } from 'src/stores/dmx';
 const dmx = useDMXStore();
 
 const fixtures = computed(() => dmx.showfileFixturesMapped);
-
-function intensityForFixture(fixtureName: string): number {
-  const fixture = fixtures.value.find((f) => f.fixtureName === fixtureName);
-  if (!fixture) return 0;
-  const dimmerCh = fixture.def.channels.find(
-    (c) => c.type === 'intensity' || c.name.toLowerCase().includes('dimmer')
-  );
-  if (!dimmerCh?.reference.path) return 0;
-  const live = dmx.channels.find((ch) => ch.path === dimmerCh.reference.path);
-  return live?.value ?? 0;
-}
 </script>
 
 <template>
@@ -32,13 +21,12 @@ function intensityForFixture(fixtureName: string): number {
         v-for="fixture in fixtures"
         :key="fixture.fixtureName"
         :fixture="fixture"
-        :intensity="intensityForFixture(fixture.fixtureName)"
       />
     </div>
     <div v-else class="tab-empty-state q-pa-lg text-center text-grey-5">
       <q-icon name="lightbulb_outline" size="3rem" />
       <div class="q-mt-sm">No fixtures patched</div>
-      <div class="text-caption">Open Setup → Patch to add fixtures.</div>
+      <div class="text-caption">Open Setup → Patch to add fixtures to select here.</div>
     </div>
   </div>
 </template>
