@@ -6,6 +6,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import { getRuntimeOptimizationFlags } from 'src/config/runtime-optimization-flags';
+import WaveformPeaksWorker from 'src/workers/waveform-peaks.worker.ts?worker';
+
 const DB_NAME = 'softdmx-timeline-audio';
 const DB_VERSION = 1;
 const STORE_NAME = 'assets';
@@ -100,6 +103,48 @@ export function buildWaveformPeaks(buffer: AudioBuffer, bucketCount = 512): numb
   return peaks;
 }
 
+let peaksWorker: Worker | null = null;
+let peaksWorkerRequestId = 0;
+
+function ensurePeaksWorker(): Worker {
+  if (peaksWorker) return peaksWorker;
+  peaksWorker = new WaveformPeaksWorker();
+  return peaksWorker;
+}
+
+export function buildWaveformPeaksInWorker(
+  channelData: Float32Array,
+  bucketCount = 512
+): Promise<number[]> {
+  const worker = ensurePeaksWorker();
+  const requestId = ++peaksWorkerRequestId;
+  return new Promise((resolve, reject) => {
+    const onMessage = (event: MessageEvent) => {
+      const message = event.data as
+        | { type: 'peaks'; requestId: number; peaks: number[] }
+        | { type: 'error'; requestId: number; error: string };
+      if (message.requestId !== requestId) return;
+      worker.removeEventListener('message', onMessage);
+      if (message.type === 'error') {
+        reject(new Error(message.error));
+        return;
+      }
+      resolve(message.peaks);
+    };
+    worker.addEventListener('message', onMessage);
+    const samples = new Float32Array(channelData);
+    worker.postMessage(
+      {
+        type: 'build-peaks',
+        requestId,
+        samples,
+        bucketCount,
+      },
+      [samples.buffer]
+    );
+  });
+}
+
 export async function decodeAudioFile(file: File): Promise<{
   buffer: AudioBuffer;
   durationMs: number;
@@ -109,10 +154,14 @@ export async function decodeAudioFile(file: File): Promise<{
   const audioContext = new AudioContext();
   try {
     const buffer = await audioContext.decodeAudioData(arrayBuffer.slice(0));
+    const channelData = buffer.getChannelData(0);
+    const peaks = getRuntimeOptimizationFlags().timelineAudioWorkerEnabled
+      ? await buildWaveformPeaksInWorker(channelData)
+      : buildWaveformPeaks(buffer);
     return {
       buffer,
       durationMs: Math.round(buffer.duration * 1000),
-      peaks: buildWaveformPeaks(buffer),
+      peaks,
     };
   } finally {
     await audioContext.close();

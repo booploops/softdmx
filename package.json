@@ -21,6 +21,8 @@
     "test:e2e": "yarn workspace @softdmx/tests test:e2e",
     "test:fuzz": "yarn workspace @softdmx/tests test:fuzz",
     "test:fuzz:ci": "yarn workspace @softdmx/tests test:fuzz:ci",
+    "test:runtime-baseline": "yarn workspace @softdmx/tests test:runtime-baseline",
+    "test:runtime-compare": "yarn workspace @softdmx/tests test:runtime-compare",
     "test:playwright": "yarn workspace @softdmx/tests test:playwright",
     "test:playwright:electron": "yarn workspace @softdmx/tests test:playwright:electron",
     "test:coverage": "yarn workspace @softdmx/tests test:coverage",

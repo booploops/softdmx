@@ -14,12 +14,13 @@ import {
   parseShowDocument,
   serializeShowDocument,
   downloadShowDocument,
-  loadShowDocumentFromFile,
   validateShowDocument,
 } from '@softdmx/engine';
 import { writeCrashSnapshot, clearCrashSnapshot, readCrashSnapshot } from 'src/utils/crash-snapshot';
 import { readLastShow, writeLastShow } from 'src/utils/last-show';
 import { useIOClient } from 'src/lib/io-client';
+import { parseShowDocumentInWorker } from 'src/lib/show-parse-worker-client';
+import { getRuntimeOptimizationFlags } from 'src/config/runtime-optimization-flags';
 import { useDMXStore } from './dmx';
 import { useOutputEngineStore } from './output-playback';
 import { useScratchStore } from './scratch';
@@ -132,12 +133,25 @@ export const useShowStore = defineStore('show', () => {
     return true;
   }
 
-  function loadShowFromYaml(yaml: string) {
+  async function loadShowFromYaml(yaml: string) {
+    const flags = getRuntimeOptimizationFlags();
+    if (flags.showParseWorkerEnabled) {
+      const parsed = await parseShowDocumentInWorker(yaml);
+      loadShow(parsed);
+      return;
+    }
     loadShow(parseShowDocument(yaml));
   }
 
   async function loadShowFromFile(file: File) {
-    const doc = await loadShowDocumentFromFile(file);
+    const content = await file.text();
+    if (!content.trim()) {
+      throw new Error('File is empty');
+    }
+    const flags = getRuntimeOptimizationFlags();
+    const doc = flags.showParseWorkerEnabled
+      ? await parseShowDocumentInWorker(content)
+      : parseShowDocument(content);
     loadShow(doc);
     filePath.value = file.name;
   }

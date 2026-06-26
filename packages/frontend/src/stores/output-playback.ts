@@ -40,6 +40,10 @@ import {
 import type { ShowDocument } from '@softdmx/engine';
 import { resolveVideoPixelMapIds } from '@softdmx/engine';
 import { resolvePresetIdFromPoolSlot } from '@softdmx/engine';
+import { recordRuntimeMetric } from 'src/utils/runtime-metrics';
+import { getRuntimeOptimizationFlags } from 'src/config/runtime-optimization-flags';
+import { buildMergeSnapshot } from 'src/lib/output-merge-runtime';
+import { mergeOutputSnapshotInWorker } from 'src/lib/output-merge-worker-client';
 
 interface CuePlayOptions {
   intensity?: number;
@@ -64,6 +68,7 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
   let animationId: number | null = null;
   let linkPhase = 0;
   let previousTimecodePositionSeconds = 0;
+  let mergeRequestVersion = 0;
 
   function maybeAdvanceStackCue(cueId: string, state: CuePlaybackState, cue: Cue) {
     const stack = cue.stack ?? [];
@@ -324,7 +329,7 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     }
   }
 
-  function computeMergedOutput(options?: { includeBlindScratch?: boolean }) {
+  function buildMergeData(options?: { includeBlindScratch?: boolean }) {
     const dmx = useDMXStore();
     const showStore = useShowStore();
     const scratchStore = useScratchStore();
@@ -445,6 +450,16 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
       layers.push(scratchToLayer(scratchStore.getEntries()));
     }
 
+    return {
+      show,
+      baseChannels,
+      layers,
+    };
+  }
+
+  function computeMergedOutput(options?: { includeBlindScratch?: boolean }) {
+    const { show, baseChannels, layers } = buildMergeData(options);
+
     const merged = mergeLayers(baseChannels, layers, {
       grandMaster: grandMaster.value,
       blackout: blackout.value,
@@ -452,9 +467,45 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     return applyGroupSubmasters(merged, show);
   }
 
-  function mergeAndApply() {
+  async function mergeAndApplyWithWorker() {
     const dmx = useDMXStore();
+    const flags = getRuntimeOptimizationFlags();
+    const requestVersion = ++mergeRequestVersion;
+    const startedAt = performance.now();
+    const { show, baseChannels, layers } = buildMergeData();
+    const snapshot = buildMergeSnapshot(baseChannels, layers, {
+      grandMaster: grandMaster.value,
+      blackout: blackout.value,
+      mergeWasmEnabled: flags.mergeWasmEnabled,
+    });
+    const merged = await mergeOutputSnapshotInWorker(snapshot);
+    if (requestVersion !== mergeRequestVersion) {
+      return;
+    }
+    recordRuntimeMetric(
+      'output.merge.computeMergedOutput.worker',
+      performance.now() - startedAt
+    );
+    dmx.applyMergedOutput(applyGroupSubmasters(merged, show));
+  }
+
+  function mergeAndApply() {
+    const flags = getRuntimeOptimizationFlags();
+    if (flags.mergeWorkerEnabled) {
+      void mergeAndApplyWithWorker().catch((error) => {
+        console.warn('Output merge worker failed, falling back to main thread merge', error);
+        mergeAndApplyMainThread();
+      });
+      return;
+    }
+    mergeAndApplyMainThread();
+  }
+
+  function mergeAndApplyMainThread() {
+    const dmx = useDMXStore();
+    const startedAt = performance.now();
     const merged = computeMergedOutput();
+    recordRuntimeMetric('output.merge.computeMergedOutput', performance.now() - startedAt);
 
     dmx.applyMergedOutput(merged);
   }

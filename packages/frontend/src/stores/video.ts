@@ -14,6 +14,7 @@ import { useShowStore } from './show';
 import { useOutputEngineStore } from './output-playback';
 import { normalizeVideoFps, resolveVideoPixelMapIds, sampleRgbGridBuffer } from '@softdmx/engine';
 import VideoSamplerWorker from '../workers/video-sampler.worker.ts?worker';
+import { recordRuntimeMetric } from 'src/utils/runtime-metrics';
 
 export interface VideoSenderInfo {
   name: string;
@@ -281,6 +282,7 @@ export const useVideoStore = defineStore('video', () => {
   }
 
   function sampleAllMapsFromVideoElement() {
+    const startedAt = performance.now();
     const maps = activePixelMaps.value;
     if (maps.length === 0) return;
 
@@ -315,9 +317,11 @@ export const useVideoStore = defineStore('video', () => {
         flipY: false
       }))
     }, [frameData]);
+    recordRuntimeMetric('video.sample.webcam.frameDispatch', performance.now() - startedAt);
   }
 
   function sampleAllMapsFromNativeFrame(payload: { width: number; height: number; data: ArrayBuffer }) {
+    const startedAt = performance.now();
     const maps = activePixelMaps.value;
     if (maps.length === 0) return;
 
@@ -335,6 +339,7 @@ export const useVideoStore = defineStore('video', () => {
         flipY: false
       }))
     }, [payload.data]);
+    recordRuntimeMetric('video.sample.native.frameDispatch', performance.now() - startedAt);
   }
 
   async function startWebcam(config: ShowVideoConfig) {

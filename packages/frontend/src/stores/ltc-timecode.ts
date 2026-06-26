@@ -11,6 +11,9 @@ import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useShowStore } from './show';
 import { useTimecodeStore } from './timecode';
+import { recordRuntimeMetric } from 'src/utils/runtime-metrics';
+import { getRuntimeOptimizationFlags } from 'src/config/runtime-optimization-flags';
+import LtcDecodeWorker from 'src/workers/ltc-decode.worker.ts?worker';
 
 type LtcChannel = 'left' | 'right' | 'mono';
 
@@ -33,6 +36,8 @@ export const useLtcTimecodeStore = defineStore('ltcTimecode', () => {
   let timeDomainData: Float32Array | null = null;
   let analyserNode: AnalyserNode | null = null;
   let lockTimeoutId: number | null = null;
+  let decodeWorker: Worker | null = null;
+  let decodeRequestId = 0;
 
   const active = computed(
     () => showStore.document.timecode?.enabled === true && showStore.document.timecode?.source === 'ltc'
@@ -63,6 +68,10 @@ export const useLtcTimecodeStore = defineStore('ltcTimecode', () => {
 
     clearLockTimer();
     signalLocked.value = false;
+    if (decodeWorker) {
+      decodeWorker.terminate();
+      decodeWorker = null;
+    }
 
     sourceNode?.disconnect();
     sourceNode = null;
@@ -93,8 +102,69 @@ export const useLtcTimecodeStore = defineStore('ltcTimecode', () => {
     if (!analyserNode || !decoder || !timeDomainData) return;
     rafId = window.requestAnimationFrame(decodeLoop);
 
+    const startedAt = performance.now();
     analyserNode.getFloatTimeDomainData(timeDomainData);
-    decoder.decode(Array.from(timeDomainData));
+    if (getRuntimeOptimizationFlags().ltcDecodeWorkerEnabled) {
+      const worker = ensureDecodeWorker();
+      const requestId = ++decodeRequestId;
+      const samples = new Float32Array(timeDomainData);
+      worker.postMessage(
+        {
+          type: 'decode',
+          requestId,
+          samples,
+        },
+        [samples.buffer]
+      );
+    } else {
+      decoder.decode(Array.from(timeDomainData));
+    }
+    recordRuntimeMetric('ltc.decode.loop', performance.now() - startedAt);
+  }
+
+  function ensureDecodeWorker(): Worker {
+    if (decodeWorker) return decodeWorker;
+    decodeWorker = new LtcDecodeWorker();
+    decodeWorker.onmessage = (event) => {
+      const message = event.data as
+        | {
+            type: 'decoded';
+            requestId: number;
+            frame: {
+              hours: number;
+              minutes: number;
+              seconds: number;
+              frames: number;
+              framerate?: number;
+            } | null;
+          }
+        | { type: 'error'; requestId: number; error: string };
+      if (message.type === 'error') {
+        if (message.requestId === decodeRequestId) {
+          lastError.value = message.error;
+        }
+        return;
+      }
+      if (message.requestId !== decodeRequestId || !message.frame) return;
+      markLocked();
+      if (typeof message.frame.framerate === 'number' && message.frame.framerate > 0) {
+        timecodeStore.setDetectedFps(message.frame.framerate);
+      }
+      timecodeStore.setSmpte(
+        message.frame.hours,
+        message.frame.minutes,
+        message.frame.seconds,
+        message.frame.frames,
+        'ltc'
+      );
+    };
+    if (audioContext) {
+      decodeWorker.postMessage({
+        type: 'init',
+        sampleRate: audioContext.sampleRate,
+      });
+    }
+    return decodeWorker;
   }
 
   async function start() {
@@ -153,6 +223,9 @@ export const useLtcTimecodeStore = defineStore('ltcTimecode', () => {
       decoder.on(
         'frame',
         (frame: { hours: number; minutes: number; seconds: number; frames: number; framerate?: number }) => {
+          if (getRuntimeOptimizationFlags().ltcDecodeWorkerEnabled) {
+            return;
+          }
           markLocked();
           if (typeof frame.framerate === 'number' && frame.framerate > 0) {
             timecodeStore.setDetectedFps(frame.framerate);
@@ -160,6 +233,12 @@ export const useLtcTimecodeStore = defineStore('ltcTimecode', () => {
           timecodeStore.setSmpte(frame.hours, frame.minutes, frame.seconds, frame.frames, 'ltc');
         }
       );
+      if (getRuntimeOptimizationFlags().ltcDecodeWorkerEnabled) {
+        ensureDecodeWorker().postMessage({
+          type: 'init',
+          sampleRate: audioContext.sampleRate,
+        });
+      }
 
       isRunning.value = true;
       rafId = window.requestAnimationFrame(decodeLoop);

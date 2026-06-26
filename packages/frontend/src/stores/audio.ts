@@ -9,6 +9,9 @@
 import { defineStore } from 'pinia';
 import { computed, ref, watch } from 'vue';
 import { useIOClient } from 'src/lib/io-client';
+import { recordRuntimeMetric } from 'src/utils/runtime-metrics';
+import { getRuntimeOptimizationFlags } from 'src/config/runtime-optimization-flags';
+import AudioAnalysisWorker from 'src/workers/audio-analysis.worker.ts?worker';
 
 const TARGET_FRAME_MS = 1000 / 30;
 const BAND_LIMITS_HZ = [20, 60, 250, 2000, 8000];
@@ -45,6 +48,8 @@ export const useAudioStore = defineStore('audio', () => {
   let lastFrameTs = 0;
   let smoothedEnergy = 0;
   let beatPulseTimeoutId: number | null = null;
+  let analysisWorker: Worker | null = null;
+  let analysisRequestId = 0;
 
   const canEnumerateDevices = computed(
     () => typeof navigator !== 'undefined' && typeof navigator.mediaDevices?.enumerateDevices === 'function'
@@ -87,6 +92,10 @@ export const useAudioStore = defineStore('audio', () => {
     }
 
     clearBeatPulseTimer();
+    if (analysisWorker) {
+      analysisWorker.terminate();
+      analysisWorker = null;
+    }
 
     sourceNode?.disconnect();
     sourceNode = null;
@@ -159,7 +168,35 @@ export const useAudioStore = defineStore('audio', () => {
     if (ts - lastFrameTs < TARGET_FRAME_MS) return;
     lastFrameTs = ts;
 
+    const startedAt = performance.now();
     analyserNode.getFloatTimeDomainData(timeDomainData);
+    analyserNode.getFloatFrequencyData(frequencyData);
+
+    if (getRuntimeOptimizationFlags().audioAnalysisWorkerEnabled) {
+      const worker = ensureAnalysisWorker();
+      const requestId = ++analysisRequestId;
+      worker.postMessage({
+        type: 'analyze',
+        requestId,
+        timeDomainData: Array.from(timeDomainData),
+        frequencyData: Array.from(frequencyData),
+        minDb: analyserNode.minDecibels,
+        maxDb: analyserNode.maxDecibels,
+        sampleRate: audioContext?.sampleRate ?? 48000,
+        fftSize: analyserNode.fftSize,
+      });
+    } else {
+      applyMainThreadAnalysis(analyserNode, timeDomainData, frequencyData);
+    }
+
+    recordRuntimeMetric('audio.analysis.loop', performance.now() - startedAt);
+  }
+
+  function applyMainThreadAnalysis(
+    analyserNode: AnalyserNode,
+    timeDomainData: Float32Array,
+    frequencyData: Float32Array
+  ) {
     let sumSquares = 0;
     let peak = 0;
 
@@ -171,8 +208,6 @@ export const useAudioStore = defineStore('audio', () => {
     }
 
     const rms = Math.sqrt(sumSquares / timeDomainData.length);
-
-    analyserNode.getFloatFrequencyData(frequencyData);
     const minDb = analyserNode.minDecibels;
     const maxDb = analyserNode.maxDecibels;
     const sampleRate = audioContext?.sampleRate ?? 48000;
@@ -199,8 +234,34 @@ export const useAudioStore = defineStore('audio', () => {
       peak: Math.min(1, peak),
       bands,
     };
-
     emitMeters();
+  }
+
+  function ensureAnalysisWorker(): Worker {
+    if (analysisWorker) return analysisWorker;
+    analysisWorker = new AudioAnalysisWorker();
+    analysisWorker.onmessage = (event) => {
+      const message = event.data as {
+        type: 'analyzed';
+        requestId: number;
+        rms: number;
+        peak: number;
+        bands: AudioBandLevels;
+        beatPulse: boolean;
+      };
+      if (message.type !== 'analyzed') return;
+      if (message.requestId !== analysisRequestId) return;
+      if (message.beatPulse) {
+        triggerBeatPulse();
+      }
+      levels.value = {
+        rms: message.rms,
+        peak: message.peak,
+        bands: message.bands,
+      };
+      emitMeters();
+    };
+    return analysisWorker;
   }
 
   async function start() {
