@@ -18,6 +18,8 @@ node_modules
 
 # Test and tooling output
 /coverage
+/packages/tests/coverage
+/packages/tests/perf-results
 /test-results
 /playwright-report
 /blob-report
