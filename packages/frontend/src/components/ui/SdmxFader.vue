@@ -6,6 +6,8 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
+import SdmxValueField from './SdmxValueField.vue';
+
 const props = withDefaults(
   defineProps<{
     modelValue: number;
