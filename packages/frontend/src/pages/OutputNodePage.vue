@@ -17,16 +17,14 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="output-node-page q-pa-md">
-    <div class="text-h6">SoftDMX Output Node</div>
-    <div class="text-caption text-grey-5">Headless merge + DMX output active.</div>
+  <div class="output-node-page sdmx-surface q-pa-md">
+    <div class="sdmx-text-title">SoftDMX Output Node</div>
+    <div class="sdmx-text-caption">Headless merge + DMX output active.</div>
   </div>
 </template>
 
 <style scoped>
 .output-node-page {
   min-height: 100vh;
-  background: #111;
-  color: #eee;
 }
 </style>

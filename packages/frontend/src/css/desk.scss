@@ -7,10 +7,10 @@
  */
 
 :root {
-  --sdmx-desk-master-bar-height: 52px;
+  --sdmx-desk-master-bar-height: var(--sdmx-layout-master-bar-height, 52px);
   --sdmx-desk-workspace-weight: 12;
   --sdmx-desk-rail-weight: 5;
-  --sdmx-desk-rail-min-height: 140px;
+  --sdmx-desk-rail-min-height: var(--sdmx-layout-playback-rail-min-height, 140px);
   --sdmx-desk-cue-bar-height: 44px;
 }
 
@@ -63,10 +63,10 @@
 
 .desk-pane-grid {
   display: grid;
-  gap: 6px;
+  gap: var(--sdmx-space-sm);
   flex: 1 1 0;
   min-height: 0;
-  padding: 6px;
+  padding: var(--sdmx-space-sm);
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -76,22 +76,20 @@
   flex-direction: column;
   min-height: 0;
   min-width: 0;
-  border: 1px solid var(--sdmx-color-border-subtle);
-  border-radius: var(--sdmx-radius-md);
-  background: var(--sdmx-color-bg-surface);
   overflow: hidden;
 }
 
 .desk-window-title {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 4px 8px;
-  font-size: 12px;
-  font-weight: 600;
+  gap: var(--sdmx-space-xs);
+  padding: var(--sdmx-space-xs) var(--sdmx-space-sm);
+  font-size: var(--sdmx-font-size-label);
+  font-weight: var(--sdmx-font-weight-bold);
   border-bottom: 1px solid var(--sdmx-color-border-subtle);
   background: var(--sdmx-color-bg-elevated);
   flex-shrink: 0;
+  min-height: var(--sdmx-layout-window-header-height);
 }
 
 .desk-window-body {
@@ -143,31 +141,34 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: var(--sdmx-space-xs);
   min-width: 56px;
   max-width: 72px;
-  padding: 6px 4px;
+  padding: var(--sdmx-space-sm) var(--sdmx-space-xs);
   border-radius: var(--sdmx-radius-sm);
   border: 1px solid var(--sdmx-color-border-subtle);
   background: var(--sdmx-color-bg-surface);
   user-select: none;
+  transition:
+    border-color var(--sdmx-motion-duration-fast) var(--sdmx-motion-easing),
+    background var(--sdmx-motion-duration-fast) var(--sdmx-motion-easing);
 
   &.active {
-    border-color: var(--sdmx-color-positive);
-    background: var(--sdmx-color-primary-soft);
+    border-color: var(--sdmx-color-active);
+    background: var(--sdmx-color-active-soft);
   }
 
   &.flash {
-    border-color: var(--sdmx-color-warning);
-    box-shadow: 0 0 0 1px var(--sdmx-color-warning-ring);
+    border-color: var(--sdmx-color-flash);
+    animation: sdmx-flash-pulse var(--sdmx-motion-duration-slow) var(--sdmx-motion-easing) infinite alternate;
   }
 }
 
 .playback-slot-label {
-  font-size: 11px;
-  font-weight: 600;
+  font-size: var(--sdmx-font-size-caption);
+  font-weight: var(--sdmx-font-weight-bold);
   text-align: center;
-  line-height: 1.2;
+  line-height: var(--sdmx-line-height-tight);
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -209,10 +210,13 @@
 .fixture-sheet-tile {
   border: 1px solid var(--sdmx-color-border);
   border-radius: var(--sdmx-radius-sm);
-  padding: 8px;
+  padding: var(--sdmx-space-sm);
   text-align: center;
   cursor: pointer;
   background: var(--sdmx-color-bg-elevated);
+  transition:
+    border-color var(--sdmx-motion-duration-fast) var(--sdmx-motion-easing),
+    box-shadow var(--sdmx-motion-duration-fast) var(--sdmx-motion-easing);
 
   &.selected {
     border-color: var(--sdmx-color-primary);
@@ -227,15 +231,17 @@
 .fixture-sheet-output {
   width: 100%;
   aspect-ratio: 1;
-  border-radius: 4px;
-  background: #000;
-  margin: 6px 0;
+  border-radius: var(--sdmx-radius-sm);
+  background: var(--sdmx-color-bg-page);
+  margin: var(--sdmx-space-xs) 0;
+  cursor: ns-resize;
 }
 
 .fixture-sheet-value {
-  font-family: 'Courier New', monospace;
-  font-size: 13px;
-  font-weight: 700;
+  font-family: var(--sdmx-font-family-mono);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--sdmx-font-size-mono);
+  font-weight: var(--sdmx-font-weight-bold);
 }
 
 .programmer-grid {

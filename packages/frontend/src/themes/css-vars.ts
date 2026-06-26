@@ -9,9 +9,10 @@
 import type { ThemeTokens } from './types.ts';
 
 export function themeTokensToCssVars(tokens: ThemeTokens): Record<string, string> {
-  const { colors, typography, radius, layout } = tokens;
+  const { colors, typography, spacing, elevation, radius, layout, motion } = tokens;
 
   return {
+    // Colors
     '--sdmx-color-bg-page': colors.bgPage,
     '--sdmx-color-bg-surface': colors.bgSurface,
     '--sdmx-color-bg-elevated': colors.bgElevated,
@@ -34,13 +35,55 @@ export function themeTokensToCssVars(tokens: ThemeTokens): Record<string, string
     '--sdmx-color-hover': colors.hover,
     '--sdmx-color-scratch': colors.scratch,
     '--sdmx-color-gm': colors.gm,
+    '--sdmx-color-active': colors.active,
+    '--sdmx-color-armed': colors.armed,
+    '--sdmx-color-flash': colors.flash,
+    '--sdmx-color-blind': colors.blind,
+    '--sdmx-color-focus-ring': colors.focusRing,
+    // Typography
     '--sdmx-font-family': typography.fontFamily,
+    '--sdmx-font-family-mono': typography.fontFamilyMono,
     '--sdmx-font-weight': typography.fontWeight,
+    '--sdmx-font-weight-bold': typography.fontWeightBold,
+    '--sdmx-font-size-display': typography.fontSizeDisplay,
+    '--sdmx-font-size-title': typography.fontSizeTitle,
+    '--sdmx-font-size-body': typography.fontSizeBody,
+    '--sdmx-font-size-label': typography.fontSizeLabel,
+    '--sdmx-font-size-caption': typography.fontSizeCaption,
+    '--sdmx-font-size-mono': typography.fontSizeMono,
+    '--sdmx-line-height-tight': typography.lineHeightTight,
+    '--sdmx-line-height-normal': typography.lineHeightNormal,
+    // Spacing
+    '--sdmx-space-xs': spacing.xs,
+    '--sdmx-space-sm': spacing.sm,
+    '--sdmx-space-md': spacing.md,
+    '--sdmx-space-lg': spacing.lg,
+    '--sdmx-space-xl': spacing.xl,
+    '--sdmx-space-xxl': spacing.xxl,
+    '--sdmx-space-touch': spacing.touchTarget,
+    // Elevation
+    '--sdmx-elevation-none': elevation.none,
+    '--sdmx-elevation-sm': elevation.sm,
+    '--sdmx-elevation-md': elevation.md,
+    '--sdmx-elevation-lg': elevation.lg,
+    '--sdmx-elevation-inset': elevation.inset,
+    // Radius
     '--sdmx-radius-sm': radius.sm,
     '--sdmx-radius-md': radius.md,
     '--sdmx-radius-lg': radius.lg,
     '--sdmx-radius-button': radius.button,
+    '--sdmx-radius-full': radius.full,
+    // Layout
     '--sdmx-layout-toolbar-height': layout.toolbarHeight,
+    '--sdmx-layout-master-bar-height': layout.masterBarHeight,
+    '--sdmx-layout-window-header-height': layout.windowHeaderHeight,
+    '--sdmx-layout-playback-rail-min-height': layout.playbackRailMinHeight,
+    // Motion
+    '--sdmx-motion-duration-fast': motion.durationFast,
+    '--sdmx-motion-duration-normal': motion.durationNormal,
+    '--sdmx-motion-duration-slow': motion.durationSlow,
+    '--sdmx-motion-easing': motion.easingDefault,
+    // Quasar bridge
     '--q-primary': colors.primary,
     '--q-secondary': colors.secondary,
     '--q-accent': colors.accent,
@@ -80,10 +123,19 @@ export const THEME_CSS_VAR_KEYS = [
   '--sdmx-color-hover',
   '--sdmx-color-scratch',
   '--sdmx-color-gm',
+  '--sdmx-color-active',
+  '--sdmx-color-armed',
+  '--sdmx-color-flash',
+  '--sdmx-color-blind',
+  '--sdmx-color-focus-ring',
   '--sdmx-color-primary-soft',
   '--sdmx-color-primary-ring',
   '--sdmx-color-canvas-bg',
   '--sdmx-radius-sm',
   '--sdmx-radius-md',
   '--sdmx-radius-lg',
+  '--sdmx-space-sm',
+  '--sdmx-space-md',
+  '--sdmx-font-size-label',
+  '--sdmx-font-size-mono',
 ] as const;

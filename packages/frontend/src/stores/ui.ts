@@ -30,6 +30,9 @@ export const useUIStore = defineStore('ui', () => {
   const operateLocked = ref(readOperateLocked());
   const programmerCollapsed = ref(false);
   const cueBarCollapsed = ref(false);
+  const infoMode = ref(false);
+  const commandLineOpen = ref(false);
+  const attributePanelOpen = ref(false);
   const dialogs = ref<Record<AppDialog, boolean>>({
     cueEditor: false,
   });
@@ -77,6 +80,18 @@ export const useUIStore = defineStore('ui', () => {
     widgetsViewMode.value = next;
   }
 
+  function toggleInfoMode(force?: boolean) {
+    infoMode.value = force ?? !infoMode.value;
+  }
+
+  function toggleCommandLine(force?: boolean) {
+    commandLineOpen.value = force ?? !commandLineOpen.value;
+  }
+
+  function toggleAttributePanel(force?: boolean) {
+    attributePanelOpen.value = force ?? !attributePanelOpen.value;
+  }
+
   return {
     mode,
     setupSection,
@@ -86,6 +101,9 @@ export const useUIStore = defineStore('ui', () => {
     operateLocked,
     programmerCollapsed,
     cueBarCollapsed,
+    infoMode,
+    commandLineOpen,
+    attributePanelOpen,
     dialogs,
     isLive,
     isProgram,
@@ -99,5 +117,8 @@ export const useUIStore = defineStore('ui', () => {
     openDialog,
     closeDialog,
     setWidgetsViewMode,
+    toggleInfoMode,
+    toggleCommandLine,
+    toggleAttributePanel,
   };
 });

@@ -29,6 +29,7 @@ export const studioBlueTheme: ThemeDefinition = {
       selected: 'rgba(59, 130, 246, 0.22)',
       scratch: '#2563eb',
       gm: '#38bdf8',
+      focusRing: 'rgba(59, 130, 246, 0.55)',
     },
   },
 };

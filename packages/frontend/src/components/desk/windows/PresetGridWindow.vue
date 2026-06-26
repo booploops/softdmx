@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import { useShowStore } from 'src/stores/show';
 import { useOutputEngineStore } from 'src/stores/output-playback';
+import { SdmxButton, SdmxEmptyState, SdmxValueField } from 'src/components/ui';
 
 const showStore = useShowStore();
 const engine = useOutputEngineStore();
@@ -22,24 +23,38 @@ function firePreset(presetId: string) {
 
 <template>
   <div class="preset-grid-window">
-    <div class="row items-center q-px-sm q-py-xs q-gutter-sm">
-      <span class="text-caption text-weight-bold">Presets</span>
-      <q-input v-model.number="presetFadeMs" type="number" dense outlined label="Fade ms" style="width: 110px" />
+    <div class="preset-grid-window__toolbar">
+      <span class="sdmx-text-label">Presets</span>
+      <SdmxValueField label="Fade" :value="presetFadeMs" unit="ms" size="sm" />
+      <q-input
+        v-model.number="presetFadeMs"
+        type="number"
+        dense
+        outlined
+        label="Fade ms"
+        class="preset-fade-input sdmx-focus-ring"
+        style="width: 110px"
+      />
     </div>
     <div v-if="presets.length" class="preset-fire-grid">
-      <q-btn
+      <SdmxButton
         v-for="preset in presets"
         :key="preset.id"
         class="preset-fire-btn"
-        unelevated
-        no-caps
+        :label="preset.name"
+        size="lg"
+        variant="default"
+        :info="`Fire preset: ${preset.name}`"
         :style="preset.color ? { backgroundColor: preset.color, color: 'var(--sdmx-color-text)' } : {}"
         @click="firePreset(preset.id)"
-      >
-        {{ preset.name }}
-      </q-btn>
+      />
     </div>
-    <div v-else class="q-pa-lg text-center text-grey-5">No presets in show</div>
+    <SdmxEmptyState
+      v-else
+      icon="palette"
+      title="No presets"
+      hint="Create presets in Program → Presets to fire them from this grid."
+    />
   </div>
 </template>
 
@@ -49,8 +64,23 @@ function firePreset(presetId: string) {
   display: flex;
   flex-direction: column;
 }
+
+.preset-grid-window__toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--sdmx-space-sm);
+  padding: var(--sdmx-space-xs) var(--sdmx-space-sm);
+  border-bottom: 1px solid var(--sdmx-color-border-subtle);
+  flex-shrink: 0;
+}
+
 .preset-fire-grid {
   flex: 1 1 auto;
   overflow: auto;
+}
+
+.preset-fire-btn {
+  min-height: 48px;
+  width: 100%;
 }
 </style>

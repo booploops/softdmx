@@ -7,11 +7,11 @@
 -->
 <script setup lang="ts">
 import type { ShowfileFixtureMapped } from '@softdmx/engine';
-import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
 import { useGroupColors } from 'src/composables/useGroupColors';
 import { groupColorStyle } from '@softdmx/engine';
 import { useChannelControl } from 'src/composables/useChannelControl';
+import { SdmxValueField } from 'src/components/ui';
 
 const props = defineProps<{
   fixture: ShowfileFixtureMapped;
@@ -35,7 +35,7 @@ const dimmerPath = computed(() => {
 
 const outputStyle = computed(() => ({
   opacity: Math.max(0.08, props.intensity / 255),
-  background: groupInfo.value?.color ?? '#fff',
+  background: groupInfo.value?.color ?? 'var(--sdmx-color-text)',
 }));
 
 function toggleSelection() {
@@ -65,16 +65,39 @@ function onOutputPointerDown(event: PointerEvent) {
 
 <template>
   <div
-    class="fixture-sheet-tile"
-    :class="{ selected: isSelected, 'has-group': !!groupInfo }"
+    class="fixture-sheet-tile sdmx-focus-ring"
+    :class="{
+      selected: isSelected,
+      'has-group': !!groupInfo,
+      'sdmx-widget--active': intensity > 0,
+    }"
     :style="cardStyle"
+    :data-sdmx-info="`Fixture ${fixture.fixtureName}`"
+    tabindex="0"
     @click="toggleSelection"
+    @keydown.enter="toggleSelection"
+    @keydown.space.prevent="toggleSelection"
   >
-    <div class="row items-center no-wrap">
-      <div class="text-caption text-weight-bold ellipsis">{{ fixture.fixtureName }}</div>
-      <q-icon v-if="isSelected" name="check_circle" size="xs" color="primary" class="q-ml-xs" />
+    <div class="fixture-sheet-tile__header">
+      <span class="sdmx-text-label ellipsis">{{ fixture.fixtureName }}</span>
+      <q-icon v-if="isSelected" name="check_circle" size="xs" color="primary" />
     </div>
     <div class="fixture-sheet-output" :style="outputStyle" @pointerdown.stop="onOutputPointerDown" />
-    <div class="fixture-sheet-value">{{ intensity }}</div>
+    <SdmxValueField :value="intensity" size="sm" />
   </div>
 </template>
+
+<style scoped>
+.fixture-sheet-tile__header {
+  display: flex;
+  align-items: center;
+  gap: var(--sdmx-space-xs);
+  min-width: 0;
+}
+
+.ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+</style>

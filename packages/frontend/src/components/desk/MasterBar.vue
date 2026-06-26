@@ -17,6 +17,7 @@ import {
   QUICK_ACCESS_WORKSPACE_MODES,
   WORKSPACE_MODE_META,
 } from 'src/desk/workspace-modes';
+import { SdmxButton, SdmxStatusChip } from 'src/components/ui';
 import ViewSwitcher from './ViewSwitcher.vue';
 import GmFader from './GmFader.vue';
 
@@ -56,78 +57,97 @@ function toggleBlind() {
 
 <template>
   <div class="master-bar row items-center q-px-sm q-gutter-x-xs">
-    <q-btn flat dense round icon="menu" aria-label="Menu" @click="ui.toggleLeftDrawer(true)" />
+    <SdmxButton
+      icon="menu"
+      round
+      variant="ghost"
+      info="Open navigation menu"
+      @click="ui.toggleLeftDrawer(true)"
+    />
 
-    <q-btn
+    <SdmxButton
       v-for="mode in QUICK_ACCESS_WORKSPACE_MODES"
       :key="mode"
-      round
-      dense
-      flat
       :icon="WORKSPACE_MODE_META[mode].icon"
-      :color="ui.mode === mode ? 'primary' : 'grey-5'"
+      round
+      :variant="ui.mode === mode ? 'primary' : 'ghost'"
+      :active="ui.mode === mode"
+      :info="WORKSPACE_MODE_META[mode].label"
       @click="ui.setMode(mode)"
-    >
-      <q-tooltip>{{ WORKSPACE_MODE_META[mode].label }}</q-tooltip>
-    </q-btn>
+    />
 
     <ViewSwitcher v-if="ui.isLive" />
 
-    <q-btn
+    <SdmxButton
       v-if="ui.isLive"
-      dense
-      flat
       :icon="ui.operateLocked ? 'lock' : 'lock_open'"
-      :color="ui.operateLocked ? 'grey-6' : 'warning'"
+      :variant="ui.operateLocked ? 'ghost' : 'warning'"
+      :info="ui.operateLocked ? 'Operate locked' : 'Edit mode unlocked'"
       @click="ui.toggleOperateLock()"
-    >
-      <q-tooltip>{{ ui.operateLocked ? 'Operate locked' : 'Edit mode unlocked' }}</q-tooltip>
-    </q-btn>
+    />
+
+    <SdmxButton
+      icon="help_outline"
+      round
+      :variant="ui.infoMode ? 'primary' : 'ghost'"
+      :active="ui.infoMode"
+      info="Toggle info mode — hover elements to learn their function"
+      @click="ui.toggleInfoMode()"
+    />
+    <SdmxButton
+      icon="terminal"
+      round
+      :variant="ui.commandLineOpen ? 'primary' : 'ghost'"
+      :active="ui.commandLineOpen"
+      info="Open command line (Ctrl+K or `)"
+      @click="ui.toggleCommandLine()"
+    />
 
     <q-space />
 
-    <GmFader v-model="grandMaster" label="GM" color="orange" />
-    <GmFader v-model="playbackBus" label="PB" color="deep-purple" />
+    <GmFader v-model="grandMaster" label="GM" color="orange" info="Grand Master — scales all output levels" />
+    <GmFader v-model="playbackBus" label="PB" color="deep-purple" info="Playback Bus Master" />
 
-    <q-btn
-      dense
-      :color="engine.blackout ? 'negative' : 'grey-8'"
+    <SdmxButton
       :label="engine.blackout ? 'BO' : 'Blackout'"
+      :variant="engine.blackout ? 'danger' : 'default'"
+      :active="engine.blackout"
+      info="Toggle blackout — kills all output"
       @click="toggleBlackout"
     />
-    <q-btn
-      dense
-      :color="scratch.blindMode ? 'warning' : 'grey-8'"
+    <SdmxButton
       :label="scratch.blindMode ? 'Blind' : 'Live'"
+      :variant="scratch.blindMode ? 'warning' : 'default'"
+      :active="scratch.blindMode"
+      info="Toggle blind/preview mode"
       @click="toggleBlind"
     />
 
-    <q-chip dense color="grey-9" text-color="white" icon="description" class="status-chip">
-      {{ showStore.name }}
-      <q-icon v-if="showStore.isDirty" name="fiber_manual_record" color="warning" size="12px" class="q-ml-xs" />
-    </q-chip>
-    <q-chip dense :color="linkStore.numPeers > 0 ? 'positive' : 'grey-8'" text-color="white" icon="link">
-      {{ linkStore.numPeers }}
-    </q-chip>
-    <q-chip
+    <SdmxStatusChip
+      :label="showStore.name"
+      icon="description"
+      :variant="showStore.isDirty ? 'warning' : 'default'"
+      info="Current show file"
+    />
+    <SdmxStatusChip
+      :label="String(linkStore.numPeers)"
+      icon="link"
+      :variant="linkStore.numPeers > 0 ? 'positive' : 'default'"
+      info="Ableton Link peers"
+    />
+    <SdmxStatusChip
       v-if="timecodeActive"
-      dense
-      :color="timecodeLocked ? 'teal' : 'grey-8'"
-      text-color="white"
+      :label="timecodeStore.smpteLabel"
       icon="schedule"
-    >
-      {{ timecodeStore.smpteLabel }}
-    </q-chip>
-    <q-chip v-if="audioStore.enabled" dense color="deep-purple" text-color="white" icon="graphic_eq">
-      Audio
-    </q-chip>
+      :variant="timecodeLocked ? 'active' : 'default'"
+      info="Timecode status"
+    />
+    <SdmxStatusChip
+      v-if="audioStore.enabled"
+      label="Audio"
+      icon="graphic_eq"
+      variant="info"
+      info="Audio reactive mode active"
+    />
   </div>
 </template>
-
-<style scoped>
-.status-chip {
-  max-width: 140px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-</style>

@@ -19,7 +19,9 @@
     "test:coverage": "NODE_V8_COVERAGE=./coverage node --import ./test/helpers/register-src-alias.mjs --experimental-strip-types --experimental-test-coverage --test 'test/**/*.test.ts' 'test/e2e/**/*.mjs' test/e2e-smoke.mjs",
     "test:all": "yarn test",
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "story:dev": "histoire dev",
+    "story:build": "histoire build"
   },
   "dependencies": {
     "@fontsource-variable/roboto-flex": "^5.2.8",
@@ -36,22 +38,26 @@
     "pinia": "^3.0.4",
     "quasar": "^2.20.1",
     "socket.io-client": "^4.8.3",
+    "three": "^0.175.0",
     "vue": "3.6.0-beta.16",
     "vue-i18n": "^11.4.6",
     "vue-router": "^5.1.0",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
+    "@histoire/plugin-vue": "^0.17.17",
     "@intlify/unplugin-vue-i18n": "^11.2.4",
     "@jazzer.js/core": "^4.0.0",
     "@playwright/test": "^1.61.0",
     "@quasar/vite-plugin": "^1.12.0",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^22.15.0",
+    "@types/three": "^0.175.0",
     "@vitejs/plugin-vue": "^5.2.1",
     "autoprefixer": "^10.5.0",
     "fast-check": "^4.8.0",
     "fastify": "^5.8.5",
+    "histoire": "^0.17.17",
     "postcss": "^8.4.49",
     "sass": "^1.81.0",
     "socket.io": "^4.8.3",

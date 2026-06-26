@@ -13,6 +13,7 @@ import WidgetWindow from './windows/WidgetWindow.vue';
 import ProgrammerWindow from './windows/ProgrammerWindow.vue';
 import PlotWindow from './windows/PlotWindow.vue';
 import PresetGridWindow from './windows/PresetGridWindow.vue';
+import AttributeControlWindow from './windows/AttributeControlWindow.vue';
 
 const props = defineProps<{ pane: DeskPane }>();
 </script>
@@ -25,6 +26,7 @@ const props = defineProps<{ pane: DeskPane }>();
     <ProgrammerWindow v-else-if="props.pane.windowType === 'programmer'" />
     <PlotWindow v-else-if="props.pane.windowType === 'plot'" />
     <PresetGridWindow v-else-if="props.pane.windowType === 'presets'" />
-    <div v-else class="q-pa-md text-grey-5">Unknown window: {{ props.pane.windowType }}</div>
+    <AttributeControlWindow v-else-if="props.pane.windowType === 'attribute-control'" />
+    <div v-else class="q-pa-md sdmx-text-muted">Unknown window: {{ props.pane.windowType }}</div>
   </div>
 </template>

@@ -10,17 +10,21 @@ import type { DeskPane } from '@softdmx/engine';
 import { DESK_GRID_COLS, buildDeskRowBands, deskPaneGridPlacement } from '@softdmx/engine';
 import { DESK_WINDOW_META } from 'src/desk/workspace-modes';
 import DeskWindowHost from './DeskWindowHost.vue';
+import DeskPaneResizeHandle from './DeskPaneResizeHandle.vue';
 import { useDeskViewStore } from 'src/stores/desk-view';
+import { useUIStore } from 'src/stores/ui';
+import { SdmxWindowChrome } from 'src/components/ui';
 import { useQuasar } from 'quasar';
 
 const deskView = useDeskViewStore();
+const ui = useUIStore();
 const $q = useQuasar();
 const mobilePaneIndex = ref(0);
 
 const isNarrow = computed(() => $q.screen.width < 900);
+const editLayout = computed(() => ui.isLive && !ui.operateLocked);
 
 const panes = computed(() => deskView.activePanes);
-
 const rowBands = computed(() => buildDeskRowBands(panes.value));
 
 const gridStyle = computed(() => ({
@@ -47,6 +51,10 @@ function paneStyle(pane: DeskPane) {
   };
 }
 
+function paneMeta(pane: DeskPane) {
+  return DESK_WINDOW_META[pane.windowType];
+}
+
 watch(
   () => deskView.activeViewId,
   () => {
@@ -58,31 +66,35 @@ watch(
 <template>
   <div class="desk-workspace-root">
     <div v-if="isNarrow && panes.length > 1" class="desk-pane-mobile-tabs">
-      <q-btn
+      <button
         v-for="(pane, index) in panes"
         :key="pane.id"
-        dense
-        flat
-        no-caps
-        :color="mobilePaneIndex === index ? 'primary' : 'grey-6'"
-        :label="DESK_WINDOW_META[pane.windowType]?.label ?? pane.windowType"
+        type="button"
+        class="desk-pane-mobile-tab sdmx-focus-ring"
+        :class="{ 'desk-pane-mobile-tab--active': mobilePaneIndex === index }"
         @click="mobilePaneIndex = index"
-      />
+      >
+        {{ paneMeta(pane)?.label ?? pane.windowType }}
+      </button>
     </div>
-    <div class="desk-pane-grid" :style="gridStyle">
+    <div class="desk-pane-grid" :class="{ 'desk-pane-grid--edit': editLayout }" :style="gridStyle">
       <div
         v-for="pane in visiblePanes"
         :key="pane.id"
         class="desk-window"
+        :class="{ 'desk-window--edit': editLayout }"
         :style="paneStyle(pane)"
       >
-        <div class="desk-window-title">
-          <q-icon :name="DESK_WINDOW_META[pane.windowType]?.icon ?? 'widgets'" size="16px" />
-          {{ DESK_WINDOW_META[pane.windowType]?.label ?? pane.windowType }}
-        </div>
-        <div class="desk-window-body">
+        <SdmxWindowChrome
+          :title="paneMeta(pane)?.label ?? pane.windowType"
+          :icon="paneMeta(pane)?.icon"
+          :info="`Desk window: ${paneMeta(pane)?.label ?? pane.windowType}`"
+        >
+          <template v-if="editLayout" #actions>
+            <DeskPaneResizeHandle :pane="pane" />
+          </template>
           <DeskWindowHost :pane="pane" />
-        </div>
+        </SdmxWindowChrome>
       </div>
     </div>
   </div>
@@ -97,8 +109,36 @@ watch(
   flex-direction: column;
   overflow: hidden;
 }
+
 .desk-pane-grid {
   flex: 1 1 0;
   min-height: 0;
+}
+
+.desk-pane-grid--edit {
+  outline: 1px dashed var(--sdmx-color-border-strong);
+  outline-offset: -1px;
+}
+
+.desk-window--edit {
+  outline: 1px dashed var(--sdmx-color-info);
+  outline-offset: -1px;
+}
+
+.desk-pane-mobile-tab {
+  flex-shrink: 0;
+  padding: var(--sdmx-space-xs) var(--sdmx-space-sm);
+  border: none;
+  border-radius: var(--sdmx-radius-sm);
+  background: transparent;
+  color: var(--sdmx-color-text-muted);
+  font-size: var(--sdmx-font-size-label);
+  cursor: pointer;
+  min-height: var(--sdmx-space-touch);
+}
+
+.desk-pane-mobile-tab--active {
+  background: var(--sdmx-color-primary-soft);
+  color: var(--sdmx-color-primary);
 }
 </style>

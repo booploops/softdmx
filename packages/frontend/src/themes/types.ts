@@ -29,11 +29,49 @@ export type ThemeColorTokens = {
   hover: string;
   scratch: string;
   gm: string;
+  /** Fixture/output actively playing */
+  active: string;
+  /** Cue or preset armed, awaiting Go */
+  armed: string;
+  /** Flash/momentary state */
+  flash: string;
+  /** Blind/preview mode indicator */
+  blind: string;
+  /** Keyboard/focus ring */
+  focusRing: string;
 };
 
 export type ThemeTypographyTokens = {
   fontFamily: string;
+  fontFamilyMono: string;
   fontWeight: string;
+  fontWeightBold: string;
+  fontSizeDisplay: string;
+  fontSizeTitle: string;
+  fontSizeBody: string;
+  fontSizeLabel: string;
+  fontSizeCaption: string;
+  fontSizeMono: string;
+  lineHeightTight: string;
+  lineHeightNormal: string;
+};
+
+export type ThemeSpacingTokens = {
+  xs: string;
+  sm: string;
+  md: string;
+  lg: string;
+  xl: string;
+  xxl: string;
+  touchTarget: string;
+};
+
+export type ThemeElevationTokens = {
+  none: string;
+  sm: string;
+  md: string;
+  lg: string;
+  inset: string;
 };
 
 export type ThemeRadiusTokens = {
@@ -41,17 +79,31 @@ export type ThemeRadiusTokens = {
   md: string;
   lg: string;
   button: string;
+  full: string;
 };
 
 export type ThemeLayoutTokens = {
   toolbarHeight: string;
+  masterBarHeight: string;
+  windowHeaderHeight: string;
+  playbackRailMinHeight: string;
+};
+
+export type ThemeMotionTokens = {
+  durationFast: string;
+  durationNormal: string;
+  durationSlow: string;
+  easingDefault: string;
 };
 
 export type ThemeTokens = {
   colors: ThemeColorTokens;
   typography: ThemeTypographyTokens;
+  spacing: ThemeSpacingTokens;
+  elevation: ThemeElevationTokens;
   radius: ThemeRadiusTokens;
   layout: ThemeLayoutTokens;
+  motion: ThemeMotionTokens;
 };
 
 export type ThemeDefinition = {
@@ -77,3 +129,56 @@ type DeepPartial<T> = {
 };
 
 export type { DeepPartial };
+
+/** Shared token defaults used as base for all presets */
+export const SHARED_TOKEN_DEFAULTS: Omit<ThemeTokens, 'colors'> & { colors?: never } = {
+  typography: {
+    fontFamily: '"Roboto Flex Variable", system-ui, sans-serif',
+    fontFamilyMono: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+    fontWeight: '500',
+    fontWeightBold: '700',
+    fontSizeDisplay: '20px',
+    fontSizeTitle: '16px',
+    fontSizeBody: '14px',
+    fontSizeLabel: '12px',
+    fontSizeCaption: '11px',
+    fontSizeMono: '13px',
+    lineHeightTight: '1.2',
+    lineHeightNormal: '1.5',
+  },
+  spacing: {
+    xs: '4px',
+    sm: '8px',
+    md: '12px',
+    lg: '16px',
+    xl: '24px',
+    xxl: '32px',
+    touchTarget: '44px',
+  },
+  elevation: {
+    none: 'none',
+    sm: '0 1px 3px var(--sdmx-color-shadow, rgba(0,0,0,0.3))',
+    md: '0 4px 12px var(--sdmx-color-shadow, rgba(0,0,0,0.35))',
+    lg: '0 8px 24px var(--sdmx-color-shadow-strong, rgba(0,0,0,0.4))',
+    inset: 'inset 0 1px 2px rgba(0,0,0,0.2)',
+  },
+  radius: {
+    sm: '6px',
+    md: '10px',
+    lg: '12px',
+    button: '8px',
+    full: '9999px',
+  },
+  layout: {
+    toolbarHeight: '48px',
+    masterBarHeight: '52px',
+    windowHeaderHeight: '32px',
+    playbackRailMinHeight: '140px',
+  },
+  motion: {
+    durationFast: '80ms',
+    durationNormal: '150ms',
+    durationSlow: '250ms',
+    easingDefault: 'cubic-bezier(0.4, 0, 0.2, 1)',
+  },
+};

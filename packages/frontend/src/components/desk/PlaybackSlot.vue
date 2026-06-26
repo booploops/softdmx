@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import type { ExecutorSlot } from '@softdmx/engine';
 import { useExecutorStore } from 'src/stores/executor';
+import { SdmxButton, SdmxFader } from 'src/components/ui';
 
 const props = defineProps<{ slot: ExecutorSlot }>();
 const executorStore = useExecutorStore();
@@ -45,28 +46,23 @@ function onStop() {
   <div
     class="playback-slot"
     :class="{ active: isActive, flash: isFlash && isActive }"
+    :data-sdmx-info="`Playback slot: ${label}`"
   >
     <div class="playback-slot-label" :title="label">{{ label }}</div>
     <div class="playback-slot-fader">
-      <q-slider
+      <SdmxFader
         v-model="level"
-        :min="0"
-        :max="1"
-        :step="0.01"
         vertical
-        reverse
-        dense
+        :show-value="false"
         color="primary"
-        track-color="grey-9"
-        class="vertical-fader"
       />
     </div>
-    <q-btn
-      dense
-      unelevated
-      color="positive"
+    <SdmxButton
       label="GO"
-      class="full-width"
+      variant="primary"
+      size="sm"
+      :active="isActive"
+      info="Trigger this playback slot"
       @click="onGoClick"
       @mousedown="onGoDown"
       @mouseup="onGoUp"
@@ -74,14 +70,21 @@ function onStop() {
       @touchstart.prevent="onGoDown"
       @touchend.prevent="onGoUp"
     />
-    <q-btn dense flat color="negative" label="STOP" class="full-width" @click="onStop" />
+    <SdmxButton
+      label="STOP"
+      variant="danger"
+      size="sm"
+      info="Stop this playback slot"
+      @click="onStop"
+    />
   </div>
 </template>
 
 <style scoped>
-.full-width {
+.playback-slot {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdmx-space-xs);
   width: 100%;
-  font-size: 10px;
-  min-height: 24px;
 }
 </style>

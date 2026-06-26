@@ -21,12 +21,31 @@ assert.equal(merged.colors.bgPage, defaultDarkTheme.tokens.colors.bgPage);
 
 console.log('Running test: themeTokensToCssVars');
 const vars = themeTokensToCssVars(defaultDarkTheme.tokens);
-assert.equal(vars['--sdmx-color-primary'], '#1976d2');
-assert.equal(vars['--q-primary'], '#1976d2');
+assert.equal(vars['--sdmx-color-primary'], '#6366f1');
+assert.equal(vars['--q-primary'], '#6366f1');
 
 console.log('Running test: parseImportedTheme');
 const imported = parseImportedTheme(defaultDarkTheme);
 assert.ok(imported);
 assert.equal(imported.id, 'default-dark');
+
+console.log('Running test: parseImportedTheme fills missing color tokens');
+const minimalImported = parseImportedTheme({
+  id: 'legacy-theme',
+  name: 'Legacy Theme',
+  tokens: {
+    colors: {
+      primary: '#ff00aa',
+      bgPage: '#000000',
+    },
+  },
+});
+assert.ok(minimalImported);
+assert.equal(minimalImported?.tokens.colors.primary, '#ff00aa');
+assert.equal(minimalImported?.tokens.colors.bgPage, '#000000');
+assert.equal(
+  minimalImported?.tokens.colors.active,
+  defaultDarkTheme.tokens.colors.active
+);
 
 console.log('All theme tests passed.');

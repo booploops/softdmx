@@ -8,7 +8,8 @@
 
 import { computed, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
-import type { DeskPane, DeskView } from '@softdmx/engine';
+import type { DeskPane, DeskPaneRect, DeskView, DeskWindowType } from '@softdmx/engine';
+import { DESK_GRID_COLS, validateDeskPane } from '@softdmx/engine';
 import { useShowStore } from './show';
 import { createDefaultDeskConfig, DEFAULT_DESK_VIEWS } from '@softdmx/engine';
 
@@ -35,6 +36,25 @@ export const useDeskViewStore = defineStore('desk-view', () => {
     { immediate: true }
   );
 
+  function ensureDeskInDocument() {
+    if (!showStore.document.desk) {
+      showStore.document.desk = createDefaultDeskConfig();
+      showStore.markDirty();
+    }
+  }
+
+  function mutateActiveView(mutator: (view: DeskView) => void) {
+    ensureDeskInDocument();
+    const desk = showStore.document.desk!;
+    const viewIndex = desk.views.findIndex((view) => view.id === activeViewId.value);
+    if (viewIndex < 0) return;
+    const view = { ...desk.views[viewIndex]!, panes: [...desk.views[viewIndex]!.panes] };
+    mutator(view);
+    desk.views = [...desk.views];
+    desk.views[viewIndex] = view;
+    showStore.markDirty();
+  }
+
   function setActiveView(viewId: string) {
     if (!views.value.some((view) => view.id === viewId)) return;
     activeViewId.value = viewId;
@@ -45,17 +65,47 @@ export const useDeskViewStore = defineStore('desk-view', () => {
     if (view) setActiveView(view.id);
   }
 
-  function ensureDeskInDocument() {
-    if (!showStore.document.desk) {
-      showStore.document.desk = createDefaultDeskConfig();
-      showStore.markDirty();
-    }
-  }
-
   function saveActiveViewAsDefault() {
     ensureDeskInDocument();
     showStore.document.desk!.defaultViewId = activeViewId.value;
     showStore.markDirty();
+  }
+
+  function updatePaneRect(paneId: string, patch: Partial<DeskPaneRect>) {
+    mutateActiveView((view) => {
+      const paneIndex = view.panes.findIndex((pane) => pane.id === paneId);
+      if (paneIndex < 0) return;
+      const pane = view.panes[paneIndex]!;
+      const nextRect = { ...pane.rect, ...patch };
+      if (nextRect.x + nextRect.w > DESK_GRID_COLS) {
+        nextRect.w = DESK_GRID_COLS - nextRect.x;
+      }
+      const updated = { ...pane, rect: nextRect };
+      if (!validateDeskPane(updated)) return;
+      view.panes[paneIndex] = updated;
+    });
+  }
+
+  function addPane(windowType: DeskWindowType) {
+    mutateActiveView((view) => {
+      const id = `${windowType}-${Date.now()}`;
+      view.panes.push({
+        id,
+        windowType,
+        rect: { x: 0, y: 0, w: 6, h: 6 },
+      });
+    });
+  }
+
+  function removePane(paneId: string) {
+    mutateActiveView((view) => {
+      if (view.panes.length <= 1) return;
+      view.panes = view.panes.filter((pane) => pane.id !== paneId);
+    });
+  }
+
+  function saveDefaultViewPreference() {
+    saveActiveViewAsDefault();
   }
 
   return {
@@ -66,5 +116,9 @@ export const useDeskViewStore = defineStore('desk-view', () => {
     setActiveView,
     setActiveViewByIndex,
     saveActiveViewAsDefault,
+    updatePaneRect,
+    addPane,
+    removePane,
+    saveDefaultViewPreference,
   };
 });

@@ -43,4 +43,5 @@ export const DESK_WINDOW_META: Record<string, { label: string; icon: string }> =
   programmer: { label: 'Programmer', icon: 'memory' },
   plot: { label: 'Plot', icon: 'map' },
   presets: { label: 'Presets', icon: 'palette' },
+  'attribute-control': { label: 'Attributes', icon: 'tune' },
 };
