@@ -14,6 +14,7 @@ import {
   indexToDmx,
   isIndexedChannel,
 } from '@softdmx/engine';
+import { SdmxEncoder, SdmxValueField } from 'src/components/ui';
 
 const props = defineProps<{
   channel: FixtureChannelDefinition;
@@ -28,14 +29,13 @@ const dmxValue = computed(() => Math.round(getDisplayValue(props.path)));
 const indexedOptions = computed(() => getIndexedSelectOptions(props.channel));
 const selectedIndex = computed(() => dmxToIndex(dmxValue.value, props.channel));
 
-function onDmxInput(event: Event) {
-  const value = Number((event.target as HTMLInputElement).value);
-  setChannel(props.path, value, props.channel.type);
-}
-
 function onIndexedChange(index: number | null) {
   if (index === null || Number.isNaN(index)) return;
   setChannel(props.path, indexToDmx(index, props.channel), props.channel.type);
+}
+
+function onEncoderUpdate(value: number) {
+  setChannel(props.path, value, props.channel.type);
 }
 </script>
 
@@ -51,42 +51,34 @@ function onIndexedChange(index: number | null) {
         filled
         dark
         :label="channel.name"
-        class="indexed-select"
+        class="indexed-select sdmx-focus-ring"
+        :data-sdmx-info="`Indexed channel: ${channel.name}`"
         @update:model-value="onIndexedChange"
       />
-      <span v-if="showDmxHint !== false" class="dmx-hint">DMX {{ dmxValue }}</span>
+      <SdmxValueField v-if="showDmxHint !== false" label="DMX" :value="dmxValue" size="sm" />
     </template>
     <template v-else>
-      <input
-        type="range"
+      <SdmxEncoder
+        :model-value="dmxValue"
+        :label="channel.name"
         :min="channel.minValue"
         :max="channel.maxValue"
-        :value="dmxValue"
-        @input="onDmxInput"
+        :changed="dmxValue > 0"
+        :info="`Channel: ${channel.name}`"
+        @update:model-value="onEncoderUpdate"
       />
-      <span>{{ dmxValue }}</span>
     </template>
   </div>
 </template>
 
 <style scoped>
 .channel-control {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: center;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdmx-space-xs);
 }
 
 .indexed-select {
-  grid-column: 1 / -1;
-}
-
-.dmx-hint {
-  font-size: 12px;
-  color: var(--sdmx-color-text-muted);
-}
-
-input[type='range'] {
   width: 100%;
 }
 </style>

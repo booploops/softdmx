@@ -14,7 +14,9 @@ import { useUIStore } from 'src/stores/ui';
 import { useChannelControl } from 'src/composables/useChannelControl';
 import MasterBar from 'src/components/desk/MasterBar.vue';
 import DeskShell from 'src/components/desk/DeskShell.vue';
+import CommandLineBar from 'src/components/desk/CommandLineBar.vue';
 import CueEditor from 'src/components/CueEditor.vue';
+import InfoModeProvider from 'src/components/ui/InfoModeProvider.vue';
 
 const dmx = useDMXStore();
 const executor = useExecutorStore();
@@ -40,6 +42,10 @@ function onKeydown(event: KeyboardEvent) {
   }
   if (event.code === 'Escape') {
     event.preventDefault();
+    if (ui.commandLineOpen) {
+      ui.toggleCommandLine(false);
+      return;
+    }
     if (ui.dialogs.cueEditor) {
       ui.closeDialog('cueEditor');
       return;
@@ -60,6 +66,16 @@ function onKeydown(event: KeyboardEvent) {
   if (event.code === 'KeyB') {
     event.preventDefault();
     output.setBlackout(!output.blackout);
+    return;
+  }
+  if (event.key === '`' || (event.ctrlKey && event.code === 'KeyK')) {
+    event.preventDefault();
+    ui.toggleCommandLine();
+    return;
+  }
+  if (event.code === 'KeyI' && event.shiftKey) {
+    event.preventDefault();
+    ui.toggleInfoMode();
     return;
   }
   if (event.code === 'Delete' && ui.isLive && !ui.dialogs.cueEditor) {
@@ -93,13 +109,16 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <q-page class="index-page column no-wrap">
-    <MasterBar />
-    <div class="index-page-body">
-      <CueEditor v-if="ui.dialogs.cueEditor" class="cue-editor-panel" @close="ui.closeDialog('cueEditor')" />
-      <DeskShell v-else />
-    </div>
-  </q-page>
+  <InfoModeProvider>
+    <q-page class="index-page column no-wrap">
+      <MasterBar />
+      <div class="index-page-body">
+        <CueEditor v-if="ui.dialogs.cueEditor" class="cue-editor-panel" @close="ui.closeDialog('cueEditor')" />
+        <DeskShell v-else />
+      </div>
+      <CommandLineBar />
+    </q-page>
+  </InfoModeProvider>
 </template>
 
 <style scoped>

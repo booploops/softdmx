@@ -10,6 +10,7 @@ import SetupNav from './SetupNav.vue';
 import PatchPanel from 'src/components/PatchPanel.vue';
 import ShowfileEditor from 'src/components/ShowfileEditor.vue';
 import VideoMappingPanel from 'src/components/VideoMappingPanel.vue';
+import GridNodePreview from 'src/components/GridNodePreview.vue';
 import { useUIStore } from 'src/stores/ui';
 
 const ui = useUIStore();
@@ -20,7 +21,10 @@ const ui = useUIStore();
     <SetupNav class="setup-nav" />
     <div class="setup-editor">
       <PatchPanel v-if="ui.setupSection === 'patch'" />
-      <VideoMappingPanel v-else-if="ui.setupSection === 'video'" />
+      <div v-else-if="ui.setupSection === 'video'" class="setup-video-column">
+        <VideoMappingPanel />
+        <GridNodePreview class="q-mt-md" />
+      </div>
       <ShowfileEditor v-else-if="ui.setupSection === 'showfile'" embedded />
     </div>
   </div>

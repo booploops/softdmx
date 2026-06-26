@@ -100,6 +100,25 @@ export const useTouchLayoutStore = defineStore('touch-layout', () => {
     });
   }
 
+  function moveControl(controlId: string, rect: Partial<TouchControl['rect']>) {
+    const page = activePage.value;
+    if (!page) return;
+    const control = page.controls.find((entry) => entry.id === controlId);
+    if (!control) return;
+    control.rect = { ...control.rect, ...rect };
+    showStore.markDirty();
+  }
+
+  function resizeControl(controlId: string, deltaW: number, deltaH: number) {
+    const page = activePage.value;
+    if (!page) return;
+    const control = page.controls.find((entry) => entry.id === controlId);
+    if (!control) return;
+    control.rect.w = Math.max(1, control.rect.w + deltaW);
+    control.rect.h = Math.max(1, control.rect.h + deltaH);
+    showStore.markDirty();
+  }
+
   return {
     activePageId,
     editMode,
@@ -108,6 +127,8 @@ export const useTouchLayoutStore = defineStore('touch-layout', () => {
     setActivePageId,
     addControl,
     removeControl,
+    moveControl,
+    resizeControl,
     rebuildFromShow,
     addPresetControl,
     addExecutorControl,

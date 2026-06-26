@@ -12,7 +12,8 @@ export type DeskWindowType =
   | "widgets"
   | "programmer"
   | "plot"
-  | "presets";
+  | "presets"
+  | "attribute-control";
 
 export interface DeskPaneRect {
   x: number;

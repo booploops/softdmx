@@ -9,6 +9,7 @@
 import { Dialog, useDialogPluginComponent } from 'quasar';
 import { useThemeStore } from 'src/stores/theme';
 import { THEME_CSS_VAR_KEYS } from 'src/themes/css-vars';
+import ThemeGallery from 'src/components/ThemeGallery.vue';
 
 const themeStore = useThemeStore();
 
@@ -113,6 +114,11 @@ function resetTheme() {
       </q-card-section>
 
     <q-card-section class="q-gutter-y-md dialog-body">
+      <div class="text-subtitle2">Theme gallery</div>
+      <ThemeGallery />
+
+      <q-separator dark />
+
       <q-select
         :model-value="themeStore.activeThemeId"
         :options="themeOptions"

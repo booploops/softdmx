@@ -54,6 +54,16 @@ export const DEFAULT_DESK_VIEWS: DeskView[] = [
         windowType: "programmer",
         rect: { x: 8, y: 0, w: 4, h: 12 },
       },
+      {
+        id: "focus-attributes",
+        windowType: "attribute-control",
+        rect: { x: 8, y: 0, w: 4, h: 6 },
+      },
+      {
+        id: "focus-programmer",
+        windowType: "programmer",
+        rect: { x: 8, y: 6, w: 4, h: 6 },
+      },
     ],
   },
   {

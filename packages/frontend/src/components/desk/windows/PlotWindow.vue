@@ -7,11 +7,14 @@
 -->
 <script setup lang="ts">
 import VisualizerPanel from 'src/components/VisualizerPanel.vue';
+import VisualizerPanel3D from 'src/components/VisualizerPanel3D.vue';
 import { useShowStore } from 'src/stores/show';
 import { useSelectionStore } from 'src/stores/selection';
+import { SdmxButton } from 'src/components/ui';
 
 const showStore = useShowStore();
 const selection = useSelectionStore();
+const viewMode = ref<'2d' | '3d'>('2d');
 
 const fixtures = computed(() =>
   showStore.document.fixtures.map((f) => ({
@@ -27,7 +30,33 @@ function onFixtureSelect(name: string) {
 
 <template>
   <div class="plot-window">
-    <VisualizerPanel compact :fixtures="fixtures" @select-fixture="onFixtureSelect" />
+    <div class="plot-window__toolbar">
+      <SdmxButton
+        label="2D"
+        size="sm"
+        :variant="viewMode === '2d' ? 'primary' : 'ghost'"
+        info="Top-down 2D plot view"
+        @click="viewMode = '2d'"
+      />
+      <SdmxButton
+        label="3D"
+        size="sm"
+        :variant="viewMode === '3d' ? 'primary' : 'ghost'"
+        info="Real-time 3D stage visualizer"
+        @click="viewMode = '3d'"
+      />
+    </div>
+    <VisualizerPanel3D
+      v-if="viewMode === '3d'"
+      :fixtures="fixtures"
+      @select-fixture="onFixtureSelect"
+    />
+    <VisualizerPanel
+      v-else
+      compact
+      :fixtures="fixtures"
+      @select-fixture="onFixtureSelect"
+    />
   </div>
 </template>
 
@@ -39,5 +68,13 @@ function onFixtureSelect(name: string) {
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+.plot-window__toolbar {
+  display: flex;
+  gap: var(--sdmx-space-xs);
+  padding: var(--sdmx-space-xs) var(--sdmx-space-sm);
+  border-bottom: 1px solid var(--sdmx-color-border-subtle);
+  flex-shrink: 0;
 }
 </style>

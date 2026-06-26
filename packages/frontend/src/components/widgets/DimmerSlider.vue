@@ -8,58 +8,51 @@
 <script setup lang="ts">
 import { DimmerSliderModel } from './dimmer-slider.types';
 import { useChannelBinding } from 'src/composables/useChannelBinding';
+import { SdmxEncoder, SdmxValueField } from 'src/components/ui';
 
 const val = defineModel<DimmerSliderModel>({ required: true });
 
 const dimmer = useChannelBinding(val.value.dimmerChannel, 'intensity');
 
-const dimmerPercentage = computed(() => {
-  return Math.round((dimmer.value / 255) * 100);
-});
+const dimmerPercentage = computed(() => Math.round((dimmer.value / 255) * 100));
 </script>
 
 <template>
-  <div class="dimmer-slider-widget">
+  <div class="dimmer-slider-widget sdmx-widget">
     <div class="dimmer-header">
-      <span class="dimmer-title">{{ val.dimmerChannel.name }}</span>
-      <span class="dimmer-percentage">{{ dimmerPercentage }}%</span>
+      <span class="sdmx-text-label">{{ val.dimmerChannel.name }}</span>
+      <SdmxValueField :value="dimmerPercentage" unit="%" size="sm" />
     </div>
-
-    <div class="slider-container">
-      <q-slider
-        v-model="dimmer"
-        :min="0"
-        :max="255"
-        :step="1"
-        color="primary"
-        track-color="grey-8"
-        thumb-color="accent"
-        track-size="8px"
-        thumb-size="20px"
-        class="dimmer-slider"
-      />
-    </div>
-
+    <SdmxEncoder
+      v-model="dimmer"
+      :label="val.dimmerChannel.name"
+      :min="0"
+      :max="255"
+      unit="%"
+      :changed="dimmer > 0"
+    />
     <div class="value-display">
-      <div class="dmx-value">
-        <span class="label">DMX:</span>
-        <span class="value">{{ dimmer }}</span>
-      </div>
+      <SdmxValueField label="DMX" :value="dimmer" size="sm" />
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
 .dimmer-slider-widget {
-  background: var(--sdmx-color-bg-surface);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--sdmx-radius-md);
+  padding: var(--sdmx-space-md);
   min-width: 200px;
   user-select: none;
 }
+
 .dimmer-header {
   display: flex;
   justify-content: space-between;
-  margin-bottom: 12px;
+  align-items: center;
+  margin-bottom: var(--sdmx-space-sm);
+}
+
+.value-display {
+  margin-top: var(--sdmx-space-xs);
 }
 </style>

@@ -1,0 +1,24 @@
+---
+description: SoftDMX UI/UX design system — use tokens and primitives for all frontend work
+globs:
+  - packages/frontend/src/**/*.vue
+  - packages/frontend/src/**/*.scss
+  - packages/frontend/src/**/*.ts
+alwaysApply: false
+---
+
+# SoftDMX UI design system
+
+When building or modifying SoftDMX frontend UI:
+
+1. **Use design tokens** — never hardcode colors, spacing, typography, or radii. Reference `--sdmx-*` CSS variables or theme types in `src/themes/types.ts`.
+2. **Use UI primitives** — import from `src/components/ui/` instead of raw Quasar controls for desk/console UI:
+   - `SdmxButton`, `SdmxToggle`, `SdmxStatusChip`, `SdmxValueField`, `SdmxFader`, `SdmxEncoder`, `SdmxWindowChrome`, `SdmxPanel`, `SdmxEmptyState`
+3. **Use utility classes** from `src/css/theme.scss` and `src/css/desk.scss` for surfaces, typography, and state styling.
+4. **Tabular numerics** — fixture values, fader levels, and DMX numbers must use `font-variant-numeric: tabular-nums` (via `.sdmx-text-mono` or `SdmxValueField`).
+5. **Touch targets** — interactive controls on desk/remote surfaces must meet `--sdmx-space-touch` (44px) minimum.
+6. **Semantic state colors** — use `--sdmx-color-scratch`, `--sdmx-color-active`, `--sdmx-color-armed`, `--sdmx-color-flash`, `--sdmx-color-blind` for lighting-specific states.
+7. **Info mode** — add `data-sdmx-info="description"` on interactive elements that benefit from discoverability tooltips.
+8. **Empty states** — use `SdmxEmptyState` instead of bare text when a panel has no content.
+
+See `docs/design-tokens.md` for the full token reference.

@@ -7,6 +7,7 @@
 -->
 <template>
   <q-layout view="hHh lpr lFf" class="app-layout">
+    <a href="#main-content" class="skip-link sdmx-focus-ring">Skip to main content</a>
     <q-header
       class="bg-dark text-white app-titlebar"
       :class="{
@@ -40,7 +41,7 @@
       <AppSidebarMenu />
     </q-drawer>
 
-    <q-page-container class="app-page-container">
+    <q-page-container id="main-content" class="app-page-container">
       <router-view />
     </q-page-container>
 
@@ -101,6 +102,23 @@ const $q = useQuasar();
   display: flex;
   flex-direction: column;
 }
+
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: var(--sdmx-space-sm);
+  z-index: 10000;
+  padding: var(--sdmx-space-sm) var(--sdmx-space-md);
+  background: var(--sdmx-color-primary);
+  color: var(--sdmx-color-text);
+  border-radius: var(--sdmx-radius-sm);
+  text-decoration: none;
+  font-size: var(--sdmx-font-size-label);
+}
+
+.skip-link:focus {
+  top: var(--sdmx-space-sm);
+}
 </style>
 
 <style lang="scss">
@@ -108,7 +126,7 @@ const $q = useQuasar();
   -webkit-app-region: no-drag;
 }
 
-.sdmx-drawer--mac :deep(.q-drawer__content) {
+.sdmx-drawer--mac .q-drawer__content {
   padding-top: var(--sdmx-mac-titlebar-inset-top);
   padding-left: var(--sdmx-mac-titlebar-inset-left);
 }

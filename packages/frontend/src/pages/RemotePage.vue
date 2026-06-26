@@ -11,6 +11,8 @@ import { useIOClient } from 'src/lib/io-client';
 import type { ShowDocument } from '@softdmx/engine';
 import { isSupportedShowVersion } from '@softdmx/engine';
 import TouchSurface from 'src/components/touch/TouchSurface.vue';
+import InfoModeProvider from 'src/components/ui/InfoModeProvider.vue';
+import { SdmxStatusChip, SdmxEmptyState } from 'src/components/ui';
 
 const socket = useIOClient();
 const showDoc = ref<ShowDocument | null>(null);
@@ -54,38 +56,41 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="remote-page">
-    <header class="remote-header">
-      <div class="title-block">
-        <div class="title">{{ showName }}</div>
-        <div class="subtitle">SoftDMX Touch</div>
-      </div>
-      <q-badge :color="isConnected ? 'positive' : 'negative'">{{ isConnected ? 'ONLINE' : 'OFFLINE' }}</q-badge>
-    </header>
-    <TouchSurface :page="touchPage" />
-  </div>
+  <InfoModeProvider>
+    <div class="remote-page sdmx-remote-page">
+      <header class="remote-header">
+        <div class="title-block">
+          <div class="sdmx-text-title">{{ showName }}</div>
+          <div class="sdmx-text-caption">SoftDMX Touch</div>
+        </div>
+        <SdmxStatusChip
+          :label="isConnected ? 'Online' : 'Offline'"
+          :variant="isConnected ? 'positive' : 'negative'"
+          info="Connection status to SoftDMX desk"
+        />
+      </header>
+      <TouchSurface v-if="touchPage" :page="touchPage" />
+      <SdmxEmptyState
+        v-else
+        icon="touch_app"
+        title="No touch layout"
+        hint="Configure a touch page in Program → Touch to use this remote."
+      />
+    </div>
+  </InfoModeProvider>
 </template>
 
 <style scoped>
 .remote-page {
   min-height: 100vh;
-  padding: 12px;
-  background: var(--sdmx-color-bg-page);
-  color: var(--sdmx-color-text);
+  padding: var(--sdmx-space-md);
   display: grid;
-  gap: 12px;
+  gap: var(--sdmx-space-md);
 }
+
 .remote-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-}
-.title {
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-.subtitle {
-  color: var(--sdmx-color-text-muted);
-  font-size: 0.85rem;
 }
 </style>
