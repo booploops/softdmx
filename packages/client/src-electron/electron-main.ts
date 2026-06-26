@@ -6,24 +6,17 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 import { app, BrowserWindow } from "electron";
-import path from "path";
 import { fileURLToPath } from "url";
 import { startServer } from "./server";
-import { createArtnetWindow } from "./windows/artnet-window";
 import { AppState } from "./state/main";
-import { getDevUrl, isDev } from "./runtime/env";
 import { Paths } from "./runtime/paths";
-import { setupOscListener, closeOscListener } from "./ipc/osc-ipc";
-import { setupAbletonLink, closeAbletonLink } from "./ipc/link-ipc";
+import { closeOscListener } from "./ipc/osc-ipc";
+import { closeAbletonLink } from "./ipc/link-ipc";
 import { setupGridNodeOverlayIpc, closeGridNodeOverlayIpc } from "./ipc/gridnode-ipc";
-import { applyGridNodeOverlayWindowState } from "./windows/gridnode-overlay";
-import { setupVideoIpc, closeVideoIpc } from "./ipc/video-ipc";
-import {
-  buildOutputNodeUrl,
-  configureOutputNodeWindow,
-  isOutputNodeMode,
-} from "./modes/output-node";
-import { setBackupPrimaryWindow } from "./backup/coordinator";
+import { closeVideoIpc } from "./ipc/video-ipc";
+import { isOutputNodeMode } from "./modes/output-node";
+import { createMainWindow } from "./windows/main-window";
+import { createOutputNodeWindow } from "./windows/output-node-window";
 
 app.setPath("userData", Paths.appData);
 
@@ -65,58 +58,11 @@ async function createWindow() {
   startServer();
   setupGridNodeOverlayIpc();
 
-  const outputNode = isOutputNodeMode();
-
-  mainWindow = new BrowserWindow({
-    icon: path.resolve(currentDir, "icons/icon.png"),
-    width: outputNode ? 360 : 1000,
-    height: outputNode ? 240 : 600,
-    show: !outputNode,
-    useContentSize: true,
-    backgroundColor: "#1D1D1D",
-    resizable: !outputNode,
-    maximizable: !outputNode,
-    titleBarOverlay: outputNode
-      ? undefined
-      : {
-          color: "#1D1D1D",
-          symbolColor: "#FFFFFF",
-        },
-    trafficLightPosition: outputNode
-      ? undefined
-      : {
-          x: 12,
-          y: 16,
-        },
-    titleBarStyle: outputNode ? "default" : "hidden",
-    webPreferences: {
-      contextIsolation: true,
-      preload: path.resolve(currentDir, "preload.js"),
-    },
-  });
-
-  if (outputNode) {
-    configureOutputNodeWindow(mainWindow);
+  if (isOutputNodeMode()) {
+    mainWindow = await createOutputNodeWindow(currentDir);
+  } else {
+    mainWindow = await createMainWindow(currentDir);
   }
-
-  setupVideoIpc(mainWindow);
-  setBackupPrimaryWindow(mainWindow);
-
-  const appBase = isDev() ? getDevUrl() : `http://127.0.0.1:${AppState.port}/app/`;
-  const loadUrl = outputNode ? buildOutputNodeUrl(appBase) : appBase;
-  await mainWindow.loadURL(loadUrl);
-
-  if (process.env.DEBUGGING && !outputNode) {
-    mainWindow.webContents.openDevTools();
-  }
-
-  if (!outputNode) {
-    AppState.artnetWindow = await createArtnetWindow();
-    applyGridNodeOverlayWindowState();
-  }
-
-  setupOscListener(mainWindow);
-  setupAbletonLink(mainWindow);
 
   mainWindow.on("closed", () => {
     mainWindow = undefined;
