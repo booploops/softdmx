@@ -68,10 +68,6 @@ const $q = useQuasar();
 
 .app-titlebar {
   -webkit-app-region: drag;
-
-  &.is-mac {
-    padding-left: var(--sdmx-mac-titlebar-inset-left);
-  }
 }
 
 .titlebar-toolbar {

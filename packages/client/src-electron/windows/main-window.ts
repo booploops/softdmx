@@ -17,7 +17,9 @@ import { applyGridNodeOverlayWindowState } from "./gridnode-overlay";
 import { setupOscListener } from "../ipc/osc-ipc";
 import { setupAbletonLink } from "../ipc/link-ipc";
 
-export async function createMainWindow(currentDir: string): Promise<BrowserWindow> {
+export async function createMainWindow(
+  currentDir: string,
+): Promise<BrowserWindow> {
   const mainWindow = new BrowserWindow({
     icon: path.resolve(currentDir, "icons/icon.png"),
     width: 1000,
@@ -27,15 +29,6 @@ export async function createMainWindow(currentDir: string): Promise<BrowserWindo
     backgroundColor: "#1D1D1D",
     resizable: true,
     maximizable: true,
-    titleBarOverlay: {
-      color: "#1D1D1D",
-      symbolColor: "#FFFFFF",
-    },
-    trafficLightPosition: {
-      x: 12,
-      y: 16,
-    },
-    titleBarStyle: "hidden",
     webPreferences: {
       contextIsolation: true,
       preload: path.resolve(currentDir, "preload.js"),
@@ -45,7 +38,9 @@ export async function createMainWindow(currentDir: string): Promise<BrowserWindo
   setupVideoIpc(mainWindow);
   setBackupPrimaryWindow(mainWindow);
 
-  const appBase = isDev() ? getDevUrl() : `http://127.0.0.1:${AppState.port}/app/`;
+  const appBase = isDev()
+    ? getDevUrl()
+    : `http://127.0.0.1:${AppState.port}/app/`;
   await mainWindow.loadURL(appBase);
 
   if (process.env.DEBUGGING) {
