@@ -6,10 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import type { SoftDmxWasmExports } from "@softdmx/wasm";
+export type { SoftDmxWasmExports } from "@softdmx/wasm";
 
 let wasmInstance: WebAssembly.Instance | null = null;
 let wasmExports: SoftDmxWasmExports | null = null;
@@ -21,7 +19,23 @@ let wasmExports: SoftDmxWasmExports | null = null;
 export async function initWasmEngine(): Promise<SoftDmxWasmExports | null> {
   if (wasmExports) return wasmExports;
 
+  // Safeguard: instantly exit if running in a browser or browser web worker environment
+  const isNode = typeof process !== "undefined" && process.versions && process.versions.node;
+  if (!isNode) {
+    return null;
+  }
+
   try {
+    // We use variable-based dynamic imports to prevent browser bundlers (like Vite)
+    // from statically analyzing and attempting to package these Node-only modules.
+    const fsName = "node:fs";
+    const pathName = "node:path";
+    const urlName = "node:url";
+
+    const fs = (await import(fsName)) as typeof import("node:fs");
+    const path = (await import(pathName)) as typeof import("node:path");
+    const { fileURLToPath } = (await import(urlName)) as typeof import("node:url");
+
     const currentDir = path.dirname(fileURLToPath(import.meta.url));
     const wasmPath = path.resolve(currentDir, "../../../wasm/dist/softdmx.wasm");
     if (fs.existsSync(wasmPath)) {

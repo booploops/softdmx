@@ -26,7 +26,7 @@ export function useFixtureImport() {
     try {
       if (lower.endsWith('.gdtf')) {
         const bytes = await readFileBytes(file);
-        const fixture = registerRuntimeFixtureFromGdtf(bytes, file.name);
+        const fixture = await registerRuntimeFixtureFromGdtf(bytes, file.name);
         Notify.create({ type: 'positive', message: `Imported GDTF fixture ${fixture.name}` });
         return fixture;
       }

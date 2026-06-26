@@ -30,6 +30,20 @@ export default defineConfig([
     },
   },
   {
+    input: "src-electron/output/output-worker.ts",
+    output: {
+      file: "dist-electron/output-worker.js",
+      format: "esm",
+    },
+    external,
+    platform: "node",
+    resolve: {
+      alias: {
+        src: path.resolve(__dirname, "../frontend/src"),
+      },
+    },
+  },
+  {
     input: "src-electron/electron-preload.ts",
     output: {
       file: "dist-electron/preload.js",

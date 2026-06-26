@@ -8,19 +8,15 @@
 
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import type { BindingTarget, MidiMapping } from '@softdmx/engine';
+import type { BindingTarget } from '@softdmx/engine';
 import { useShowStore } from './show';
 import { useCueStore } from './cue';
 import { useOutputEngineStore } from './output-playback';
 import { useChannelControl } from 'src/composables/useChannelControl';
-import {
-  parseMidiMessage,
-  parseMidiShowControl,
-  scaleMidiToDmx,
-  MtcAssembler,
-  parseMtcQuarterFrame,
-} from '@softdmx/engine';
 import { useTimecodeStore } from './timecode';
+import MidiParserWorker from '../workers/midi-parser.worker.ts?worker';
+
+import type { MidiWorkerResponse } from '../workers/midi-parser.worker.ts';
 
 export const useMidiStore = defineStore('midi', () => {
   const showStore = useShowStore();
@@ -31,7 +27,8 @@ export const useMidiStore = defineStore('midi', () => {
   const isLearning = ref(false);
   const activeLearnTarget = ref<BindingTarget | null>(null);
   const isMidiSupported = ref(false);
-  const mtcAssembler = new MtcAssembler();
+
+  let worker: Worker | null = null;
 
   const mappings = computed(() => showStore.document.bindings.midi);
 
@@ -82,11 +79,15 @@ export const useMidiStore = defineStore('midi', () => {
     }
   }
 
-  function handleMidiInput(data: Uint8Array | number[]) {
-    const mtcQuarter = parseMtcQuarterFrame(data);
-    if (mtcQuarter !== null) {
-      const frame = mtcAssembler.feed(mtcQuarter);
-      if (frame) {
+  function initWorker() {
+    if (worker) return;
+    worker = new MidiParserWorker();
+    worker.onmessage = (e: MessageEvent<MidiWorkerResponse>) => {
+      const msg = e.data;
+      if (!msg) return;
+
+      if (msg.type === 'mtc') {
+        const { frame } = msg;
         useTimecodeStore().applyMtcFrame(
           frame.hours,
           frame.minutes,
@@ -94,51 +95,48 @@ export const useMidiStore = defineStore('midi', () => {
           frame.frames,
           frame.frameRate
         );
+      } else if (msg.type === 'msc') {
+        const cueId = findCueIdByToken(msg.cueNumber);
+        if (msg.command === 'go' || msg.command === 'cue') {
+          if (cueId) cueStore.playCue(cueId);
+        } else if (msg.command === 'stop') {
+          if (cueId) cueStore.stopCue(cueId);
+          else cueStore.stopAllCues();
+        }
+      } else if (msg.type === 'message') {
+        const { channel, controlType, control, targetValue } = msg;
+
+        if (isLearning.value && activeLearnTarget.value) {
+          const target = { ...activeLearnTarget.value };
+          showStore.updateDocument((doc) => {
+            doc.bindings.midi = doc.bindings.midi.filter(
+              (m) => JSON.stringify(m.target) !== JSON.stringify(target)
+            );
+            doc.bindings.midi.push({
+              id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              channel,
+              controlType,
+              controlNumber: control,
+              target,
+            });
+          });
+          isLearning.value = false;
+          activeLearnTarget.value = null;
+          return;
+        }
+
+        mappings.value
+          .filter((m) => m.channel === channel && m.controlType === controlType && m.controlNumber === control)
+          .forEach((m) => applyTarget(m.target, targetValue));
       }
-      return;
+    };
+  }
+
+  function handleMidiInput(data: Uint8Array | number[]) {
+    if (!worker) {
+      initWorker();
     }
-
-    const msc = parseMidiShowControl(data);
-    if (msc) {
-      const cueId = findCueIdByToken(msc.cueNumber);
-      if (msc.command === 'go' || msc.command === 'cue') {
-        if (cueId) cueStore.playCue(cueId);
-      } else if (msc.command === 'stop') {
-        if (cueId) cueStore.stopCue(cueId);
-        else cueStore.stopAllCues();
-      }
-      return;
-    }
-
-    const parsed = parseMidiMessage(data);
-    if (!parsed) return;
-
-    const { command, channel, control, value } = parsed;
-    const controlType = command === 0xb0 ? 'cc' : 'note';
-
-    if (isLearning.value && activeLearnTarget.value) {
-      const target = { ...activeLearnTarget.value };
-      showStore.updateDocument((doc) => {
-        doc.bindings.midi = doc.bindings.midi.filter(
-          (m) => JSON.stringify(m.target) !== JSON.stringify(target)
-        );
-        doc.bindings.midi.push({
-          id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-          channel,
-          controlType,
-          controlNumber: control,
-          target,
-        });
-      });
-      isLearning.value = false;
-      activeLearnTarget.value = null;
-      return;
-    }
-
-    const targetValue = scaleMidiToDmx(value);
-    mappings.value
-      .filter((m) => m.channel === channel && m.controlType === controlType && m.controlNumber === control)
-      .forEach((m) => applyTarget(m.target, targetValue));
+    worker.postMessage({ data });
   }
 
   function startLearning(target: BindingTarget) {

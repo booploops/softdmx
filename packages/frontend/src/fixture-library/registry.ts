@@ -18,6 +18,7 @@ import {
   loadFixtureYaml,
 } from './loader';
 import { loadFixtureFromGdtf } from '@softdmx/engine';
+import GdtfParserWorker from '../workers/gdtf-parser.worker.ts?worker';
 
 const plugins = new Map<string, SoftDMXPlugin>();
 const runtimePluginId = 'runtime-imports';
@@ -64,9 +65,26 @@ export function loadPluginsFromIds(pluginIds: string[]): void {
   }
 }
 
-export function registerRuntimeFixtureFromGdtf(bytes: Uint8Array, fileName?: string): FixtureDefinition {
-  const fixture = loadFixtureFromGdtf(bytes, fileName);
-  return registerRuntimeFixture(fixture);
+export function registerRuntimeFixtureFromGdtf(bytes: Uint8Array, fileName?: string): Promise<FixtureDefinition> {
+  return new Promise((resolve, reject) => {
+    const worker = new GdtfParserWorker();
+    worker.onmessage = (e) => {
+      if (e.data.type === 'success') {
+        const fixture = e.data.fixture;
+        const registered = registerRuntimeFixture(fixture);
+        worker.terminate();
+        resolve(registered);
+      } else {
+        worker.terminate();
+        reject(new Error(e.data.error || 'GDTF parsing failed'));
+      }
+    };
+    worker.onerror = (err) => {
+      worker.terminate();
+      reject(err);
+    };
+    worker.postMessage({ bytes, fileName });
+  });
 }
 
 function registerRuntimeFixture(fixture: FixtureDefinition): FixtureDefinition {
