@@ -24,7 +24,51 @@ export const useDeskViewStore = defineStore('desk-view', () => {
     return found ?? views.value[0] ?? DEFAULT_DESK_VIEWS[0]!;
   });
 
-  const activePanes = computed<DeskPane[]>(() => activeView.value?.panes ?? []);
+  const activePanes = computed<DeskPane[]>(() => {
+    const panes = (activeView.value?.panes ?? []).map((pane) => ({
+      ...pane,
+      rect: { ...pane.rect },
+    }));
+
+    const programmerPane = panes.find((pane) => pane.windowType === 'programmer');
+    const hasQuickProgrammer = panes.some((pane) => pane.windowType === 'quick-programmer');
+    if (programmerPane && !hasQuickProgrammer) {
+      const minProgrammerWidth = 2;
+      const desiredQuickWidth = Math.max(2, Math.floor(programmerPane.rect.w / 2));
+      const availableByProgrammer = programmerPane.rect.w - minProgrammerWidth;
+      const availableByGrid = DESK_GRID_COLS - programmerPane.rect.x - minProgrammerWidth;
+      const resolvedQuickWidth = Math.min(desiredQuickWidth, availableByProgrammer, availableByGrid);
+
+      if (resolvedQuickWidth >= 2) {
+        const nextProgrammerWidth = programmerPane.rect.w - resolvedQuickWidth;
+        const nextQuickX = programmerPane.rect.x + nextProgrammerWidth;
+
+        programmerPane.rect.w = nextProgrammerWidth;
+        panes.push({
+          id: `${activeView.value?.id ?? 'active'}-quick-programmer`,
+          windowType: 'quick-programmer',
+          rect: {
+            x: nextQuickX,
+            y: programmerPane.rect.y,
+            w: resolvedQuickWidth,
+            h: programmerPane.rect.h,
+          },
+        });
+      }
+    }
+
+    const hasPlaybackRail = panes.some((pane) => pane.windowType === 'playback-rail');
+    if (!hasPlaybackRail) {
+      const nextY = panes.reduce((maxY, pane) => Math.max(maxY, pane.rect.y + pane.rect.h), 0);
+      panes.push({
+        id: `${activeView.value?.id ?? 'active'}-playback-rail`,
+        windowType: 'playback-rail',
+        rect: { x: 0, y: nextY, w: 12, h: 3 },
+      });
+    }
+
+    return panes;
+  });
 
   watch(
     () => showStore.document.desk?.defaultViewId,

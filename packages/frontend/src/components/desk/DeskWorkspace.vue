@@ -6,7 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import type { DeskPane } from '@softdmx/engine';
+import { DESK_GRID_COLS, type DeskPane } from '@softdmx/engine';
 import { DESK_WINDOW_META } from 'src/desk/workspace-modes';
 import DeskDockviewPanel from './DeskDockviewPanel.vue';
 import { useDeskViewStore } from 'src/stores/desk-view';
@@ -36,61 +36,137 @@ function initializeLayout(api: DockviewApi) {
 
   if (panes.value.length === 0) return;
 
-  // Simple layout translation:
-  // We'll group panels by row based on `rect.y`
-  const rows = new Map<number, DeskPane[]>();
-  for (const pane of panes.value) {
-    const row = rows.get(pane.rect.y) || [];
-    row.push(pane);
-    rows.set(pane.rect.y, row);
-  }
+  // Full-width panes become global rows at the bottom (e.g. playback rail).
+  const fullWidthPanes = panes.value
+    .filter((pane) => pane.rect.w >= DESK_GRID_COLS)
+    .sort((a, b) => a.rect.y - b.rect.y);
+  // Other panes use grid-neighbor placement so rows and columns line up.
+  const regularPanes = panes.value.filter((pane) => pane.rect.w < DESK_GRID_COLS);
+  const sortedRegularPanes = [...regularPanes].sort(
+    (a, b) => a.rect.y - b.rect.y || a.rect.x - b.rect.x
+  );
+  const rowStartByY = new Map<number, number>();
+  sortedRegularPanes.forEach((pane) => {
+    const current = rowStartByY.get(pane.rect.y);
+    if (current === undefined || pane.rect.x < current) {
+      rowStartByY.set(pane.rect.y, pane.rect.x);
+    }
+  });
+  const panelIdCounts = new Map<string, number>();
+  const makePanelId = (baseId: string): string => {
+    const existing = panelIdCounts.get(baseId) ?? 0;
+    panelIdCounts.set(baseId, existing + 1);
+    return existing === 0 ? baseId : `${baseId}-${existing + 1}`;
+  };
+  const panelIdsByPane = new Map<DeskPane, string>();
 
-  // Sort rows by y
-  const sortedY = Array.from(rows.keys()).sort((a, b) => a - b);
+  let hasPanels = false;
+  let lastRegularPanelId: string | undefined;
 
-  let firstPanelIdInPrevRow: string | undefined;
+  sortedRegularPanes.forEach((pane) => {
+    const panelId = makePanelId(pane.id);
+    const title = paneMeta(pane)?.label ?? pane.windowType;
 
-  sortedY.forEach((y, rowIndex) => {
-    const rowPanes = rows.get(y)!.sort((a, b) => a.rect.x - b.rect.x);
-    let firstPanelIdInThisRow: string | undefined;
+    const leftNeighbor = sortedRegularPanes
+      .filter(
+        (candidate) =>
+          candidate !== pane &&
+          candidate.rect.y === pane.rect.y &&
+          candidate.rect.x < pane.rect.x &&
+          panelIdsByPane.has(candidate)
+      )
+      .sort((a, b) => b.rect.x - a.rect.x)[0];
 
-    rowPanes.forEach((pane, colIndex) => {
-      const panelId = pane.id;
+    const aboveNeighbor = sortedRegularPanes
+      .filter(
+        (candidate) =>
+          candidate !== pane &&
+          candidate.rect.y < pane.rect.y &&
+          panelIdsByPane.has(candidate) &&
+          candidate.rect.x < pane.rect.x + pane.rect.w &&
+          pane.rect.x < candidate.rect.x + candidate.rect.w
+      )
+      .sort((a, b) => b.rect.y - a.rect.y || b.rect.x - a.rect.x)[0];
 
-      const title = paneMeta(pane)?.label ?? pane.windowType;
+    const isRowStart = pane.rect.x === rowStartByY.get(pane.rect.y);
 
-      if (rowIndex === 0 && colIndex === 0) {
-        // First ever panel
-        api.addPanel({
-          id: panelId,
-          component: 'default',
-          title: title,
-          params: { pane: toRaw(pane) },
-        });
-        firstPanelIdInThisRow = panelId;
-      } else if (colIndex === 0) {
-        // First panel in a new row -> dock below the root layout to span full width
-        api.addPanel({
-          id: panelId,
-          component: 'default',
-          title: title,
-          position: { direction: 'below' },
-          params: { pane: toRaw(pane) },
-        });
-        firstPanelIdInThisRow = panelId;
-      } else {
-        // Subsequent panels in the same row -> dock to the right
-        api.addPanel({
-          id: panelId,
-          component: 'default',
-          title: title,
-          position: { direction: 'right', referencePanel: rowPanes[colIndex - 1].id },
-          params: { pane: toRaw(pane) },
-        });
-      }
+    if (!hasPanels) {
+      api.addPanel({
+        id: panelId,
+        component: 'default',
+        title: title,
+        params: { pane: toRaw(pane) },
+      });
+      hasPanels = true;
+    } else if (isRowStart) {
+      // First pane in a new row should split the whole layout below,
+      // not just a single column panel.
+      api.addPanel({
+        id: panelId,
+        component: 'default',
+        title: title,
+        position: { direction: 'below' },
+        params: { pane: toRaw(pane) },
+      });
+    } else if (leftNeighbor) {
+      api.addPanel({
+        id: panelId,
+        component: 'default',
+        title: title,
+        position: { direction: 'right', referencePanel: panelIdsByPane.get(leftNeighbor)! },
+        params: { pane: toRaw(pane) },
+      });
+    } else if (aboveNeighbor) {
+      api.addPanel({
+        id: panelId,
+        component: 'default',
+        title: title,
+        position: { direction: 'below', referencePanel: panelIdsByPane.get(aboveNeighbor)! },
+        params: { pane: toRaw(pane) },
+      });
+    } else {
+      api.addPanel({
+        id: panelId,
+        component: 'default',
+        title: title,
+        position: lastRegularPanelId
+          ? { direction: 'right', referencePanel: lastRegularPanelId }
+          : { direction: 'right' },
+        params: { pane: toRaw(pane) },
+      });
+    }
+
+    panelIdsByPane.set(pane, panelId);
+    lastRegularPanelId = panelId;
+  });
+
+  let previousFullWidthPanelId: string | undefined;
+  fullWidthPanes.forEach((pane) => {
+    const panelId = makePanelId(pane.id);
+    const title = paneMeta(pane)?.label ?? pane.windowType;
+
+    if (!hasPanels) {
+      api.addPanel({
+        id: panelId,
+        component: 'default',
+        title: title,
+        params: { pane: toRaw(pane) },
+      });
+      hasPanels = true;
+      previousFullWidthPanelId = panelId;
+      return;
+    }
+
+    api.addPanel({
+      id: panelId,
+      component: 'default',
+      title: title,
+      position: previousFullWidthPanelId
+        ? { direction: 'below', referencePanel: previousFullWidthPanelId }
+        : { direction: 'below' },
+      params: { pane: toRaw(pane) },
     });
-
-    firstPanelIdInPrevRow = firstPanelIdInThisRow;
+    previousFullWidthPanelId = panelId;
   });
 }
 

@@ -35,6 +35,7 @@ const { clearScratch, setChannel } = useChannelControl();
 const filterSelection = ref(false);
 const showSavePreset = ref(false);
 const presetName = ref('');
+const programmerPage = ref<'controls' | 'scratch'>('controls');
 
 const alignModeOptions: Array<{ label: string; value: AlignMode }> = [
   { label: 'None', value: 'none' },
@@ -122,10 +123,45 @@ function storeProgrammerPreset() {
 function saveAsPreset() {
   storeProgrammerPreset();
 }
+
+function isEditableTarget(target: EventTarget | null): boolean {
+  const el = target as HTMLElement | null;
+  if (!el) return false;
+  const tag = el.tagName.toLowerCase();
+  return tag === 'input' || tag === 'textarea' || el.isContentEditable;
+}
+
+function switchProgrammerPage(direction: 1 | -1) {
+  const order: Array<'controls' | 'scratch'> = ['controls', 'scratch'];
+  const index = order.indexOf(programmerPage.value);
+  const next = (index + direction + order.length) % order.length;
+  programmerPage.value = order[next]!;
+}
+
+function onProgrammerKeydown(event: KeyboardEvent) {
+  if (isEditableTarget(event.target)) return;
+
+  // Ctrl+Tab / Ctrl+Shift+Tab cycles programmer pages.
+  if (event.ctrlKey && event.key === 'Tab') {
+    event.preventDefault();
+    switchProgrammerPage(event.shiftKey ? -1 : 1);
+    return;
+  }
+
+  if (event.key === '[') {
+    event.preventDefault();
+    switchProgrammerPage(-1);
+    return;
+  }
+  if (event.key === ']') {
+    event.preventDefault();
+    switchProgrammerPage(1);
+  }
+}
 </script>
 
 <template>
-  <div class="programmer-window">
+  <div class="programmer-window" tabindex="0" @keydown="onProgrammerKeydown">
     <div v-if="ui.programmerCollapsed" class="row items-center q-px-sm q-py-xs q-gutter-xs">
       <q-icon v-if="scratch.isActive" name="mdi-circle" color="white" size="xs" class="pulse" />
       <span class="text-caption">{{ scratch.activeCount }} active</span>
@@ -160,92 +196,110 @@ function saveAsPreset() {
         />
       </div>
 
-      <SelectionControlPanel />
+      <q-tabs
+        v-model="programmerPage"
+        dense
+        no-caps
+        align="left"
+        indicator-color="primary"
+        class="programmer-page-tabs q-px-sm"
+      >
+        <q-tab name="scratch" label="Scratch" />
+        <q-tab name="controls" label="Controls" />
+      </q-tabs>
 
-      <div class="row q-px-sm q-pb-xs q-gutter-xs flex-wrap items-center programmer-secondary-toolbar">
-        <q-btn-toggle
-          v-model="programmer.storeMode"
-          dense
-          no-caps
-          toggle-color="secondary"
-          :options="storeModeOptions.map((option) => ({ label: option.label, value: option.value }))"
-        />
-        <q-select
-          v-model="programmer.selectedPoolId"
-          dense
-          outlined
-          emit-value
-          map-options
-          :options="poolOptions"
-          label="Pool"
-          style="min-width: 120px"
-        />
-        <q-input
-          v-model.number="programmer.selectedPoolSlot"
-          dense
-          outlined
-          type="number"
-          min="0"
-          label="Slot"
-          style="width: 90px"
-        />
-        <q-select
-          v-model="selection.alignMode"
-          dense
-          outlined
-          emit-value
-          map-options
-          :options="alignModeOptions"
-          label="Align"
-          style="min-width: 110px"
-        />
-        <q-input
-          v-model.number="selection.wings"
-          dense
-          outlined
-          type="number"
-          min="0"
-          label="Wings"
-          style="width: 90px"
-        />
-        <q-select
-          v-model="selection.wingDirection"
-          dense
-          outlined
-          emit-value
-          map-options
-          :options="wingDirectionOptions"
-          label="Wing Dir"
-          style="min-width: 110px"
-        />
-        <q-btn dense flat label="Apply Wings @128" @click="applyWingsToSelection('Pan', 128)" />
-      </div>
+      <q-tab-panels v-model="programmerPage" animated class="programmer-pages">
+        <q-tab-panel name="scratch" class="programmer-page programmer-page--scratch q-pa-none">
+          <div class="programmer-scratch-header row items-center q-px-sm q-py-xs">
+            <span class="text-caption text-weight-bold">Scratch</span>
+            <q-space />
+            <q-toggle v-model="filterSelection" dense label="Filter to selection" />
+          </div>
 
-      <div class="programmer-scratch-header row items-center q-px-sm q-py-xs">
-        <span class="text-caption text-weight-bold">Scratch</span>
-        <q-space />
-        <q-toggle v-model="filterSelection" dense label="Filter to selection" />
-      </div>
-
-      <div v-if="entries.length" class="programmer-grid programmer-body">
-        <div v-for="entry in entries" :key="entry.path" class="programmer-row">
-          <div class="col text-caption" style="min-width: 0; flex: 1">
-            <div class="text-weight-bold ellipsis">
-              {{ entry.attributeName ?? entry.path.split('/').pop() }}
-            </div>
-            <div class="ellipsis text-grey-5">
-              {{ entry.feature ?? entry.attributeType }} · {{ entry.path }}
+          <div v-if="entries.length" class="programmer-grid programmer-body">
+            <div v-for="entry in entries" :key="entry.path" class="programmer-row">
+              <div class="col text-caption" style="min-width: 0; flex: 1">
+                <div class="text-weight-bold ellipsis">
+                  {{ entry.attributeName ?? entry.path.split('/').pop() }}
+                </div>
+                <div class="ellipsis text-grey-5">
+                  {{ entry.feature ?? entry.attributeType }} · {{ entry.path }}
+                </div>
+              </div>
+              <div class="programmer-row-bar">
+                <div class="programmer-row-fill" :style="{ width: `${(entry.value / 255) * 100}%` }" />
+              </div>
+              <div class="text-caption text-weight-bold" style="width: 36px; text-align: right">{{ entry.value }}</div>
             </div>
           </div>
-          <div class="programmer-row-bar">
-            <div class="programmer-row-fill" :style="{ width: `${(entry.value / 255) * 100}%` }" />
+          <div v-else class="programmer-body q-pa-md text-center text-grey-5 text-caption">
+            No scratch values for {{ programmer.activeFeatureGroup }}. Adjust selection controls above.
           </div>
-          <div class="text-caption text-weight-bold" style="width: 36px; text-align: right">{{ entry.value }}</div>
-        </div>
-      </div>
-      <div v-else class="programmer-body q-pa-md text-center text-grey-5 text-caption">
-        No scratch values for {{ programmer.activeFeatureGroup }}. Adjust selection controls above.
-      </div>
+        </q-tab-panel>
+
+        <q-tab-panel name="controls" class="programmer-page programmer-page--controls q-pa-none">
+          <div class="row q-px-sm q-pb-xs q-gutter-xs flex-wrap items-center programmer-secondary-toolbar">
+            <q-btn-toggle
+              v-model="programmer.storeMode"
+              dense
+              no-caps
+              toggle-color="secondary"
+              :options="storeModeOptions.map((option) => ({ label: option.label, value: option.value }))"
+            />
+            <q-select
+              v-model="programmer.selectedPoolId"
+              dense
+              outlined
+              emit-value
+              map-options
+              :options="poolOptions"
+              label="Pool"
+              style="min-width: 120px"
+            />
+            <q-input
+              v-model.number="programmer.selectedPoolSlot"
+              dense
+              outlined
+              type="number"
+              min="0"
+              label="Slot"
+              style="width: 90px"
+            />
+            <q-select
+              v-model="selection.alignMode"
+              dense
+              outlined
+              emit-value
+              map-options
+              :options="alignModeOptions"
+              label="Align"
+              style="min-width: 110px"
+            />
+            <q-input
+              v-model.number="selection.wings"
+              dense
+              outlined
+              type="number"
+              min="0"
+              label="Wings"
+              style="width: 90px"
+            />
+            <q-select
+              v-model="selection.wingDirection"
+              dense
+              outlined
+              emit-value
+              map-options
+              :options="wingDirectionOptions"
+              label="Wing Dir"
+              style="min-width: 110px"
+            />
+            <q-btn dense flat label="Apply Wings @128" @click="applyWingsToSelection('Pan', 128)" />
+          </div>
+
+          <SelectionControlPanel class="programmer-selection-panel" />
+        </q-tab-panel>
+      </q-tab-panels>
     </template>
   </div>
 
@@ -281,9 +335,29 @@ function saveAsPreset() {
   flex-shrink: 0;
 }
 
-.programmer-scratch-header {
+.programmer-page-tabs {
   flex-shrink: 0;
   border-top: 1px solid var(--sdmx-color-border-subtle);
+  border-bottom: 1px solid var(--sdmx-color-border-subtle);
+}
+
+.programmer-pages {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.programmer-page {
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.programmer-scratch-header {
+  flex-shrink: 0;
 }
 
 .programmer-body {
@@ -291,9 +365,18 @@ function saveAsPreset() {
   min-height: 0;
   overflow: auto;
 }
+
+.programmer-selection-panel {
+  max-height: none;
+  flex: 1 1 auto;
+  min-height: 0;
+  border-bottom: 0;
+}
+
 .pulse {
   animation: pulse 1.5s ease-in-out infinite;
 }
+
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }

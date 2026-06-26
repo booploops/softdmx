@@ -41,13 +41,16 @@ const busking = DEFAULT_DESK_VIEWS.find((view) => view.id === 'busking')!;
 const buskingBands = buildDeskRowBands(busking.panes);
 assert.deepEqual(
   buskingBands.map((band) => band.height),
-  [7, 5]
+  [6, 6, 3]
 );
 const fixturePlacement = deskPaneGridPlacement(busking.panes[0]!, buskingBands);
 const programmerPlacement = deskPaneGridPlacement(busking.panes[2]!, buskingBands);
+const quickProgrammerPlacement = deskPaneGridPlacement(busking.panes[3]!, buskingBands);
 assert.equal(fixturePlacement.row, '1 / span 1');
 assert.equal(programmerPlacement.row, '2 / span 1');
-assert.equal(fixturePlacement.column, '1 / span 8');
-assert.equal(programmerPlacement.column, '1 / span 12');
+assert.equal(quickProgrammerPlacement.row, '2 / span 1');
+assert.equal(fixturePlacement.column, '1 / span 6');
+assert.equal(programmerPlacement.column, '1 / span 6');
+assert.equal(quickProgrammerPlacement.column, '7 / span 6');
 
 console.log('desk-defaults tests passed');

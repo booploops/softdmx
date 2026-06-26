@@ -11,9 +11,11 @@ export type DeskWindowType =
   | "groups"
   | "widgets"
   | "programmer"
+  | "quick-programmer"
   | "plot"
   | "presets"
-  | "attribute-control";
+  | "attribute-control"
+  | "playback-rail";
 
 export interface DeskPaneRect {
   x: number;

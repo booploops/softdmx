@@ -26,17 +26,27 @@ export const DEFAULT_DESK_VIEWS: DeskView[] = [
       {
         id: "busking-fixture-sheet",
         windowType: "fixture-sheet",
-        rect: { x: 0, y: 0, w: 8, h: 7 },
+        rect: { x: 0, y: 0, w: 6, h: 6 },
       },
       {
         id: "busking-groups",
         windowType: "groups",
-        rect: { x: 8, y: 0, w: 4, h: 7 },
+        rect: { x: 6, y: 0, w: 6, h: 6 },
       },
       {
         id: "busking-programmer",
         windowType: "programmer",
-        rect: { x: 0, y: 7, w: 12, h: 5 },
+        rect: { x: 0, y: 6, w: 6, h: 6 },
+      },
+      {
+        id: "busking-quick-programmer",
+        windowType: "quick-programmer",
+        rect: { x: 6, y: 6, w: 6, h: 6 },
+      },
+      {
+        id: "busking-playback-rail",
+        windowType: "playback-rail",
+        rect: { x: 0, y: 12, w: 12, h: 3 },
       },
     ],
   },
@@ -50,11 +60,6 @@ export const DEFAULT_DESK_VIEWS: DeskView[] = [
         rect: { x: 0, y: 0, w: 8, h: 12 },
       },
       {
-        id: "focus-programmer",
-        windowType: "programmer",
-        rect: { x: 8, y: 0, w: 4, h: 12 },
-      },
-      {
         id: "focus-attributes",
         windowType: "attribute-control",
         rect: { x: 8, y: 0, w: 4, h: 6 },
@@ -63,6 +68,11 @@ export const DEFAULT_DESK_VIEWS: DeskView[] = [
         id: "focus-programmer",
         windowType: "programmer",
         rect: { x: 8, y: 6, w: 4, h: 6 },
+      },
+      {
+        id: "focus-playback-rail",
+        windowType: "playback-rail",
+        rect: { x: 0, y: 12, w: 12, h: 3 },
       },
     ],
   },
@@ -80,6 +90,11 @@ export const DEFAULT_DESK_VIEWS: DeskView[] = [
         windowType: "groups",
         rect: { x: 8, y: 0, w: 4, h: 12 },
       },
+      {
+        id: "plot-playback-rail",
+        windowType: "playback-rail",
+        rect: { x: 0, y: 12, w: 12, h: 3 },
+      },
     ],
   },
   {
@@ -95,6 +110,11 @@ export const DEFAULT_DESK_VIEWS: DeskView[] = [
         id: "playback-fixture-sheet",
         windowType: "fixture-sheet",
         rect: { x: 7, y: 0, w: 5, h: 12 },
+      },
+      {
+        id: "playback-playback-rail",
+        windowType: "playback-rail",
+        rect: { x: 0, y: 12, w: 12, h: 3 },
       },
     ],
   },
