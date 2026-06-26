@@ -5,16 +5,17 @@
   "type": "module",
   "license": "MPL-2.0",
   "scripts": {
-    "test": "node --import ./src/helpers/register-src-alias.mjs --experimental-strip-types --test 'src/**/*.test.ts' 'src/e2e/**/*.mjs' src/e2e-smoke.mjs",
-    "test:unit": "node --import ./src/helpers/register-src-alias.mjs --experimental-strip-types --test 'src/*.test.ts' 'src/unit/**/*.test.ts' 'src/helpers/**/*.test.ts' 'src/fixtures/**/*.test.ts' 'src/fuzz/**/*.test.ts'",
-    "test:property": "node --import ./src/helpers/register-src-alias.mjs --experimental-strip-types --test 'src/property/**/*.test.ts'",
-    "test:integration": "node --import ./src/helpers/register-src-alias.mjs --experimental-strip-types --test 'src/integration/**/*.test.ts'",
-    "test:e2e": "node --import ./src/helpers/register-src-alias.mjs --experimental-strip-types --test 'src/e2e/**/*.mjs' src/e2e-smoke.mjs",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run src/*.test.ts src/unit src/helpers src/fixtures src/fuzz",
+    "test:property": "vitest run src/property",
+    "test:integration": "vitest run src/integration",
+    "test:e2e": "vitest run src/e2e src/e2e-smoke.mjs",
     "test:fuzz": "node src/fuzz/run-fuzz.mjs",
     "test:fuzz:ci": "FUZZ_CI=1 node src/fuzz/run-fuzz.mjs",
     "test:playwright": "playwright test",
     "test:playwright:electron": "SOFTDMX_E2E=1 playwright test",
-    "test:coverage": "NODE_V8_COVERAGE=./coverage node --import ./src/helpers/register-src-alias.mjs --experimental-strip-types --experimental-test-coverage --test 'src/**/*.test.ts' 'src/e2e/**/*.mjs' src/e2e-smoke.mjs",
+    "test:coverage": "vitest run --coverage 'src/**/*.test.ts' 'src/e2e/**/*.mjs' 'src/e2e-smoke.mjs'",
     "test:all": "yarn test"
   },
   "dependencies": {
@@ -29,9 +30,11 @@
     "@playwright/test": "^1.61.0",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^22.15.0",
+    "@vitest/coverage-v8": "^4.1.9",
     "fast-check": "^4.8.0",
     "fastify": "^5.8.5",
     "socket.io": "^4.8.3",
-    "typescript": "~6.0.3"
+    "typescript": "~6.0.3",
+    "vitest": "^4.1.9"
   }
 }

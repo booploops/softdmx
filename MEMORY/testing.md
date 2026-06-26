@@ -33,29 +33,29 @@ All test scripts are defined in `@softdmx/tests` but are aliased as top-level wo
 
 | Script | Description |
 | :--- | :--- |
-| `yarn test` | Runs all unit and E2E Node-native tests. |
+| `yarn test` | Runs all unit, integration, and E2E headless tests using Vitest once. |
+| `yarn test:watch` | Runs Vitest in interactive watch mode. |
 | `yarn test:unit` | Runs all unit, helper, fuzz, and fixture tests. |
 | `yarn test:property` | Runs property-based roundtrip and invariant tests. |
 | `yarn test:integration` | Runs API endpoint and Socket.IO mock server tests. |
 | `yarn test:e2e` | Runs standalone Node test harness smoke tests. |
 | `yarn test:playwright` | Runs Playwright Chromium E2E/Electron tests. |
-| `yarn test:coverage` | Computes test coverage using Node V8 native coverage. |
+| `yarn test:coverage` | Computes test coverage using `@vitest/coverage-v8`. |
 
 ---
 
 ## 3. Architecture & Path Resolution
 
-SoftDMX tests run in a pure **Node.js** native test runner (`node --test`) with `--experimental-strip-types`. 
+SoftDMX tests run in **Vitest**, a high-performance test runner powered by Vite.
 
-### The Custom ESM Loader Hook
-Because tests live in a different workspace (`packages/tests`) than the source code (`packages/frontend/src`, `packages/engine/src`), we use a custom Node ESM Loader Hook to resolve and map paths:
+### Path Resolution Plugin
+Because tests live in a different workspace (`packages/tests`) than the source code (`packages/frontend/src`, `packages/engine/src`), we configure a custom Vite resolver plugin (`resolve-frontend-to-engine`) in **`packages/tests/vitest.config.ts`** to map import paths transparently:
+- Resolves any imports targeting `@softdmx/engine` directly to raw source files under `packages/engine/src/index.ts`.
+- Intercepts paths starting with `packages/frontend/src/engine/` and redirects them to the decoupled core folder: `packages/engine/src/core/`.
+- Intercepts paths starting with `packages/frontend/src/show/` and redirects them to `packages/engine/src/show/`.
 
-* **Location**: `packages/tests/src/helpers/resolve-src-hook.mjs`
-* **Registration**: Preloaded via `--import src/helpers/register-src-alias.mjs` in all test scripts.
-* **How it works**: 
-  - Resolves any imports targeting `@softdmx/engine` directly to raw source files under `packages/engine/src/index.ts`.
-  - Intercepts paths starting with `packages/frontend/src/engine/` and redirects them to the decoupled core folder: `packages/engine/src/core/`.
-  - Intercepts paths starting with `packages/frontend/src/show/` and redirects them to `packages/engine/src/show/`.
+### The `node:test` Compatibility Bridge
+To run existing tests that import from Node's native test runner (`node:test`) without rewriting them, we configure an alias mapping `'node:test'` to a bridge helper file **`packages/tests/src/helpers/node-test-bridge.ts`**. This bridge exports standard Vitest functions under their native Node.js counterparts (e.g., aliasing `before` to `beforeAll`, `after` to `afterAll`), enabling zero code churn in existing tests.
 
 ---
 

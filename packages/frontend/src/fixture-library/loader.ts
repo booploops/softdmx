@@ -21,43 +21,33 @@ let bundledFixtureRaw: Record<string, string> | undefined;
 function ensureBundledAssetsLoaded(): void {
   if (bundledManifestRaw !== undefined) return;
 
-  const globFn = (import.meta as ImportMeta & {
-    glob?: (pattern: string, options: Record<string, unknown>) => Record<string, string>;
-  }).glob;
-
-  if (typeof globFn !== 'function') {
-    bundledManifestRaw = {};
-    bundledFixtureRaw = {};
-    return;
-  }
-
-  bundledManifestRaw = globFn('./bundled/**/plugin.json', {
+  bundledManifestRaw = import.meta.glob('./bundled/**/plugin.json', {
     query: '?raw',
     import: 'default',
     eager: true,
-  });
+  }) as Record<string, string>;
 
   bundledFixtureRaw = {
-    ...globFn('./bundled/**/*.yaml', {
+    ...import.meta.glob('./bundled/**/*.yaml', {
       query: '?raw',
       import: 'default',
       eager: true,
-    }),
-    ...globFn('./bundled/**/*.yml', {
+    }) as Record<string, string>,
+    ...import.meta.glob('./bundled/**/*.yml', {
       query: '?raw',
       import: 'default',
       eager: true,
-    }),
-    ...globFn('../fixtures/**/*.yaml', {
+    }) as Record<string, string>,
+    ...import.meta.glob('../fixtures/**/*.yaml', {
       query: '?raw',
       import: 'default',
       eager: true,
-    }),
-    ...globFn('../fixtures/**/*.yml', {
+    }) as Record<string, string>,
+    ...import.meta.glob('../fixtures/**/*.yml', {
       query: '?raw',
       import: 'default',
       eager: true,
-    }),
+    }) as Record<string, string>,
   };
 }
 

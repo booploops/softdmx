@@ -20,7 +20,7 @@ Welcome! This folder houses memory files designed to help developer agents and h
 
 4. **[Testing & Contribution Guide](./testing.md)**
    * Outlines how the testing suite is structured in `packages/tests` (`@softdmx/tests`).
-   * Explains how to run unit, integration, and property-based tests, and how the custom Node ESM loader hook handles path alias resolution.
+   * Explains how to run unit, integration, and property-based tests, and how Vitest with custom resolution plugins handles path alias resolution and compatibility bridges.
 
 ---
 
