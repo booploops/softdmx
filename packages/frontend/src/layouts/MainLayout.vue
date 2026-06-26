@@ -6,29 +6,10 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <template>
-  <q-layout view="hHh lpr lFf" class="app-layout">
-    <a href="#main-content" class="skip-link sdmx-focus-ring">Skip to main content</a>
-    <q-header
-      class="bg-dark text-white app-titlebar"
-      :class="{
-        'is-mac': $q.platform.is.mac
-      }"
-    >
-      <q-toolbar class="titlebar-toolbar">
-        <q-btn
-          flat
-          icon="fa fa-ellipsis-h"
-          aria-label="Menu"
-          @click="ui.toggleLeftDrawer()"
-          class="no-app-drag"
-          dense
-        />
-        <q-toolbar-title class="titlebar-title no-app-drag">
-          SoftDMX
-        </q-toolbar-title>
-      </q-toolbar>
-    </q-header>
-
+  <q-layout
+    view="hHh lpr lFf"
+    class="app-layout"
+  >
     <q-drawer
       v-model="ui.leftDrawerOpen"
       bordered
@@ -41,7 +22,10 @@
       <AppSidebarMenu />
     </q-drawer>
 
-    <q-page-container id="main-content" class="app-page-container">
+    <q-page-container
+      id="main-content"
+      class="app-page-container"
+    >
       <router-view />
     </q-page-container>
 
