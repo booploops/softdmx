@@ -1,6 +1,6 @@
 {
   "extends": "../tsconfig.json",
-  "include": ["./**/*", "../.quasar/*.d.ts"],
+  "include": ["./**/*", "../.quasar/*.d.ts", "../auto-imports.d.ts"],
   "compilerOptions": {
     "allowImportingTsExtensions": true
   }
