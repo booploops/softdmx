@@ -224,6 +224,34 @@ export const FEATURE_FLAG_DEFINITIONS = {
     group: "audio",
     defaultValueByProfile: { dev: true, staging: true, prod: true },
   },
+  commandLineV2Enabled: {
+    description: "Enable Command Line v2 parser/executor and contextual UX.",
+    owner: "ui-team",
+    kind: "migration",
+    group: "ui",
+    defaultValueByProfile: { dev: true, staging: false, prod: false },
+  },
+  commandIntentEnabled: {
+    description: "Enable intent-command translation to canonical command syntax.",
+    owner: "ui-team",
+    kind: "experiment",
+    group: "ui",
+    defaultValueByProfile: { dev: true, staging: false, prod: false },
+  },
+  commandSandboxRequiredForRisky: {
+    description: "Require preview/sandbox confirmation for risky command plans.",
+    owner: "security-team",
+    kind: "killSwitch",
+    group: "ui",
+    defaultValueByProfile: { dev: true, staging: true, prod: true },
+  },
+  commandSuggestionsEnabled: {
+    description: "Enable show-aware command suggestions in command line UI.",
+    owner: "ui-team",
+    kind: "experiment",
+    group: "ui",
+    defaultValueByProfile: { dev: true, staging: false, prod: false },
+  },
 } as const satisfies Record<string, FeatureFlagDefinition>;
 
 export type FeatureFlagKey = keyof typeof FEATURE_FLAG_DEFINITIONS;
