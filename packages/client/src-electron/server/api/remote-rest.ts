@@ -64,13 +64,13 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
             count: 1,
             resetAt: now + REMOTE_RATE_LIMIT_WINDOW_MS,
           });
-          hookDone();
-          return;
+        } else {
+          entry.count += 1;
         }
 
-        entry.count += 1;
-        if (entry.count > REMOTE_RATE_LIMIT_MAX_REQUESTS) {
-          const retryAfterSeconds = Math.max(1, Math.ceil((entry.resetAt - now) / 1000));
+        const currentEntry = rateLimitByClient.get(clientKey);
+        if (currentEntry && currentEntry.count > REMOTE_RATE_LIMIT_MAX_REQUESTS) {
+          const retryAfterSeconds = Math.max(1, Math.ceil((currentEntry.resetAt - now) / 1000));
           reply
             .header("Retry-After", retryAfterSeconds.toString())
             .code(429)
@@ -78,19 +78,16 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
           return;
         }
 
-        hookDone();
-      });
-
-      if (requiredToken) {
-        instance.addHook("onRequest", (request, reply, hookDone) => {
+        if (requiredToken) {
           const token = extractTokenFromHeaders(request.headers as Record<string, unknown>);
           if (!isRemoteApiTokenAuthorized(token, requiredToken)) {
             reply.code(401).send({ error: "Unauthorized" });
             return;
           }
-          hookDone();
-        });
-      }
+        }
+
+        hookDone();
+      });
 
       instance.get("/show", (_request, reply) => {
         const show = ctx.getShow();
