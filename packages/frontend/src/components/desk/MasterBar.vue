@@ -102,6 +102,15 @@ function toggleBlind() {
       info="Open command line (Ctrl+K or `)"
       @click="ui.toggleCommandLine()"
     />
+    <SdmxButton
+      v-if="ui.isLive"
+      :icon="ui.cueBarCollapsed ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"
+      round
+      :variant="ui.cueBarCollapsed ? 'warning' : 'ghost'"
+      :active="!ui.cueBarCollapsed"
+      :info="ui.cueBarCollapsed ? 'Show transport controls' : 'Hide transport controls'"
+      @click="ui.cueBarCollapsed = !ui.cueBarCollapsed"
+    />
 
     <q-space />
 
