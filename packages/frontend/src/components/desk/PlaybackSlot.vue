@@ -60,7 +60,7 @@ function onStop() {
     <SdmxButton
       label="GO"
       variant="primary"
-      size="sm"
+      size="xs"
       :active="isActive"
       info="Trigger this playback slot"
       @click="onGoClick"
@@ -73,7 +73,7 @@ function onStop() {
     <SdmxButton
       label="STOP"
       variant="danger"
-      size="sm"
+      size="xs"
       info="Stop this playback slot"
       @click="onStop"
     />
@@ -86,5 +86,9 @@ function onStop() {
   flex-direction: column;
   gap: var(--sdmx-space-xs);
   width: 100%;
+}
+
+:deep(.sdmx-fader__slider--vertical) {
+  min-height: 42px;
 }
 </style>

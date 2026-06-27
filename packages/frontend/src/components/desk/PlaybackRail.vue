@@ -10,13 +10,33 @@ import PlaybackSlot from './PlaybackSlot.vue';
 import { useExecutorStore } from 'src/stores/executor';
 
 const executorStore = useExecutorStore();
+const railRef = ref<HTMLElement | null>(null);
+const layoutVersion = ref(0);
+
+let resizeObserver: ResizeObserver | null = null;
+
+onMounted(() => {
+  if (typeof ResizeObserver === 'undefined') return;
+  resizeObserver = new ResizeObserver(() => {
+    // Force child fader remount so vertical slider geometry is recalculated.
+    layoutVersion.value += 1;
+  });
+  if (railRef.value) {
+    resizeObserver.observe(railRef.value);
+  }
+});
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect();
+  resizeObserver = null;
+});
 </script>
 
 <template>
-  <div class="playback-rail">
+  <div ref="railRef" class="playback-rail">
     <div class="playback-rail-inner">
       <div class="playback-rail-controls">
-        <div class="text-caption text-weight-bold">
+        <div class="playback-rail-page-label text-caption text-weight-bold">
           Page {{ executorStore.activePage }}/{{ executorStore.pageCount }}
         </div>
         <q-btn dense flat icon="navigate_before" @click="executorStore.previousPage" />
@@ -26,11 +46,19 @@ const executorStore = useExecutorStore();
       </div>
 
       <div class="playback-slots">
-        <PlaybackSlot v-for="slot in executorStore.visibleSlots" :key="slot.id" :slot="slot" />
+        <PlaybackSlot
+          v-for="slot in executorStore.visibleSlots"
+          :key="`${slot.id}-${layoutVersion}`"
+          :slot="slot"
+        />
       </div>
 
       <div v-if="executorStore.submasters.length" class="playback-submasters row q-gutter-xs">
-        <div v-for="sub in executorStore.submasters" :key="sub.id" class="playback-slot">
+        <div
+          v-for="sub in executorStore.submasters"
+          :key="`${sub.id}-${layoutVersion}`"
+          class="playback-slot"
+        >
           <div class="playback-slot-label">{{ sub.name }}</div>
           <div class="playback-slot-fader">
             <q-slider

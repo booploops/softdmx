@@ -420,6 +420,8 @@ function recoverLook() {
   border-top: 1px solid var(--sdmx-color-border-subtle);
   background: var(--sdmx-color-bg-drawer);
   padding: var(--sdmx-space-sm);
+  max-height: 40vh;
+  overflow: auto;
 }
 
 .command-line-bar__input-row {
@@ -528,6 +530,8 @@ function recoverLook() {
   border-radius: var(--sdmx-radius-sm);
   background: var(--sdmx-color-bg-surface);
   padding: var(--sdmx-space-xs);
+  max-height: 32vh;
+  overflow: hidden;
 }
 
 .command-line-bar__history-head {
@@ -578,6 +582,8 @@ function recoverLook() {
   font-size: var(--sdmx-font-size-caption);
   white-space: pre-wrap;
   border-radius: var(--sdmx-radius-sm);
+  max-height: 24vh;
+  overflow: auto;
 }
 
 .command-line-bar__message--error {

@@ -117,7 +117,7 @@
   height: 100%;
   box-sizing: border-box;
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 
 .playback-rail-controls {
@@ -127,6 +127,11 @@
   gap: 4px;
   flex-shrink: 0;
   min-width: 88px;
+}
+
+.playback-rail-page-label {
+  width: 100%;
+  text-align: center;
 }
 
 .playback-slots {
@@ -142,9 +147,10 @@
   flex-direction: column;
   align-items: center;
   gap: var(--sdmx-space-xs);
+  min-height: 0;
   min-width: 56px;
   max-width: 72px;
-  padding: var(--sdmx-space-sm) var(--sdmx-space-xs);
+  padding: var(--sdmx-space-xs);
   border-radius: var(--sdmx-radius-sm);
   border: 1px solid var(--sdmx-color-border-subtle);
   background: var(--sdmx-color-bg-surface);
@@ -169,10 +175,13 @@
   font-weight: var(--sdmx-font-weight-bold);
   text-align: center;
   line-height: var(--sdmx-line-height-tight);
+  min-height: 16px;
   max-width: 100%;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  position: relative;
+  z-index: 2;
 }
 
 .playback-slot-fader {
@@ -180,8 +189,10 @@
   display: flex;
   align-items: stretch;
   justify-content: center;
-  min-height: 0;
+  min-height: 42px;
   width: 100%;
+  padding-top: 10px;
+  box-sizing: border-box;
 }
 
 .vertical-fader {
@@ -192,7 +203,7 @@
 .playback-slot-fader .vertical-fader {
   flex: 1 1 auto;
   height: 100%;
-  min-height: 88px;
+  min-height: 42px;
 }
 
 .fixture-sheet-grid {
