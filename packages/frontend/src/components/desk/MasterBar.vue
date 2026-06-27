@@ -18,6 +18,7 @@ import {
   WORKSPACE_MODE_META,
 } from 'src/desk/workspace-modes';
 import { SdmxButton, SdmxStatusChip } from 'src/components/ui';
+import { useInfoText } from 'src/composables/useInfoText';
 import ViewSwitcher from './ViewSwitcher.vue';
 import GmFader from './GmFader.vue';
 
@@ -28,6 +29,7 @@ const scratch = useScratchStore();
 const linkStore = useLinkStore();
 const audioStore = useAudioStore();
 const timecodeStore = useTimecodeStore();
+const { info } = useInfoText();
 
 const grandMaster = computed({
   get: () => engine.grandMaster,
@@ -61,7 +63,7 @@ function toggleBlind() {
       icon="menu"
       round
       variant="ghost"
-      info="Open navigation menu"
+      :info="info('desk.masterBar.menu')"
       @click="ui.toggleLeftDrawer(true)"
     />
 
@@ -72,7 +74,7 @@ function toggleBlind() {
       round
       :variant="ui.mode === mode ? 'primary' : 'ghost'"
       :active="ui.mode === mode"
-      :info="WORKSPACE_MODE_META[mode].label"
+      :info="info(WORKSPACE_MODE_META[mode].infoKey)"
       @click="ui.setMode(mode)"
     />
 
@@ -82,7 +84,7 @@ function toggleBlind() {
       v-if="ui.isLive"
       :icon="ui.operateLocked ? 'lock' : 'lock_open'"
       :variant="ui.operateLocked ? 'ghost' : 'warning'"
-      :info="ui.operateLocked ? 'Operate locked' : 'Edit mode unlocked'"
+      :info="info(ui.operateLocked ? 'desk.masterBar.operateLocked' : 'desk.masterBar.operateUnlocked')"
       @click="ui.toggleOperateLock()"
     />
 
@@ -91,7 +93,7 @@ function toggleBlind() {
       round
       :variant="ui.infoMode ? 'primary' : 'ghost'"
       :active="ui.infoMode"
-      info="Toggle info mode — hover elements to learn their function"
+      :info="info('desk.masterBar.infoMode')"
       @click="ui.toggleInfoMode()"
     />
     <SdmxButton
@@ -99,7 +101,7 @@ function toggleBlind() {
       round
       :variant="ui.commandLineOpen ? 'primary' : 'ghost'"
       :active="ui.commandLineOpen"
-      info="Open command line (Ctrl+K or `)"
+      :info="info('desk.masterBar.commandLine')"
       @click="ui.toggleCommandLine()"
     />
     <SdmxButton
@@ -108,27 +110,27 @@ function toggleBlind() {
       round
       :variant="ui.cueBarCollapsed ? 'warning' : 'ghost'"
       :active="!ui.cueBarCollapsed"
-      :info="ui.cueBarCollapsed ? 'Show transport controls' : 'Hide transport controls'"
+      :info="info(ui.cueBarCollapsed ? 'desk.masterBar.showCueBar' : 'desk.masterBar.hideCueBar')"
       @click="ui.cueBarCollapsed = !ui.cueBarCollapsed"
     />
 
     <q-space />
 
-    <GmFader v-model="grandMaster" label="GM" color="orange" info="Grand Master — scales all output levels" />
-    <GmFader v-model="playbackBus" label="PB" color="deep-purple" info="Playback Bus Master" />
+    <GmFader v-model="grandMaster" label="GM" color="orange" :info="info('desk.masterBar.grandMaster')" />
+    <GmFader v-model="playbackBus" label="PB" color="deep-purple" :info="info('desk.masterBar.playbackBus')" />
 
     <SdmxButton
       :label="engine.blackout ? 'BO' : 'Blackout'"
       :variant="engine.blackout ? 'danger' : 'default'"
       :active="engine.blackout"
-      info="Toggle blackout — kills all output"
+      :info="info('desk.masterBar.blackout')"
       @click="toggleBlackout"
     />
     <SdmxButton
       :label="scratch.blindMode ? 'Blind' : 'Live'"
       :variant="scratch.blindMode ? 'warning' : 'default'"
       :active="scratch.blindMode"
-      info="Toggle blind/preview mode"
+      :info="info('desk.masterBar.blind')"
       @click="toggleBlind"
     />
 
@@ -136,27 +138,27 @@ function toggleBlind() {
       :label="showStore.name"
       icon="description"
       :variant="showStore.isDirty ? 'warning' : 'default'"
-      info="Current show file"
+      :info="info('desk.masterBar.showFile')"
     />
     <SdmxStatusChip
       :label="String(linkStore.numPeers)"
       icon="link"
       :variant="linkStore.numPeers > 0 ? 'positive' : 'default'"
-      info="Ableton Link peers"
+      :info="info('desk.masterBar.linkPeers')"
     />
     <SdmxStatusChip
       v-if="timecodeActive"
       :label="timecodeStore.smpteLabel"
       icon="schedule"
       :variant="timecodeLocked ? 'active' : 'default'"
-      info="Timecode status"
+      :info="info('desk.masterBar.timecode')"
     />
     <SdmxStatusChip
       v-if="audioStore.enabled"
       label="Audio"
       icon="graphic_eq"
       variant="info"
-      info="Audio reactive mode active"
+      :info="info('desk.masterBar.audioReactive')"
     />
   </div>
 </template>

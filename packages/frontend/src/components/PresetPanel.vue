@@ -36,7 +36,7 @@ function firePreset(presetId: string) {
         label="Fade (ms)"
         style="max-width: 130px"
       />
-      <q-btn dense flat icon="edit" label="Edit Presets" class="q-ml-sm" @click="showPresetEditor = true" />
+      <q-btn v-info="'program.presets.editPreset'" dense flat icon="edit" label="Edit Presets" class="q-ml-sm" @click="showPresetEditor = true" />
     </div>
     <div class="row q-gutter-sm q-mb-lg">
       <q-btn

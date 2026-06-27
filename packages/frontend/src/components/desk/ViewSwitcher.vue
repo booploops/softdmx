@@ -9,14 +9,23 @@
 import { useDeskViewStore } from 'src/stores/desk-view';
 import { useUIStore } from 'src/stores/ui';
 import { SdmxButton } from 'src/components/ui';
+import { useInfoText } from 'src/composables/useInfoText';
 
 const deskView = useDeskViewStore();
 const ui = useUIStore();
+const { info } = useInfoText();
 </script>
 
 <template>
   <div class="view-switcher row items-center q-gutter-x-xs">
-    <q-btn-dropdown dense flat no-caps :label="deskView.activeView.name" icon="view_quilt">
+    <q-btn-dropdown
+      v-info="'desk.views.switch'"
+      dense
+      flat
+      no-caps
+      :label="deskView.activeView.name"
+      icon="view_quilt"
+    >
       <q-list dense style="min-width: 160px">
         <q-item
           v-for="view in deskView.views"
@@ -36,7 +45,7 @@ const ui = useUIStore();
       icon="save"
       size="sm"
       variant="ghost"
-      info="Set this view as the default live view"
+      :info="info('desk.views.saveDefault')"
       @click="deskView.saveDefaultViewPreference()"
     />
   </div>

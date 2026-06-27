@@ -12,7 +12,7 @@ import { useAudioStore } from 'src/stores/audio';
 import { useDMXStore } from 'src/stores/dmx';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useShowStore } from 'src/stores/show';
-import { SdmxEmptyState } from 'src/components/ui';
+import { SdmxEmptyState, SdmxIconButton } from 'src/components/ui';
 
 type MappingTargetMode = 'channelPath' | 'groupAttr' | 'fixtureAttr';
 type MappingSourceForm = 'rms' | 'peak' | 'beat' | 'sub' | 'low' | 'mid' | 'high';
@@ -503,17 +503,13 @@ onMounted(() => {
               />
             </div>
             <div class="col-auto">
-              <q-btn
+              <SdmxIconButton
                 icon="refresh"
                 color="primary"
-                flat
-                round
-                dense
+                info-key="setup.audio.refreshDevices"
                 :disable="!audioStore.isSupported"
                 @click="audioStore.refreshDevices"
-              >
-                <q-tooltip>Refresh audio devices</q-tooltip>
-              </q-btn>
+              />
             </div>
           </div>
 

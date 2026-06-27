@@ -46,9 +46,9 @@ function onSlotGoClick(slot: ExecutorSlot) {
           style="width: 170px"
           @update:model-value="(value) => executorStore.updateExecutor({ defaultReleaseMs: Number(value ?? 0) })"
         />
-        <q-btn icon="navigate_before" dense flat @click="executorStore.previousPage" />
-        <q-btn icon="navigate_next" dense flat @click="executorStore.nextPage" />
-        <q-btn color="negative" dense unelevated label="Stop All" @click="executorStore.stopAll" />
+        <q-btn v-info="'desk.playback.pagePrev'" icon="navigate_before" dense flat @click="executorStore.previousPage" />
+        <q-btn v-info="'desk.playback.pageNext'" icon="navigate_next" dense flat @click="executorStore.nextPage" />
+        <q-btn v-info="'desk.playback.stopAll'" color="negative" dense unelevated label="Stop All" @click="executorStore.stopAll" />
       </div>
     </div>
 
@@ -127,6 +127,7 @@ function onSlotGoClick(slot: ExecutorSlot) {
         </q-card-section>
         <q-card-actions align="between">
           <q-btn
+            v-info="'desk.playback.go'"
             color="positive"
             label="GO"
             @click.stop="onSlotGoClick(slot)"
@@ -134,7 +135,7 @@ function onSlotGoClick(slot: ExecutorSlot) {
             @mouseup="onSlotRelease(slot)"
             @mouseleave="onSlotRelease(slot)"
           />
-          <q-btn color="negative" label="STOP" @click.stop="executorStore.stopSlot(slot.id)" />
+          <q-btn v-info="'desk.playback.stop'" color="negative" label="STOP" @click.stop="executorStore.stopSlot(slot.id)" />
         </q-card-actions>
       </q-card>
     </div>

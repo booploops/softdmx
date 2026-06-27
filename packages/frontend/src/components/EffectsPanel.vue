@@ -11,7 +11,7 @@ import type { EffectDefinition } from '@softdmx/engine';
 import { useShowStore } from 'src/stores/show';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import EffectEditor from './EffectEditor.vue';
-import { SdmxEmptyState } from 'src/components/ui';
+import { SdmxEmptyState, SdmxIconButton } from 'src/components/ui';
 
 const showStore = useShowStore();
 const outputEngine = useOutputEngineStore();
@@ -60,6 +60,7 @@ function targetSummary(effect: EffectDefinition): string[] {
       <q-chip dense color="primary" text-color="white">Enabled {{ enabledCount }}</q-chip>
       <q-chip dense color="secondary" text-color="white" class="q-ml-xs">Running {{ runningCount }}</q-chip>
       <q-btn
+        v-info="'program.effects.addEffect'"
         dense
         flat
         icon="open_in_new"
@@ -118,12 +119,11 @@ function targetSummary(effect: EffectDefinition): string[] {
             {{ effect.enabled && outputEngine.isGlobalPlaying ? 'Running' : 'Idle' }}
           </q-chip>
           <q-toggle
+            v-info="'program.effects.enableEffect'"
             :model-value="effect.enabled"
             @update:model-value="(value) => toggleEffect(effect.id, Boolean(value))"
           />
-          <q-btn dense flat round icon="content_copy" @click="duplicateEffect(effect)">
-            <q-tooltip>Duplicate effect</q-tooltip>
-          </q-btn>
+          <SdmxIconButton icon="content_copy" info-key="program.effects.duplicateEffect" @click="duplicateEffect(effect)" />
         </q-item-section>
       </q-item>
     </q-list>

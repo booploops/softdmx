@@ -18,7 +18,7 @@ When building or modifying SoftDMX frontend UI:
 4. **Tabular numerics** — fixture values, fader levels, and DMX numbers must use `font-variant-numeric: tabular-nums` (via `.sdmx-text-mono` or `SdmxValueField`).
 5. **Touch targets** — interactive controls on desk/remote surfaces must meet `--sdmx-space-touch` (44px) minimum.
 6. **Semantic state colors** — use `--sdmx-color-scratch`, `--sdmx-color-active`, `--sdmx-color-armed`, `--sdmx-color-flash`, `--sdmx-color-blind` for lighting-specific states.
-7. **Info mode** — add `data-sdmx-info="description"` on interactive elements that benefit from discoverability tooltips.
+7. **Info mode** — add info text via `useInfoText()`, the `info` prop on `Sdmx*` primitives, `SdmxIconButton`, or the `v-info` directive. Never hardcode tooltip strings in templates. Register new copy in `src/i18n/en-US/tooltips/`.
 8. **Empty states** — use `SdmxEmptyState` instead of bare text when a panel has no content.
 
 See `docs/design-tokens.md` for the full token reference.

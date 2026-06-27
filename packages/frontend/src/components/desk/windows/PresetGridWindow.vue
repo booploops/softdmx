@@ -9,9 +9,11 @@
 import { useShowStore } from 'src/stores/show';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import { SdmxButton, SdmxEmptyState, SdmxValueField } from 'src/components/ui';
+import { useInfoText } from 'src/composables/useInfoText';
 
 const showStore = useShowStore();
 const engine = useOutputEngineStore();
+const { info } = useInfoText();
 
 const presets = computed(() => showStore.document.presets);
 const presetFadeMs = ref(500);
@@ -27,6 +29,7 @@ function firePreset(presetId: string) {
       <span class="sdmx-text-label">Presets</span>
       <SdmxValueField label="Fade" :value="presetFadeMs" unit="ms" size="sm" />
       <q-input
+        v-info="'desk.presets.fadeMs'"
         v-model.number="presetFadeMs"
         type="number"
         dense
@@ -44,7 +47,7 @@ function firePreset(presetId: string) {
         :label="preset.name"
         size="lg"
         variant="default"
-        :info="`Fire preset: ${preset.name}`"
+        :info="info('desk.presets.fire', { name: preset.name })"
         :style="preset.color ? { backgroundColor: preset.color, color: 'var(--sdmx-color-text)' } : {}"
         @click="firePreset(preset.id)"
       />

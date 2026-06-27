@@ -6,10 +6,11 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <template>
-  <q-layout
-    view="hHh lpr lFf"
-    class="app-layout"
-  >
+  <InfoModeProvider>
+    <q-layout
+      view="hHh lpr lFf"
+      class="app-layout"
+    >
     <q-drawer
       v-model="ui.leftDrawerOpen"
       bordered
@@ -30,12 +31,14 @@
     </q-page-container>
 
     <ShowStartupDialog />
-  </q-layout>
+    </q-layout>
+  </InfoModeProvider>
 </template>
 
 <script setup lang="ts">
 import AppSidebarMenu from 'src/components/AppSidebarMenu.vue';
 import ShowStartupDialog from 'src/components/ShowStartupDialog.vue';
+import InfoModeProvider from 'src/components/ui/InfoModeProvider.vue';
 import { useUIStore } from 'src/stores/ui';
 import { useQuasar } from 'quasar';
 

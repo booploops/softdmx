@@ -10,10 +10,12 @@ import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
 import { useGroupColors } from 'src/composables/useGroupColors';
 import { groupColorStyle } from '@softdmx/engine';
+import { useInfoText } from 'src/composables/useInfoText';
 
 const dmx = useDMXStore();
 const selection = useSelectionStore();
 const { groupColor } = useGroupColors();
+const { info } = useInfoText();
 
 const groups = computed(() => dmx.showfile?.groups || []);
 
@@ -31,7 +33,7 @@ function toggleGroup(name: string) {
         class="fixture-sheet-tile sdmx-focus-ring group-sheet-tile"
         :class="{ selected: selection.isGroupSelected(group.name), 'has-group': true }"
         :style="groupColorStyle(groupColor(group.name))"
-        :data-sdmx-info="`Group ${group.name}`"
+        :data-sdmx-info="info('desk.fixtures.group', { name: group.name })"
         role="button"
         :aria-pressed="selection.isGroupSelected(group.name)"
         tabindex="0"

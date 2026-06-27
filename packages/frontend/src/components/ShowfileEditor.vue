@@ -29,6 +29,7 @@ import {
   groupColorStyle,
   normalizeGroupColor,
 } from '@softdmx/engine';
+import { SdmxIconButton } from 'src/components/ui';
 
 const showStore = useShowStore();
 const ui = useUIStore();
@@ -673,34 +674,9 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
                   </div>
 
                   <div class="fixture-actions">
-                    <q-btn
-                      @click="editFixture(index)"
-                      icon="edit"
-                      size="sm"
-                      flat
-                      round
-                    >
-                      <q-tooltip>Edit</q-tooltip>
-                    </q-btn>
-                    <q-btn
-                      @click="duplicateFixture(index)"
-                      icon="content_copy"
-                      size="sm"
-                      flat
-                      round
-                    >
-                      <q-tooltip>Duplicate</q-tooltip>
-                    </q-btn>
-                    <q-btn
-                      @click="removeFixture(index)"
-                      icon="delete"
-                      size="sm"
-                      flat
-                      round
-                      color="negative"
-                    >
-                      <q-tooltip>Remove</q-tooltip>
-                    </q-btn>
+                    <SdmxIconButton icon="edit" info-key="program.showfile.editSection" @click="editFixture(index)" />
+                    <SdmxIconButton icon="content_copy" info-key="program.showfile.duplicateSection" @click="duplicateFixture(index)" />
+                    <SdmxIconButton icon="delete" color="negative" info-key="program.showfile.removeSection" @click="removeFixture(index)" />
                   </div>
                 </div>
               </q-card-section>
@@ -760,25 +736,8 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
                   </div>
 
                   <div class="group-actions">
-                    <q-btn
-                      @click="editGroup(index)"
-                      icon="edit"
-                      size="sm"
-                      flat
-                      round
-                    >
-                      <q-tooltip>Edit</q-tooltip>
-                    </q-btn>
-                    <q-btn
-                      @click="removeGroup(index)"
-                      icon="delete"
-                      size="sm"
-                      flat
-                      round
-                      color="negative"
-                    >
-                      <q-tooltip>Remove</q-tooltip>
-                    </q-btn>
+                    <SdmxIconButton icon="edit" info-key="program.showfile.editSection" @click="editGroup(index)" />
+                    <SdmxIconButton icon="delete" color="negative" info-key="program.showfile.removeSection" @click="removeGroup(index)" />
                   </div>
                 </div>
 

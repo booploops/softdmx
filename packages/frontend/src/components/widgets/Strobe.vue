@@ -127,15 +127,14 @@ const toggleStrobe = () => {
         <q-btn
           v-for="preset in strobePresets"
           :key="preset.value"
+          v-info="{ key: 'widgets.strobe.preset', vars: { description: preset.description } }"
           @click="setPreset(preset.value)"
           :color="strobe === preset.value ? 'primary' : 'grey-7'"
           :label="preset.label"
           size="sm"
           class="preset-btn"
           dense
-        >
-          <q-tooltip>{{ preset.description }}</q-tooltip>
-        </q-btn>
+        />
       </div>
     </div>
 

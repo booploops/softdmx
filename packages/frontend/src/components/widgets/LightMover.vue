@@ -11,6 +11,7 @@
 <script setup lang="ts">
 import { LightMoverModel } from './light-mover.types';
 import { useChannelBinding } from 'src/composables/useChannelBinding';
+import { SdmxIconButton } from 'src/components/ui';
 
 const val = defineModel<LightMoverModel>({required: true});
 
@@ -138,17 +139,12 @@ function resetPosition() {
   <div class="light-mover-widget">
     <div class="mover-header">
       <span class="mover-title">Light Mover</span>
-      <q-btn
-        flat
-        dense
-        round
+      <SdmxIconButton
         icon="center_focus_strong"
-        size="sm"
-        @click="resetPosition"
+        info-key="widgets.lightMover.reset"
         class="reset-btn"
-      >
-        <q-tooltip>Reset to center</q-tooltip>
-      </q-btn>
+        @click="resetPosition"
+      />
     </div>
 
     <div

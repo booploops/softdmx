@@ -10,6 +10,7 @@ import type { ShowfileFixtureMapped } from '@softdmx/engine';
 import { useSelectionStore } from 'src/stores/selection';
 import { useGroupColors } from 'src/composables/useGroupColors';
 import { groupColorStyle } from '@softdmx/engine';
+import { useInfoText } from 'src/composables/useInfoText';
 
 const props = defineProps<{
   fixture: ShowfileFixtureMapped;
@@ -17,6 +18,7 @@ const props = defineProps<{
 
 const selection = useSelectionStore();
 const { fixtureGroup } = useGroupColors();
+const { info } = useInfoText();
 
 const isSelected = computed(() => selection.isFixtureSelected(props.fixture.fixtureName));
 const groupInfo = computed(() => fixtureGroup(props.fixture.fixtureName));
@@ -35,7 +37,7 @@ function toggleSelection() {
       'has-group': !!groupInfo,
     }"
     :style="cardStyle"
-    :data-sdmx-info="`Fixture ${fixture.fixtureName}`"
+    :data-sdmx-info="info('desk.fixtures.tile', { name: fixture.fixtureName })"
     role="button"
     :aria-pressed="isSelected"
     tabindex="0"

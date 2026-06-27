@@ -13,10 +13,12 @@ import { useShowStore } from 'src/stores/show';
 import { useSelectionStore } from 'src/stores/selection';
 import { usePlotSettingsStore } from 'src/stores/plot-settings';
 import { SdmxButton } from 'src/components/ui';
+import { useInfoText } from 'src/composables/useInfoText';
 
 const showStore = useShowStore();
 const selection = useSelectionStore();
 const plotSettings = usePlotSettingsStore();
+const { info } = useInfoText();
 const viewMode = ref<'2d' | '3d'>('2d');
 const SNAP_STEPS = [0.25, 0.5, 1, 2] as const;
 
@@ -128,48 +130,49 @@ function autoAlignFixtures() {
         label="2D"
         size="sm"
         :variant="viewMode === '2d' ? 'primary' : 'ghost'"
-        info="Top-down 2D plot view"
+        :info="info('desk.plot.view2d')"
         @click="viewMode = '2d'"
       />
       <SdmxButton
         label="3D"
         size="sm"
         :variant="viewMode === '3d' ? 'primary' : 'ghost'"
-        info="Real-time 3D stage visualizer"
+        :info="info('desk.plot.view3d')"
         @click="viewMode = '3d'"
       />
       <SdmxButton
         :label="plotSettings.snapEnabled ? `Snap ${plotSettings.snapStep}m` : 'Snap Off'"
         size="sm"
         :variant="plotSettings.snapEnabled ? 'primary' : 'ghost'"
-        info="Toggle position snapping while dragging"
+        :info="info('desk.plot.snap')"
         @click="plotSettings.snapEnabled = !plotSettings.snapEnabled"
       />
       <SdmxButton
         label="Snap Step"
         size="sm"
         variant="ghost"
-        info="Cycle snap distance"
+        :info="info('desk.plot.snapStep')"
         @click="cycleSnapStep"
       />
       <SdmxButton
         label="Auto Align"
         size="sm"
         variant="ghost"
-        :info="`Align selected fixtures in a straight ${plotSettings.autoAlignMode}`"
+        :info="info('desk.plot.autoAlign', { mode: plotSettings.autoAlignMode })"
         @click="autoAlignFixtures"
       />
       <SdmxButton
         :label="plotSettings.autoAlignMode === 'row' ? 'Mode: Row' : 'Mode: Column'"
         size="sm"
         variant="ghost"
-        info="Toggle auto-align direction"
+        :info="info('desk.plot.alignDirection')"
         @click="cycleAutoAlignMode"
       />
-      <q-btn color="grey-8" text-color="grey-3" dense flat icon="tune" label="Settings">
+      <q-btn v-info="'desk.plot.settings'" color="grey-8" text-color="grey-3" dense flat icon="tune" label="Settings">
         <q-menu class="plot-settings-menu" dark :auto-close="false">
           <div class="plot-settings-menu__title">2D plot</div>
           <q-toggle
+            v-info="'desk.plot.showGrid'"
             v-model="plotSettings.showGrid2d"
             dense
             dark
@@ -177,6 +180,7 @@ function autoAlignFixtures() {
             label="Show grid"
           />
           <q-toggle
+            v-info="'desk.plot.showLabels'"
             v-model="plotSettings.showLabels2d"
             dense
             dark
@@ -184,6 +188,7 @@ function autoAlignFixtures() {
             label="Show fixture labels"
           />
           <q-toggle
+            v-info="'desk.plot.showCenter'"
             v-model="plotSettings.showCenter2d"
             dense
             dark
@@ -193,6 +198,7 @@ function autoAlignFixtures() {
           <q-separator dark spaced />
           <div class="plot-settings-menu__title">3D plot</div>
           <q-toggle
+            v-info="'desk.plot.showGrid'"
             v-model="plotSettings.showGrid3d"
             dense
             dark
@@ -200,6 +206,7 @@ function autoAlignFixtures() {
             label="Show grid helper"
           />
           <q-toggle
+            v-info="'desk.plot.showStageFloor'"
             v-model="plotSettings.showStagePlane3d"
             dense
             dark
@@ -207,6 +214,7 @@ function autoAlignFixtures() {
             label="Show stage floor"
           />
           <q-toggle
+            v-info="'desk.plot.enableOrbit'"
             v-model="plotSettings.enableOrbit3d"
             dense
             dark
@@ -216,6 +224,7 @@ function autoAlignFixtures() {
           <q-separator dark spaced />
           <div class="plot-settings-menu__title">Interaction</div>
           <q-toggle
+            v-info="'desk.plot.enableDrag'"
             v-model="plotSettings.enableDrag"
             dense
             dark

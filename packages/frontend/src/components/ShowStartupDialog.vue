@@ -127,7 +127,7 @@ function loadDemo(show: ShowDocument) {
       <q-separator />
 
       <q-card-section v-if="step === 'choose'" class="startup-options">
-        <button type="button" class="startup-option" @click="loadBlankShow">
+        <button v-info="'desk.startup.blank'" type="button" class="startup-option" @click="loadBlankShow">
           <q-icon name="note_add" size="28px" color="primary" />
           <div class="startup-option-body">
             <div class="startup-option-title">Blank showfile</div>
@@ -136,6 +136,7 @@ function loadDemo(show: ShowDocument) {
         </button>
 
         <button
+          v-info="'desk.startup.lastOpened'"
           type="button"
           class="startup-option"
           :class="{ disabled: !hasLastShow }"
@@ -153,7 +154,7 @@ function loadDemo(show: ShowDocument) {
           </div>
         </button>
 
-        <button type="button" class="startup-option" @click="openFilePicker">
+        <button v-info="'desk.startup.openFile'" type="button" class="startup-option" @click="openFilePicker">
           <q-icon name="upload_file" size="28px" color="accent" />
           <div class="startup-option-body">
             <div class="startup-option-title">Open showfile</div>
@@ -161,7 +162,7 @@ function loadDemo(show: ShowDocument) {
           </div>
         </button>
 
-        <button type="button" class="startup-option" @click="showDemoPicker">
+        <button v-info="'desk.startup.loadDemo'" type="button" class="startup-option" @click="showDemoPicker">
           <q-icon name="auto_awesome" size="28px" color="warning" />
           <div class="startup-option-body">
             <div class="startup-option-title">Load a demo</div>

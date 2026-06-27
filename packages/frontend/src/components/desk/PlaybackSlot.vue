@@ -9,9 +9,11 @@
 import type { ExecutorSlot } from '@softdmx/engine';
 import { useExecutorStore } from 'src/stores/executor';
 import { SdmxButton, SdmxFader } from 'src/components/ui';
+import { useInfoText } from 'src/composables/useInfoText';
 
 const props = defineProps<{ slot: ExecutorSlot }>();
 const executorStore = useExecutorStore();
+const { info } = useInfoText();
 
 const isActive = computed(() => executorStore.isSlotActive(props.slot.id));
 const isFlash = computed(() => props.slot.mode === 'flash');
@@ -46,7 +48,7 @@ function onStop() {
   <div
     class="playback-slot"
     :class="{ active: isActive, flash: isFlash && isActive }"
-    :data-sdmx-info="`Playback slot: ${label}`"
+    :data-sdmx-info="info('desk.playback.slot', { label })"
   >
     <div class="playback-slot-label" :title="label">{{ label }}</div>
     <div class="playback-slot-fader">
@@ -55,6 +57,7 @@ function onStop() {
         vertical
         :show-value="false"
         color="primary"
+        :info="info('desk.playback.level')"
       />
     </div>
     <SdmxButton
@@ -62,7 +65,7 @@ function onStop() {
       variant="primary"
       size="xs"
       :active="isActive"
-      info="Trigger this playback slot"
+      :info="info('desk.playback.go')"
       @click="onGoClick"
       @mousedown="onGoDown"
       @mouseup="onGoUp"
@@ -74,7 +77,7 @@ function onStop() {
       label="STOP"
       variant="danger"
       size="xs"
-      info="Stop this playback slot"
+      :info="info('desk.playback.stop')"
       @click="onStop"
     />
   </div>

@@ -127,6 +127,7 @@ function handleShowBindingsDialog() {
       <q-item
         v-for="mode in QUICK_ACCESS_WORKSPACE_MODES"
         :key="mode"
+        v-info="{ key: 'desk.nav.workspaceMode', vars: { label: WORKSPACE_MODE_META[mode].label } }"
         clickable
         @click="selectMode(mode)"
       >
@@ -141,6 +142,7 @@ function handleShowBindingsDialog() {
         <q-item
           v-for="(meta, section) in PROGRAM_SECTION_META"
           :key="section"
+          v-info="{ key: 'desk.nav.programSection', vars: { label: meta.label } }"
           clickable
           :active="ui.programSection === section"
           active-class="sidebar-active"
@@ -157,6 +159,7 @@ function handleShowBindingsDialog() {
         <q-item
           v-for="(meta, section) in SETUP_SECTION_META"
           :key="section"
+          v-info="{ key: 'desk.nav.setupSection', vars: { label: meta.label } }"
           clickable
           :active="ui.setupSection === section"
           active-class="sidebar-active"
@@ -169,49 +172,49 @@ function handleShowBindingsDialog() {
 
       <q-separator spaced />
       <q-item-label header>Show file</q-item-label>
-      <q-item clickable @click="reloadExampleShow">
+      <q-item v-info="'desk.nav.reloadExample'" clickable @click="reloadExampleShow">
         <q-item-section avatar><q-icon name="refresh" /></q-item-section>
         <q-item-section>Reload example show</q-item-section>
       </q-item>
-      <q-item clickable @click="loadSimpleWash">
+      <q-item v-info="'desk.nav.loadSimpleWash'" clickable @click="loadSimpleWash">
         <q-item-section avatar><q-icon name="light_mode" /></q-item-section>
         <q-item-section>Load simple wash</q-item-section>
       </q-item>
-      <q-item clickable @click="loadLaserDemo">
+      <q-item v-info="'desk.nav.loadLaserDemo'" clickable @click="loadLaserDemo">
         <q-item-section avatar><q-icon name="flash_on" /></q-item-section>
         <q-item-section>Load laser demo</q-item-section>
       </q-item>
-      <q-item clickable @click="exportShow">
+      <q-item v-info="'desk.nav.exportYaml'" clickable @click="exportShow">
         <q-item-section avatar><q-icon name="download" /></q-item-section>
         <q-item-section>Export YAML</q-item-section>
       </q-item>
-      <q-item clickable @click="importShow">
+      <q-item v-info="'desk.nav.importYaml'" clickable @click="importShow">
         <q-item-section avatar><q-icon name="upload" /></q-item-section>
         <q-item-section>Import YAML</q-item-section>
       </q-item>
 
       <q-separator spaced />
       <q-item-label header>Tools</q-item-label>
-      <q-item clickable @click="openCueEditor">
+      <q-item v-info="'desk.nav.cueEditor'" clickable @click="openCueEditor">
         <q-item-section avatar><q-icon name="movie_edit" /></q-item-section>
         <q-item-section>Cue editor</q-item-section>
       </q-item>
-      <q-item clickable @click="handleShowBindingsDialog">
+      <q-item v-info="'desk.nav.bindings'" clickable @click="handleShowBindingsDialog">
         <q-item-section avatar><q-icon name="tune" /></q-item-section>
         <q-item-section>Bindings</q-item-section>
       </q-item>
-      <q-item clickable @click="handleShowAudioSettingsDialog">
+      <q-item v-info="'desk.nav.audioAnalysis'" clickable @click="handleShowAudioSettingsDialog">
         <q-item-section avatar><q-icon name="graphic_eq" /></q-item-section>
         <q-item-section>Audio analysis</q-item-section>
       </q-item>
 
       <q-separator spaced />
       <q-item-label header>Output</q-item-label>
-      <q-item clickable @click="handleShowSettingsDialog">
+      <q-item v-info="'desk.nav.outputSync'" clickable @click="handleShowSettingsDialog">
         <q-item-section avatar><q-icon name="settings_input_component" /></q-item-section>
         <q-item-section>Output &amp; sync</q-item-section>
       </q-item>
-      <q-item v-if="gridNodeOverlay.isAvailable" clickable @click="gridNodeOverlay.toggle()">
+      <q-item v-if="gridNodeOverlay.isAvailable" v-info="'desk.nav.gridNodeOverlay'" clickable @click="gridNodeOverlay.toggle()">
         <q-item-section avatar><q-icon name="grid_view" /></q-item-section>
         <q-item-section>GridNode overlay</q-item-section>
         <q-item-section side>
@@ -227,11 +230,11 @@ function handleShowBindingsDialog() {
 
       <q-separator spaced />
       <q-item-label header>Settings</q-item-label>
-      <q-item clickable @click="handleShowInterfaceSettingsDialog">
+      <q-item v-info="'desk.nav.interfaceSettings'" clickable @click="handleShowInterfaceSettingsDialog">
         <q-item-section avatar><q-icon name="dashboard_customize" /></q-item-section>
         <q-item-section>Interface</q-item-section>
       </q-item>
-      <q-item clickable @click="handleShowThemeSettingsDialog">
+      <q-item v-info="'desk.nav.themeSettings'" clickable @click="handleShowThemeSettingsDialog">
         <q-item-section avatar><q-icon name="palette" /></q-item-section>
         <q-item-section>Theme</q-item-section>
       </q-item>

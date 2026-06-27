@@ -117,6 +117,7 @@ function applyValue() {
   <div class="quick-programmer-window">
     <div class="quick-programmer-targets q-px-sm q-pt-xs">
       <q-btn-toggle
+        v-info="'desk.quickProgrammer.target'"
         v-model="quickTarget"
         dense
         no-caps
@@ -132,10 +133,10 @@ function applyValue() {
     </div>
 
     <div class="quick-programmer-actions q-px-sm q-gutter-xs q-pb-sm">
-      <q-btn dense flat label="Out" @click="setQuickValue(0)" />
-      <q-btn dense flat label="Half" @click="setQuickValue(128)" />
-      <q-btn dense flat label="Full" @click="setQuickValue(255)" />
-      <q-btn dense flat label="Clear" @click="setQuickValue(0)" />
+      <q-btn v-info="'desk.quickProgrammer.valueOut'" dense flat label="Out" @click="setQuickValue(0)" />
+      <q-btn v-info="'desk.quickProgrammer.valueHalf'" dense flat label="Half" @click="setQuickValue(128)" />
+      <q-btn v-info="'desk.quickProgrammer.valueFull'" dense flat label="Full" @click="setQuickValue(255)" />
+      <q-btn v-info="'desk.quickProgrammer.clear'" dense flat label="Clear" @click="setQuickValue(0)" />
     </div>
 
     <div class="quick-programmer-keypad q-px-sm q-pb-sm">
@@ -150,6 +151,7 @@ function applyValue() {
       <q-btn dense class="quick-programmer-key quick-programmer-key--back" icon="backspace" @click="removeDigit" />
       <q-btn dense class="quick-programmer-key" label="0" @click="appendDigit('0')" />
       <q-btn
+        v-info="'desk.quickProgrammer.enter'"
         dense
         class="quick-programmer-key quick-programmer-key--enter"
         color="primary"

@@ -11,6 +11,7 @@ import { useSelectionStore } from 'src/stores/selection';
 import { useProgrammerStore, PROGRAMMER_FEATURE_GROUPS } from 'src/stores/programmer';
 import { useScratchStore } from 'src/stores/scratch';
 import { SdmxButton, SdmxEmptyState } from 'src/components/ui';
+import { useInfoText } from 'src/composables/useInfoText';
 import ChannelAttributeControl from 'src/components/ChannelAttributeControl.vue';
 import type { AttributeFeature, FixtureChannelDefinition } from '@softdmx/engine';
 
@@ -18,6 +19,7 @@ const showStore = useShowStore();
 const selection = useSelectionStore();
 const programmer = useProgrammerStore();
 const scratch = useScratchStore();
+const { info } = useInfoText();
 
 const activeGroupIndex = ref(0);
 const featureGroups = PROGRAMMER_FEATURE_GROUPS;
@@ -73,11 +75,11 @@ function nextGroup() {
 <template>
   <div class="attribute-control-surface">
     <div class="attribute-control-surface__tabs">
-      <SdmxButton icon="chevron_left" variant="ghost" size="sm" info="Previous attribute group" @click="prevGroup" />
+      <SdmxButton icon="chevron_left" variant="ghost" size="sm" :info="info('desk.attributes.prevGroup')" @click="prevGroup" />
       <span class="sdmx-text-label attribute-control-surface__group-label">
         {{ featureGroups[activeGroupIndex]?.label }}
       </span>
-      <SdmxButton icon="chevron_right" variant="ghost" size="sm" info="Next attribute group" @click="nextGroup" />
+      <SdmxButton icon="chevron_right" variant="ghost" size="sm" :info="info('desk.attributes.nextGroup')" @click="nextGroup" />
     </div>
 
     <SdmxEmptyState

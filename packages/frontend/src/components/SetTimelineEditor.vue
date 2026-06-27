@@ -19,6 +19,7 @@ import {
 import { getCueTotalDuration } from '@softdmx/engine';
 import { formatSmpte, formatTimelineSeconds, msToSeconds, parseSmpteInput, secondsToMs } from '@softdmx/engine';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
+import { SdmxIconButton } from 'src/components/ui';
 
 const props = withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false });
 const emit = defineEmits<{ close: [] }>();
@@ -483,16 +484,12 @@ onUnmounted(() => {
             label="Advanced"
             @click="showAdvancedControls = !showAdvancedControls"
           />
-          <q-btn
+          <SdmxIconButton
             v-if="!embedded"
-            dense
-            flat
-            round
             icon="close"
+            info-key="program.timeline.close"
             @click="closeEditor"
-          >
-            <q-tooltip>Close</q-tooltip>
-          </q-btn>
+          />
         </div>
       </div>
 
@@ -739,9 +736,7 @@ onUnmounted(() => {
             class="cue-select"
             @update:model-value="timelineEditor.setSelectedCue"
           />
-          <q-btn dense round color="primary" icon="add" @click="addTimelineCue">
-            <q-tooltip>Add cue</q-tooltip>
-          </q-btn>
+          <SdmxIconButton icon="add" color="primary" info-key="program.timeline.addCue" @click="addTimelineCue" />
         </div>
 
         <div class="playback-controls timeline-toolbar__group">

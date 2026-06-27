@@ -16,7 +16,6 @@ import MasterBar from 'src/components/desk/MasterBar.vue';
 import DeskShell from 'src/components/desk/DeskShell.vue';
 import CommandLineBar from 'src/components/desk/CommandLineBar.vue';
 import CueEditor from 'src/components/CueEditor.vue';
-import InfoModeProvider from 'src/components/ui/InfoModeProvider.vue';
 
 const dmx = useDMXStore();
 const executor = useExecutorStore();
@@ -109,16 +108,14 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <InfoModeProvider>
-    <q-page class="index-page column no-wrap">
+  <q-page class="index-page column no-wrap">
       <MasterBar />
       <div class="index-page-body">
         <CueEditor v-if="ui.dialogs.cueEditor" class="cue-editor-panel" @close="ui.closeDialog('cueEditor')" />
         <DeskShell v-else />
       </div>
       <CommandLineBar />
-    </q-page>
-  </InfoModeProvider>
+  </q-page>
 </template>
 
 <style scoped>

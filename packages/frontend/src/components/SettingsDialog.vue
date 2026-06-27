@@ -15,6 +15,7 @@ import { useGridNodeOverlayStore } from 'src/stores/gridnode-overlay';
 import { useTimecodeStore } from 'src/stores/timecode';
 import { useLtcTimecodeStore } from 'src/stores/ltc-timecode';
 import type { OutputDestination, TimecodeSource } from '@softdmx/engine';
+import { SdmxIconButton } from 'src/components/ui';
 
 const socket = useIOClient();
 const showStore = useShowStore();
@@ -239,9 +240,7 @@ function saveSettings() {
       <div class="col-4 sdmx-border-right destinations-column">
         <div class="row justify-between items-center q-mb-sm">
           <span class="text-subtitle2 text-grey-4">Destinations</span>
-          <q-btn icon="add" color="primary" dense round size="sm" @click="addDestination">
-            <q-tooltip>Add Destination</q-tooltip>
-          </q-btn>
+          <SdmxIconButton icon="add" color="primary" info-key="setup.settings.addDestination" @click="addDestination" />
         </div>
 
         <q-scroll-area class="destinations-scroll">
@@ -337,9 +336,7 @@ function saveSettings() {
                 class="col"
                 no-options-label="No serial ports detected"
               />
-              <q-btn icon="refresh" color="primary" flat round dense @click="refreshPorts">
-                <q-tooltip>Scan Ports</q-tooltip>
-              </q-btn>
+              <SdmxIconButton icon="refresh" color="primary" info-key="setup.settings.scanPorts" @click="refreshPorts" />
             </div>
           </div>
 
@@ -444,9 +441,7 @@ function saveSettings() {
                 />
               </div>
               <div class="col-auto">
-                <q-btn icon="refresh" color="primary" flat round dense @click="audioStore.refreshDevices">
-                  <q-tooltip>Refresh audio devices</q-tooltip>
-                </q-btn>
+                <SdmxIconButton icon="refresh" color="primary" info-key="setup.settings.refreshAudio" @click="audioStore.refreshDevices" />
               </div>
             </div>
             <q-select v-model="ltcChannel" :options="ltcChannelOptions" label="LTC channel" dark filled dense emit-value map-options />

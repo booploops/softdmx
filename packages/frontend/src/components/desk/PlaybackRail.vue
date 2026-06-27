@@ -36,13 +36,13 @@ onBeforeUnmount(() => {
   <div ref="railRef" class="playback-rail">
     <div class="playback-rail-inner">
       <div class="playback-rail-controls">
-        <div class="playback-rail-page-label text-caption text-weight-bold">
+        <div v-info="'desk.playback.pageLabel'" class="playback-rail-page-label text-caption text-weight-bold">
           Page {{ executorStore.activePage }}/{{ executorStore.pageCount }}
         </div>
-        <q-btn dense flat icon="navigate_before" @click="executorStore.previousPage" />
-        <q-btn dense flat icon="navigate_next" @click="executorStore.nextPage" />
-        <q-btn dense flat color="primary" label="Go+" @click="executorStore.goActive()" />
-        <q-btn dense flat color="negative" label="Stop" @click="executorStore.stopAll" />
+        <q-btn v-info="'desk.playback.pagePrev'" dense flat icon="navigate_before" @click="executorStore.previousPage" />
+        <q-btn v-info="'desk.playback.pageNext'" dense flat icon="navigate_next" @click="executorStore.nextPage" />
+        <q-btn v-info="'desk.playback.goActive'" dense flat color="primary" label="Go+" @click="executorStore.goActive()" />
+        <q-btn v-info="'desk.playback.stopAll'" dense flat color="negative" label="Stop" @click="executorStore.stopAll" />
       </div>
 
       <div class="playback-slots">
@@ -57,6 +57,7 @@ onBeforeUnmount(() => {
         <div
           v-for="sub in executorStore.submasters"
           :key="`${sub.id}-${layoutVersion}`"
+          v-info="{ key: 'desk.playback.submaster', vars: { name: sub.name } }"
           class="playback-slot"
         >
           <div class="playback-slot-label">{{ sub.name }}</div>

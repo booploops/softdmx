@@ -10,11 +10,12 @@ defineProps<{
   title?: string;
   inset?: boolean;
   footer?: boolean;
+  info?: string;
 }>();
 </script>
 
 <template>
-  <section class="sdmx-panel" :class="{ 'sdmx-panel--inset': inset }">
+  <section class="sdmx-panel" :class="{ 'sdmx-panel--inset': inset }" :data-sdmx-info="info">
     <header v-if="title || $slots.header" class="sdmx-panel__header">
       <slot name="header">
         <span class="sdmx-panel__title">{{ title }}</span>

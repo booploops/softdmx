@@ -22,6 +22,7 @@ const sections = Object.entries(SETUP_SECTION_META) as [SetupSection, { label: s
     <q-item
       v-for="[section, meta] in sections"
       :key="section"
+      v-info="{ key: 'desk.nav.setupSection', vars: { label: meta.label } }"
       clickable
       :active="ui.setupSection === section"
       active-class="sidebar-active"

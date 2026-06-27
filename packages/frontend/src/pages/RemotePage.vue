@@ -12,9 +12,13 @@ import type { ShowDocument } from '@softdmx/engine';
 import { isSupportedShowVersion } from '@softdmx/engine';
 import TouchSurface from 'src/components/touch/TouchSurface.vue';
 import InfoModeProvider from 'src/components/ui/InfoModeProvider.vue';
-import { SdmxStatusChip, SdmxEmptyState } from 'src/components/ui';
+import { SdmxButton, SdmxStatusChip, SdmxEmptyState } from 'src/components/ui';
+import { useUIStore } from 'src/stores/ui';
+import { useInfoText } from 'src/composables/useInfoText';
 
 const socket = useIOClient();
+const ui = useUIStore();
+const { info } = useInfoText();
 const showDoc = ref<ShowDocument | null>(null);
 const isConnected = ref(socket.connected);
 
@@ -58,17 +62,27 @@ onBeforeUnmount(() => {
 <template>
   <InfoModeProvider>
     <div class="remote-page sdmx-remote-page">
-      <header class="remote-header">
-        <div class="title-block">
-          <div class="sdmx-text-title">{{ showName }}</div>
-          <div class="sdmx-text-caption">SoftDMX Touch</div>
-        </div>
+    <header class="remote-header">
+      <div class="title-block">
+        <div class="sdmx-text-title">{{ showName }}</div>
+        <div class="sdmx-text-caption">SoftDMX Touch</div>
+      </div>
+      <div class="remote-header-actions">
+        <SdmxButton
+          icon="help_outline"
+          round
+          :variant="ui.infoMode ? 'primary' : 'ghost'"
+          :active="ui.infoMode"
+          :info="info('remote.infoMode')"
+          @click="ui.toggleInfoMode()"
+        />
         <SdmxStatusChip
           :label="isConnected ? 'Online' : 'Offline'"
           :variant="isConnected ? 'positive' : 'negative'"
-          info="Connection status to SoftDMX desk"
+          :info="info('remote.connection')"
         />
-      </header>
+      </div>
+    </header>
       <TouchSurface v-if="touchPage" :page="touchPage" />
       <SdmxEmptyState
         v-else
@@ -92,5 +106,11 @@ onBeforeUnmount(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.remote-header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sdmx-space-sm);
 }
 </style>

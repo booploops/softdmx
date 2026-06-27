@@ -22,8 +22,8 @@ function openCueEditor() {
     <div class="row items-center q-mb-md">
       <div class="text-h6">Cues</div>
       <q-space />
-      <q-btn color="primary" icon="add" label="New cue" @click="cueStore.addCue(`Cue ${cueStore.cues.length + 1}`)" />
-      <q-btn flat icon="movie_edit" label="Cue editor" class="q-ml-sm" @click="openCueEditor" />
+      <q-btn v-info="'desk.cueList.add'" color="primary" icon="add" label="New cue" @click="cueStore.addCue(`Cue ${cueStore.cues.length + 1}`)" />
+      <q-btn v-info="'desk.cueList.openEditor'" flat icon="movie_edit" label="Cue editor" class="q-ml-sm" @click="openCueEditor" />
     </div>
     <q-list bordered separator>
       <q-item v-for="cue in cueStore.cues" :key="cue.id" clickable @click="cueStore.activeCueId = cue.id">
@@ -32,8 +32,8 @@ function openCueEditor() {
           <q-item-label caption>{{ cue.view === 'stack' ? 'Stack' : 'Timeline' }}</q-item-label>
         </q-item-section>
         <q-item-section side>
-          <q-btn dense flat icon="play_arrow" @click.stop="cueStore.playCue(cue.id)" />
-          <q-btn dense flat icon="stop" color="negative" @click.stop="cueStore.stopCue(cue.id)" />
+          <q-btn v-info="'desk.cueList.play'" dense flat icon="play_arrow" @click.stop="cueStore.playCue(cue.id)" />
+          <q-btn v-info="'desk.cueList.stop'" dense flat icon="stop" color="negative" @click.stop="cueStore.stopCue(cue.id)" />
         </q-item-section>
       </q-item>
       <q-item v-if="!cueStore.cues.length">

@@ -169,7 +169,7 @@ function onProgrammerKeydown(event: KeyboardEvent) {
         {{ scratch.blindMode ? 'Blind' : 'Live' }}
       </q-chip>
       <q-space />
-      <q-btn dense flat label="Expand" @click="ui.programmerCollapsed = false" />
+      <q-btn v-info="'desk.programmer.expand'" dense flat label="Expand" @click="ui.programmerCollapsed = false" />
     </div>
     <template v-else>
       <div class="row items-center q-px-sm q-py-xs q-gutter-xs flex-wrap programmer-toolbar">
@@ -177,17 +177,18 @@ function onProgrammerKeydown(event: KeyboardEvent) {
           {{ scratch.blindMode ? 'Blind Preview' : 'Live Output' }}
         </q-chip>
         <q-space />
-        <q-btn dense flat label="Blind" @click="toggleBlind" />
-        <q-btn dense flat label="Undo" :disable="!scratch.canUndo" @click="scratch.undo()" />
-        <q-btn dense flat label="Redo" :disable="!scratch.canRedo" @click="scratch.redo()" />
-        <q-btn dense flat label="Record" @click="cueStore.recordFrame()" />
-        <q-btn dense flat label="Store" @click="showSavePreset = true" />
-        <q-btn dense flat label="Clear" @click="clearScratch" />
-        <q-btn dense flat icon="expand_more" @click="ui.programmerCollapsed = true" />
+        <q-btn v-info="'desk.programmer.blind'" dense flat label="Blind" @click="toggleBlind" />
+        <q-btn v-info="'desk.programmer.undo'" dense flat label="Undo" :disable="!scratch.canUndo" @click="scratch.undo()" />
+        <q-btn v-info="'desk.programmer.redo'" dense flat label="Redo" :disable="!scratch.canRedo" @click="scratch.redo()" />
+        <q-btn v-info="'desk.programmer.record'" dense flat label="Record" @click="cueStore.recordFrame()" />
+        <q-btn v-info="'desk.programmer.store'" dense flat label="Store" @click="showSavePreset = true" />
+        <q-btn v-info="'desk.programmer.clear'" dense flat label="Clear" @click="clearScratch" />
+        <q-btn v-info="'desk.programmer.collapse'" dense flat icon="expand_more" @click="ui.programmerCollapsed = true" />
       </div>
 
       <div class="row q-px-sm q-pb-xs q-gutter-xs flex-wrap">
         <q-btn-toggle
+          v-info="'desk.programmer.featureGroup'"
           v-model="programmer.activeFeatureGroup"
           dense
           no-caps
@@ -204,8 +205,8 @@ function onProgrammerKeydown(event: KeyboardEvent) {
         indicator-color="primary"
         class="programmer-page-tabs q-px-sm"
       >
-        <q-tab name="scratch" label="Scratch" />
-        <q-tab name="controls" label="Controls" />
+        <q-tab v-info="'desk.programmer.scratchTab'" name="scratch" label="Scratch" />
+        <q-tab v-info="'desk.programmer.controlsTab'" name="controls" label="Controls" />
       </q-tabs>
 
       <q-tab-panels v-model="programmerPage" animated class="programmer-pages">
@@ -213,7 +214,7 @@ function onProgrammerKeydown(event: KeyboardEvent) {
           <div class="programmer-scratch-header row items-center q-px-sm q-py-xs">
             <span class="text-caption text-weight-bold">Scratch</span>
             <q-space />
-            <q-toggle v-model="filterSelection" dense label="Filter to selection" />
+            <q-toggle v-info="'desk.programmer.filterSelection'" v-model="filterSelection" dense label="Filter to selection" />
           </div>
 
           <div v-if="entries.length" class="programmer-grid programmer-body">
@@ -240,6 +241,7 @@ function onProgrammerKeydown(event: KeyboardEvent) {
         <q-tab-panel name="controls" class="programmer-page programmer-page--controls q-pa-none">
           <div class="row q-px-sm q-pb-xs q-gutter-xs flex-wrap items-center programmer-secondary-toolbar">
             <q-btn-toggle
+              v-info="'desk.programmer.storeMode'"
               v-model="programmer.storeMode"
               dense
               no-caps
@@ -247,6 +249,7 @@ function onProgrammerKeydown(event: KeyboardEvent) {
               :options="storeModeOptions.map((option) => ({ label: option.label, value: option.value }))"
             />
             <q-select
+              v-info="'desk.programmer.pool'"
               v-model="programmer.selectedPoolId"
               dense
               outlined
@@ -257,6 +260,7 @@ function onProgrammerKeydown(event: KeyboardEvent) {
               style="min-width: 120px"
             />
             <q-input
+              v-info="'desk.programmer.slot'"
               v-model.number="programmer.selectedPoolSlot"
               dense
               outlined
@@ -266,6 +270,7 @@ function onProgrammerKeydown(event: KeyboardEvent) {
               style="width: 90px"
             />
             <q-select
+              v-info="'desk.programmer.align'"
               v-model="selection.alignMode"
               dense
               outlined
@@ -276,6 +281,7 @@ function onProgrammerKeydown(event: KeyboardEvent) {
               style="min-width: 110px"
             />
             <q-input
+              v-info="'desk.programmer.wings'"
               v-model.number="selection.wings"
               dense
               outlined
@@ -285,6 +291,7 @@ function onProgrammerKeydown(event: KeyboardEvent) {
               style="width: 90px"
             />
             <q-select
+              v-info="'desk.programmer.wingDirection'"
               v-model="selection.wingDirection"
               dense
               outlined
@@ -294,7 +301,7 @@ function onProgrammerKeydown(event: KeyboardEvent) {
               label="Wing Dir"
               style="min-width: 110px"
             />
-            <q-btn dense flat label="Apply Wings @128" @click="applyWingsToSelection('Pan', 128)" />
+            <q-btn v-info="'desk.programmer.applyWings'" dense flat label="Apply Wings @128" @click="applyWingsToSelection('Pan', 128)" />
           </div>
 
           <SelectionControlPanel class="programmer-selection-panel" />

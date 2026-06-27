@@ -464,8 +464,8 @@ function addFixtureFromLibrary() {
         </div>
       </div>
       <div v-if="selectedPatchTab === 'fixtures'" class="row q-gutter-sm">
-        <q-btn color="primary" icon="add" label="Add Fixture from Library" @click="openAddFixtureDialog" />
-        <q-btn color="accent" icon="upload" label="Import GDTF/YAML" @click="triggerImportFixture" />
+        <q-btn v-info="'setup.patch.addFixture'" color="primary" icon="add" label="Add Fixture from Library" @click="openAddFixtureDialog" />
+        <q-btn v-info="'setup.patch.importFixtures'" color="accent" icon="upload" label="Import GDTF/YAML" @click="triggerImportFixture" />
         <input
           ref="importInputRef"
           type="file"
@@ -475,13 +475,12 @@ function addFixtureFromLibrary() {
         />
         <q-btn
           v-if="showStore.document.fixtures.length > 0"
+          v-info="'setup.patch.autoPatch'"
           color="secondary"
           icon="auto_fix_high"
           label="Auto Patch Sequentially"
           @click="autoPatchAll"
-        >
-          <q-tooltip>Re-allocate all fixture starting channels to prevent overlaps.</q-tooltip>
-        </q-btn>
+        />
       </div>
     </div>
 

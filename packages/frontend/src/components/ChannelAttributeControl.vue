@@ -15,6 +15,7 @@ import {
   isIndexedChannel,
 } from '@softdmx/engine';
 import { SdmxEncoder, SdmxValueField } from 'src/components/ui';
+import { useInfoText } from 'src/composables/useInfoText';
 
 const props = defineProps<{
   channel: FixtureChannelDefinition;
@@ -23,6 +24,7 @@ const props = defineProps<{
 }>();
 
 const { setChannel, getDisplayValue } = useChannelControl();
+const { info } = useInfoText();
 
 const isIndexed = computed(() => isIndexedChannel(props.channel));
 const dmxValue = computed(() => Math.round(getDisplayValue(props.path)));
@@ -52,7 +54,7 @@ function onEncoderUpdate(value: number) {
         dark
         :label="channel.name"
         class="indexed-select sdmx-focus-ring"
-        :data-sdmx-info="`Indexed channel: ${channel.name}`"
+        :data-sdmx-info="info('desk.fixtures.indexedChannel', { name: channel.name })"
         @update:model-value="onIndexedChange"
       />
       <SdmxValueField v-if="showDmxHint !== false" label="DMX" :value="dmxValue" size="sm" />
@@ -64,7 +66,7 @@ function onEncoderUpdate(value: number) {
         :min="channel.minValue"
         :max="channel.maxValue"
         :changed="dmxValue > 0"
-        :info="`Channel: ${channel.name}`"
+        :info="info('desk.fixtures.channel', { name: channel.name })"
         @update:model-value="onEncoderUpdate"
       />
     </template>

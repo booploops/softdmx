@@ -60,6 +60,7 @@ async function runBootFiles() {
   const bootFiles = [
     () => import("./boot/viewport-height"),
     () => import("./boot/i18n"),
+    () => import("./boot/info-directive"),
     () => import("./boot/theme"),
     () => import("./boot/quasar-overrides"),
     () => import("./boot/show"),

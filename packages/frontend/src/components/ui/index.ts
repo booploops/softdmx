@@ -15,3 +15,4 @@ export { default as SdmxEncoder } from './SdmxEncoder.vue';
 export { default as SdmxWindowChrome } from './SdmxWindowChrome.vue';
 export { default as SdmxPanel } from './SdmxPanel.vue';
 export { default as SdmxEmptyState } from './SdmxEmptyState.vue';
+export { default as SdmxIconButton } from './SdmxIconButton.vue';

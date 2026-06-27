@@ -10,6 +10,8 @@ import type { TouchControl, TouchPage } from '@softdmx/engine';
 import { useIOClient } from 'src/lib/io-client';
 import { useShowStore } from 'src/stores/show';
 import { createDefaultTouchConfig } from '@softdmx/engine';
+import { useInfoText } from 'src/composables/useInfoText';
+import type { TooltipKey } from 'src/lib/info-text';
 
 type AudioMetersPayload = {
   rms?: number;
@@ -22,6 +24,7 @@ const props = defineProps<{
 
 const socket = useIOClient();
 const showStore = useShowStore();
+const { info } = useInfoText();
 
 const grandMaster = ref(1);
 const blackout = ref(false);
@@ -41,6 +44,19 @@ function controlStyle(control: TouchControl) {
   };
 }
 
+function touchControlInfo(control: TouchControl): string {
+  const label = control.label ?? control.type;
+  const keyByType: Record<string, TooltipKey> = {
+    'preset-button': 'remote.touch.presetButton',
+    'executor-button': 'remote.touch.executorButton',
+    blackout: 'remote.touch.blackout',
+    'cue-go': 'remote.touch.cueGo',
+    'grand-master': 'remote.touch.grandMaster',
+    'audio-meter': 'remote.touch.audioMeter',
+  };
+  const key = keyByType[control.type];
+  return key ? info(key, { label }) : label;
+}
 function onControlClick(control: TouchControl) {
   switch (control.type) {
     case 'preset-button':
@@ -91,7 +107,12 @@ onBeforeUnmount(() => {
     }"
   >
     <template v-for="control in resolvedPage.controls" :key="control.id">
-      <div v-if="control.type === 'grand-master'" class="touch-control touch-control--gm" :style="controlStyle(control)">
+      <div
+        v-if="control.type === 'grand-master'"
+        class="touch-control touch-control--gm"
+        :style="controlStyle(control)"
+        :data-sdmx-info="touchControlInfo(control)"
+      >
         <div class="text-caption">GM {{ Math.round(grandMaster * 100) }}%</div>
         <q-slider
           :model-value="grandMaster"
@@ -102,7 +123,12 @@ onBeforeUnmount(() => {
           @update:model-value="(v) => setGrandMaster(Number(v ?? 0))"
         />
       </div>
-      <div v-else-if="control.type === 'audio-meter'" class="touch-control" :style="controlStyle(control)">
+      <div
+        v-else-if="control.type === 'audio-meter'"
+        class="touch-control"
+        :style="controlStyle(control)"
+        :data-sdmx-info="touchControlInfo(control)"
+      >
         <div class="text-caption">Audio</div>
         <q-linear-progress :value="audioMeters.rms" color="positive" />
       </div>
@@ -112,6 +138,7 @@ onBeforeUnmount(() => {
         class="touch-control"
         :class="{ 'touch-control--blackout': control.type === 'blackout' && blackout }"
         :style="controlStyle(control)"
+        :data-sdmx-info="touchControlInfo(control)"
         @click="onControlClick(control)"
       >
         {{ control.label ?? control.type }}

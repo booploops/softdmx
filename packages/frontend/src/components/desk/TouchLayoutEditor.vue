@@ -10,21 +10,24 @@ import type { TouchControl, TouchControlType } from '@softdmx/engine';
 import { useTouchLayoutStore } from 'src/stores/touch-layout';
 import { useShowStore } from 'src/stores/show';
 import { SdmxButton, SdmxToggle } from 'src/components/ui';
+import { useInfoText } from 'src/composables/useInfoText';
+import type { TooltipKey } from 'src/lib/info-text';
 
 const touchLayout = useTouchLayoutStore();
 const showStore = useShowStore();
+const { info } = useInfoText();
 
 const showMode = ref(true);
 const canvasRef = ref<HTMLElement | null>(null);
 const dragState = ref<{ controlId: string; startX: number; startY: number; originX: number; originY: number } | null>(null);
 
-const palette: { type: TouchControlType; label: string }[] = [
-  { type: 'grand-master', label: 'GM' },
-  { type: 'blackout', label: 'Blackout' },
-  { type: 'preset-button', label: 'Preset' },
-  { type: 'executor-button', label: 'Executor' },
-  { type: 'cue-go', label: 'Cue GO' },
-  { type: 'audio-meter', label: 'Audio' },
+const palette: { type: TouchControlType; label: string; infoKey: TooltipKey }[] = [
+  { type: 'grand-master', label: 'GM', infoKey: 'desk.touchEditor.addGm' },
+  { type: 'blackout', label: 'Blackout', infoKey: 'desk.touchEditor.addBlackout' },
+  { type: 'preset-button', label: 'Preset', infoKey: 'desk.touchEditor.addPreset' },
+  { type: 'executor-button', label: 'Executor', infoKey: 'desk.touchEditor.addExecutor' },
+  { type: 'cue-go', label: 'Cue GO', infoKey: 'desk.touchEditor.addCueGo' },
+  { type: 'audio-meter', label: 'Audio', infoKey: 'desk.touchEditor.addAudio' },
 ];
 
 function addPaletteControl(type: TouchControlType) {
@@ -104,9 +107,9 @@ onBeforeUnmount(onControlPointerUp);
     <div class="touch-layout-editor__header">
       <div class="sdmx-text-title">Show Mode / Touch Layout</div>
       <q-space />
-      <SdmxToggle v-model="showMode" label="Show Mode" info="Drag controls to reposition on the canvas" />
-      <SdmxToggle v-model="touchLayout.editMode" label="Edit mode" info="Enable editing controls on the canvas" />
-      <SdmxButton label="Rebuild from show" variant="ghost" @click="rebuild" />
+      <SdmxToggle v-model="showMode" label="Show Mode" :info="info('desk.touchEditor.showMode')" />
+      <SdmxToggle v-model="touchLayout.editMode" label="Edit mode" :info="info('desk.touchEditor.editMode')" />
+      <SdmxButton label="Rebuild from show" variant="ghost" :info="info('desk.touchEditor.rebuild')" @click="rebuild" />
     </div>
 
     <div class="row q-col-gutter-md">
@@ -141,6 +144,7 @@ onBeforeUnmount(onControlPointerUp);
               size="sm"
               variant="ghost"
               class="touch-control-remove"
+              :info="info('desk.touchEditor.removeControl')"
               @click.stop="touchLayout.removeControl(control.id)"
             />
           </div>
@@ -155,6 +159,7 @@ onBeforeUnmount(onControlPointerUp);
             :label="item.label"
             size="sm"
             :disabled="!touchLayout.editMode"
+            :info="info(item.infoKey)"
             @click="addPaletteControl(item.type)"
           />
         </div>

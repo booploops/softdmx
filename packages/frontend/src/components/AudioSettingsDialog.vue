@@ -10,6 +10,7 @@ import { computed, onMounted, ref } from 'vue';
 import { useDialogPluginComponent } from 'quasar';
 import { useAudioStore } from 'src/stores/audio';
 import { useShowStore } from 'src/stores/show';
+import { SdmxIconButton } from 'src/components/ui';
 
 const audioStore = useAudioStore();
 const showStore = useShowStore();
@@ -103,17 +104,13 @@ function saveSettings() {
           />
         </div>
         <div class="col-auto">
-          <q-btn
+          <SdmxIconButton
             icon="refresh"
             color="primary"
-            flat
-            round
-            dense
+            info-key="setup.audio.refreshDevices"
             :disable="!audioStore.isSupported"
             @click="audioStore.refreshDevices"
-          >
-            <q-tooltip>Refresh audio devices</q-tooltip>
-          </q-btn>
+          />
         </div>
       </div>
 
