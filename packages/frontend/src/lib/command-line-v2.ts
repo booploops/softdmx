@@ -119,6 +119,43 @@ type ExecutionDeps = {
 const MACROS_KEY = 'softdmx.command_macros_v2';
 const PACKS_KEY = 'softdmx.command_packs_v2';
 
+function buildProgrammerHelpText(): string {
+  const legacy = COMMAND_DEFINITIONS.map((cmd) => `  ${cmd.usage} - ${cmd.description}`).join('\n');
+  return [
+    'SoftDMX Programmer Help',
+    '',
+    'Core Commands',
+    legacy,
+    '',
+    'Selection Syntax',
+    '  1 @ full',
+    '  1 Thru 10 - 3 @ 50',
+    '',
+    'Programmer Verbs',
+    '  record [name]',
+    '  update',
+    '  edit <cue-id>',
+    '  label <cue-id> <new name>',
+    '  time <seconds>',
+    '',
+    'Timeline',
+    '  timeline marker <name>',
+    '  timeline section <name> <startSec> <endSec>',
+    '  timeline seek <seconds>',
+    '  timeline quantize',
+    '',
+    'Audio / Spatial',
+    '  audio bind <targetId> [beat|rms|peak|band]',
+    '  audio unbind <targetId>',
+    '  align [row|column]',
+    '  distribute <spacing>',
+    '  mirror',
+    '  zone <stage-left|stage-right|stage-center>',
+    '',
+    'Tip: use Up/Down for history and Tab for suggestions.',
+  ].join('\n');
+}
+
 function safeRead<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
   try {
@@ -630,7 +667,7 @@ export function buildExecutionPlan(ast: CommandAst, deps: ExecutionDeps, canonic
     apply: () => {
       switch (ast.command) {
         case 'help':
-          return COMMAND_DEFINITIONS.map((cmd) => `${cmd.usage} - ${cmd.description}`).join('\n');
+          return buildProgrammerHelpText();
         case 'blackout': {
           const off = ast.args.includes('--off');
           deps.outputStore.setBlackout(!off);

@@ -14,7 +14,7 @@ export type CommandDefinition = {
 };
 
 export const COMMAND_DEFINITIONS: CommandDefinition[] = [
-  { name: 'help', usage: 'help', description: 'Show available commands' },
+  { name: 'help', usage: 'help', description: 'Show programmer command help and examples' },
   { name: 'blackout', usage: 'blackout [--off]', description: 'Enable or disable blackout', args: ['--off'] },
   { name: 'fire-preset', usage: 'fire-preset <preset-id> [--fade <ms>]', description: 'Fire a preset by ID', args: ['--fade'] },
   { name: 'play-cue', usage: 'play-cue <cue-id> [--stop]', description: 'Play or stop a cue', args: ['--stop'] },
