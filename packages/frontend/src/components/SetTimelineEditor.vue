@@ -40,7 +40,15 @@ const dragState = ref<{
   startX: number;
   originInSec: number;
   originOutSec: number;
+  selectedCueIds: string[];
+  deltaSec: number;
 } | null>(null);
+const marqueeState = ref<{
+  startX: number;
+  currentX: number;
+  active: boolean;
+} | null>(null);
+const selectedCueIds = ref<Set<string>>(new Set());
 
 const pixelsPerSecond = computed(() => timelineEditor.pixelsPerSecond);
 const durationMs = computed(() => timelineEditor.durationMs);
@@ -79,9 +87,53 @@ const cueBlocks = computed(() =>
   })
 );
 
+const displayCueBlocks = computed(() => {
+  const base = cueBlocks.value.map((block) => ({ ...block }));
+  if (!dragState.value) return base;
+  if (dragState.value.mode === 'move') {
+    const moving = new Set(dragState.value.selectedCueIds);
+    return base.map((block) => {
+      if (!moving.has(block.cue.id)) return block;
+      const nextIn = Math.max(0, block.inSec + dragState.value.deltaSec);
+      const duration = Math.max(0.1, block.outSec - block.inSec);
+      return {
+        ...block,
+        inSec: nextIn,
+        outSec: nextIn + duration,
+        leftPx: nextIn * pixelsPerSecond.value,
+      };
+    });
+  }
+  return base.map((block) => {
+    if (block.cue.id !== dragState.value?.cueId) return block;
+    const nextOut = Math.max(block.inSec, block.outSec + dragState.value.deltaSec);
+    return {
+      ...block,
+      outSec: nextOut,
+      widthPx: Math.max(24, (nextOut - block.inSec) * pixelsPerSecond.value),
+    };
+  });
+});
+
 const selectedCue = computed(() =>
   showStore.document.cues.find((cue) => cue.id === timelineEditor.selectedCueId) ?? null
 );
+const inspectorCue = computed(() => {
+  const firstSelectedId = selectedCueIds.value.values().next().value as string | undefined;
+  if (firstSelectedId) {
+    return showStore.document.cues.find((cue) => cue.id === firstSelectedId) ?? null;
+  }
+  return selectedCue.value;
+});
+const inspectorClip = computed(() => {
+  const cueId = inspectorCue.value?.id;
+  if (!cueId) return null;
+  for (const track of timelineEditor.timelineTracks) {
+    const clip = track.clips.find((entry) => entry.cueId === cueId);
+    if (clip) return { track, clip };
+  }
+  return null;
+});
 
 const selectedCueInSmpte = computed({
   get: () => {
@@ -119,15 +171,20 @@ const playheadProgress = computed(() => {
 const timelineCueOptions = computed(() =>
   timelineEditor.timelineCues.map((cue) => ({ label: cue.name, value: cue.id }))
 );
+const markerList = computed(() => timelineEditor.markers);
+const sectionList = computed(() => timelineEditor.sections);
+const transientMarkerList = computed(() => timelineAudio.transientMarkers);
 
 const showAdvancedControls = ref(false);
+const markerName = ref('Marker');
+const sectionName = ref('Section');
 
 function pxToSeconds(px: number) {
   return Math.max(0, px / pixelsPerSecond.value);
 }
 
 function handleTimelineClick(event: MouseEvent) {
-  if (!timelineViewport.value || dragState.value) return;
+  if (!timelineViewport.value || dragState.value || marqueeState.value?.active) return;
   const rect = timelineViewport.value.getBoundingClientRect();
   const x = event.clientX - rect.left + timelineEditor.scrollLeftPx;
   timelineEditor.seekToMs(secondsToMs(pxToSeconds(x)));
@@ -138,6 +195,12 @@ function startCueDrag(event: MouseEvent, cueId: string, mode: 'move' | 'resize')
   const cue = showStore.document.cues.find((entry) => entry.id === cueId);
   if (!cue) return;
 
+  if (event.metaKey || event.ctrlKey) {
+    if (selectedCueIds.value.has(cueId)) selectedCueIds.value.delete(cueId);
+    else selectedCueIds.value.add(cueId);
+  } else if (!selectedCueIds.value.has(cueId)) {
+    selectedCueIds.value = new Set([cueId]);
+  }
   timelineEditor.setSelectedCue(cueId);
   dragState.value = {
     cueId,
@@ -145,23 +208,122 @@ function startCueDrag(event: MouseEvent, cueId: string, mode: 'move' | 'resize')
     startX: event.clientX,
     originInSec: getCueTimecodeInSeconds(cue) ?? 0,
     originOutSec: getCueTimecodeOutSeconds(cue) ?? 0,
+    selectedCueIds: mode === 'move' ? Array.from(selectedCueIds.value) : [cueId],
+    deltaSec: 0,
   };
 }
 
 function onPointerMove(event: MouseEvent) {
-  if (!dragState.value) return;
-  const deltaSec = (event.clientX - dragState.value.startX) / pixelsPerSecond.value;
-
-  if (dragState.value.mode === 'move') {
-    timelineEditor.assignCueTimecodeIn(dragState.value.cueId, dragState.value.originInSec + deltaSec);
+  if (dragState.value) {
+    dragState.value.deltaSec = (event.clientX - dragState.value.startX) / pixelsPerSecond.value;
     return;
   }
-
-  timelineEditor.assignCueTimecodeOut(dragState.value.cueId, dragState.value.originOutSec + deltaSec);
+  if (marqueeState.value?.active && timelineViewport.value) {
+    const rect = timelineViewport.value.getBoundingClientRect();
+    marqueeState.value.currentX = event.clientX - rect.left + timelineEditor.scrollLeftPx;
+  }
 }
 
 function onPointerUp() {
+  if (dragState.value) {
+    const deltaSec = dragState.value.deltaSec;
+    if (dragState.value.mode === 'move') {
+      const cueIdSet = new Set(dragState.value.selectedCueIds);
+      const selectedCues = timelineEditor.timelineCues.filter((cue) => cueIdSet.has(cue.id));
+      selectedCues.forEach((cue) => {
+        timelineEditor.assignCueTimecodeIn(
+          cue.id,
+          (getCueTimecodeInSeconds(cue) ?? 0) + deltaSec
+        );
+      });
+    } else {
+      timelineEditor.assignCueTimecodeOut(
+        dragState.value.cueId,
+        dragState.value.originOutSec + deltaSec
+      );
+    }
+  }
   dragState.value = null;
+  if (marqueeState.value?.active) {
+    const start = Math.min(marqueeState.value.startX, marqueeState.value.currentX);
+    const end = Math.max(marqueeState.value.startX, marqueeState.value.currentX);
+    const next = displayCueBlocks.value
+      .filter((block) => block.leftPx <= end && block.leftPx + block.widthPx >= start)
+      .map((block) => block.cue.id);
+    selectedCueIds.value = new Set(next);
+  }
+  marqueeState.value = null;
+}
+
+function startMarquee(event: MouseEvent) {
+  if (!timelineViewport.value || event.button !== 0) return;
+  if ((event.target as HTMLElement).closest('.cue-block')) return;
+  const rect = timelineViewport.value.getBoundingClientRect();
+  const x = event.clientX - rect.left + timelineEditor.scrollLeftPx;
+  marqueeState.value = {
+    startX: x,
+    currentX: x,
+    active: true,
+  };
+}
+
+function onWheelZoom(event: WheelEvent) {
+  if (!event.ctrlKey && !event.metaKey) return;
+  event.preventDefault();
+  const factor = event.deltaY < 0 ? 1.08 : 0.92;
+  timelineEditor.pixelsPerSecond = Math.max(24, Math.min(480, timelineEditor.pixelsPerSecond * factor));
+}
+
+function nudgeSelection(deltaSec: number) {
+  if (selectedCueIds.value.size === 0) return;
+  const selected = timelineEditor.timelineCues.filter((cue) => selectedCueIds.value.has(cue.id));
+  selected.forEach((cue) => {
+    timelineEditor.assignCueTimecodeIn(cue.id, (getCueTimecodeInSeconds(cue) ?? 0) + deltaSec);
+  });
+}
+
+function duplicateSelection() {
+  if (selectedCueIds.value.size === 0) return;
+  const source = timelineEditor.timelineCues.filter((cue) => selectedCueIds.value.has(cue.id));
+  showStore.updateDocument((doc) => {
+    source.forEach((cue, index) => {
+      const duplicated = structuredClone(cue);
+      duplicated.id = `${cue.id}-copy-${Date.now()}-${index}`;
+      duplicated.name = `${cue.name} Copy`;
+      duplicated.timecodeIn = (cue.timecodeIn ?? 0) + 1;
+      duplicated.timecodeOut = cue.timecodeOut !== undefined ? cue.timecodeOut + 1 : undefined;
+      duplicated.modified = new Date().toISOString();
+      duplicated.created = new Date().toISOString();
+      doc.cues.push(duplicated);
+    });
+  });
+}
+
+function addMarkerAtPlayhead() {
+  timelineEditor.addMarker(markerName.value || 'Marker', msToSeconds(timelineEditor.playheadMs));
+}
+
+function addSectionFromSelection() {
+  const selected = displayCueBlocks.value.filter((block) => selectedCueIds.value.has(block.cue.id));
+  if (selected.length === 0) return;
+  const start = Math.min(...selected.map((block) => block.inSec));
+  const end = Math.max(...selected.map((block) => block.outSec));
+  timelineEditor.addSection(sectionName.value || 'Section', start, end);
+}
+
+function onEditorKeydown(event: KeyboardEvent) {
+  if ((event.target as HTMLElement)?.closest('input,textarea,[contenteditable="true"]')) return;
+  const snapStep = Math.max(0.1, timelineEditor.timelineConfig?.snapStep ?? 1);
+  if (event.key === 'ArrowLeft') {
+    event.preventDefault();
+    nudgeSelection(-snapStep);
+  } else if (event.key === 'ArrowRight') {
+    event.preventDefault();
+    nudgeSelection(snapStep);
+  } else if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'd') {
+    event.preventDefault();
+    duplicateSelection();
+  }
 }
 
 function openCueContentEditor() {
@@ -268,6 +430,7 @@ onMounted(() => {
   void timelineAudio.prepareAudioElement().then(drawAudioWaveform);
   window.addEventListener('mousemove', onPointerMove);
   window.addEventListener('mouseup', onPointerUp);
+  window.addEventListener('keydown', onEditorKeydown);
 });
 
 onUnmounted(() => {
@@ -276,120 +439,29 @@ onUnmounted(() => {
   timelineAudio.disposeAudioElement();
   window.removeEventListener('mousemove', onPointerMove);
   window.removeEventListener('mouseup', onPointerUp);
+  window.removeEventListener('keydown', onEditorKeydown);
 });
 </script>
 
 <template>
-  <div class="set-timeline-editor">
-    <div class="editor-body">
-      <div class="timeline-panel">
-        <div class="timeline-scroll" ref="timelineViewport" @click="handleTimelineClick">
-          <div class="timeline-canvas" :style="{ width: `${timelineWidthPx}px` }">
-            <div class="timeline-ruler">
-              <div
-                v-for="marker in rulerMarkers"
-                :key="`${marker.leftPx}-${marker.label}`"
-                class="ruler-marker"
-                :style="{ left: `${marker.leftPx}px` }"
-              >
-                <span class="ruler-seconds">{{ marker.label }}</span>
-                <span class="ruler-smpte">{{ marker.smpte }}</span>
-              </div>
-            </div>
-
-            <div class="timeline-lane audio-lane">
-              <div class="lane-label">Audio</div>
-              <canvas ref="audioCanvas" class="audio-waveform" :style="{ width: `${timelineWidthPx}px` }" />
-              <div v-if="!timelineAudio.primaryAsset" class="lane-empty">Import an audio file to align your set.</div>
-            </div>
-
-            <div class="timeline-lane cue-lane">
-              <div class="lane-label">Cues</div>
-              <div
-                v-for="block in cueBlocks"
-                :key="block.cue.id"
-                class="cue-block"
-                :class="{ selected: timelineEditor.selectedCueId === block.cue.id }"
-                :style="{ left: `${block.leftPx}px`, width: `${block.widthPx}px` }"
-                @mousedown="startCueDrag($event, block.cue.id, 'move')"
-              >
-                <div class="cue-block-title">{{ block.cue.name }}</div>
-                <div class="cue-block-meta">
-                  {{ formatSmpte(block.inSec, fps) }}
-                </div>
-                <div
-                  class="cue-resize-handle"
-                  @mousedown.stop="startCueDrag($event, block.cue.id, 'resize')"
-                />
-              </div>
-            </div>
-
-            <div class="playhead" :style="{ left: `${playheadLeftPx}px` }" />
-          </div>
-        </div>
-      </div>
-    </div>
-
+  <div class="set-timeline-editor" tabindex="0">
     <div class="timeline-control-panel sdmx-panel-footer">
       <div class="timeline-toolbar">
-        <div class="cue-selection">
-          <q-select
-            :model-value="timelineEditor.selectedCueId"
-            :options="timelineCueOptions"
-            emit-value
-            map-options
-            label="Selected cue"
-            dense
-            class="cue-select"
-            @update:model-value="timelineEditor.setSelectedCue"
-          />
-          <q-btn dense round color="primary" icon="add" @click="addTimelineCue">
-            <q-tooltip>Add cue</q-tooltip>
-          </q-btn>
-        </div>
+        <div class="timeline-page-title">Set Timeline</div>
 
-        <div class="playback-controls">
-          <q-btn-group unelevated class="transport-btn-group">
-            <q-btn
-              icon="skip_previous"
-              color="info"
-              text-color="white"
-              @click="timelineEditor.stop()"
+        <div class="timeline-options timeline-toolbar__group">
+          <div class="zoom-controls">
+            <q-btn dense flat icon="zoom_out" @click="timelineEditor.pixelsPerSecond = Math.max(24, timelineEditor.pixelsPerSecond - 12)" />
+            <q-slider
+              :model-value="timelineEditor.pixelsPerSecond"
+              :min="24"
+              :max="480"
+              :step="4"
+              style="width: 120px"
+              @update:model-value="(value) => (timelineEditor.pixelsPerSecond = Number(value))"
             />
-            <q-btn
-              :icon="timelineEditor.isPlaying ? 'pause' : 'play_arrow'"
-              :color="timelineEditor.isPlaying ? 'warning' : 'positive'"
-              text-color="white"
-              @click="timelineEditor.isPlaying ? timelineEditor.pause() : timelineEditor.play()"
-            />
-            <q-btn
-              icon="stop"
-              color="negative"
-              text-color="white"
-              @click="timelineEditor.stop(); timelineAudio.stopAudio()"
-            />
-          </q-btn-group>
-        </div>
-
-        <div class="progress-section">
-          <div class="progress-info">
-            <span class="cue-name">{{ selectedCue?.name ?? 'Set timeline' }}</span>
-            <span class="progress-text">
-              {{ playheadSmpte }} / {{ formatSmpte(msToSeconds(durationMs), fps) }}
-            </span>
+            <q-btn dense flat icon="zoom_in" @click="timelineEditor.pixelsPerSecond = Math.min(480, timelineEditor.pixelsPerSecond + 12)" />
           </div>
-          <q-linear-progress
-            :value="playheadProgress"
-            color="primary"
-            track-color="grey-8"
-            size="8px"
-            class="progress-bar clickable"
-            animation-speed="0"
-            @click="handleProgressClick"
-          />
-        </div>
-
-        <div class="timeline-options">
           <q-btn-toggle
             v-model="timelineEditor.syncMode"
             toggle-color="primary"
@@ -401,6 +473,8 @@ onUnmounted(() => {
             ]"
           />
           <q-btn dense flat icon="upload_file" label="Import audio" @click="triggerAudioImport" />
+          <q-btn dense flat icon="bookmark_add" label="Add marker" @click="addMarkerAtPlayhead" />
+          <q-btn dense flat icon="crop_16_9" label="Add section" @click="addSectionFromSelection" />
           <q-btn dense flat icon="movie_edit" label="Edit cue" @click="openCueContentEditor" />
           <q-btn
             dense
@@ -456,6 +530,44 @@ onUnmounted(() => {
               </span>
             </div>
 
+            <div class="sync-controls">
+              <span class="controls-label">Snap</span>
+              <q-toggle
+                :model-value="timelineEditor.timelineConfig?.snapEnabled ?? true"
+                label="Enabled"
+                dense
+                @update:model-value="(value) => timelineEditor.timelineConfig && (timelineEditor.timelineConfig.snapEnabled = Boolean(value))"
+              />
+              <q-select
+                :model-value="timelineEditor.timelineConfig?.snapMode ?? 'seconds'"
+                :options="[
+                  { label: 'Seconds', value: 'seconds' },
+                  { label: 'Frames', value: 'frames' },
+                  { label: 'Beats', value: 'beats' }
+                ]"
+                emit-value
+                map-options
+                dense
+                label="Mode"
+                style="min-width: 120px"
+                @update:model-value="(value) => timelineEditor.timelineConfig && (timelineEditor.timelineConfig.snapMode = value as 'seconds' | 'frames' | 'beats')"
+              />
+              <q-input
+                :model-value="timelineEditor.timelineConfig?.snapStep ?? 1"
+                type="number"
+                dense
+                label="Step"
+                style="width: 90px"
+                @update:model-value="(value) => timelineEditor.timelineConfig && (timelineEditor.timelineConfig.snapStep = Number(value) || 1)"
+              />
+              <q-toggle
+                :model-value="timelineEditor.timelineConfig?.snapToMarkers ?? false"
+                label="To markers"
+                dense
+                @update:model-value="(value) => timelineEditor.timelineConfig && (timelineEditor.timelineConfig.snapToMarkers = Boolean(value))"
+              />
+            </div>
+
             <div v-if="timelineAudio.primaryAsset" class="audio-controls">
               <span class="controls-label">Reference audio</span>
               <span class="audio-file-name">{{ timelineAudio.primaryAsset.fileName }}</span>
@@ -476,6 +588,205 @@ onUnmounted(() => {
       </q-slide-transition>
     </div>
 
+    <div class="editor-body">
+      <div class="timeline-panel sdmx-panel--inset">
+        <div class="timeline-scroll" ref="timelineViewport" @click="handleTimelineClick" @mousedown="startMarquee" @wheel="onWheelZoom">
+          <div class="timeline-canvas" :style="{ width: `${timelineWidthPx}px` }">
+            <div class="timeline-ruler">
+              <div
+                v-for="section in sectionList"
+                :key="section.id"
+                class="timeline-section"
+                :style="{
+                  left: `${section.startSec * pixelsPerSecond}px`,
+                  width: `${Math.max(1, (section.endSec - section.startSec) * pixelsPerSecond)}px`
+                }"
+              >
+                <span>{{ section.name }}</span>
+              </div>
+              <div
+                v-for="marker in rulerMarkers"
+                :key="`${marker.leftPx}-${marker.label}`"
+                class="ruler-marker"
+                :style="{ left: `${marker.leftPx}px` }"
+              >
+                <span class="ruler-seconds">{{ marker.label }}</span>
+                <span class="ruler-smpte">{{ marker.smpte }}</span>
+              </div>
+              <div
+                v-for="marker in markerList"
+                :key="marker.id"
+                class="timeline-marker timeline-marker--manual"
+                :style="{ left: `${marker.timeSec * pixelsPerSecond}px` }"
+                :title="marker.name"
+              />
+              <div
+                v-for="(timeSec, index) in transientMarkerList"
+                :key="`transient-${index}`"
+                class="timeline-marker timeline-marker--transient"
+                :style="{ left: `${timeSec * pixelsPerSecond}px` }"
+              />
+            </div>
+
+            <div class="timeline-lane audio-lane">
+              <div class="lane-label"><span>Audio</span></div>
+              <canvas ref="audioCanvas" class="audio-waveform" :style="{ width: `${timelineWidthPx}px` }" />
+              <div v-if="!timelineAudio.primaryAsset" class="lane-empty">Import an audio file to align your set.</div>
+            </div>
+
+            <div class="timeline-lane cue-lane">
+              <div class="lane-label"><span>Cues</span></div>
+              <div
+                v-for="block in displayCueBlocks"
+                :key="block.cue.id"
+                class="cue-block"
+                :class="{ selected: selectedCueIds.has(block.cue.id) || timelineEditor.selectedCueId === block.cue.id }"
+                :style="{ left: `${block.leftPx}px`, width: `${block.widthPx}px` }"
+                @mousedown="startCueDrag($event, block.cue.id, 'move')"
+              >
+                <div class="cue-block-title">{{ block.cue.name }}</div>
+                <div class="cue-block-meta">
+                  {{ formatSmpte(block.inSec, fps) }}
+                </div>
+                <div
+                  class="cue-resize-handle"
+                  @mousedown.stop="startCueDrag($event, block.cue.id, 'resize')"
+                />
+              </div>
+            </div>
+
+            <div class="playhead" :style="{ left: `${playheadLeftPx}px` }" />
+            <div
+              v-if="marqueeState?.active"
+              class="timeline-marquee"
+              :style="{
+                left: `${Math.min(marqueeState.startX, marqueeState.currentX)}px`,
+                width: `${Math.abs(marqueeState.currentX - marqueeState.startX)}px`
+              }"
+            />
+          </div>
+        </div>
+      </div>
+      <aside class="timeline-inspector sdmx-panel--inset">
+        <div class="inspector-title">Inspector</div>
+        <div v-if="inspectorCue" class="inspector-group">
+          <div class="inspector-label">Cue</div>
+          <q-input v-model="inspectorCue.name" dense label="Name" @blur="cueStore.updateCueModified" />
+          <q-input v-model="selectedCueInSmpte" dense label="TC in" />
+          <q-input v-model="selectedCueOutSmpte" dense label="TC out" />
+          <div v-if="inspectorClip" class="inspector-meta">
+            Track: {{ inspectorClip.track.name }}<br />
+            Clip: {{ formatTimelineSeconds(inspectorClip.clip.startSec) }} - {{ formatTimelineSeconds(inspectorClip.clip.endSec) }}
+          </div>
+        </div>
+        <div v-else class="inspector-empty">Select a cue block to inspect timing and metadata.</div>
+
+        <div class="inspector-group">
+          <div class="inspector-label">Markers</div>
+          <q-input v-model="markerName" dense label="Marker name" />
+          <q-btn dense flat icon="bookmark_add" label="Add at playhead" @click="addMarkerAtPlayhead" />
+          <div class="inspector-list">
+            <div v-for="marker in markerList" :key="marker.id" class="inspector-list-row">
+              <span>{{ marker.name }}</span>
+              <span>{{ formatTimelineSeconds(marker.timeSec) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="inspector-group">
+          <div class="inspector-label">Sections</div>
+          <q-input v-model="sectionName" dense label="Section name" />
+          <q-btn dense flat icon="crop_16_9" label="Add from selection" @click="addSectionFromSelection" />
+          <div class="inspector-list">
+            <div v-for="section in sectionList" :key="section.id" class="inspector-list-row">
+              <span>{{ section.name }}</span>
+              <span>{{ formatTimelineSeconds(section.startSec) }} - {{ formatTimelineSeconds(section.endSec) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="inspector-group">
+          <div class="inspector-label">Diagnostics</div>
+          <div v-if="timelineEditor.conflictDiagnostics.length === 0" class="inspector-empty">
+            No overlaps detected.
+          </div>
+          <div v-else class="inspector-list">
+            <div
+              v-for="(conflict, index) in timelineEditor.conflictDiagnostics"
+              :key="`${conflict.trackId}-${index}`"
+              class="inspector-list-row inspector-list-row--warning"
+            >
+              <span>{{ conflict.trackName }}</span>
+              <span>
+                {{ formatTimelineSeconds(conflict.overlapStartSec) }} - {{ formatTimelineSeconds(conflict.overlapEndSec) }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <div class="timeline-bottom-controls sdmx-panel-footer">
+      <div class="timeline-toolbar">
+        <div class="cue-selection timeline-toolbar__group">
+          <q-select
+            :model-value="timelineEditor.selectedCueId"
+            :options="timelineCueOptions"
+            emit-value
+            map-options
+            label="Selected cue"
+            dense
+            class="cue-select"
+            @update:model-value="timelineEditor.setSelectedCue"
+          />
+          <q-btn dense round color="primary" icon="add" @click="addTimelineCue">
+            <q-tooltip>Add cue</q-tooltip>
+          </q-btn>
+        </div>
+
+        <div class="playback-controls timeline-toolbar__group">
+          <q-btn-group unelevated class="transport-btn-group">
+            <q-btn
+              icon="skip_previous"
+              color="info"
+              text-color="white"
+              @click="timelineEditor.stop()"
+            />
+            <q-btn
+              :icon="timelineEditor.isPlaying ? 'pause' : 'play_arrow'"
+              :color="timelineEditor.isPlaying ? 'warning' : 'positive'"
+              text-color="white"
+              @click="timelineEditor.isPlaying ? timelineEditor.pause() : timelineEditor.play()"
+            />
+            <q-btn
+              icon="stop"
+              color="negative"
+              text-color="white"
+              @click="timelineEditor.stop(); timelineAudio.stopAudio()"
+            />
+          </q-btn-group>
+        </div>
+
+        <div class="progress-section timeline-toolbar__group">
+          <div class="progress-info">
+            <span class="cue-name">{{ selectedCue?.name ?? 'Set timeline' }}</span>
+            <span class="progress-text">
+              {{ playheadSmpte }} / {{ formatSmpte(msToSeconds(durationMs), fps) }}
+            </span>
+          </div>
+          <q-linear-progress
+            :value="playheadProgress"
+            color="primary"
+            track-color="grey-8"
+            size="8px"
+            class="progress-bar clickable"
+            animation-speed="0"
+            @click="handleProgressClick"
+          />
+        </div>
+      </div>
+    </div>
+
     <input ref="fileInput" type="file" accept="audio/*" hidden @change="onAudioFilePicked" />
   </div>
 </template>
@@ -484,7 +795,7 @@ onUnmounted(() => {
 .set-timeline-editor {
   position: relative;
   display: grid;
-  grid-template-rows: minmax(0, 1fr) auto;
+  grid-template-rows: auto minmax(0, 1fr) auto;
   height: 100%;
   max-height: 100%;
   min-height: 0;
@@ -494,24 +805,97 @@ onUnmounted(() => {
 }
 
 .editor-body {
-  grid-row: 1;
+  grid-row: 2;
   min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  gap: var(--sdmx-space-sm);
 }
 
 .timeline-panel {
-  flex: 1 1 0;
+  flex: 1 1 auto;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
+  border-radius: var(--sdmx-radius-md);
+  margin: var(--sdmx-space-sm) var(--sdmx-space-sm) 0 var(--sdmx-space-sm);
+}
+
+.timeline-inspector {
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  margin: 0 var(--sdmx-space-sm) var(--sdmx-space-sm) var(--sdmx-space-sm);
+  border-radius: var(--sdmx-radius-md);
+  padding: var(--sdmx-space-sm);
+  overflow: auto;
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sdmx-space-sm);
+  align-items: flex-start;
+  max-height: 220px;
+}
+
+.inspector-title {
+  font-size: var(--sdmx-font-size-title);
+  font-weight: var(--sdmx-font-weight-bold);
+  margin-bottom: var(--sdmx-space-sm);
+}
+
+.inspector-group {
+  flex: 1 1 260px;
+  min-width: 220px;
+  border: 1px solid var(--sdmx-color-border-subtle);
+  border-radius: var(--sdmx-radius-sm);
+  background: color-mix(in srgb, var(--sdmx-color-bg-surface) 65%, transparent);
+  padding: var(--sdmx-space-sm);
+  margin-bottom: var(--sdmx-space-sm);
+  display: grid;
+  gap: var(--sdmx-space-xs);
+}
+
+.inspector-label {
+  font-size: var(--sdmx-font-size-label);
+  color: var(--sdmx-color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.inspector-empty {
+  font-size: var(--sdmx-font-size-label);
+  color: var(--sdmx-color-text-muted);
+}
+
+.inspector-meta {
+  font-size: var(--sdmx-font-size-label);
+  color: var(--sdmx-color-text-muted);
+}
+
+.inspector-list {
+  display: grid;
+  gap: 4px;
+}
+
+.inspector-list-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--sdmx-space-sm);
+  font-size: var(--sdmx-font-size-label);
+}
+
+.inspector-list-row--warning {
+  color: var(--sdmx-color-warning);
 }
 
 .timeline-scroll {
   height: 100%;
   overflow: auto;
-  background: var(--sdmx-color-bg-inset);
+  background: linear-gradient(
+    to bottom,
+    color-mix(in srgb, var(--sdmx-color-bg-elevated) 82%, transparent),
+    var(--sdmx-color-bg-inset)
+  );
 }
 
 .timeline-canvas {
@@ -523,9 +907,29 @@ onUnmounted(() => {
   position: sticky;
   top: 0;
   z-index: 3;
-  height: 42px;
+  height: 44px;
   border-bottom: 1px solid var(--sdmx-color-border-subtle);
-  background: var(--sdmx-color-bg-surface);
+  background: color-mix(in srgb, var(--sdmx-color-bg-surface) 92%, transparent);
+  backdrop-filter: blur(2px);
+}
+
+.timeline-section {
+  position: absolute;
+  top: 2px;
+  height: 14px;
+  border-radius: var(--sdmx-radius-full);
+  background: color-mix(in srgb, var(--sdmx-color-secondary) 30%, transparent);
+  border: 1px solid color-mix(in srgb, var(--sdmx-color-secondary) 55%, transparent);
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.timeline-section span {
+  display: inline-block;
+  font-size: 9px;
+  color: var(--sdmx-color-text);
+  padding: 0 6px;
+  white-space: nowrap;
 }
 
 .ruler-marker {
@@ -550,9 +954,26 @@ onUnmounted(() => {
   color: var(--sdmx-color-text-muted);
 }
 
+.timeline-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  pointer-events: none;
+}
+
+.timeline-marker--manual {
+  background: var(--sdmx-color-accent);
+}
+
+.timeline-marker--transient {
+  background: color-mix(in srgb, var(--sdmx-color-info) 60%, transparent);
+  opacity: 0.7;
+}
+
 .timeline-lane {
   position: relative;
-  min-height: 88px;
+  min-height: 92px;
   border-bottom: 1px solid var(--sdmx-color-border-subtle);
 }
 
@@ -561,10 +982,19 @@ onUnmounted(() => {
   left: 8px;
   top: 8px;
   z-index: 2;
-  font-size: 11px;
+}
+
+.lane-label span {
+  display: inline-flex;
+  align-items: center;
+  font-size: 10px;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--sdmx-color-text-muted);
+  letter-spacing: 0.05em;
+  color: var(--sdmx-color-text-faint);
+  border: 1px solid var(--sdmx-color-border-subtle);
+  background: color-mix(in srgb, var(--sdmx-color-bg-surface) 75%, transparent);
+  border-radius: var(--sdmx-radius-full);
+  padding: 2px 8px;
 }
 
 .audio-waveform {
@@ -590,16 +1020,22 @@ onUnmounted(() => {
   position: absolute;
   top: 28px;
   height: 52px;
-  border-radius: 6px;
+  border-radius: var(--sdmx-radius-sm);
   border: 1px solid color-mix(in srgb, var(--sdmx-color-primary) 50%, var(--sdmx-color-border-subtle));
   background: color-mix(in srgb, var(--sdmx-color-primary) 18%, var(--sdmx-color-bg-surface));
   padding: 6px 10px;
   cursor: grab;
   overflow: hidden;
+  box-shadow: var(--sdmx-elevation-sm);
+  transition: box-shadow var(--sdmx-motion-duration-fast) var(--sdmx-motion-easing);
 
   &.selected {
     border-color: var(--sdmx-color-primary);
     box-shadow: 0 0 0 1px var(--sdmx-color-primary-ring);
+  }
+
+  &:hover {
+    box-shadow: var(--sdmx-elevation-md);
   }
 }
 
@@ -636,8 +1072,18 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
+.timeline-marquee {
+  position: absolute;
+  top: 44px;
+  bottom: 0;
+  border: 1px dashed var(--sdmx-color-primary);
+  background: color-mix(in srgb, var(--sdmx-color-primary) 15%, transparent);
+  pointer-events: none;
+  z-index: 5;
+}
+
 .timeline-control-panel {
-  grid-row: 2;
+  grid-row: 1;
   flex-shrink: 0;
   min-width: 0;
   z-index: 2;
@@ -647,14 +1093,37 @@ onUnmounted(() => {
   overflow-x: hidden;
 }
 
+.timeline-page-title {
+  font-size: var(--sdmx-font-size-title);
+  font-weight: var(--sdmx-font-weight-bold);
+  color: var(--sdmx-color-text);
+  padding: 0 var(--sdmx-space-xs);
+}
+
+.timeline-bottom-controls {
+  grid-row: 3;
+  flex-shrink: 0;
+  min-width: 0;
+  z-index: 2;
+  background: var(--sdmx-color-bg-toolbar);
+  border-top: 1px solid var(--sdmx-color-border-subtle);
+}
+
 .timeline-toolbar {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px 12px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   min-height: 48px;
   min-width: 0;
+
+  &__group {
+    border: 1px solid var(--sdmx-color-border-subtle);
+    border-radius: var(--sdmx-radius-sm);
+    background: color-mix(in srgb, var(--sdmx-color-bg-surface) 65%, transparent);
+    padding: 6px 8px;
+  }
 
   .cue-selection {
     display: flex;
@@ -751,12 +1220,18 @@ onUnmounted(() => {
   }
 }
 
+.zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .advanced-toolbar {
   display: flex;
   align-items: flex-start;
   flex-wrap: wrap;
   gap: 8px 16px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   min-height: 44px;
   min-width: 0;
 

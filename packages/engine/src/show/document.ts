@@ -8,6 +8,7 @@
 
 import type { ShowBindings } from "../types/bindings";
 import type { Cue } from "../types/cue";
+import type { TimelineMarker, TimelineSection, TimelineTrack } from "../types/cue";
 import type { ShowDeskConfig, ShowTouchConfig } from "../types/desk";
 import type { EffectDefinition } from "../types/effects";
 
@@ -141,8 +142,19 @@ export interface ShowTimelineConfig {
   durationMs?: number;
   fps?: number;
   syncMode?: TimelineSyncMode;
+  snapEnabled?: boolean;
+  snapMode?: "seconds" | "frames" | "beats";
+  snapStep?: number;
+  snapToMarkers?: boolean;
+  snapToAudioTransients?: boolean;
+  showConflictDiagnostics?: boolean;
+  showMarkers?: boolean;
+  showSections?: boolean;
   primaryAudioAssetId?: string | null;
   audioAssets?: ShowTimelineAudioAsset[];
+  tracks?: TimelineTrack[];
+  markers?: TimelineMarker[];
+  sections?: TimelineSection[];
 }
 
 export interface ShowAudioMapping {
@@ -336,8 +348,19 @@ export function createEmptyShow(name = "Untitled Show"): ShowDocument {
       durationMs: 300_000,
       fps: 30,
       syncMode: "free",
+      snapEnabled: true,
+      snapMode: "seconds",
+      snapStep: 1,
+      snapToMarkers: false,
+      snapToAudioTransients: false,
+      showConflictDiagnostics: true,
+      showMarkers: true,
+      showSections: true,
       primaryAudioAssetId: null,
       audioAssets: [],
+      tracks: [],
+      markers: [],
+      sections: [],
     },
     audioMappings: [],
     executors: [

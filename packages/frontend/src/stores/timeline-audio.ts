@@ -44,6 +44,30 @@ export const useTimelineAudioStore = defineStore('timeline-audio', () => {
     return loadedAssets.value.get(asset.id)?.peaks ?? [];
   });
 
+  const transientMarkers = computed(() => {
+    const asset = primaryAsset.value;
+    const peaks = primaryPeaks.value;
+    if (!asset || peaks.length < 3) return [] as number[];
+    const threshold = 0.62;
+    const minGapBuckets = Math.max(2, Math.floor(peaks.length / 96));
+    const markers: number[] = [];
+    let lastAccepted = -minGapBuckets;
+    const offsetSec = (asset.offsetMs ?? 0) / 1000;
+    const durationSec = Math.max(0.001, asset.durationMs / 1000);
+    for (let i = 1; i < peaks.length - 1; i += 1) {
+      const current = peaks[i] ?? 0;
+      const previous = peaks[i - 1] ?? 0;
+      const next = peaks[i + 1] ?? 0;
+      if (current < threshold) continue;
+      if (current < previous || current < next) continue;
+      if (i - lastAccepted < minGapBuckets) continue;
+      const localSec = (i / (peaks.length - 1)) * durationSec;
+      markers.push(offsetSec + localSec);
+      lastAccepted = i;
+    }
+    return markers;
+  });
+
   function revokeObjectUrl(id: string) {
     const url = objectUrls.value.get(id);
     if (url) URL.revokeObjectURL(url);
@@ -205,6 +229,7 @@ export const useTimelineAudioStore = defineStore('timeline-audio', () => {
     assets,
     primaryAsset,
     primaryPeaks,
+    transientMarkers,
     isImporting,
     errorMessage,
     importAudioFile,

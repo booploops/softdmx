@@ -10,6 +10,8 @@ import type { ShowDocument } from "./document.ts";
 import { createDefaultDeskConfig, createDefaultTouchConfig } from "../utils/desk-defaults.ts";
 import { createDefaultVideoConfig } from "../utils/video-defaults.ts";
 import { ensureDefaultPresetPool } from "../utils/preset-pool.ts";
+import { getCueTimecodeInSeconds, getCueTimecodeOutSeconds } from "../core/timecode-set-playback.ts";
+import type { TimelineTrack } from "../types/cue.ts";
 
 type LegacyGroup = {
   name: string;
@@ -22,6 +24,63 @@ type LegacyShowDocument = Partial<ShowDocument> & {
   linkedGroups?: LegacyGroup[];
   groups?: LegacyGroup[];
 };
+
+function buildTimelineTracksFromLegacyCues(doc: Partial<ShowDocument>): TimelineTrack[] {
+  const timelineCues = (doc.cues ?? []).filter((cue) => cue.view === "timeline");
+  if (timelineCues.length === 0) return [];
+  return [
+    {
+      id: "timeline-main-track",
+      name: "Main",
+      kind: "cue",
+      order: 0,
+      enabled: true,
+      solo: false,
+      clips: timelineCues.map((cue, index) => {
+        const inSec = getCueTimecodeInSeconds(cue) ?? index * 4;
+        const outSec = getCueTimecodeOutSeconds(cue) ?? inSec + Math.max(1, cue.totalDuration / 1000);
+        return {
+          id: `timeline-clip-${cue.id}`,
+          name: cue.name,
+          startSec: inSec,
+          endSec: Math.max(inSec, outSec),
+          cueId: cue.id,
+          color: cue.tags.includes("accent") ? "#a78bfa" : undefined,
+        };
+      }),
+    },
+  ];
+}
+
+function ensureTimelineDefaults(doc: Partial<ShowDocument>): Partial<ShowDocument> {
+  const timeline = doc.timeline ?? {};
+  const tracks =
+    Array.isArray(timeline.tracks) && timeline.tracks.length > 0
+      ? timeline.tracks
+      : buildTimelineTracksFromLegacyCues(doc);
+  return {
+    ...doc,
+    timeline: {
+      ...timeline,
+      durationMs: timeline.durationMs ?? 300_000,
+      fps: timeline.fps ?? 30,
+      syncMode: timeline.syncMode ?? "free",
+      snapEnabled: timeline.snapEnabled ?? true,
+      snapMode: timeline.snapMode ?? "seconds",
+      snapStep: timeline.snapStep ?? 1,
+      snapToMarkers: timeline.snapToMarkers ?? false,
+      snapToAudioTransients: timeline.snapToAudioTransients ?? false,
+      showConflictDiagnostics: timeline.showConflictDiagnostics ?? true,
+      showMarkers: timeline.showMarkers ?? true,
+      showSections: timeline.showSections ?? true,
+      primaryAudioAssetId: timeline.primaryAudioAssetId ?? null,
+      audioAssets: timeline.audioAssets ?? [],
+      tracks,
+      markers: timeline.markers ?? [],
+      sections: timeline.sections ?? [],
+    },
+  };
+}
 
 function normalizeLegacyGroups(doc: LegacyShowDocument): Partial<ShowDocument> {
   const hasGroups = Array.isArray(doc.groups) && doc.groups.length > 0;
@@ -47,7 +106,7 @@ function normalizeLegacyGroups(doc: LegacyShowDocument): Partial<ShowDocument> {
 }
 
 function migrateV1_0ToV1_1(doc: Partial<ShowDocument>): Partial<ShowDocument> {
-  return {
+  return ensureTimelineDefaults({
     ...doc,
     version: "1.1",
     audio: doc.audio,
@@ -81,7 +140,7 @@ function migrateV1_0ToV1_1(doc: Partial<ShowDocument>): Partial<ShowDocument> {
       ...fixture,
       position: fixture.position,
     })),
-  };
+  });
 }
 
 function migrateV1_1ToV1_2(doc: Partial<ShowDocument>): Partial<ShowDocument> {
@@ -95,7 +154,7 @@ function migrateV1_1ToV1_2(doc: Partial<ShowDocument>): Partial<ShowDocument> {
 }
 
 function migrateV1_2ToV1_3(doc: Partial<ShowDocument>): Partial<ShowDocument> {
-  return {
+  return ensureTimelineDefaults({
     ...doc,
     version: "1.3",
     video: doc.video ?? createDefaultVideoConfig(),
@@ -103,7 +162,7 @@ function migrateV1_2ToV1_3(doc: Partial<ShowDocument>): Partial<ShowDocument> {
       ...map,
       sampleRegion: map.sampleRegion,
     })),
-  };
+  });
 }
 
 function migrateV1_3ToV1_4(doc: Partial<ShowDocument>): Partial<ShowDocument> {
@@ -115,14 +174,14 @@ function migrateV1_3ToV1_4(doc: Partial<ShowDocument>): Partial<ShowDocument> {
         ? [video.pixelMapId]
         : [];
 
-  return {
+  return ensureTimelineDefaults({
     ...doc,
     version: "1.4",
     video: {
       ...video,
       pixelMapIds,
     },
-  };
+  });
 }
 
 function migrateV1_4ToV1_5(doc: Partial<ShowDocument>): Partial<ShowDocument> {
@@ -133,7 +192,7 @@ function migrateV1_4ToV1_5(doc: Partial<ShowDocument>): Partial<ShowDocument> {
     presetPools: doc.presetPools,
   });
 
-  return {
+  return ensureTimelineDefaults({
     ...doc,
     version: "1.5",
     meta: {
@@ -168,7 +227,7 @@ function migrateV1_4ToV1_5(doc: Partial<ShowDocument>): Partial<ShowDocument> {
           effectIds: step.effectIds,
         })),
     })),
-  };
+  });
 }
 
 export function migrateShowDocument(doc: Partial<ShowDocument>): Partial<ShowDocument> {
@@ -189,5 +248,5 @@ export function migrateShowDocument(doc: Partial<ShowDocument>): Partial<ShowDoc
   if (normalized.version === "1.4") {
     return migrateShowDocument(migrateV1_4ToV1_5(normalized));
   }
-  return normalized;
+  return ensureTimelineDefaults(normalized);
 }

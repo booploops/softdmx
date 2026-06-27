@@ -102,3 +102,41 @@ export interface CuePlaybackState {
   stackStepIndex?: number;
   stackStepStartTime?: number;
 }
+
+export type TimelineTrackKind = "cue" | "audio" | "marker" | "automation";
+
+export interface TimelineClip {
+  id: string;
+  name: string;
+  startSec: number;
+  endSec: number;
+  cueId?: string;
+  color?: string;
+  locked?: boolean;
+  muted?: boolean;
+}
+
+export interface TimelineTrack {
+  id: string;
+  name: string;
+  kind: TimelineTrackKind;
+  order: number;
+  enabled: boolean;
+  solo?: boolean;
+  clips: TimelineClip[];
+}
+
+export interface TimelineMarker {
+  id: string;
+  name: string;
+  timeSec: number;
+  color?: string;
+}
+
+export interface TimelineSection {
+  id: string;
+  name: string;
+  startSec: number;
+  endSec: number;
+  color?: string;
+}

@@ -320,7 +320,7 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     baseChannels: ActiveChannel[],
     layers: LayerContribution[]
   ) {
-    const activeCues = getActiveTimelineCuesAtTimecode(show.cues, timecodeSeconds);
+    const activeCues = getActiveTimelineCuesAtTimecode(show.cues, timecodeSeconds, show.timeline);
     for (const { cue, localMs } of activeCues) {
       const intensity = resolveCueOutputIntensity(getCueLevel(cue.id), cue.id);
       let cueChannels = evaluateTimelineCueAtTime(show, cue, localMs, baseChannels);

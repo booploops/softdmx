@@ -8,6 +8,7 @@
 
 import type { Cue } from "../types";
 import type { ShowTimelineConfig } from "../show/document";
+import type { TimelineClip, TimelineTrack } from "../types/cue";
 
 function cueDurationMs(cue: Cue): number {
   if (cue.view === "stack" && cue.stack?.length) {
@@ -30,6 +31,14 @@ export type ActiveSetCue = {
   localMs: number;
 };
 
+type TimelineCueInterval = {
+  cue: Cue;
+  inSec: number;
+  outSec: number;
+  sourceClip?: TimelineClip;
+  sourceTrack?: TimelineTrack;
+};
+
 export function getCueTimecodeInSeconds(cue: Cue): number | null {
   if (typeof cue.timecodeIn !== "number" || !Number.isFinite(cue.timecodeIn)) return null;
   return Math.max(0, cue.timecodeIn);
@@ -47,31 +56,67 @@ export function getCueTimecodeOutSeconds(cue: Cue): number | null {
   return timecodeIn + Math.max(0, durationSec);
 }
 
+function cueIntervalsFromTracks(cues: Cue[], timeline?: ShowTimelineConfig): TimelineCueInterval[] {
+  const tracks = timeline?.tracks ?? [];
+  if (tracks.length === 0) return [];
+  const cueById = new Map(cues.map((cue) => [cue.id, cue]));
+  const intervals: TimelineCueInterval[] = [];
+  for (const track of tracks) {
+    if (track.enabled === false || track.kind !== "cue") continue;
+    for (const clip of track.clips ?? []) {
+      if (!clip.cueId) continue;
+      const cue = cueById.get(clip.cueId);
+      if (!cue || cue.view !== "timeline") continue;
+      const inSec = Math.max(0, Number.isFinite(clip.startSec) ? clip.startSec : 0);
+      const outSec = Math.max(
+        inSec,
+        Number.isFinite(clip.endSec) ? clip.endSec : inSec + Math.max(0.001, cueDurationMs(cue) / 1000),
+      );
+      intervals.push({ cue, inSec, outSec, sourceClip: clip, sourceTrack: track });
+    }
+  }
+  return intervals;
+}
+
+function cueIntervalsFromCueTimecodes(cues: Cue[]): TimelineCueInterval[] {
+  const intervals: TimelineCueInterval[] = [];
+  for (const cue of cues) {
+    if (cue.view !== "timeline") continue;
+    const inSec = getCueTimecodeInSeconds(cue);
+    if (inSec === null) continue;
+    const outSec = getCueTimecodeOutSeconds(cue) ?? inSec;
+    intervals.push({ cue, inSec, outSec: Math.max(inSec, outSec) });
+  }
+  return intervals;
+}
+
+function resolveTimelineCueIntervals(cues: Cue[], timeline?: ShowTimelineConfig): TimelineCueInterval[] {
+  const fromTracks = cueIntervalsFromTracks(cues, timeline);
+  if (fromTracks.length > 0) return fromTracks;
+  return cueIntervalsFromCueTimecodes(cues);
+}
+
 export function getActiveTimelineCuesAtTimecode(
   cues: Cue[],
   timecodeSeconds: number,
+  timeline?: ShowTimelineConfig,
 ): ActiveSetCue[] {
   const position = Math.max(0, timecodeSeconds);
   const active: ActiveSetCue[] = [];
 
-  for (const cue of cues) {
-    if (cue.view !== "timeline") continue;
-
-    const timecodeIn = getCueTimecodeInSeconds(cue);
-    if (timecodeIn === null) continue;
-
-    const timecodeOut = getCueTimecodeOutSeconds(cue);
-    if (timecodeOut !== null && position >= timecodeOut) continue;
-    if (position < timecodeIn) continue;
+  for (const interval of resolveTimelineCueIntervals(cues, timeline)) {
+    if (position >= interval.outSec) continue;
+    if (position < interval.inSec) continue;
 
     active.push({
-      cue,
-      localMs: Math.max(0, (position - timecodeIn) * 1000),
+      cue: interval.cue,
+      localMs: Math.max(0, (position - interval.inSec) * 1000),
     });
   }
 
   return active.sort(
-    (a, b) => (getCueTimecodeInSeconds(a.cue) ?? 0) - (getCueTimecodeInSeconds(b.cue) ?? 0),
+    (a, b) =>
+      (getCueTimecodeInSeconds(a.cue) ?? 0) - (getCueTimecodeInSeconds(b.cue) ?? 0),
   );
 }
 
@@ -81,17 +126,18 @@ export function computeSetTimelineDurationMs(cues: Cue[], timeline?: ShowTimelin
 
   let maxEndMs = 60_000;
 
-  for (const cue of cues) {
-    if (cue.view !== "timeline") continue;
-    const timecodeIn = getCueTimecodeInSeconds(cue);
-    if (timecodeIn === null) continue;
-    const endSec = getCueTimecodeOutSeconds(cue) ?? timecodeIn;
+  for (const interval of resolveTimelineCueIntervals(cues, timeline)) {
+    const endSec = interval.outSec;
     maxEndMs = Math.max(maxEndMs, endSec * 1000);
   }
 
   for (const asset of timeline?.audioAssets ?? []) {
     const endMs = (asset.offsetMs ?? 0) + asset.durationMs;
     maxEndMs = Math.max(maxEndMs, endMs);
+  }
+
+  for (const section of timeline?.sections ?? []) {
+    maxEndMs = Math.max(maxEndMs, Math.max(section.startSec, section.endSec, 0) * 1000);
   }
 
   return Math.max(60_000, maxEndMs);
