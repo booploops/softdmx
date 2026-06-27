@@ -43,6 +43,11 @@ const newFixtureStartingChannel = ref<number | undefined>(undefined);
 const newFixtureModeId = ref<string>('');
 const selectedGridDestinationId = ref<string>('default-gridnode');
 const selectedPatchTab = ref<'fixtures' | 'pixel-maps'>('fixtures');
+const visualizerSelectedFixtures = ref<string[]>([]);
+const visualizerSnapEnabled = ref(true);
+const visualizerSnapStep = ref(1);
+const visualizerAutoAlignMode = ref<'row' | 'column'>('row');
+const VISUALIZER_SNAP_STEPS = [0.25, 0.5, 1, 2] as const;
 
 const availableFixtures = computed(() => getAllFixtures());
 const fixtureTypeOptions = computed(() =>
@@ -319,6 +324,102 @@ const visualizerFixtures = computed(() =>
   }))
 );
 
+function snapVisualizerValue(value: number): number {
+  if (!visualizerSnapEnabled.value) return value;
+  const step = Math.max(0.05, visualizerSnapStep.value);
+  return Math.round(value / step) * step;
+}
+
+function cycleVisualizerSnapStep() {
+  const currentIndex = VISUALIZER_SNAP_STEPS.findIndex((value) => value === visualizerSnapStep.value);
+  const nextIndex = (currentIndex + 1) % VISUALIZER_SNAP_STEPS.length;
+  visualizerSnapStep.value = VISUALIZER_SNAP_STEPS[nextIndex] ?? 1;
+}
+
+function cycleVisualizerAlignMode() {
+  visualizerAutoAlignMode.value = visualizerAutoAlignMode.value === 'row' ? 'column' : 'row';
+}
+
+function onVisualizerFixtureSelect(name: string) {
+  const selected = new Set(visualizerSelectedFixtures.value);
+  if (selected.has(name)) {
+    selected.delete(name);
+  } else {
+    selected.add(name);
+  }
+  visualizerSelectedFixtures.value = Array.from(selected);
+}
+
+function onVisualizerFixtureMove(name: string, position: { x: number; y?: number; z: number }) {
+  const snappedX = snapVisualizerValue(position.x);
+  const snappedZ = snapVisualizerValue(position.z);
+  showStore.updateDocument((doc) => {
+    const fixture = doc.fixtures.find((entry) => entry.name === name);
+    if (!fixture) return;
+    fixture.position = {
+      ...(fixture.position ?? {}),
+      x: snappedX,
+      y: position.y ?? fixture.position?.y ?? 0,
+      z: snappedZ,
+    };
+  });
+}
+
+function autoAlignVisualizerFixtures() {
+  const fixtureList = showStore.document.fixtures;
+  if (!fixtureList.length) return;
+
+  const selectedSet = new Set(visualizerSelectedFixtures.value);
+  const targetNames =
+    selectedSet.size > 0
+      ? fixtureList.filter((fixture) => selectedSet.has(fixture.name)).map((fixture) => fixture.name)
+      : fixtureList.map((fixture) => fixture.name);
+  if (!targetNames.length) return;
+  const targetNameSet = new Set(targetNames);
+
+  const positions = fixtureList
+    .map((fixture, index) => ({
+      name: fixture.name,
+      position: resolveFixturePosition(fixture.position, index, fixtureList.length),
+    }))
+    .filter((entry) => targetNameSet.has(entry.name))
+    .sort((a, b) =>
+      visualizerAutoAlignMode.value === 'row'
+        ? a.position.x - b.position.x || a.position.z - b.position.z
+        : a.position.z - b.position.z || a.position.x - b.position.x
+    );
+
+  const count = positions.length;
+  if (!count) return;
+
+  const averageX = positions.reduce((sum, entry) => sum + entry.position.x, 0) / count;
+  const averageZ = positions.reduce((sum, entry) => sum + entry.position.z, 0) / count;
+  const spacing = visualizerSnapEnabled.value ? Math.max(visualizerSnapStep.value, 0.25) : 1;
+  const positionByName = new Map(
+    positions.map((entry, index) => {
+      if (visualizerAutoAlignMode.value === 'row') {
+        const startX = averageX - ((count - 1) * spacing) / 2;
+        return [entry.name, { x: snapVisualizerValue(startX + index * spacing), z: snapVisualizerValue(averageZ) }];
+      }
+      const startZ = averageZ - ((count - 1) * spacing) / 2;
+      return [entry.name, { x: snapVisualizerValue(averageX), z: snapVisualizerValue(startZ + index * spacing) }];
+    })
+  );
+
+  showStore.updateDocument((doc) => {
+    doc.fixtures.forEach((fixture) => {
+      const next = positionByName.get(fixture.name);
+      if (!next) return;
+      fixture.position = {
+        ...(fixture.position ?? {}),
+        x: next.x,
+        y: fixture.position?.y ?? 0,
+        z: next.z,
+      };
+    });
+  });
+}
+
 function openAddFixtureDialog() {
   selectedFixtureType.value = '';
   newFixtureName.value = '';
@@ -414,7 +515,34 @@ function addFixtureFromLibrary() {
       </div>
     </div>
 
-    <VisualizerPanel v-show="selectedPatchTab === 'fixtures'" :fixtures="visualizerFixtures" />
+    <div v-show="selectedPatchTab === 'fixtures'" class="row q-gutter-xs q-mb-sm items-center">
+      <q-btn
+        dense
+        :color="visualizerSnapEnabled ? 'primary' : 'grey-7'"
+        :outline="!visualizerSnapEnabled"
+        :label="visualizerSnapEnabled ? `Snap ${visualizerSnapStep}m` : 'Snap Off'"
+        @click="visualizerSnapEnabled = !visualizerSnapEnabled"
+      />
+      <q-btn dense flat color="grey-3" label="Snap Step" @click="cycleVisualizerSnapStep" />
+      <q-btn
+        dense
+        flat
+        color="grey-3"
+        :label="visualizerAutoAlignMode === 'row' ? 'Mode: Row' : 'Mode: Column'"
+        @click="cycleVisualizerAlignMode"
+      />
+      <q-btn dense flat color="grey-3" label="Auto Align" @click="autoAlignVisualizerFixtures" />
+    </div>
+
+    <VisualizerPanel
+      v-show="selectedPatchTab === 'fixtures'"
+      :fixtures="visualizerFixtures"
+      :selected-fixtures="visualizerSelectedFixtures"
+      :snap-enabled="visualizerSnapEnabled"
+      :snap-step="visualizerSnapStep"
+      @select-fixture="onVisualizerFixtureSelect"
+      @move-fixture="onVisualizerFixtureMove"
+    />
 
     <div v-show="selectedPatchTab === 'fixtures'" class="col scroll-area-container">
       <q-scroll-area v-if="showStore.document.fixtures.length > 0" class="fit">

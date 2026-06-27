@@ -18,6 +18,45 @@ const fixtureNames = {
 
 const allFixtures = Object.values(fixtureNames).flat();
 
+function fixturePositionForName(name: string): { x: number; y: number; z: number } {
+  const stageFront = /^Stage Front (\d+)$/i.exec(name);
+  if (stageFront) {
+    const index = Math.max(0, Number(stageFront[1]) - 1);
+    const frontX = [-8, -6, -4, -2, 0, 2, 4, 6, 8];
+    return { x: frontX[index] ?? index * 2, y: 0, z: -6 };
+  }
+
+  const stageCenter = /^Stage Center (\d+)$/i.exec(name);
+  if (stageCenter) {
+    const index = Math.max(0, Number(stageCenter[1]) - 1);
+    const centerX = [-5, -3, -1, 1, 3, 5];
+    return { x: centerX[index] ?? index * 2, y: 0, z: -1 };
+  }
+
+  const stageBack = /^Stage Back (\d+)$/i.exec(name);
+  if (stageBack) {
+    const index = Math.max(0, Number(stageBack[1]) - 1);
+    const backX = [-4, 0, 4];
+    return { x: backX[index] ?? index * 2, y: 0, z: 6 };
+  }
+
+  const sideLeft = /^Stage Side Left (\d+)$/i.exec(name);
+  if (sideLeft) {
+    const index = Math.max(0, Number(sideLeft[1]) - 1);
+    const sideZ = [-4, -1, 2, 5];
+    return { x: -10, y: 0, z: sideZ[index] ?? index * 2 };
+  }
+
+  const sideRight = /^Stage Side Right (\d+)$/i.exec(name);
+  if (sideRight) {
+    const index = Math.max(0, Number(sideRight[1]) - 1);
+    const sideZ = [-4, -1, 2, 5];
+    return { x: 10, y: 0, z: sideZ[index] ?? index * 2 };
+  }
+
+  return { x: 0, y: 0, z: 0 };
+}
+
 export const exampleVrClubShow: ShowDocument = {
   version: '1.0',
   meta: {
@@ -37,6 +76,7 @@ export const exampleVrClubShow: ShowDocument = {
   fixtures: allFixtures.map((name) => ({
     name,
     fixtureId: 'VRSL_Spotlight',
+    position: fixturePositionForName(name),
   })),
   groups: [
     { name: 'Stage Side Left', fixtures: fixtureNames.stageSideLeft, color: '#e53935' },

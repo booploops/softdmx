@@ -34,6 +34,12 @@ const tokenDraft = ref({
   bgSurface: themeStore.resolvedTheme.tokens.colors.bgSurface,
   text: themeStore.resolvedTheme.tokens.colors.text,
   scratch: themeStore.resolvedTheme.tokens.colors.scratch,
+  plotBackground: themeStore.resolvedTheme.tokens.colors.plotBackground,
+  plotFixture: themeStore.resolvedTheme.tokens.colors.plotFixture,
+  plotSelected: themeStore.resolvedTheme.tokens.colors.plotSelected,
+  plotGrid: themeStore.resolvedTheme.tokens.colors.plotGrid,
+  plotCenter: themeStore.resolvedTheme.tokens.colors.plotCenter,
+  plotLabel: themeStore.resolvedTheme.tokens.colors.plotLabel,
 });
 
 watch(
@@ -45,6 +51,12 @@ watch(
       bgSurface: theme.tokens.colors.bgSurface,
       text: theme.tokens.colors.text,
       scratch: theme.tokens.colors.scratch,
+      plotBackground: theme.tokens.colors.plotBackground,
+      plotFixture: theme.tokens.colors.plotFixture,
+      plotSelected: theme.tokens.colors.plotSelected,
+      plotGrid: theme.tokens.colors.plotGrid,
+      plotCenter: theme.tokens.colors.plotCenter,
+      plotLabel: theme.tokens.colors.plotLabel,
     };
   },
   { deep: true }
@@ -147,6 +159,24 @@ function resetTheme() {
         </div>
         <div class="col-6 col-sm-4">
           <q-input v-model="tokenDraft.scratch" label="Scratch bar" dark filled dense />
+        </div>
+        <div class="col-6 col-sm-4">
+          <q-input v-model="tokenDraft.plotBackground" label="Plot background" dark filled dense />
+        </div>
+        <div class="col-6 col-sm-4">
+          <q-input v-model="tokenDraft.plotFixture" label="Plot fixture" dark filled dense />
+        </div>
+        <div class="col-6 col-sm-4">
+          <q-input v-model="tokenDraft.plotSelected" label="Plot selected" dark filled dense />
+        </div>
+        <div class="col-6 col-sm-4">
+          <q-input v-model="tokenDraft.plotGrid" label="Plot grid" dark filled dense />
+        </div>
+        <div class="col-6 col-sm-4">
+          <q-input v-model="tokenDraft.plotCenter" label="Plot center marker" dark filled dense />
+        </div>
+        <div class="col-6 col-sm-4">
+          <q-input v-model="tokenDraft.plotLabel" label="Plot labels" dark filled dense />
         </div>
       </div>
       <div class="row q-gutter-sm">

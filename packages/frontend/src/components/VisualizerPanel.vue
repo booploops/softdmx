@@ -18,15 +18,108 @@ type VisualizerFixture = {
 
 const props = defineProps<{
   fixtures: VisualizerFixture[];
+  selectedFixtures?: string[];
+  snapEnabled?: boolean;
+  snapStep?: number;
+  showGrid?: boolean;
+  showLabels?: boolean;
+  showStageCenter?: boolean;
+  allowDrag?: boolean;
   compact?: boolean;
 }>();
 
-const emit = defineEmits<{ 'select-fixture': [name: string] }>();
+const emit = defineEmits<{
+  'select-fixture': [name: string];
+  'move-fixture': [name: string, position: { x: number; y: number; z: number }];
+}>();
 
 const containerRef = ref<HTMLElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const themeStore = useThemeStore();
 let resizeObserver: ResizeObserver | null = null;
+const zoomLevel = ref(1);
+const panOffset = ref({ x: 0, y: 0 });
+const selectedFixtureSet = computed(() => new Set(props.selectedFixtures ?? []));
+let dragFixtureName: string | null = null;
+let dragPointerId: number | null = null;
+let suppressClick = false;
+
+type ResolvedFixture = {
+  name: string;
+  position: { x: number; y: number; z: number };
+};
+
+type PlotLayout = {
+  resolved: ResolvedFixture[];
+  width: number;
+  height: number;
+  margin: number;
+  scale: number;
+  centerX: number;
+  centerY: number;
+};
+
+function computeLayout(canvas: HTMLCanvasElement): PlotLayout {
+  const width = canvas.width;
+  const height = canvas.height;
+  const margin = 30;
+  const resolved = props.fixtures.map((fixture, index) => ({
+    name: fixture.name,
+    position: resolveFixturePosition(fixture.position, index, props.fixtures.length),
+  }));
+  const allX = [0, ...resolved.map((fixture) => fixture.position.x)];
+  const allZ = [0, ...resolved.map((fixture) => fixture.position.z)];
+  const minX = Math.min(...allX);
+  const maxX = Math.max(...allX);
+  const minZ = Math.min(...allZ);
+  const maxZ = Math.max(...allZ);
+  const spanX = Math.max(maxX - minX, 1);
+  const spanZ = Math.max(maxZ - minZ, 1);
+
+  const baseScale = Math.min((width - margin * 2) / spanX, (height - margin * 2) / spanZ);
+  const scale = Math.max(0.1, baseScale * zoomLevel.value);
+  const centerX = width / 2 - ((minX + maxX) / 2) * scale + panOffset.value.x;
+  const centerY = height / 2 + ((minZ + maxZ) / 2) * scale + panOffset.value.y;
+  return { resolved, width, height, margin, scale, centerX, centerY };
+}
+
+function toCanvas(layout: PlotLayout, x: number, z: number) {
+  return {
+    x: layout.centerX + x * layout.scale,
+    y: layout.centerY - z * layout.scale,
+  };
+}
+
+function fromCanvas(layout: PlotLayout, x: number, y: number) {
+  return {
+    x: (x - layout.centerX) / layout.scale,
+    z: (layout.centerY - y) / layout.scale,
+  };
+}
+
+function canvasCoordinates(event: MouseEvent | PointerEvent, canvas: HTMLCanvasElement) {
+  const rect = canvas.getBoundingClientRect();
+  return {
+    x: ((event.clientX - rect.left) / rect.width) * canvas.width,
+    y: ((event.clientY - rect.top) / rect.height) * canvas.height,
+  };
+}
+
+function fixtureHit(layout: PlotLayout, x: number, y: number): ResolvedFixture | null {
+  for (const fixture of layout.resolved) {
+    const point = toCanvas(layout, fixture.position.x, fixture.position.z);
+    const dx = x - point.x;
+    const dy = y - point.y;
+    if (dx * dx + dy * dy <= 12 * 12) return fixture;
+  }
+  return null;
+}
+
+function snapValue(value: number): number {
+  if (!props.snapEnabled) return value;
+  const step = Math.max(0.05, props.snapStep ?? 1);
+  return Math.round(value / step) * step;
+}
 
 function readCanvasCssSize(): { width: number; height: number } | null {
   const container = containerRef.value;
@@ -73,72 +166,66 @@ function render() {
     return;
   }
 
-  const resolved = props.fixtures.map((fixture, index) => ({
-    name: fixture.name,
-    position: resolveFixturePosition(fixture.position, index, props.fixtures.length),
-  }));
+  const layout = computeLayout(canvas);
+  const toPoint = (x: number, z: number) => toCanvas(layout, x, z);
 
-  const allX = [0, ...resolved.map((f) => f.position.x)];
-  const allZ = [0, ...resolved.map((f) => f.position.z)];
-  const minX = Math.min(...allX);
-  const maxX = Math.max(...allX);
-  const minZ = Math.min(...allZ);
-  const maxZ = Math.max(...allZ);
-  const spanX = Math.max(maxX - minX, 1);
-  const spanZ = Math.max(maxZ - minZ, 1);
-  const margin = 30;
-
-  const scale = Math.min((width - margin * 2) / spanX, (height - margin * 2) / spanZ);
-  const centerX = width / 2 - ((minX + maxX) / 2) * scale;
-  const centerY = height / 2 + ((minZ + maxZ) / 2) * scale;
-
-  const toCanvas = (x: number, z: number) => ({
-    x: centerX + x * scale,
-    y: centerY - z * scale,
-  });
-
-  const gridSteps = 6;
-  ctx.strokeStyle = palette.grid;
-  ctx.lineWidth = 1;
-  for (let i = 0; i <= gridSteps; i += 1) {
-    const t = i / gridSteps;
-    const x = margin + (width - margin * 2) * t;
-    const y = margin + (height - margin * 2) * t;
-    ctx.beginPath();
-    ctx.moveTo(x, margin);
-    ctx.lineTo(x, height - margin);
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(margin, y);
-    ctx.lineTo(width - margin, y);
-    ctx.stroke();
+  if (props.showGrid !== false) {
+    const gridSteps = 6;
+    ctx.strokeStyle = palette.grid;
+    ctx.lineWidth = 1;
+    for (let i = 0; i <= gridSteps; i += 1) {
+      const t = i / gridSteps;
+      const x = layout.margin + (width - layout.margin * 2) * t;
+      const y = layout.margin + (height - layout.margin * 2) * t;
+      ctx.beginPath();
+      ctx.moveTo(x, layout.margin);
+      ctx.lineTo(x, height - layout.margin);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(layout.margin, y);
+      ctx.lineTo(width - layout.margin, y);
+      ctx.stroke();
+    }
   }
 
-  const stageCenter = toCanvas(0, 0);
-  ctx.strokeStyle = palette.center;
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(stageCenter.x - 8, stageCenter.y);
-  ctx.lineTo(stageCenter.x + 8, stageCenter.y);
-  ctx.moveTo(stageCenter.x, stageCenter.y - 8);
-  ctx.lineTo(stageCenter.x, stageCenter.y + 8);
-  ctx.stroke();
-  ctx.fillStyle = palette.center;
-  ctx.font = '12px sans-serif';
-  ctx.textAlign = 'left';
-  ctx.fillText('Stage center', stageCenter.x + 10, stageCenter.y - 10);
+  if (props.showStageCenter !== false) {
+    const stageCenter = toPoint(0, 0);
+    ctx.strokeStyle = palette.center;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(stageCenter.x - 8, stageCenter.y);
+    ctx.lineTo(stageCenter.x + 8, stageCenter.y);
+    ctx.moveTo(stageCenter.x, stageCenter.y - 8);
+    ctx.lineTo(stageCenter.x, stageCenter.y + 8);
+    ctx.stroke();
+    ctx.fillStyle = palette.center;
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText('Stage center', stageCenter.x + 10, stageCenter.y - 10);
+  }
 
-  for (const fixture of resolved) {
-    const point = toCanvas(fixture.position.x, fixture.position.z);
-    ctx.fillStyle = palette.fixture;
+  for (const fixture of layout.resolved) {
+    const point = toPoint(fixture.position.x, fixture.position.z);
+    const isSelected = selectedFixtureSet.value.has(fixture.name);
+    ctx.fillStyle = isSelected ? palette.selected : palette.fixture;
     ctx.beginPath();
     ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
     ctx.fill();
 
-    ctx.fillStyle = palette.label;
-    ctx.font = '11px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText(fixture.name, point.x, point.y - 10);
+    if (isSelected) {
+      ctx.strokeStyle = palette.selected;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, 10, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    if (props.showLabels !== false) {
+      ctx.fillStyle = palette.label;
+      ctx.font = '11px sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(fixture.name, point.x, point.y - 10);
+    }
   }
 }
 
@@ -158,6 +245,21 @@ watch(
   { deep: true }
 );
 
+watch(
+  () => props.selectedFixtures,
+  () => {
+    render();
+  },
+  { deep: true }
+);
+
+watch(
+  () => [props.showGrid, props.showLabels, props.showStageCenter],
+  () => {
+    render();
+  }
+);
+
 onMounted(async () => {
   await nextTick();
   render();
@@ -175,44 +277,74 @@ onBeforeUnmount(() => {
 });
 
 function onCanvasClick(event: MouseEvent) {
+  if (suppressClick) {
+    suppressClick = false;
+    return;
+  }
   const canvas = canvasRef.value;
   const container = containerRef.value;
   if (!canvas || !container || !props.fixtures.length) return;
 
-  const rect = canvas.getBoundingClientRect();
-  const clickX = ((event.clientX - rect.left) / rect.width) * canvas.width;
-  const clickY = ((event.clientY - rect.top) / rect.height) * canvas.height;
-
-  const resolved = props.fixtures.map((fixture, index) => ({
-    name: fixture.name,
-    position: resolveFixturePosition(fixture.position, index, props.fixtures.length),
-  }));
-
-  const allX = [0, ...resolved.map((f) => f.position.x)];
-  const allZ = [0, ...resolved.map((f) => f.position.z)];
-  const minX = Math.min(...allX);
-  const maxX = Math.max(...allX);
-  const minZ = Math.min(...allZ);
-  const maxZ = Math.max(...allZ);
-  const spanX = Math.max(maxX - minX, 1);
-  const spanZ = Math.max(maxZ - minZ, 1);
-  const margin = 30;
-  const width = canvas.width;
-  const height = canvas.height;
-  const scale = Math.min((width - margin * 2) / spanX, (height - margin * 2) / spanZ);
-  const centerX = width / 2 - ((minX + maxX) / 2) * scale;
-  const centerY = height / 2 + ((minZ + maxZ) / 2) * scale;
-
-  for (const fixture of resolved) {
-    const x = centerX + fixture.position.x * scale;
-    const y = centerY - fixture.position.z * scale;
-    const dx = clickX - x;
-    const dy = clickY - y;
-    if (dx * dx + dy * dy <= 12 * 12) {
-      emit('select-fixture', fixture.name);
-      return;
-    }
+  const click = canvasCoordinates(event, canvas);
+  const layout = computeLayout(canvas);
+  const hit = fixtureHit(layout, click.x, click.y);
+  if (hit) {
+    emit('select-fixture', hit.name);
   }
+}
+
+function onCanvasWheel(event: WheelEvent) {
+  const canvas = canvasRef.value;
+  if (!canvas) return;
+  event.preventDefault();
+  const point = canvasCoordinates(event, canvas);
+  const oldLayout = computeLayout(canvas);
+  const worldBefore = fromCanvas(oldLayout, point.x, point.y);
+  const zoomFactor = event.deltaY < 0 ? 1.1 : 0.9;
+  zoomLevel.value = Math.max(0.5, Math.min(8, zoomLevel.value * zoomFactor));
+  const newLayout = computeLayout(canvas);
+  const canvasAfter = toCanvas(newLayout, worldBefore.x, worldBefore.z);
+  panOffset.value = {
+    x: panOffset.value.x + (point.x - canvasAfter.x),
+    y: panOffset.value.y + (point.y - canvasAfter.y),
+  };
+  render();
+}
+
+function onCanvasPointerDown(event: PointerEvent) {
+  if (props.allowDrag === false) return;
+  const canvas = canvasRef.value;
+  if (!canvas) return;
+  const point = canvasCoordinates(event, canvas);
+  const layout = computeLayout(canvas);
+  const hit = fixtureHit(layout, point.x, point.y);
+  if (!hit) return;
+
+  dragFixtureName = hit.name;
+  dragPointerId = event.pointerId;
+  suppressClick = false;
+  canvas.setPointerCapture(event.pointerId);
+}
+
+function onCanvasPointerMove(event: PointerEvent) {
+  if (props.allowDrag === false) return;
+  const canvas = canvasRef.value;
+  if (!canvas || !dragFixtureName || dragPointerId !== event.pointerId) return;
+  const point = canvasCoordinates(event, canvas);
+  const layout = computeLayout(canvas);
+  const world = fromCanvas(layout, point.x, point.y);
+  emit('move-fixture', dragFixtureName, { x: snapValue(world.x), y: 0, z: snapValue(world.z) });
+  suppressClick = true;
+}
+
+function onCanvasPointerEnd(event: PointerEvent) {
+  const canvas = canvasRef.value;
+  if (!canvas || dragPointerId !== event.pointerId) return;
+  if (canvas.hasPointerCapture(event.pointerId)) {
+    canvas.releasePointerCapture(event.pointerId);
+  }
+  dragFixtureName = null;
+  dragPointerId = null;
 }
 </script>
 
@@ -230,12 +362,30 @@ function onCanvasClick(event: MouseEvent) {
       </q-card-section>
       <q-card-section class="q-pt-none">
         <div ref="containerRef" class="visualizer-canvas-wrap">
-          <canvas ref="canvasRef" class="visualizer-canvas" @click="onCanvasClick" />
+          <canvas
+            ref="canvasRef"
+            class="visualizer-canvas"
+            @click="onCanvasClick"
+            @wheel="onCanvasWheel"
+            @pointerdown="onCanvasPointerDown"
+            @pointermove="onCanvasPointerMove"
+            @pointerup="onCanvasPointerEnd"
+            @pointercancel="onCanvasPointerEnd"
+          />
         </div>
       </q-card-section>
     </q-card>
     <div v-else ref="containerRef" class="visualizer-stage">
-      <canvas ref="canvasRef" class="visualizer-canvas" @click="onCanvasClick" />
+      <canvas
+        ref="canvasRef"
+        class="visualizer-canvas"
+        @click="onCanvasClick"
+        @wheel="onCanvasWheel"
+        @pointerdown="onCanvasPointerDown"
+        @pointermove="onCanvasPointerMove"
+        @pointerup="onCanvasPointerEnd"
+        @pointercancel="onCanvasPointerEnd"
+      />
     </div>
   </div>
 </template>

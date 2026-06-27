@@ -35,6 +35,12 @@
   --sdmx-color-flash: #fde047;
   --sdmx-color-blind: #a78bfa;
   --sdmx-color-focus-ring: rgba(99, 102, 241, 0.55);
+  --sdmx-color-plot-bg: color-mix(in srgb, var(--sdmx-color-bg-page) 88%, #000);
+  --sdmx-color-plot-fixture: var(--sdmx-color-info);
+  --sdmx-color-plot-selected: var(--sdmx-color-primary);
+  --sdmx-color-plot-grid: var(--sdmx-color-border-subtle);
+  --sdmx-color-plot-center: var(--sdmx-color-positive);
+  --sdmx-color-plot-label: var(--sdmx-color-text-muted);
 
   /* Derived colors */
   --sdmx-color-bg-inset: color-mix(in srgb, var(--sdmx-color-text) 3%, transparent);
@@ -56,8 +62,8 @@
   --sdmx-color-flash-soft: color-mix(in srgb, var(--sdmx-color-flash) 25%, transparent);
   --sdmx-color-shadow: color-mix(in srgb, #000 30%, transparent);
   --sdmx-color-shadow-strong: color-mix(in srgb, #000 40%, transparent);
-  --sdmx-color-canvas-bg: color-mix(in srgb, var(--sdmx-color-bg-page) 88%, #000);
-  --sdmx-color-canvas-grid: var(--sdmx-color-border-subtle);
+  --sdmx-color-canvas-bg: var(--sdmx-color-plot-bg);
+  --sdmx-color-canvas-grid: var(--sdmx-color-plot-grid);
   --sdmx-gradient-surface: linear-gradient(
     to bottom,
     var(--sdmx-color-bg-elevated),

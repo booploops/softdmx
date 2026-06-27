@@ -25,9 +25,9 @@ export const simpleWashShow: ShowDocument = {
     },
   ],
   fixtures: [
-    { name: 'Wash Left', fixtureId: 'VRSL_Light5CH' },
-    { name: 'Wash Center', fixtureId: 'VRSL_Light5CH' },
-    { name: 'Wash Right', fixtureId: 'VRSL_Light5CH' },
+    { name: 'Wash Left', fixtureId: 'VRSL_Light5CH', position: { x: -4, y: 0, z: -2 } },
+    { name: 'Wash Center', fixtureId: 'VRSL_Light5CH', position: { x: 0, y: 0, z: -2 } },
+    { name: 'Wash Right', fixtureId: 'VRSL_Light5CH', position: { x: 4, y: 0, z: -2 } },
   ],
   groups: [{ name: 'Wash', fixtures: ['Wash Left', 'Wash Center', 'Wash Right'] }],
   presets: [

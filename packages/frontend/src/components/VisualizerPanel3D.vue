@@ -10,6 +10,9 @@ import type { FixturePosition } from '@softdmx/engine';
 import { resolveFixturePosition } from '@softdmx/engine';
 import { useDMXStore } from 'src/stores/dmx';
 import * as THREE from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { useThemeStore } from 'src/stores/theme';
+import { readThemeCanvasPalette } from 'src/utils/theme-css';
 
 type VisualizerFixture = {
   name: string;
@@ -18,19 +21,44 @@ type VisualizerFixture = {
 
 const props = defineProps<{
   fixtures: VisualizerFixture[];
+  selectedFixtures?: string[];
+  snapEnabled?: boolean;
+  snapStep?: number;
+  showGrid?: boolean;
+  showStagePlane?: boolean;
+  enableOrbit?: boolean;
+  allowDrag?: boolean;
 }>();
 
-const emit = defineEmits<{ 'select-fixture': [name: string] }>();
+const emit = defineEmits<{
+  'select-fixture': [name: string];
+  'move-fixture': [name: string, position: { x: number; y: number; z: number }];
+}>();
 
 const containerRef = ref<HTMLElement | null>(null);
 const dmx = useDMXStore();
+const themeStore = useThemeStore();
 
 let renderer: THREE.WebGLRenderer | null = null;
 let scene: THREE.Scene | null = null;
 let camera: THREE.PerspectiveCamera | null = null;
 let fixtureMeshes = new Map<string, THREE.Mesh>();
+let gridHelper: THREE.GridHelper | null = null;
+let stagePlane: THREE.Mesh | null = null;
+let controls: OrbitControls | null = null;
+let dragFixtureName: string | null = null;
+let dragPointerId: number | null = null;
+let suppressClick = false;
+const dragPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 let animationId = 0;
 let resizeObserver: ResizeObserver | null = null;
+const selectedFixtureSet = computed(() => new Set(props.selectedFixtures ?? []));
+
+function snapValue(value: number): number {
+  if (!props.snapEnabled) return value;
+  const step = Math.max(0.05, props.snapStep ?? 1);
+  return Math.round(value / step) * step;
+}
 
 function intensityForFixture(name: string): number {
   const prefix = `show://${name}/`;
@@ -47,12 +75,13 @@ function intensityForFixture(name: string): number {
 
 function buildScene() {
   if (!containerRef.value) return;
+  const palette = readThemeCanvasPalette();
 
   const width = containerRef.value.clientWidth || 640;
   const height = containerRef.value.clientHeight || 400;
 
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x0e0e10);
+  scene.background = new THREE.Color(palette.background);
 
   camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 200);
   camera.position.set(0, 12, 18);
@@ -61,28 +90,30 @@ function buildScene() {
   const ambient = new THREE.AmbientLight(0xffffff, 0.35);
   scene.add(ambient);
 
-  const grid = new THREE.GridHelper(24, 24, 0x333344, 0x222233);
-  scene.add(grid);
+  gridHelper = new THREE.GridHelper(24, 24, palette.grid, palette.grid);
+  gridHelper.visible = props.showGrid !== false;
+  scene.add(gridHelper);
 
-  const stage = new THREE.Mesh(
+  stagePlane = new THREE.Mesh(
     new THREE.PlaneGeometry(24, 16),
     new THREE.MeshStandardMaterial({ color: 0x18181b, roughness: 0.9 })
   );
-  stage.rotation.x = -Math.PI / 2;
-  stage.position.y = -0.01;
-  scene.add(stage);
+  stagePlane.rotation.x = -Math.PI / 2;
+  stagePlane.position.y = -0.01;
+  stagePlane.visible = props.showStagePlane !== false;
+  scene.add(stagePlane);
 
   fixtureMeshes.clear();
   props.fixtures.forEach((fixture, index) => {
     const pos = resolveFixturePosition(fixture.position, index, props.fixtures.length);
     const geometry = new THREE.CylinderGeometry(0.25, 0.35, 1.2, 12);
     const material = new THREE.MeshStandardMaterial({
-      color: 0x6366f1,
+      color: palette.fixture,
       emissive: 0x000000,
       emissiveIntensity: 0,
     });
     const mesh = new THREE.Mesh(geometry, material);
-    mesh.position.set(pos.x * 0.05, 0.6, pos.z * 0.05);
+    mesh.position.set(pos.x, 0.6, pos.z);
     mesh.userData.fixtureName = fixture.name;
     scene!.add(mesh);
     fixtureMeshes.set(fixture.name, mesh);
@@ -94,11 +125,23 @@ function buildScene() {
   containerRef.value.innerHTML = '';
   containerRef.value.appendChild(renderer.domElement);
 
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.enablePan = props.enableOrbit !== false;
+  controls.enableZoom = props.enableOrbit !== false;
+  controls.enabled = props.enableOrbit !== false;
+  controls.target.set(0, 0, 0);
+  controls.update();
+
   renderer.domElement.addEventListener('click', onCanvasClick);
+  renderer.domElement.addEventListener('pointerdown', onPointerDown);
+  renderer.domElement.addEventListener('pointermove', onPointerMove);
+  renderer.domElement.addEventListener('pointerup', onPointerEnd);
+  renderer.domElement.addEventListener('pointercancel', onPointerEnd);
 }
 
-function onCanvasClick(event: MouseEvent) {
-  if (!camera || !scene || !renderer) return;
+function createRaycaster(event: MouseEvent | PointerEvent): THREE.Raycaster | null {
+  if (!camera || !scene || !renderer) return null;
   const rect = renderer.domElement.getBoundingClientRect();
   const mouse = new THREE.Vector2(
     ((event.clientX - rect.left) / rect.width) * 2 - 1,
@@ -106,6 +149,16 @@ function onCanvasClick(event: MouseEvent) {
   );
   const raycaster = new THREE.Raycaster();
   raycaster.setFromCamera(mouse, camera);
+  return raycaster;
+}
+
+function onCanvasClick(event: MouseEvent) {
+  if (suppressClick) {
+    suppressClick = false;
+    return;
+  }
+  const raycaster = createRaycaster(event);
+  if (!raycaster || !scene) return;
   const hits = raycaster.intersectObjects(scene.children, true);
   const hit = hits.find((h) => h.object.userData.fixtureName);
   if (hit?.object.userData.fixtureName) {
@@ -113,16 +166,61 @@ function onCanvasClick(event: MouseEvent) {
   }
 }
 
+function onPointerDown(event: PointerEvent) {
+  if (props.allowDrag === false) return;
+  const raycaster = createRaycaster(event);
+  if (!raycaster || !scene || !renderer) return;
+  const hits = raycaster.intersectObjects(scene.children, true);
+  const hit = hits.find((entry) => entry.object.userData.fixtureName);
+  const fixtureName = hit?.object.userData.fixtureName as string | undefined;
+  if (!fixtureName) return;
+  dragFixtureName = fixtureName;
+  dragPointerId = event.pointerId;
+  suppressClick = false;
+  if (controls) controls.enabled = false;
+  renderer.domElement.setPointerCapture(event.pointerId);
+}
+
+function onPointerMove(event: PointerEvent) {
+  if (props.allowDrag === false) return;
+  if (!dragFixtureName || dragPointerId !== event.pointerId) return;
+  const raycaster = createRaycaster(event);
+  if (!raycaster || !camera) return;
+  const targetPoint = new THREE.Vector3();
+  if (!raycaster.ray.intersectPlane(dragPlane, targetPoint)) return;
+  suppressClick = true;
+  emit('move-fixture', dragFixtureName, {
+    x: snapValue(targetPoint.x),
+    y: 0,
+    z: snapValue(targetPoint.z),
+  });
+}
+
+function onPointerEnd(event: PointerEvent) {
+  if (!renderer || dragPointerId !== event.pointerId) return;
+  if (renderer.domElement.hasPointerCapture(event.pointerId)) {
+    renderer.domElement.releasePointerCapture(event.pointerId);
+  }
+  dragFixtureName = null;
+  dragPointerId = null;
+  if (controls) controls.enabled = props.enableOrbit !== false;
+}
+
 function animate() {
   if (!renderer || !scene || !camera) return;
+  const palette = readThemeCanvasPalette();
 
   for (const [name, mesh] of fixtureMeshes) {
     const intensity = intensityForFixture(name);
+    const isSelected = selectedFixtureSet.value.has(name);
     const mat = mesh.material as THREE.MeshStandardMaterial;
+    mat.color.set(isSelected ? palette.selected : palette.fixture);
     mat.emissive.setRGB(intensity, intensity * 0.6, intensity * 0.2);
     mat.emissiveIntensity = intensity * 2;
+    mesh.scale.setScalar(isSelected ? 1.2 : 1);
   }
 
+  controls?.update();
   renderer.render(scene, camera);
   animationId = requestAnimationFrame(animate);
 }
@@ -149,9 +247,17 @@ function dispose() {
   resizeObserver?.disconnect();
   if (renderer) {
     renderer.domElement.removeEventListener('click', onCanvasClick);
+    renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+    renderer.domElement.removeEventListener('pointermove', onPointerMove);
+    renderer.domElement.removeEventListener('pointerup', onPointerEnd);
+    renderer.domElement.removeEventListener('pointercancel', onPointerEnd);
     renderer.dispose();
   }
+  controls?.dispose();
+  controls = null;
   fixtureMeshes.clear();
+  gridHelper = null;
+  stagePlane = null;
   renderer = null;
   scene = null;
   camera = null;
@@ -174,6 +280,54 @@ watch(
     animate();
   },
   { deep: true }
+);
+
+watch(
+  () => props.selectedFixtures,
+  () => {
+    // Selection visuals are applied in animation loop; trigger immediate repaint as well.
+    if (renderer && scene && camera) {
+      renderer.render(scene, camera);
+    }
+  },
+  { deep: true }
+);
+
+watch(
+  () => themeStore.resolvedTheme,
+  () => {
+    if (!renderer || !scene) return;
+    const palette = readThemeCanvasPalette();
+    scene.background = new THREE.Color(palette.background);
+    if (gridHelper) {
+      const color = new THREE.Color(palette.grid);
+      const material = gridHelper.material;
+      if (Array.isArray(material)) {
+        material.forEach((entry) => {
+          const typed = entry as THREE.Material & { color?: THREE.Color };
+          typed.color?.set(color);
+        });
+      } else {
+        const typed = material as THREE.Material & { color?: THREE.Color };
+        typed.color?.set(color);
+      }
+    }
+  },
+  { deep: true }
+);
+
+watch(
+  () => [props.showGrid, props.showStagePlane, props.enableOrbit],
+  () => {
+    if (gridHelper) gridHelper.visible = props.showGrid !== false;
+    if (stagePlane) stagePlane.visible = props.showStagePlane !== false;
+    if (controls) {
+      const enabled = props.enableOrbit !== false;
+      controls.enabled = enabled;
+      controls.enablePan = enabled;
+      controls.enableZoom = enabled;
+    }
+  }
 );
 </script>
 

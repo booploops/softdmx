@@ -44,6 +44,12 @@ export const highContrastDaylightTheme: ThemeDefinition = {
       flash: '#fef08a',
       blind: '#c084fc',
       focusRing: 'rgba(96, 165, 250, 0.8)',
+      plotBackground: '#050505',
+      plotFixture: '#7dd3fc',
+      plotSelected: '#60a5fa',
+      plotGrid: 'rgba(255, 255, 255, 0.18)',
+      plotCenter: '#4ade80',
+      plotLabel: 'rgba(255, 255, 255, 0.88)',
     },
   },
 };

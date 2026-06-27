@@ -44,6 +44,12 @@ export const defaultLightTheme: ThemeDefinition = {
       flash: '#ca8a04',
       blind: '#7c3aed',
       focusRing: 'rgba(79, 70, 229, 0.45)',
+      plotBackground: '#1f2937',
+      plotFixture: '#0284c7',
+      plotSelected: '#4f46e5',
+      plotGrid: 'rgba(0, 0, 0, 0.12)',
+      plotCenter: '#16a34a',
+      plotLabel: 'rgba(24, 24, 27, 0.72)',
     },
   },
 };

@@ -6,6 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import { timingSafeEqual } from "node:crypto";
+
 export function getRequiredRemoteApiToken(): string | null {
   const token = process.env.SOFTDMX_API_TOKEN?.trim();
   return token && token.length > 0 ? token : null;
@@ -57,5 +59,13 @@ export function isRemoteApiTokenAuthorized(
   if (!requiredToken) {
     return true;
   }
-  return Boolean(providedToken && providedToken === requiredToken);
+  if (typeof providedToken !== "string") {
+    return false;
+  }
+  const provided = Buffer.from(providedToken, "utf8");
+  const required = Buffer.from(requiredToken, "utf8");
+  if (provided.length !== required.length) {
+    return false;
+  }
+  return timingSafeEqual(provided, required);
 }

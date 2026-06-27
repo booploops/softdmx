@@ -39,6 +39,18 @@ export type ThemeColorTokens = {
   blind: string;
   /** Keyboard/focus ring */
   focusRing: string;
+  /** Plot/visualizer background */
+  plotBackground: string;
+  /** Plot/visualizer fixture color */
+  plotFixture: string;
+  /** Plot/visualizer selected fixture color */
+  plotSelected: string;
+  /** Plot/visualizer grid line color */
+  plotGrid: string;
+  /** Plot/visualizer stage center marker color */
+  plotCenter: string;
+  /** Plot/visualizer label color */
+  plotLabel: string;
 };
 
 export type ThemeTypographyTokens = {

@@ -25,9 +25,9 @@ export const laserDemoShow: ShowDocument = {
     },
   ],
   fixtures: [
-    { name: 'Laser Left', fixtureId: 'LC_LatrixLasers' },
-    { name: 'Laser Right', fixtureId: 'LC_LatrixLasers' },
-    { name: 'Center Spot', fixtureId: 'VRSL_Spotlight' },
+    { name: 'Laser Left', fixtureId: 'LC_LatrixLasers', position: { x: -6, y: 0, z: 1 } },
+    { name: 'Laser Right', fixtureId: 'LC_LatrixLasers', position: { x: 6, y: 0, z: 1 } },
+    { name: 'Center Spot', fixtureId: 'VRSL_Spotlight', position: { x: 0, y: 0, z: -3 } },
   ],
   groups: [
     { name: 'Lasers', fixtures: ['Laser Left', 'Laser Right'] },

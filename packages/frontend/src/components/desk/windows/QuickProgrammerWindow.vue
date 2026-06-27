@@ -115,13 +115,6 @@ function applyValue() {
 
 <template>
   <div class="quick-programmer-window">
-    <div class="quick-programmer-header q-px-sm q-py-xs">
-      <div class="text-caption text-weight-bold">Quick Programmer</div>
-      <div class="text-caption text-grey-5">
-        {{ selectedFixtureNames.length }} selected
-      </div>
-    </div>
-
     <div class="quick-programmer-targets q-px-sm q-pt-xs">
       <q-btn-toggle
         v-model="quickTarget"
@@ -147,7 +140,7 @@ function applyValue() {
 
     <div class="quick-programmer-keypad q-px-sm q-pb-sm">
       <q-btn
-        v-for="digit in ['7', '8', '9', '4', '5', '6', '1', '2', '3', '0']"
+        v-for="digit in ['7', '8', '9', '4', '5', '6', '1', '2', '3']"
         :key="digit"
         dense
         class="quick-programmer-key"
@@ -155,6 +148,7 @@ function applyValue() {
         @click="appendDigit(digit)"
       />
       <q-btn dense class="quick-programmer-key quick-programmer-key--back" icon="backspace" @click="removeDigit" />
+      <q-btn dense class="quick-programmer-key" label="0" @click="appendDigit('0')" />
       <q-btn
         dense
         class="quick-programmer-key quick-programmer-key--enter"
@@ -174,13 +168,6 @@ function applyValue() {
   min-height: 0;
   height: 100%;
   overflow: hidden;
-}
-
-.quick-programmer-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid var(--sdmx-color-border-subtle);
 }
 
 .quick-programmer-display {
@@ -226,7 +213,6 @@ function applyValue() {
 }
 
 .quick-programmer-key--enter {
-  grid-column: span 2;
   min-height: var(--sdmx-space-touch);
 }
 </style>
