@@ -9,6 +9,8 @@
 import ProgramNav from './ProgramNav.vue';
 import ExecutorEditor from './ExecutorEditor.vue';
 import PresetPanel from 'src/components/PresetPanel.vue';
+import EffectsPanel from 'src/components/EffectsPanel.vue';
+import AudioPanel from 'src/components/AudioPanel.vue';
 import CueListPanel from './CueListPanel.vue';
 import TouchLayoutEditor from './TouchLayoutEditor.vue';
 import { useUIStore } from 'src/stores/ui';
@@ -21,7 +23,9 @@ const ui = useUIStore();
     <ProgramNav class="program-nav" />
     <div class="program-editor">
       <ExecutorEditor v-if="ui.programSection === 'executors'" />
-      <PresetPanel v-else-if="ui.programSection === 'presets' || ui.programSection === 'effects' || ui.programSection === 'audio'" />
+      <PresetPanel v-else-if="ui.programSection === 'presets'" />
+      <EffectsPanel v-else-if="ui.programSection === 'effects'" />
+      <AudioPanel v-else-if="ui.programSection === 'audio'" />
       <CueListPanel v-else-if="ui.programSection === 'cues'" />
       <TouchLayoutEditor v-else-if="ui.programSection === 'touch'" />
     </div>

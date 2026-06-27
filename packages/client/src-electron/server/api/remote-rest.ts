@@ -24,6 +24,14 @@ type AudioMappingUpdatePayload = {
   mapping: Partial<ShowAudioMapping>;
 };
 
+type RateLimitEntry = {
+  count: number;
+  resetAt: number;
+};
+
+const REMOTE_RATE_LIMIT_WINDOW_MS = 60_000;
+const REMOTE_RATE_LIMIT_MAX_REQUESTS = 240;
+
 function isShowDocument(payload: unknown): payload is ShowDocument {
   return (
     !!payload &&
@@ -34,9 +42,45 @@ function isShowDocument(payload: unknown): payload is ShowDocument {
 
 export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteContext): void {
   const requiredToken = getRequiredRemoteApiToken();
+  const rateLimitByClient = new Map<string, RateLimitEntry>();
+
+  function resolveClientKey(request: { ip: string; headers: Record<string, unknown> }): string {
+    const token = extractTokenFromHeaders(request.headers);
+    if (token) return `token:${token}`;
+    return `ip:${request.ip}`;
+  }
 
   server.register(
     (instance, _opts, done) => {
+      instance.addHook("onRequest", (request, reply, hookDone) => {
+        const now = Date.now();
+        const clientKey = resolveClientKey({
+          ip: request.ip,
+          headers: request.headers as Record<string, unknown>,
+        });
+        const entry = rateLimitByClient.get(clientKey);
+        if (!entry || entry.resetAt <= now) {
+          rateLimitByClient.set(clientKey, {
+            count: 1,
+            resetAt: now + REMOTE_RATE_LIMIT_WINDOW_MS,
+          });
+          hookDone();
+          return;
+        }
+
+        entry.count += 1;
+        if (entry.count > REMOTE_RATE_LIMIT_MAX_REQUESTS) {
+          const retryAfterSeconds = Math.max(1, Math.ceil((entry.resetAt - now) / 1000));
+          reply
+            .header("Retry-After", retryAfterSeconds.toString())
+            .code(429)
+            .send({ error: "Too many requests" });
+          return;
+        }
+
+        hookDone();
+      });
+
       if (requiredToken) {
         instance.addHook("onRequest", (request, reply, hookDone) => {
           const token = extractTokenFromHeaders(request.headers as Record<string, unknown>);

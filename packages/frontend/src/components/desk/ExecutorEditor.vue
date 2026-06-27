@@ -10,11 +10,9 @@ import { computed } from 'vue';
 import type { ExecutorSlot } from '@softdmx/engine';
 import { useCueStore } from 'src/stores/cue';
 import { useExecutorStore } from 'src/stores/executor';
-import { useOutputEngineStore } from 'src/stores/output-playback';
 
 const cueStore = useCueStore();
 const executorStore = useExecutorStore();
-const outputEngine = useOutputEngineStore();
 
 const cueOptions = computed(() =>
   cueStore.cues.map((cue) => ({ label: cue.name, value: cue.id }))
@@ -64,7 +62,15 @@ function onSlotGoClick(slot: ExecutorSlot) {
       >
         <q-card-section class="q-pb-sm">
           <div class="row items-center justify-between">
-            <div class="text-subtitle2">{{ executorStore.getSlotDisplayLabel(slot) }}</div>
+            <q-input
+              :model-value="slot.name"
+              dense
+              filled
+              class="slot-name-input"
+              placeholder="Slot name"
+              @click.stop
+              @update:model-value="(name) => executorStore.updateSlot(slot.id, { name: String(name ?? '') })"
+            />
             <q-badge :label="slot.mode ?? 'go'" color="primary" />
           </div>
           <q-select
@@ -173,6 +179,10 @@ function onSlotGoClick(slot: ExecutorSlot) {
   border: 1px solid var(--sdmx-color-border);
   &.active { border-color: var(--sdmx-color-positive); }
   &.selected { box-shadow: 0 0 0 1px var(--sdmx-color-accent); }
+}
+.slot-name-input {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .submaster-grid {
   display: grid;
