@@ -1394,6 +1394,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@hono/node-server@npm:^2.0.6":
+  version: 2.0.6
+  resolution: "@hono/node-server@npm:2.0.6"
+  peerDependencies:
+    hono: ^4
+  checksum: 10c0/493361ac3b165c4e91fc4442160d60c4fdfb2cd4d303e0d0ee70f1be17acbe6abd516582556a66bbfd8a47ad5f436468caf3bb7f89090b1a07fd613ffd6ad0e7
+  languageName: node
+  linkType: hard
+
 "@intlify/bundle-utils@npm:11.2.4":
   version: 11.2.4
   resolution: "@intlify/bundle-utils@npm:11.2.4"
@@ -2991,6 +3000,15 @@ __metadata:
   languageName: unknown
   linkType: soft
 
+"@softdmx/conduit@workspace:packages/conduit":
+  version: 0.0.0-use.local
+  resolution: "@softdmx/conduit@workspace:packages/conduit"
+  dependencies:
+    rolldown: "npm:^1.1.2"
+    typescript: "npm:^6.0.3"
+  languageName: unknown
+  linkType: soft
+
 "@softdmx/engine@workspace:*, @softdmx/engine@workspace:packages/engine":
   version: 0.0.0-use.local
   resolution: "@softdmx/engine@workspace:packages/engine"
@@ -3050,6 +3068,19 @@ __metadata:
     vue-router: "npm:^5.1.0"
     vue-tsc: "npm:^3.3.5"
     yaml: "npm:^2.9.0"
+  languageName: unknown
+  linkType: soft
+
+"@softdmx/server@workspace:packages/server":
+  version: 0.0.0-use.local
+  resolution: "@softdmx/server@workspace:packages/server"
+  dependencies:
+    "@hono/node-server": "npm:^2.0.6"
+    hono: "npm:^4.12.27"
+    oxfmt: "npm:^0.56.0"
+    oxlint: "npm:^1.71.0"
+    tsx: "npm:^4.22.4"
+    typescript: "npm:^6.0.3"
   languageName: unknown
   linkType: soft
 
@@ -5731,7 +5762,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"esbuild@npm:^0.27.0 || ^0.28.0":
+"esbuild@npm:^0.27.0 || ^0.28.0, esbuild@npm:~0.28.0":
   version: 0.28.1
   resolution: "esbuild@npm:0.28.1"
   dependencies:
@@ -6645,6 +6676,13 @@ __metadata:
   bin:
     histoire: bin.mjs
   checksum: 10c0/e05b871943cbb6f36205d974ce8929c013c453735e0b6a58b8d9d2dc053a7955a6f8fa07e47c24614cf30b1b9afbaf6e379befa30213b2a61765489b705938be
+  languageName: node
+  linkType: hard
+
+"hono@npm:^4.12.27":
+  version: 4.12.27
+  resolution: "hono@npm:4.12.27"
+  checksum: 10c0/1c62a52ccafde751656d065bbdacffbd421d3cfaedfbffefe80ecdb8ccf96c2209af732a74064cd33ac6d187a91ec32b1dc7ddde2416a53052fe7c0a94352a89
   languageName: node
   linkType: hard
 
@@ -8942,7 +8980,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"rolldown@npm:^1.1.1, rolldown@npm:~1.1.2":
+"rolldown@npm:^1.1.1, rolldown@npm:^1.1.2, rolldown@npm:~1.1.2":
   version: 1.1.2
   resolution: "rolldown@npm:1.1.2"
   dependencies:
@@ -9979,6 +10017,21 @@ __metadata:
   languageName: node
   linkType: hard
 
+"tsx@npm:^4.22.4":
+  version: 4.22.4
+  resolution: "tsx@npm:4.22.4"
+  dependencies:
+    esbuild: "npm:~0.28.0"
+    fsevents: "npm:~2.3.3"
+  dependenciesMeta:
+    fsevents:
+      optional: true
+  bin:
+    tsx: dist/cli.mjs
+  checksum: 10c0/3df31eb4929ff501b40b122163705b201ea57a492581e14312ae95d21eb015b33ded46a3fd564f9c89a0e8083186987fc4f10dd38182c4ad6241605974f6c927
+  languageName: node
+  linkType: hard
+
 "type-fest@npm:^0.13.1":
   version: 0.13.1
   resolution: "type-fest@npm:0.13.1"
@@ -9986,7 +10039,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@npm:~6.0.3":
+"typescript@npm:^6.0.3, typescript@npm:~6.0.3":
   version: 6.0.3
   resolution: "typescript@npm:6.0.3"
   bin:
@@ -9996,7 +10049,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"typescript@patch:typescript@npm%3A~6.0.3#optional!builtin<compat/typescript>":
+"typescript@patch:typescript@npm%3A^6.0.3#optional!builtin<compat/typescript>, typescript@patch:typescript@npm%3A~6.0.3#optional!builtin<compat/typescript>":
   version: 6.0.3
   resolution: "typescript@patch:typescript@npm%3A6.0.3#optional!builtin<compat/typescript>::version=6.0.3&hash=5786d5"
   bin:
