@@ -12,6 +12,83 @@ import {
   mergeSnapshot,
 } from "../../frontend/src/lib/output-merge-runtime";
 import { mergeLayers, initWasmEngine } from "@softdmx/engine";
+import type { SoftDmxWasmExports } from "@softdmx/engine";
+
+function createGrowingMockWasm(): SoftDmxWasmExports {
+  const memory = new WebAssembly.Memory({ initial: 1, maximum: 256 });
+  let heap = 1024;
+
+  const ensure = (size: number) => {
+    const required = heap + size;
+    const pageSize = 64 * 1024;
+    while (required > memory.buffer.byteLength) {
+      memory.grow(1);
+    }
+    const ptr = heap;
+    heap += Math.max(1, size);
+    return ptr;
+  };
+
+  const alloc = (size: number) => {
+    // Force buffer replacement on every allocation to simulate worst-case growth behavior.
+    memory.grow(1);
+    return ensure(size);
+  };
+  const free = () => {};
+
+  const mergeLayer: SoftDmxWasmExports["mergeLayer"] = (
+    out_values,
+    layer_count,
+    indices_ptr,
+    values_ptr,
+    is_htp_ptr,
+  ) => {
+    const out = new Uint8Array(memory.buffer, out_values);
+    const indices = new Uint32Array(memory.buffer, indices_ptr, layer_count);
+    const values = new Uint8Array(memory.buffer, values_ptr, layer_count);
+    const isHtp = new Uint8Array(memory.buffer, is_htp_ptr, layer_count);
+    for (let i = 0; i < layer_count; i += 1) {
+      const idx = indices[i] ?? 0;
+      const next = values[i] ?? 0;
+      if ((isHtp[i] ?? 0) === 1) {
+        out[idx] = Math.max(out[idx] ?? 0, next);
+      } else {
+        out[idx] = next;
+      }
+    }
+  };
+
+  const scaleGrandMaster: SoftDmxWasmExports["scaleGrandMaster"] = (
+    out_values,
+    channels_count,
+    scales_with_gm,
+    grand_master,
+  ) => {
+    const out = new Uint8Array(memory.buffer, out_values, channels_count);
+    const scales = new Uint8Array(memory.buffer, scales_with_gm, channels_count);
+    for (let i = 0; i < channels_count; i += 1) {
+      if ((scales[i] ?? 0) === 1) {
+        out[i] = Math.max(0, Math.min(255, Math.round((out[i] ?? 0) * grand_master)));
+      }
+    }
+  };
+
+  return {
+    _start: () => {},
+    alloc,
+    free: free as SoftDmxWasmExports["free"],
+    mergeLayer,
+    scaleGrandMaster,
+    memory,
+    hashUnit32: () => 0,
+    evaluateSineEffect: () => {},
+    evaluatePhaserEffect: () => {},
+    sampleFrameToPixelGrid: () => {},
+    flattenPixelMatrixToChannelsWasm: () => {},
+    packArtNetPacket: () => 0,
+    packSacnPacket: () => 0,
+  } as SoftDmxWasmExports;
+}
 
 describe("output merge runtime", () => {
   test("snapshot merge matches engine mergeLayers", () => {
@@ -132,6 +209,43 @@ describe("output merge runtime", () => {
     const expected = mergeLayers(baseChannels, layers, {
       blackout: false,
       grandMaster: 0.9,
+    });
+    expect(actual).toEqual(expected);
+  });
+
+  test("snapshot merge remains correct when wasm memory grows between allocs", () => {
+    const wasm = createGrowingMockWasm();
+    const baseChannels = Array.from({ length: 96 }, (_, idx) => ({
+      id: idx + 1,
+      path: `show://Fixture/${idx + 1}`,
+      value: (idx * 11) % 255,
+      attributeType: idx % 3 === 0 ? "intensity" : idx % 3 === 1 ? "color" : "effect",
+    }));
+    const layers = Array.from({ length: 4 }, (_, layerIndex) => ({
+      source: layerIndex % 2 === 0 ? ("cue" as const) : ("effect" as const),
+      priority: 20 + layerIndex * 10,
+      channels: new Map(
+        baseChannels.map((channel, idx) => [
+          channel.path,
+          {
+            path: channel.path,
+            value: (idx * (layerIndex + 5)) % 255,
+            attributeType: channel.attributeType,
+            priority: 20 + layerIndex * 10,
+            source: layerIndex % 2 === 0 ? ("cue" as const) : ("effect" as const),
+          },
+        ]),
+      ),
+    }));
+    const snapshot = buildMergeSnapshot(baseChannels, layers, {
+      blackout: false,
+      grandMaster: 0.85,
+      mergeWasmEnabled: true,
+    });
+    const actual = mergeSnapshot(snapshot, wasm);
+    const expected = mergeLayers(baseChannels, layers, {
+      blackout: false,
+      grandMaster: 0.85,
     });
     expect(actual).toEqual(expected);
   });

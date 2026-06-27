@@ -90,8 +90,10 @@ function wasmMerge(
   }
 
   try {
-    const wasmValues = new Uint8Array(wasm.memory.buffer, valuesPtr, result.length);
-    const scales = new Uint8Array(wasm.memory.buffer, scalesPtr, result.length);
+    // Always bind views after current allocation phase. Future alloc() calls may grow memory
+    // and invalidate older JS views over wasm.memory.buffer.
+    let wasmValues = new Uint8Array(wasm.memory.buffer, valuesPtr, result.length);
+    let scales = new Uint8Array(wasm.memory.buffer, scalesPtr, result.length);
     for (let i = 0; i < result.length; i += 1) {
       const channel = result[i]!;
       wasmValues[i] = channel.value;
@@ -107,6 +109,9 @@ function wasmMerge(
         continue;
       }
       try {
+        // Rebind after alloc() in this iteration to avoid stale views if memory grew.
+        wasmValues = new Uint8Array(wasm.memory.buffer, valuesPtr, result.length);
+        scales = new Uint8Array(wasm.memory.buffer, scalesPtr, result.length);
         const indices = new Uint32Array(wasm.memory.buffer, indicesPtr, layer.channels.length);
         const values = new Uint8Array(wasm.memory.buffer, layerValuesPtr, layer.channels.length);
         const isHtp = new Uint8Array(wasm.memory.buffer, htpPtr, layer.channels.length);
@@ -129,8 +134,14 @@ function wasmMerge(
     }
 
     wasm.scaleGrandMaster(valuesPtr, result.length, scalesPtr, snapshot.options.grandMaster);
+    // Final readback must always use a fresh view from the current memory buffer.
+    const readbackValues = new Uint8Array(wasm.memory.buffer, valuesPtr, result.length);
     for (let i = 0; i < result.length; i += 1) {
-      result[i]!.value = wasmValues[i] ?? 0;
+      const next = readbackValues[i];
+      if (next === undefined) {
+        throw new Error(`WASM merge readback failed at index ${i}.`);
+      }
+      result[i]!.value = next;
     }
     return result;
   } finally {
