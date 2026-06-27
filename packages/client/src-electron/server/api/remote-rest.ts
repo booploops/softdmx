@@ -7,6 +7,7 @@
  */
 
 import type { FastifyInstance } from "fastify";
+import fastifyRateLimit from "@fastify/rate-limit";
 import type { ShowAudioMapping, ShowDocument } from "@softdmx/engine";
 import type { RemoteContext } from "../context";
 import { isSupportedShowVersion } from "@softdmx/engine";
@@ -24,11 +25,6 @@ type AudioMappingUpdatePayload = {
   mapping: Partial<ShowAudioMapping>;
 };
 
-type RateLimitEntry = {
-  count: number;
-  resetAt: number;
-};
-
 const REMOTE_RATE_LIMIT_WINDOW_MS = 60_000;
 const REMOTE_RATE_LIMIT_MAX_REQUESTS = 240;
 
@@ -42,7 +38,6 @@ function isShowDocument(payload: unknown): payload is ShowDocument {
 
 export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteContext): void {
   const requiredToken = getRequiredRemoteApiToken();
-  const rateLimitByClient = new Map<string, RateLimitEntry>();
 
   function resolveClientKey(request: { ip: string; headers: Record<string, unknown> }): string {
     const token = extractTokenFromHeaders(request.headers);
@@ -52,32 +47,23 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
 
   server.register(
     (instance, _opts, done) => {
+      instance.register(fastifyRateLimit, {
+        global: true,
+        max: REMOTE_RATE_LIMIT_MAX_REQUESTS,
+        timeWindow: REMOTE_RATE_LIMIT_WINDOW_MS,
+        keyGenerator: (request) =>
+          resolveClientKey({
+            ip: request.ip,
+            headers: request.headers as Record<string, unknown>,
+          }),
+        errorResponseBuilder: (_request, context) => ({
+          error: "Too many requests",
+          max: context.max,
+          timeWindow: context.after,
+        }),
+      });
+
       instance.addHook("onRequest", (request, reply, hookDone) => {
-        const now = Date.now();
-        const clientKey = resolveClientKey({
-          ip: request.ip,
-          headers: request.headers as Record<string, unknown>,
-        });
-        const entry = rateLimitByClient.get(clientKey);
-        if (!entry || entry.resetAt <= now) {
-          rateLimitByClient.set(clientKey, {
-            count: 1,
-            resetAt: now + REMOTE_RATE_LIMIT_WINDOW_MS,
-          });
-        } else {
-          entry.count += 1;
-        }
-
-        const currentEntry = rateLimitByClient.get(clientKey);
-        if (currentEntry && currentEntry.count > REMOTE_RATE_LIMIT_MAX_REQUESTS) {
-          const retryAfterSeconds = Math.max(1, Math.ceil((currentEntry.resetAt - now) / 1000));
-          reply
-            .header("Retry-After", retryAfterSeconds.toString())
-            .code(429)
-            .send({ error: "Too many requests" });
-          return;
-        }
-
         if (requiredToken) {
           const token = extractTokenFromHeaders(request.headers as Record<string, unknown>);
           if (!isRemoteApiTokenAuthorized(token, requiredToken)) {
