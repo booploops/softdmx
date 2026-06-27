@@ -47,35 +47,49 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
 
   server.register(
     (instance, _opts, done) => {
-      instance.register(fastifyRateLimit, {
-        global: true,
+      const routeRateLimitOptions = {
         max: REMOTE_RATE_LIMIT_MAX_REQUESTS,
         timeWindow: REMOTE_RATE_LIMIT_WINDOW_MS,
-        keyGenerator: (request) =>
+        keyGenerator: (request: { ip: string; headers: Record<string, unknown> }) =>
           resolveClientKey({
             ip: request.ip,
-            headers: request.headers as Record<string, unknown>,
+            headers: request.headers,
           }),
-        errorResponseBuilder: (_request, context) => ({
+        errorResponseBuilder: (_request: unknown, context: { max: number; after: number }) => ({
           error: "Too many requests",
           max: context.max,
           timeWindow: context.after,
         }),
-      });
+      };
 
-      instance.addHook("onRequest", (request, reply, hookDone) => {
+      const authorizeRequest = (
+        request: { headers: Record<string, unknown> },
+        reply: { code: (statusCode: number) => { send: (payload: unknown) => void } },
+        hookDone: () => void,
+      ) => {
         if (requiredToken) {
-          const token = extractTokenFromHeaders(request.headers as Record<string, unknown>);
+          const token = extractTokenFromHeaders(request.headers);
           if (!isRemoteApiTokenAuthorized(token, requiredToken)) {
             reply.code(401).send({ error: "Unauthorized" });
             return;
           }
         }
-
         hookDone();
+      };
+
+      instance.register(fastifyRateLimit, {
+        global: false,
+        ...routeRateLimitOptions,
       });
 
-      instance.get("/show", (_request, reply) => {
+      const protectedRouteOptions = {
+        config: {
+          rateLimit: routeRateLimitOptions,
+        },
+        preHandler: authorizeRequest,
+      } as const;
+
+      instance.get("/show", protectedRouteOptions, (_request, reply) => {
         const show = ctx.getShow();
         if (!show) {
           reply.code(404).send({ error: "No show loaded" });
@@ -84,7 +98,7 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
         reply.send(show);
       });
 
-      instance.post<{ Body: ShowDocument }>("/show", (request, reply) => {
+      instance.post<{ Body: ShowDocument }>("/show", protectedRouteOptions, (request, reply) => {
         const body = request.body;
         if (!isShowDocument(body)) {
           reply.code(400).send({ error: "Invalid show document payload" });
@@ -97,40 +111,41 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
         reply.send({ ok: true });
       });
 
-      instance.post<{ Body: ScratchSetPayload }>("/scratch/set", (request, reply) => {
+      instance.post<{ Body: ScratchSetPayload }>("/scratch/set", protectedRouteOptions, (request, reply) => {
         ctx.io.emit("remote:scratch:set", request.body);
         reply.send({ ok: true });
       });
 
-      instance.post("/scratch/clear", (_request, reply) => {
+      instance.post("/scratch/clear", protectedRouteOptions, (_request, reply) => {
         ctx.io.emit("remote:scratch:clear");
         reply.send({ ok: true });
       });
 
       instance.post<{ Body: { presetId: string; fade?: number } }>(
         "/preset/fire",
+        protectedRouteOptions,
         (request, reply) => {
           ctx.io.emit("remote:preset:fire", request.body);
           reply.send({ ok: true });
         },
       );
 
-      instance.post<{ Body: { cueId: string } }>("/cue/play", (request, reply) => {
+      instance.post<{ Body: { cueId: string } }>("/cue/play", protectedRouteOptions, (request, reply) => {
         ctx.io.emit("remote:cue:play", request.body);
         reply.send({ ok: true });
       });
 
-      instance.post<{ Body: { cueId: string } }>("/cue/stop", (request, reply) => {
+      instance.post<{ Body: { cueId: string } }>("/cue/stop", protectedRouteOptions, (request, reply) => {
         ctx.io.emit("remote:cue:stop", request.body);
         reply.send({ ok: true });
       });
 
-      instance.post<{ Body: { cueId: string } }>("/cue/stack/go", (request, reply) => {
+      instance.post<{ Body: { cueId: string } }>("/cue/stack/go", protectedRouteOptions, (request, reply) => {
         ctx.io.emit("remote:cue:stack:go", request.body);
         reply.send({ ok: true });
       });
 
-      instance.post<{ Body: { value: boolean } | boolean }>("/blackout", (request, reply) => {
+      instance.post<{ Body: { value: boolean } | boolean }>("/blackout", protectedRouteOptions, (request, reply) => {
         const value =
           typeof request.body === "boolean"
             ? request.body
@@ -139,7 +154,7 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
         reply.send({ ok: true });
       });
 
-      instance.post<{ Body: { value: number } | number }>("/grandmaster", (request, reply) => {
+      instance.post<{ Body: { value: number } | number }>("/grandmaster", protectedRouteOptions, (request, reply) => {
         const value =
           typeof request.body === "number"
             ? request.body
@@ -150,6 +165,7 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
 
       instance.post<{ Body: { enabled: boolean } | boolean }>(
         "/audio/enabled",
+        protectedRouteOptions,
         (request, reply) => {
           const enabled =
             typeof request.body === "boolean"
@@ -162,6 +178,7 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
 
       instance.post<{ Body: { mapping: ShowAudioMapping } }>(
         "/audio/mappings",
+        protectedRouteOptions,
         (request, reply) => {
           const mapping = request.body?.mapping;
           if (!mapping || typeof mapping.id !== "string" || mapping.id.length === 0) {
@@ -175,6 +192,7 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
 
       instance.patch<{ Body: AudioMappingUpdatePayload }>(
         "/audio/mappings/:id",
+        protectedRouteOptions,
         (request, reply) => {
           const id = (request.params as { id?: string })?.id;
           if (!id || typeof id !== "string") {
@@ -189,7 +207,7 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
         },
       );
 
-      instance.delete("/audio/mappings/:id", (request, reply) => {
+      instance.delete("/audio/mappings/:id", protectedRouteOptions, (request, reply) => {
         const id = (request.params as { id?: string })?.id;
         if (!id || typeof id !== "string") {
           reply.code(400).send({ error: "Invalid mapping id" });
@@ -202,7 +220,7 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
       // Convenience route for CLI-level channel updates.
       instance.post<{
         Body: { path: string; value: number; attributeType?: string };
-      }>("/channel/set", (request, reply) => {
+      }>("/channel/set", protectedRouteOptions, (request, reply) => {
         ctx.io.emit("remote:scratch:set", {
           path: request.body.path,
           value: request.body.value,
