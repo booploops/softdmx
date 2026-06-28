@@ -22,7 +22,8 @@ import {
   XCollapseItem,
   XCard,
   XWell,
-  XInput
+  XInput,
+  XStepper
 } from './index';
 
 const $q = useQuasar();
@@ -60,6 +61,7 @@ const selectedValue = ref('Option 1');
 
 const textValue = ref('Hello World');
 const denseTextValue = ref('');
+const stepperValue = ref(5);
 
 // List selection state
 const selectedListItem = ref('item-1');
@@ -156,6 +158,18 @@ const collapseOpen2 = ref(false);
               <span class="sdmx-text-mono font-bold">{{ rangeValue.min }} - {{ rangeValue.max }}</span>
             </div>
             <XRange v-model="rangeValue" :min="0" :max="100" :step="5" />
+          </div>
+
+          <div class="slider-field q-mt-md">
+            <div class="slider-field__header">
+              <span>XStepper</span>
+              <span class="sdmx-text-mono font-bold">{{ stepperValue }}</span>
+            </div>
+            <div class="zoo-row">
+              <XStepper v-model="stepperValue" :min="0" :max="10" />
+              <XStepper v-model="stepperValue" :min="0" :max="10" dense />
+              <XStepper v-model="stepperValue" :min="0" :max="10" disable />
+            </div>
           </div>
         </div>
       </XCard>
