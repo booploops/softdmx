@@ -9,13 +9,13 @@
 import { ref, computed } from 'vue';
 import XSidebarButton from 'src/components/controls/XSidebarButton.vue';
 import WSWorkspaceInstance from 'src/components/workspace/WSWorkspaceInstance.vue';
-import MainMenu from 'src/components/workspace/MainMenu.vue';
 import { WorkspacePanels } from 'src/lib/workspace-panels';
 import { getMainMenu } from 'src/lib/main-menu';
 import type { Route } from '@booploops/pod-router';
 import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type GetTabContextMenuItemsParams, type ContextMenuItem } from 'dockview-vue';
 import { useWorkspaceStore } from 'src/stores/workspace';
 import { useQuasar } from 'quasar';
+import { trpc } from 'src/lib/trpc';
 import 'dockview-core/dist/styles/dockview.css';
 
 const $q = useQuasar();
@@ -150,7 +150,72 @@ function onReady(event: DockviewReadyEvent) {
     });
 }
 
-const isElectron = computed(() => typeof window.electronAPI?.createMenu === 'function');
+const isElectron = computed(() => typeof (window as any).electronTRPC !== 'undefined');
+
+let nextClickId = 0;
+
+function showNativeContextMenu(template: FrontendMenuItem[], x?: number, y?: number) {
+    const clickCallbacks = new Map<string, () => void>();
+
+    const serializeTemplate = (items: FrontendMenuItem[]): any[] => {
+        return items.map((item) => {
+            const serialized: any = {
+                role: item.role,
+                type: item.type,
+                label: item.label,
+                sublabel: item.sublabel,
+                toolTip: item.toolTip,
+                accelerator: item.accelerator,
+                icon: item.icon,
+                enabled: item.enabled,
+                visible: item.visible,
+                checked: item.checked,
+                id: item.id,
+            };
+
+            if (item.click) {
+                const clickId = `click-${nextClickId++}`;
+                clickCallbacks.set(clickId, item.click);
+                serialized.clickId = clickId;
+            }
+
+            if (item.submenu) {
+                serialized.submenu = serializeTemplate(item.submenu);
+            }
+
+            return serialized;
+        });
+    };
+
+    const serialized = serializeTemplate(template);
+
+    const subscription = trpc.showContextMenu.subscribe(
+        { template: serialized, x, y },
+        {
+            onData(event) {
+                if (event.type === 'click') {
+                    const cb = clickCallbacks.get(event.clickId);
+                    if (cb) {
+                        try {
+                            cb();
+                        } catch (err) {
+                            console.error('Error executing menu click callback:', err);
+                        }
+                    }
+                } else if (event.type === 'close') {
+                    setTimeout(() => {
+                        clickCallbacks.clear();
+                        subscription.unsubscribe();
+                    }, 100);
+                }
+            },
+            onError(err) {
+                console.error('Context menu tRPC subscription error:', err);
+                clickCallbacks.clear();
+            },
+        }
+    );
+}
 
 function showNativeMainMenu() {
     if (!isElectron.value) return;
@@ -172,7 +237,7 @@ function showNativeMainMenu() {
     };
 
     const template = mapMenu(getMainMenu());
-    window.electronAPI?.createMenu!(template);
+    showNativeContextMenu(template);
 }
 
 function showNativeSpawnMenu() {
@@ -196,7 +261,7 @@ function showNativeSpawnMenu() {
         }))
     ];
 
-    window.electronAPI?.createMenu!(template);
+    showNativeContextMenu(template);
 }
 </script>
 
@@ -204,72 +269,16 @@ function showNativeSpawnMenu() {
     <div class="workspace-shell">
         <div class="workspace-sidebar">
             <XSidebarButton
-                tooltip="Spawn Panel"
-                @click="isElectron ? showNativeSpawnMenu() : undefined"
-            >
-                <i class="codicon codicon-plus"></i>
-                <template #menu v-if="!isElectron">
-                    <q-menu
-                        anchor="bottom right"
-                        self="top left"
-                        class="sdmx-menu"
-                    >
-                        <q-list style="min-width: 200px">
-                            <!-- Workspaces Section -->
-                            <div
-                                class="q-px-md q-py-xs text-muted text-overline"
-                                style="font-size: 0.65rem; letter-spacing: 0.1em; line-height: 1.5;"
-                            >
-                                Workspaces
-                            </div>
-                            <q-item
-                                clickable
-                                v-close-popup
-                                @click="createNewWorkspace(true)"
-                            >
-                                <q-item-section class="q-py-xs">
-                                    <div class="row items-center no-wrap">
-                                        <i class="codicon codicon-plus q-mr-sm text-primary" />
-                                        <span>New Workspace</span>
-                                    </div>
-                                </q-item-section>
-                            </q-item>
-
-                            <q-separator class="bg-border-subtle" />
-
-                            <!-- Panels Section -->
-                            <div
-                                class="q-px-md q-py-xs text-muted text-overline"
-                                style="font-size: 0.65rem; letter-spacing: 0.1em; line-height: 1.5;"
-                            >
-                                Spawn Panels
-                            </div>
-                            <q-item
-                                v-for="panel in WorkspacePanels"
-                                :key="panel.path"
-                                clickable
-                                v-close-popup
-                                @click="spawnToolInActiveWorkspace(panel)"
-                            >
-                                <q-item-section class="q-py-xs">
-                                    <div class="row items-center no-wrap">
-                                        <i class="codicon codicon-terminal q-mr-sm" />
-                                        <span>{{ panel.name || panel.meta?.title || formatPath(panel.path) }}</span>
-                                    </div>
-                                </q-item-section>
-                            </q-item>
-                        </q-list>
-                    </q-menu>
-                </template>
-            </XSidebarButton>
-            <XSidebarButton
                 tooltip="Main Menu"
                 @click="isElectron ? showNativeMainMenu() : undefined"
             >
                 <i class="codicon codicon-menu" />
-                <template #menu v-if="!isElectron">
-                    <MainMenu touch-position />
-                </template>
+            </XSidebarButton>
+            <XSidebarButton
+                tooltip="Spawn Panel"
+                @click="isElectron ? showNativeSpawnMenu() : undefined"
+            >
+                <i class="codicon codicon-plus"></i>
             </XSidebarButton>
             <XSidebarButton>
                 <i class="codicon codicon-gear" />

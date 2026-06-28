@@ -27,7 +27,6 @@ interface Window {
     getRemoteApiToken?: () => string | undefined;
     onOscMessage: (callback: (event: any, data: { address: string; args: any[] }) => void) => void;
     removeOscListener: () => void;
-    createMenu?: (template: FrontendMenuItem[]) => void;
   };
   electronLink?: {
     onTick: (callback: (event: any, data: any) => void) => void;

@@ -13,8 +13,9 @@ import { Paths } from "./runtime/paths";
 import { closeOscListener } from "./ipc/osc-ipc";
 import { closeAbletonLink } from "./ipc/link-ipc";
 import { setupGridNodeOverlayIpc, closeGridNodeOverlayIpc } from "./ipc/gridnode-ipc";
-import { setupMenuIpc, closeMenuIpc } from "./ipc/menu-ipc";
 import { closeVideoIpc } from "./ipc/video-ipc";
+import { createIPCHandler } from "electron-trpc-experimental/main";
+import { appRouter, createContext } from "./ipc/trpc-router";
 import { isOutputNodeMode } from "./modes/output-node";
 import { createMainWindow } from "./windows/main-window";
 import { createOutputNodeWindow } from "./windows/output-node-window";
@@ -39,7 +40,6 @@ function runShutdownCleanup() {
   closeAbletonLink();
   closeGridNodeOverlayIpc();
   void closeVideoIpc();
-  closeMenuIpc();
   destroyAuxiliaryWindows();
 }
 
@@ -59,13 +59,19 @@ async function shutdownAndQuit() {
 async function createWindow() {
   startServer();
   setupGridNodeOverlayIpc();
-  setupMenuIpc();
+
+  const trpcHandler = createIPCHandler({
+    router: appRouter,
+    createContext,
+  });
 
   if (isOutputNodeMode()) {
     mainWindow = await createOutputNodeWindow(currentDir);
   } else {
     mainWindow = await createMainWindow(currentDir);
   }
+
+  trpcHandler.attachWindow(mainWindow);
 
   mainWindow.on("closed", () => {
     mainWindow = undefined;
