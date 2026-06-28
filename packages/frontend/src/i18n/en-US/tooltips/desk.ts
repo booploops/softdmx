@@ -50,6 +50,7 @@ export default {
     level: 'Adjust playback level for this slot',
     pagePrev: 'Go to previous executor page',
     pageNext: 'Go to next executor page',
+    goPreviousActive: 'Trigger the previous executor (Go-)',
     goActive: 'Trigger the active executor (Go+)',
     stopAll: 'Stop all running executors',
     submaster: 'Submaster level for {name}',

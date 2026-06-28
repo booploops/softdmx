@@ -41,6 +41,7 @@ onBeforeUnmount(() => {
         </div>
         <q-btn v-info="'desk.playback.pagePrev'" dense flat icon="navigate_before" @click="executorStore.previousPage" />
         <q-btn v-info="'desk.playback.pageNext'" dense flat icon="navigate_next" @click="executorStore.nextPage" />
+        <q-btn v-info="'desk.playback.goPreviousActive'" dense flat color="secondary" label="Go-" @click="executorStore.goPreviousActive()" />
         <q-btn v-info="'desk.playback.goActive'" dense flat color="primary" label="Go+" @click="executorStore.goActive()" />
         <q-btn v-info="'desk.playback.stopAll'" dense flat color="negative" label="Stop" @click="executorStore.stopAll" />
       </div>

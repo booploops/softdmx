@@ -260,6 +260,22 @@ export const useExecutorStore = defineStore('executor', () => {
     }
   }
 
+  function goPreviousActive() {
+    const visible = visibleSlots.value;
+    if (!visible.length) return;
+
+    const selectedIndex = selectedSlotId.value
+      ? visible.findIndex((slot) => slot.id === selectedSlotId.value)
+      : -1;
+
+    const previousIndex = selectedIndex > 0 ? selectedIndex - 1 : visible.length - 1;
+    const previous = visible[previousIndex];
+    if (!previous) return;
+
+    triggerSlot(previous.id);
+    selectedSlotId.value = previous.id;
+  }
+
   function assignSubmaster(slotId: string, submasterId?: string) {
     showStore.updateDocument((doc) => {
       const rootExecutor = ensureRootExecutor(doc);
@@ -330,6 +346,7 @@ export const useExecutorStore = defineStore('executor', () => {
     setSelectedSlot,
     goSlot,
     goActive,
+    goPreviousActive,
     stopSlot,
     stopAll,
     triggerSlot,
