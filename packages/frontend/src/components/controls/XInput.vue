@@ -7,7 +7,7 @@
 -->
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 const props = withDefaults(
   defineProps<{
@@ -18,6 +18,7 @@ const props = withDefaults(
     readonly?: boolean;
     dense?: boolean;
     clearable?: boolean;
+    label?: string;
   }>(),
   {
     modelValue: '',
@@ -27,6 +28,7 @@ const props = withDefaults(
     readonly: false,
     dense: false,
     clearable: false,
+    label: '',
   }
 );
 
@@ -37,9 +39,37 @@ const emit = defineEmits<{
   'clear': [];
 }>();
 
+const isFocused = ref(false);
+
+const isShrunk = computed(() => {
+  return (
+    isFocused.value ||
+    (props.modelValue !== undefined &&
+      props.modelValue !== null &&
+      props.modelValue !== '')
+  );
+});
+
+const activePlaceholder = computed(() => {
+  if (props.label && !isShrunk.value) {
+    return '';
+  }
+  return props.placeholder;
+});
+
 const onInput = (event: Event) => {
   const target = event.target as HTMLInputElement;
   emit('update:modelValue', target.value);
+};
+
+const onFocus = (event: FocusEvent) => {
+  isFocused.value = true;
+  emit('focus', event);
+};
+
+const onBlur = (event: FocusEvent) => {
+  isFocused.value = false;
+  emit('blur', event);
 };
 
 const clear = () => {
@@ -55,6 +85,7 @@ const clear = () => {
       'x-input--dense': dense,
       'x-input--disabled': disable,
       'x-input--readonly': readonly,
+      'x-input--has-label': label,
     }"
   >
     <!-- Prepend Slot -->
@@ -66,16 +97,24 @@ const clear = () => {
     </div>
 
     <div class="x-input__inner-wrapper">
+      <span
+        v-if="label"
+        class="x-input__label"
+        :class="{ 'x-input__label--shrunk': isShrunk }"
+      >
+        {{ label }}
+      </span>
+
       <input
         class="x-input__native"
         :type="type"
         :value="modelValue"
-        :placeholder="placeholder"
+        :placeholder="activePlaceholder"
         :disabled="disable"
         :readonly="readonly"
         @input="onInput"
-        @focus="emit('focus', $event)"
-        @blur="emit('blur', $event)"
+        @focus="onFocus"
+        @blur="onBlur"
       />
 
       <!-- Clear button -->
@@ -227,6 +266,60 @@ const clear = () => {
       box-shadow: none;
     }
   }
+
+  &__label {
+    position: absolute;
+    left: 8px;
+    right: 24px;
+    pointer-events: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
+    z-index: 1;
+    color: rgba(0, 0, 0, 0.35);
+    font-size: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    &--shrunk {
+      top: 4px;
+      transform: none;
+      font-size: 10px;
+      color: #8e8e93;
+    }
+  }
+
+  &--has-label {
+    .x-input__inner-wrapper {
+      height: 38px;
+    }
+
+    .x-input__native {
+      padding: 14px 8px 2px 8px;
+    }
+
+    &.x-input--dense {
+      .x-input__inner-wrapper {
+        height: 30px;
+      }
+
+      .x-input__native {
+        padding: 11px 6px 1px 6px;
+      }
+
+      .x-input__label {
+        left: 6px;
+        right: 20px;
+        font-size: 11px;
+
+        &--shrunk {
+          top: 3px;
+          font-size: 9px;
+        }
+      }
+    }
+  }
 }
 </style>
 
@@ -273,6 +366,14 @@ const clear = () => {
       .x-input__inner-wrapper {
         background-color: rgba(255, 255, 255, 0.02) !important;
         box-shadow: none !important;
+      }
+    }
+
+    &__label {
+      color: rgba(255, 255, 255, 0.35) !important;
+
+      &--shrunk {
+        color: rgba(255, 255, 255, 0.5) !important;
       }
     }
   }

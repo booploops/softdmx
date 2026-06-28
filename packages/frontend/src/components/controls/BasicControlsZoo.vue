@@ -64,6 +64,13 @@ const selectedValue = ref('Option 1');
 
 const textValue = ref('Hello World');
 const denseTextValue = ref('');
+const emptySelectValue = ref('');
+const emptySelectOptions = [
+  { label: 'Select option...', value: '' },
+  'Option 1',
+  'Option 2',
+  'Option 3'
+];
 const stepperValue = ref(5);
 
 // List selection state
@@ -369,6 +376,28 @@ const demoTabJustify = ref('tab-a');
             v-model="selectedValue"
             :options="selectOptions"
           />
+          <div class="q-mt-sm">
+            <XSelect
+              v-model="selectedValue"
+              :options="selectOptions"
+              label="Selected Preset"
+            />
+          </div>
+          <div class="q-mt-sm">
+            <XSelect
+              v-model="emptySelectValue"
+              :options="emptySelectOptions"
+              label="Choose Option (Empty)"
+            />
+          </div>
+          <div class="q-mt-sm">
+            <XSelect
+              v-model="selectedValue"
+              :options="selectOptions"
+              label="Dense Selected Preset"
+              dense
+            />
+          </div>
           <div class="zoo-row q-mt-sm">
             <div class="zoo-text-info">
               Selected value: <strong class="sdmx-text-mono">{{ typeof selectedValue === 'object' ?
@@ -384,14 +413,28 @@ const demoTabJustify = ref('tab-a');
             placeholder="Type something..."
             clearable
           />
-          <div class="zoo-row q-mt-sm">
+          <div class="q-mt-sm">
+            <XInput
+              v-model="textValue"
+              label="Device Name"
+              clearable
+            />
+          </div>
+          <div class="q-mt-sm">
             <XInput
               v-model="denseTextValue"
-              placeholder="Dense text field"
+              placeholder="Dense field without label"
               dense
             />
           </div>
-          <div class="zoo-row q-mt-sm">
+          <div class="q-mt-sm">
+            <XInput
+              v-model="denseTextValue"
+              label="Dense IP Address (Empty)"
+              dense
+            />
+          </div>
+          <div class="q-mt-sm">
             <XInput
               model-value="Disabled text input"
               disable

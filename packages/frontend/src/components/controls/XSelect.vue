@@ -7,7 +7,7 @@
 -->
 
 <script setup lang="ts" generic="T = string | number | boolean">
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 interface OptionObject<V> {
   label: string;
@@ -22,9 +22,13 @@ const props = withDefaults(
     modelValue: T;
     options: OptionType<T>[];
     disable?: boolean;
+    label?: string;
+    dense?: boolean;
   }>(),
   {
     disable: false,
+    label: '',
+    dense: false,
   }
 );
 
@@ -32,6 +36,17 @@ const emit = defineEmits<{
   'update:modelValue': [T];
   'change': [T];
 }>();
+
+const isFocused = ref(false);
+
+const isShrunk = computed(() => {
+  return (
+    isFocused.value ||
+    (props.modelValue !== undefined &&
+      props.modelValue !== null &&
+      props.modelValue !== '')
+  );
+});
 
 const normalizedOptions = computed<OptionObject<T>[]>(() => {
   return props.options.map((opt) => {
@@ -59,6 +74,13 @@ const displayLabel = computed(() => {
   return selectedOption.value ? selectedOption.value.label : '';
 });
 
+const activeDisplayLabel = computed(() => {
+  if (props.label && !isShrunk.value) {
+    return '';
+  }
+  return displayLabel.value;
+});
+
 function handleChange(event: Event) {
   const target = event.target as HTMLSelectElement;
   const val = target.value;
@@ -73,7 +95,11 @@ function handleChange(event: Event) {
 <template>
   <div
     class="x-select"
-    :class="{ 'x-select--disabled': disable }"
+    :class="{
+      'x-select--disabled': disable,
+      'x-select--has-label': label,
+      'x-select--dense': dense,
+    }"
   >
     <!-- Native select covering the button overlay -->
     <select
@@ -81,6 +107,8 @@ function handleChange(event: Event) {
       :disabled="disable"
       class="x-select__native"
       @change="handleChange"
+      @focus="isFocused = true"
+      @blur="isFocused = false"
     >
       <option
         v-for="opt in normalizedOptions"
@@ -94,7 +122,14 @@ function handleChange(event: Event) {
 
     <!-- Styled macOS Catalina button container -->
     <div class="x-select__button">
-      <span class="x-select__text">{{ displayLabel }}</span>
+      <span
+        v-if="label"
+        class="x-select__label"
+        :class="{ 'x-select__label--shrunk': isShrunk }"
+      >
+        {{ label }}
+      </span>
+      <span class="x-select__text">{{ activeDisplayLabel }}</span>
       <span class="x-select__arrows">
         <!-- Up and Down Caret macOS style double arrows -->
         <svg
@@ -144,6 +179,7 @@ function handleChange(event: Event) {
   }
 
   &__button {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -175,11 +211,15 @@ function handleChange(event: Event) {
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
-    margin-right: 8px;
+    margin-right: 16px;
     line-height: 1;
   }
 
   &__arrows {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -195,6 +235,70 @@ function handleChange(event: Event) {
   &--disabled {
     opacity: 0.45;
     pointer-events: none;
+  }
+
+  &__label {
+    position: absolute;
+    left: 8px;
+    right: 24px;
+    pointer-events: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
+    z-index: 1;
+    color: rgba(0, 0, 0, 0.35);
+    font-size: 13px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    &--shrunk {
+      top: 4px;
+      transform: none;
+      font-size: 10px;
+      color: #8e8e93;
+    }
+  }
+
+  &--dense {
+    font-size: 11px;
+
+    .x-select__button {
+      height: 20px;
+      border-radius: 4px;
+      padding: 0 6px;
+    }
+
+    .x-select__arrows-svg {
+      width: 6px;
+      height: 10px;
+    }
+  }
+
+  &--has-label {
+    .x-select__button {
+      height: 38px;
+      align-items: flex-end;
+      padding-bottom: 5px;
+    }
+
+    &.x-select--dense {
+      .x-select__button {
+        height: 30px;
+        padding-bottom: 3px;
+      }
+
+      .x-select__label {
+        left: 6px;
+        right: 20px;
+        font-size: 11px;
+
+        &--shrunk {
+          top: 3px;
+          font-size: 9px;
+        }
+      }
+    }
   }
 }
 </style>
@@ -215,6 +319,14 @@ function handleChange(event: Event) {
 
   .x-select__arrows {
     color: #0a84ff !important;
+  }
+
+  .x-select__label {
+    color: rgba(255, 255, 255, 0.35) !important;
+
+    &--shrunk {
+      color: rgba(255, 255, 255, 0.5) !important;
+    }
   }
 }
 </style>
