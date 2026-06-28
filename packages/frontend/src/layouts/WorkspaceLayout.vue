@@ -8,46 +8,113 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import XSidebarButton from 'src/components/controls/XSidebarButton.vue';
-import WSWorkspacePanel from 'src/components/workspace/WSWorkspacePanel.vue';
+import WSWorkspaceInstance from 'src/components/workspace/WSWorkspaceInstance.vue';
 import { WorkspacePanels } from 'src/lib/workspace-panels';
 import type { Route } from '@booploops/pod-router';
 import { DockviewVue, type DockviewApi, type DockviewReadyEvent } from 'dockview-vue';
+import { useWorkspaceStore } from 'src/stores/workspace';
 import 'dockview-core/dist/styles/dockview.css';
 
+const workspaceStore = useWorkspaceStore();
 const components = {
-  WSPanelContent: WSWorkspacePanel as any,
+  WorkspaceInstance: WSWorkspaceInstance as any,
 };
 
-let dockviewApi: DockviewApi | undefined;
-const panelCounter = ref(1);
+let outerApi: DockviewApi | undefined;
+const workspaceCounter = ref(1);
 
 function formatPath(path: string) {
   return path.charAt(0).toUpperCase() + path.slice(1);
 }
 
-function spawnPanel(route: Route) {
-  if (!dockviewApi) return;
-  const id = `panel-${route.path}-${panelCounter.value++}`;
-  const title = route.name || route.meta?.title || formatPath(route.path);
+function createNewWorkspace(focus = true): string {
+  if (!outerApi) return '';
+  const workspaceId = `workspace-${Date.now()}-${workspaceCounter.value++}`;
+  const title = `Workspace ${workspaceCounter.value - 1}`;
   
-  const panelPath = route.path.startsWith('/') ? route.path : `/${route.path}`;
-  
-  dockviewApi.addPanel({
-    id,
-    component: 'WSPanelContent',
+  const panel = outerApi.addPanel({
+    id: workspaceId,
+    component: 'WorkspaceInstance',
     title,
     params: {
-      path: panelPath,
+      workspaceId,
     },
   });
+
+  if (panel && focus) {
+    panel.api.setActive();
+  }
+
+  if (focus) {
+    workspaceStore.setActiveWorkspace(workspaceId);
+  }
+  return workspaceId;
+}
+
+function spawnToolInActiveWorkspace(route: Route) {
+  if (!outerApi) return;
+
+  let targetWorkspaceId = workspaceStore.activeWorkspaceId;
+  const panelPath = route.path.startsWith('/') ? route.path : `/${route.path}`;
+  const title = route.name || route.meta?.title || formatPath(route.path);
+
+  // Check if active workspace is still valid in outer layout
+  if (!targetWorkspaceId || !outerApi.getPanel(targetWorkspaceId)) {
+    targetWorkspaceId = createNewWorkspace(true);
+  } else {
+    // If it exists, make sure it is focused in the outer layout too
+    const panel = outerApi.getPanel(targetWorkspaceId);
+    if (panel) {
+      panel.api.setActive();
+    }
+  }
+
+  workspaceStore.requestSpawnPanel(targetWorkspaceId, panelPath, title);
 }
 
 function onReady(event: DockviewReadyEvent) {
-  dockviewApi = event.api;
-  // Spawn initial panel
-  if (WorkspacePanels.length > 0) {
-    spawnPanel(WorkspacePanels[0]);
+  outerApi = event.api;
+
+  // Restore outer layout if persistent state exists
+  const savedOuterLayout = workspaceStore.outerLayout;
+  if (savedOuterLayout) {
+    try {
+      outerApi.fromJSON(savedOuterLayout);
+    } catch (err) {
+      console.error('Failed to restore outer workspace layout:', err);
+    }
   }
+
+  // If no workspaces exist after layout restoration, create an initial one
+  if (outerApi.panels.length === 0) {
+    createNewWorkspace(true);
+  }
+
+  // Subscribe to outer layout changes to save to store
+  outerApi.onDidLayoutChange(() => {
+    if (!outerApi) return;
+    try {
+      workspaceStore.saveOuterLayout(outerApi.toJSON());
+    } catch (err) {
+      console.error('Failed to serialize outer workspace layout:', err);
+    }
+  });
+
+  // Track focused workspace
+  outerApi.onDidActivePanelChange((panelEvent) => {
+    if (panelEvent && panelEvent.panel) {
+      workspaceStore.setActiveWorkspace(panelEvent.panel.id);
+    }
+  });
+
+  // Handle workspace panel removal to clean up its serialized inner layout
+  outerApi.onDidRemovePanel((panel) => {
+    workspaceStore.deleteWorkspaceLayout(panel.id);
+    // Automatically spawn a new default workspace if all workspaces are closed
+    if (outerApi && outerApi.panels.length === 0) {
+      createNewWorkspace(true);
+    }
+  });
 }
 </script>
 
@@ -57,16 +124,38 @@ function onReady(event: DockviewReadyEvent) {
       <XSidebarButton tooltip="Spawn Panel">
         <i class="codicon codicon-plus" />
         <q-menu anchor="bottom right" self="top left" class="sdmx-menu">
-          <q-list style="min-width: 150px">
+          <q-list style="min-width: 200px">
+            <!-- Workspaces Section -->
+            <div class="q-px-md q-py-xs text-muted text-overline" style="font-size: 0.65rem; letter-spacing: 0.1em; line-height: 1.5;">
+              Workspaces
+            </div>
+            <q-item clickable v-close-popup @click="createNewWorkspace(true)">
+              <q-item-section class="q-py-xs">
+                <div class="row items-center no-wrap">
+                  <i class="codicon codicon-plus q-mr-sm text-primary" />
+                  <span>New Workspace</span>
+                </div>
+              </q-item-section>
+            </q-item>
+
+            <q-separator class="bg-border-subtle" />
+
+            <!-- Panels Section -->
+            <div class="q-px-md q-py-xs text-muted text-overline" style="font-size: 0.65rem; letter-spacing: 0.1em; line-height: 1.5;">
+              Spawn Panels
+            </div>
             <q-item
               v-for="panel in WorkspacePanels"
               :key="panel.path"
               clickable
               v-close-popup
-              @click="spawnPanel(panel)"
+              @click="spawnToolInActiveWorkspace(panel)"
             >
-              <q-item-section>
-                {{ panel.name || panel.meta?.title || formatPath(panel.path) }}
+              <q-item-section class="q-py-xs">
+                <div class="row items-center no-wrap">
+                  <i class="codicon codicon-terminal q-mr-sm" />
+                  <span>{{ panel.name || panel.meta?.title || formatPath(panel.path) }}</span>
+                </div>
               </q-item-section>
             </q-item>
           </q-list>
