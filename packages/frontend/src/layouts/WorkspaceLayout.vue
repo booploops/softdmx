@@ -17,6 +17,7 @@ import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type GetTabCont
 import { useWorkspaceStore } from 'src/stores/workspace';
 import { useQuasar } from 'quasar';
 import { trpc } from 'src/lib/trpc';
+import { createMenu } from 'src/lib/menus';
 import 'dockview-core/dist/styles/dockview.css';
 import { showSettingsUI } from 'src/lib/settings-ui';
 
@@ -256,87 +257,6 @@ watch(
 
 const isElectron = computed(() => typeof window.electronTRPC !== 'undefined');
 
-let nextClickId = 0;
-
-function showNativeContextMenu(template: FrontendMenuItem[], x?: number, y?: number) {
-    const clickCallbacks = new Map<string, () => void>();
-
-    interface SerializedMenuItem {
-        clickId?: string;
-        role?: string;
-        type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
-        label?: string;
-        sublabel?: string;
-        toolTip?: string;
-        accelerator?: string;
-        icon?: string;
-        enabled?: boolean;
-        visible?: boolean;
-        checked?: boolean;
-        id?: string;
-        submenu?: SerializedMenuItem[];
-    }
-
-    const serializeTemplate = (items: FrontendMenuItem[]): SerializedMenuItem[] => {
-        return items.map((item) => {
-            const serialized: SerializedMenuItem = {
-                role: item.role,
-                type: item.type,
-                label: item.label,
-                sublabel: item.sublabel,
-                toolTip: item.toolTip,
-                accelerator: item.accelerator,
-                icon: item.icon,
-                enabled: item.enabled,
-                visible: item.visible,
-                checked: item.checked,
-                id: item.id,
-            };
-
-            if (item.click) {
-                const clickId = `click-${nextClickId++}`;
-                clickCallbacks.set(clickId, item.click);
-                serialized.clickId = clickId;
-            }
-
-            if (item.submenu) {
-                serialized.submenu = serializeTemplate(item.submenu);
-            }
-
-            return serialized;
-        });
-    };
-
-    const serialized = serializeTemplate(template);
-
-    const subscription = trpc.showContextMenu.subscribe(
-        { template: serialized, x, y },
-        {
-            onData(event) {
-                if (event.type === 'click') {
-                    const cb = clickCallbacks.get(event.clickId);
-                    if (cb) {
-                        try {
-                            cb();
-                        } catch (err) {
-                            console.error('Error executing menu click callback:', err);
-                        }
-                    }
-                } else if (event.type === 'close') {
-                    setTimeout(() => {
-                        clickCallbacks.clear();
-                        subscription.unsubscribe();
-                    }, 100);
-                }
-            },
-            onError(err) {
-                console.error('Context menu tRPC subscription error:', err);
-                clickCallbacks.clear();
-            },
-        }
-    );
-}
-
 function importWorkspaceData(title: string, layout: unknown) {
     if (!outerApi) return;
     const workspaceId = `workspace-${Date.now()}-${workspaceCounter.value++}`;
@@ -442,7 +362,7 @@ function showNativeMainMenu() {
     const template = mapMenu(getMainMenu({
         onImportWorkspace: importWorkspaceJSON,
     }));
-    showNativeContextMenu(template);
+    createMenu(template).show();
 }
 
 function showNativeSpawnMenu() {
@@ -470,7 +390,7 @@ function showNativeSpawnMenu() {
         ...getPanelsMenu().map(mapPanelMenuItem)
     ];
 
-    showNativeContextMenu(template);
+    createMenu(template).show();
 }
 </script>
 
