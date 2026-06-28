@@ -33,6 +33,7 @@ export interface MscMessage {
 
 export interface MidiActionMessage {
   type: 'message';
+  deviceName?: string;
   channel: number;
   controlType: 'cc' | 'note';
   control: number;
@@ -43,15 +44,15 @@ export interface MidiActionMessage {
 export type MidiWorkerResponse = MtcFrameMessage | MscMessage | MidiActionMessage;
 
 interface MidiWorkerGlobalScope {
-  onmessage: ((this: MidiWorkerGlobalScope, ev: MessageEvent<{ data: Uint8Array | number[] }>) => void) | null;
+  onmessage: ((this: MidiWorkerGlobalScope, ev: MessageEvent<{ data: Uint8Array | number[]; deviceName?: string }>) => void) | null;
   postMessage(message: MidiWorkerResponse): void;
 }
 
 const ctx = self as unknown as MidiWorkerGlobalScope;
 const mtcAssembler = new MtcAssembler();
 
-ctx.onmessage = (e: MessageEvent<{ data: Uint8Array | number[] }>) => {
-  const { data } = e.data;
+ctx.onmessage = (e: MessageEvent<{ data: Uint8Array | number[]; deviceName?: string }>) => {
+  const { data, deviceName } = e.data;
   if (!data) return;
 
   const mtcQuarter = parseMtcQuarterFrame(data);
@@ -90,6 +91,7 @@ ctx.onmessage = (e: MessageEvent<{ data: Uint8Array | number[] }>) => {
 
     ctx.postMessage({
       type: 'message',
+      deviceName,
       channel,
       controlType,
       control,

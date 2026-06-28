@@ -52,6 +52,13 @@ const midiControlTypeOptions = [
   { label: 'Note', value: 'note' },
 ];
 
+const midiDeviceOptions = computed(() => [
+  { label: 'Any MIDI Device', value: '__any__' },
+  ...midiStore.midiInputs.map((input) => ({ label: input.name, value: input.name })),
+]);
+
+const connectedMidiDeviceNames = computed(() => new Set(midiStore.midiInputs.map((input) => input.name)));
+
 const currentLearningLabel = computed(() => {
   if (midiStore.isLearning) return 'MIDI learn active';
   if (oscStore.isLearning) return 'OSC learn active';
@@ -110,8 +117,21 @@ function onTargetTypeChange(target: BindingTarget, type: BindingTargetType) {
 }
 
 function startMidiLearn(mapping: MidiMapping) {
-  midiStore.startLearning(mapping.target);
+  midiStore.startLearning(mapping.target, mapping.deviceName);
   oscStore.stopLearning();
+}
+
+function getMidiMappingDevice(mapping: MidiMapping): string {
+  return mapping.deviceName ?? '__any__';
+}
+
+function setMidiMappingDevice(mapping: MidiMapping, value: string) {
+  mapping.deviceName = value === '__any__' ? undefined : value;
+}
+
+function isMidiMappingDeviceDisconnected(mapping: MidiMapping): boolean {
+  if (!mapping.deviceName) return false;
+  return !connectedMidiDeviceNames.value.has(mapping.deviceName);
 }
 
 function startOscLearn(mapping: OscMapping) {
@@ -195,7 +215,20 @@ reloadBindings();
           <q-list v-else bordered separator class="rounded-borders">
             <q-item v-for="mapping in midiMappings" :key="mapping.id" class="column">
               <div class="row q-col-gutter-sm full-width items-center">
-                <div class="col-2">
+                <div class="col-3">
+                  <q-select
+                    :model-value="getMidiMappingDevice(mapping)"
+                    :options="midiDeviceOptions"
+                    dense
+                    filled
+                    dark
+                    emit-value
+                    map-options
+                    label="Device"
+                    @update:model-value="(v) => setMidiMappingDevice(mapping, v as string)"
+                  />
+                </div>
+                <div class="col-1">
                   <q-input v-model.number="mapping.channel" type="number" min="0" max="15" dense filled dark label="Channel" />
                 </div>
                 <div class="col-2">
@@ -213,7 +246,7 @@ reloadBindings();
                 <div class="col-2">
                   <q-input v-model.number="mapping.controlNumber" type="number" min="0" max="127" dense filled dark label="Control" />
                 </div>
-                <div class="col-3">
+                <div class="col-2">
                   <q-select
                     :model-value="mapping.target.type"
                     :options="targetTypeOptions"
@@ -226,7 +259,15 @@ reloadBindings();
                     @update:model-value="(v) => onTargetTypeChange(mapping.target, v as BindingTargetType)"
                   />
                 </div>
-                <div class="col-3 row q-gutter-xs justify-end">
+                <div class="col-2 row q-gutter-xs justify-end">
+                  <q-chip
+                    v-if="isMidiMappingDeviceDisconnected(mapping)"
+                    dense
+                    color="negative"
+                    text-color="white"
+                    icon="warning"
+                    label="Device Offline"
+                  />
                   <q-btn dense color="secondary" icon="sensors" label="Learn" @click="startMidiLearn(mapping)" />
                   <q-btn dense flat color="negative" icon="delete" @click="removeMidi(mapping.id)" />
                 </div>

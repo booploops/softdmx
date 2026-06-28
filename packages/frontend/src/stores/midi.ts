@@ -26,7 +26,9 @@ export const useMidiStore = defineStore('midi', () => {
 
   const isLearning = ref(false);
   const activeLearnTarget = ref<BindingTarget | null>(null);
+  const activeLearnDeviceName = ref<string | undefined>(undefined);
   const isMidiSupported = ref(false);
+  const midiInputs = ref<Array<{ id: string; name: string }>>([]);
 
   let worker: Worker | null = null;
 
@@ -105,15 +107,22 @@ export const useMidiStore = defineStore('midi', () => {
         }
       } else if (msg.type === 'message') {
         const { channel, controlType, control, targetValue } = msg;
+        const deviceName = msg.deviceName;
 
         if (isLearning.value && activeLearnTarget.value) {
           const target = { ...activeLearnTarget.value };
+          const learnDeviceName = activeLearnDeviceName.value;
           showStore.updateDocument((doc) => {
             doc.bindings.midi = doc.bindings.midi.filter(
-              (m) => JSON.stringify(m.target) !== JSON.stringify(target)
+              (m) =>
+                !(
+                  JSON.stringify(m.target) === JSON.stringify(target)
+                  && (m.deviceName ?? undefined) === (learnDeviceName ?? undefined)
+                )
             );
             doc.bindings.midi.push({
               id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              deviceName: learnDeviceName,
               channel,
               controlType,
               controlNumber: control,
@@ -122,31 +131,37 @@ export const useMidiStore = defineStore('midi', () => {
           });
           isLearning.value = false;
           activeLearnTarget.value = null;
+          activeLearnDeviceName.value = undefined;
           return;
         }
 
         mappings.value
-          .filter((m) => m.channel === channel && m.controlType === controlType && m.controlNumber === control)
+          .filter((m) => {
+            const deviceMatches = !m.deviceName || m.deviceName === deviceName;
+            return deviceMatches && m.channel === channel && m.controlType === controlType && m.controlNumber === control;
+          })
           .forEach((m) => applyTarget(m.target, targetValue));
       }
     };
   }
 
-  function handleMidiInput(data: Uint8Array | number[]) {
+  function handleMidiInput(data: Uint8Array | number[], deviceName?: string) {
     if (!worker) {
       initWorker();
     }
-    worker.postMessage({ data });
+    worker.postMessage({ data, deviceName });
   }
 
-  function startLearning(target: BindingTarget) {
+  function startLearning(target: BindingTarget, deviceName?: string) {
     isLearning.value = true;
     activeLearnTarget.value = target;
+    activeLearnDeviceName.value = deviceName;
   }
 
   function stopLearning() {
     isLearning.value = false;
     activeLearnTarget.value = null;
+    activeLearnDeviceName.value = undefined;
   }
 
   async function initMidi() {
@@ -161,18 +176,29 @@ export const useMidiStore = defineStore('midi', () => {
 
       const bindInput = (input: MIDIInput) => {
         input.onmidimessage = (event) => {
-          if (event.data) handleMidiInput(event.data);
+          if (event.data) handleMidiInput(event.data, input.name || undefined);
         };
       };
 
+      const refreshInputs = () => {
+        const entries = Array.from(midiAccess.inputs.values()).map((input) => ({
+          id: input.id,
+          name: input.name || `MIDI Input ${input.id}`,
+        }));
+        midiInputs.value = entries;
+      };
+
       for (const input of midiAccess.inputs.values()) bindInput(input);
+      refreshInputs();
       midiAccess.onstatechange = (event) => {
         if (event.port?.type === 'input' && event.port.state === 'connected') {
           bindInput(event.port as MIDIInput);
         }
+        refreshInputs();
       };
     } catch {
       isMidiSupported.value = false;
+      midiInputs.value = [];
     }
   }
 
@@ -180,7 +206,9 @@ export const useMidiStore = defineStore('midi', () => {
     mappings,
     isLearning,
     activeLearnTarget,
+    activeLearnDeviceName,
     isMidiSupported,
+    midiInputs,
     handleMidiInput,
     startLearning,
     stopLearning,
