@@ -43,6 +43,7 @@
     "@types/node": "^22.15.0",
     "@types/three": "^0.175.0",
     "@vitejs/plugin-vue": "^5.2.1",
+    "@vscode/codicons": "^0.0.45",
     "autoprefixer": "^10.5.0",
     "fast-check": "^4.8.0",
     "fastify": "^5.8.5",

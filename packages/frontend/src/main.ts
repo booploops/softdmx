@@ -17,6 +17,7 @@ import "@quasar/extras/ionicons-v4/ionicons-v4.css";
 import "@quasar/extras/mdi-v7/mdi-v7.css";
 import "@quasar/extras/fontawesome-v7/fontawesome-v7.css";
 import "quasar/src/css/index.sass";
+import "@vscode/codicons/dist/codicon.css";
 
 // Custom Styles
 import "./css/app.scss";

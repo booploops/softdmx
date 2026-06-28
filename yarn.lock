@@ -3041,6 +3041,7 @@ __metadata:
     "@types/node": "npm:^22.15.0"
     "@types/three": "npm:^0.175.0"
     "@vitejs/plugin-vue": "npm:^5.2.1"
+    "@vscode/codicons": "npm:^0.0.45"
     "@vueuse/core": "npm:^14.3.0"
     alien-signals: "npm:^3.2.1"
     autoprefixer: "npm:^10.5.0"
@@ -3695,6 +3696,13 @@ __metadata:
     path-browserify: "npm:^1.0.1"
     vscode-uri: "npm:^3.0.8"
   checksum: 10c0/075c890b9ec1cb17f17e38aaed035f8ee7d507439e87270d8e3c394356fc9387fd0bda9ec1069b36ea4c378d9375a08f5bc64c063a83427010ddd86d472124fc
+  languageName: node
+  linkType: hard
+
+"@vscode/codicons@npm:^0.0.45":
+  version: 0.0.45
+  resolution: "@vscode/codicons@npm:0.0.45"
+  checksum: 10c0/652c435d8d8440fcc76f6d83f01caec24fc162217e26086caa098c1ea4a533d0e29c7b2a9dfb1c704ab2f386e54c8c6e141f239e6c8bd5ddf611f6998ef170ad
   languageName: node
   linkType: hard
 

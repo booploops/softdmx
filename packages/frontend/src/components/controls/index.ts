@@ -20,6 +20,7 @@ export { default as XCard } from './XCard.vue';
 export { default as XWell } from './XWell.vue';
 export { default as XInput } from './XInput.vue';
 export { default as XStepper } from './XStepper.vue';
+export { default as XSidebarButton } from './XSidebarButton.vue';
 
 
 

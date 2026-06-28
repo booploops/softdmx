@@ -6,7 +6,6 @@ import BasicControlsZoo from 'src/components/controls/BasicControlsZoo.vue';
 
 <template>
     <div>
-        test
         <BasicControlsZoo />
     </div>
 </template>
