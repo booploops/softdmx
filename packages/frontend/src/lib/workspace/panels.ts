@@ -181,6 +181,36 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     path: "settings",
     component: () => import("components/SettingsPanel.vue"),
   },
+  {
+    label: "General",
+    path: "settings-general",
+    component: () => import("components/settings/SettingsGeneralSection.vue"),
+  },
+  {
+    label: "Interface",
+    path: "settings-interface",
+    component: () => import("components/settings/SettingsInterfaceSection.vue"),
+  },
+  {
+    label: "Output & Sync",
+    path: "settings-output-sync",
+    component: () => import("components/settings/SettingsOutputSyncSection.vue"),
+  },
+  {
+    label: "Audio",
+    path: "settings-audio",
+    component: () => import("components/settings/SettingsAudioSection.vue"),
+  },
+  {
+    label: "Plot",
+    path: "settings-plot",
+    component: () => import("components/settings/SettingsPlotSection.vue"),
+  },
+  {
+    label: "Theme",
+    path: "settings-theme",
+    component: () => import("components/settings/SettingsThemeSection.vue"),
+  },
 ];
 
 export type PanelMenuItem = {
