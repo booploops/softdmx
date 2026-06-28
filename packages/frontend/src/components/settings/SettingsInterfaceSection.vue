@@ -12,12 +12,6 @@ const deskView = useDeskViewStore();
 <template>
   <XCard title="Interface">
     <div class="q-gutter-y-md">
-      <XSwitch
-        :model-value="uiStore.operateLocked"
-        label="Operate lock (hide config UI in Live)"
-        @update:model-value="uiStore.toggleOperateLock"
-      />
-
       <XSelect
         :model-value="deskView.activeViewId"
         :options="deskView.views.map((view) => ({ label: view.name, value: view.id }))"

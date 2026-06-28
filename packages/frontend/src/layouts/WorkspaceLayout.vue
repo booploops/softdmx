@@ -448,6 +448,13 @@ function showNativeSpawnMenu() {
                 >
                     <i class="codicon codicon-plus"></i>
                 </XSidebarButton>
+                <XSidebarButton
+                    :active="ui.operateLocked"
+                    :tooltip="ui.operateLocked ? 'Operate Lock: On' : 'Operate Lock: Off'"
+                    @click="ui.toggleOperateLock()"
+                >
+                    <i :class="ui.operateLocked ? 'codicon codicon-lock' : 'codicon codicon-unlock'" />
+                </XSidebarButton>
                 <div class="workspace-sidebar__shortcuts" :class="sidebarShortcutGroupClass">
                     <XSidebarButton
                         v-for="shortcut in sidebarShortcuts"

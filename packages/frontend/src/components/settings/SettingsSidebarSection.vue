@@ -44,39 +44,53 @@ function setShortcutEnabled(id: string, value: boolean) {
 <template>
   <div class="q-pa-md">
     <XCard title="Sidebar Behavior">
-      <div class="q-gutter-y-md">
-        <div class="text-body2 text-grey-5">
-          Add quick-launch icons to the workspace sidebar for frequently used panels.
+      <div class="behavior-layout">
+        <div class="behavior-layout__left q-gutter-y-md">
+          <div class="text-body2 text-grey-5">
+            Add quick-launch icons to the workspace sidebar for frequently used panels.
+          </div>
+
+          <XSelect
+            :model-value="uiStore.sidebarShortcutOpenMode"
+            :options="openModeOptions"
+            label="Shortcut launch behavior"
+            @update:model-value="(value) => uiStore.setSidebarShortcutOpenMode(value)"
+          />
+
+          <XSelect
+            :model-value="uiStore.sidebarShortcutNewWorkspacePolicy"
+            :options="newWorkspacePolicyOptions"
+            label="New workspace policy"
+            :disable="uiStore.sidebarShortcutOpenMode !== 'new-workspace'"
+            @update:model-value="(value) => uiStore.setSidebarShortcutNewWorkspacePolicy(value)"
+          />
         </div>
 
-        <XSelect
-          :model-value="uiStore.sidebarShortcutOpenMode"
-          :options="openModeOptions"
-          label="Shortcut launch behavior"
-          @update:model-value="(value) => uiStore.setSidebarShortcutOpenMode(value)"
-        />
-
-        <XSelect
-          :model-value="uiStore.sidebarShortcutNewWorkspacePolicy"
-          :options="newWorkspacePolicyOptions"
-          label="New workspace policy"
-          :disable="uiStore.sidebarShortcutOpenMode !== 'new-workspace'"
-          @update:model-value="(value) => uiStore.setSidebarShortcutNewWorkspacePolicy(value)"
-        />
-
-        <div
-          v-for="shortcut in SIDEBAR_SHORTCUTS"
-          :key="shortcut.id"
-          class="shortcut-row"
-        >
-          <div class="shortcut-label">
-            <i :class="`codicon codicon-${shortcut.icon}`" aria-hidden="true" />
-            <span>{{ shortcut.label }}</span>
+        <div class="behavior-layout__right q-gutter-y-sm">
+          <div class="shortcut-row">
+            <div class="shortcut-label">
+              <span>Operate lock (hide config UI in Live)</span>
+            </div>
+            <XSwitch
+              :model-value="uiStore.operateLocked"
+              @update:model-value="uiStore.toggleOperateLock"
+            />
           </div>
-          <XSwitch
-            :model-value="isShortcutEnabled(shortcut.id)"
-            @update:model-value="(value) => setShortcutEnabled(shortcut.id, value)"
-          />
+
+          <div
+            v-for="shortcut in SIDEBAR_SHORTCUTS"
+            :key="shortcut.id"
+            class="shortcut-row"
+          >
+            <div class="shortcut-label">
+              <i :class="`codicon codicon-${shortcut.icon}`" aria-hidden="true" />
+              <span>{{ shortcut.label }}</span>
+            </div>
+            <XSwitch
+              :model-value="isShortcutEnabled(shortcut.id)"
+              @update:model-value="(value) => setShortcutEnabled(shortcut.id, value)"
+            />
+          </div>
         </div>
       </div>
     </XCard>
@@ -84,6 +98,13 @@ function setShortcutEnabled(id: string, value: boolean) {
 </template>
 
 <style scoped lang="scss">
+.behavior-layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.95fr) minmax(320px, 1.05fr);
+  gap: 16px;
+  align-items: start;
+}
+
 .shortcut-row {
   display: flex;
   align-items: center;
@@ -99,6 +120,12 @@ function setShortcutEnabled(id: string, value: boolean) {
 
   .codicon {
     color: var(--sdmx-color-text-muted);
+  }
+}
+
+@media (max-width: 900px) {
+  .behavior-layout {
+    grid-template-columns: 1fr;
   }
 }
 </style>

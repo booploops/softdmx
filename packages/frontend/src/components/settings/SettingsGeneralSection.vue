@@ -6,9 +6,7 @@ import XSwitch from 'src/components/controls/XSwitch.vue';
 import { useAudioStore } from 'src/stores/audio';
 import { useDeskViewStore } from 'src/stores/desk-view';
 import { useThemeStore } from 'src/stores/theme';
-import { useUIStore } from 'src/stores/ui';
 
-const uiStore = useUIStore();
 const deskView = useDeskViewStore();
 const audioStore = useAudioStore();
 const themeStore = useThemeStore();
@@ -27,12 +25,6 @@ const themeOptions = computed(() =>
       <div class="text-body2 text-grey-5">
         Quick controls for common app preferences.
       </div>
-
-      <XSwitch
-        :model-value="uiStore.operateLocked"
-        label="Operate lock (hide config UI in Live)"
-        @update:model-value="uiStore.toggleOperateLock"
-      />
 
       <XSelect
         :model-value="deskView.activeViewId"
