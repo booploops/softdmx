@@ -61,28 +61,6 @@ provide('listViewProps', props);
     flex-direction: column;
     width: 100%;
   }
-
-  // Custom macOS Catalina style scrollbars
-  &::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 4px;
-    border: 2px solid transparent;
-    background-clip: padding-box;
-
-    &:hover {
-      background: rgba(0, 0, 0, 0.4);
-      background-clip: padding-box;
-    }
-  }
 }
 </style>
 
@@ -94,17 +72,6 @@ provide('listViewProps', props);
 
     &--bordered {
       border-color: rgba(255, 255, 255, 0.15) !important;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: rgba(255, 255, 255, 0.2) !important;
-      border: 2px solid transparent !important;
-      background-clip: padding-box !important;
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.4) !important;
-        background-clip: padding-box !important;
-      }
     }
   }
 }

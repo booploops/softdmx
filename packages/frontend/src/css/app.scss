@@ -35,3 +35,101 @@ body.body--dark {
 .q-focus-helper {
   transition: none!important;
 }
+
+/* Custom Scrollbar Style (Dear ImGui with macOS Sizing) */
+::-webkit-scrollbar {
+  width: 15px;
+  height: 15px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: #141419;
+  border: 1px solid #08080a;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: #3d3d49;
+  border: 1px solid #1f1f26;
+  border-radius: 0px;
+
+  &:hover {
+    background-color: #4f4f5c;
+    border-color: #2b2b35;
+  }
+
+  &:active {
+    background-color: #606070;
+    border-color: #3b3b47;
+  }
+}
+
+/* Scrollbar buttons: show decrement and increment at the bottom/right end */
+::-webkit-scrollbar-button:end:increment,
+::-webkit-scrollbar-button:end:decrement {
+  display: block;
+}
+
+::-webkit-scrollbar-button:start:increment,
+::-webkit-scrollbar-button:start:decrement {
+  display: none;
+}
+
+::-webkit-scrollbar-button {
+  background-color: #2d2d34;
+  border: 1px solid #141416;
+
+  &:hover {
+    background-color: #3d3d45;
+  }
+
+  &:active {
+    background-color: #4d4d57;
+  }
+}
+
+::-webkit-scrollbar-button:vertical {
+  height: 22px;
+  width: 15px;
+}
+
+::-webkit-scrollbar-button:horizontal {
+  height: 15px;
+  width: 22px;
+}
+
+/* Arrow Vector icons using sharp SVG Data URIs */
+
+/* Vertical Scrollbar (Up/Down Buttons at the Bottom) */
+::-webkit-scrollbar-button:vertical:end:decrement {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='8,4 3,11 13,11' fill='%23c5c5ca'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 11px;
+}
+
+::-webkit-scrollbar-button:vertical:end:increment {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='8,12 3,5 13,5' fill='%23c5c5ca'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 11px;
+}
+
+/* Horizontal Scrollbar (Left/Right Buttons on the Right) */
+::-webkit-scrollbar-button:horizontal:end:decrement {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='4,8 11,3 11,13' fill='%23c5c5ca'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 11px;
+}
+
+::-webkit-scrollbar-button:horizontal:end:increment {
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpolygon points='12,8 5,3 5,13' fill='%23c5c5ca'/%3E%3C/svg%3E");
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 11px;
+}
+
+/* Scrollbar Corner */
+::-webkit-scrollbar-corner {
+  background-color: #141419;
+}
