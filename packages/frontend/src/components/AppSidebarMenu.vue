@@ -128,7 +128,7 @@ function handleShowBindingsDialog() {
   <div class="sidebar-menu">
     <XListView :bordered="false">
       <XButton
-        @click="$router.push('/new-workspace')"
+        @click="$router.push('/')"
         label="Workspace View"
         color="primary"
         class="full-width q-mb-sm"

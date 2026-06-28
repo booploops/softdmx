@@ -27,7 +27,9 @@ type MainMenuItem = {
   children?: MainMenuItem[];
 };
 
-export function getMainMenu(options?: { onImportWorkspace?: () => void }): MainMenuItem[] {
+export function getMainMenu(options?: {
+  onImportWorkspace?: () => void;
+}): MainMenuItem[] {
   const ui = useUIStore();
   const showStore = useShowStore();
   const gridNodeOverlay = useGridNodeOverlayStore();
@@ -93,13 +95,15 @@ export function getMainMenu(options?: { onImportWorkspace?: () => void }): MainM
             input.click();
           },
         },
-        ...(options?.onImportWorkspace ? [
-          {
-            label: "Import Workspace JSON",
-            icon: "upload",
-            click: options.onImportWorkspace,
-          }
-        ] : []),
+        ...(options?.onImportWorkspace
+          ? [
+              {
+                label: "Import Workspace JSON",
+                icon: "upload",
+                click: options.onImportWorkspace,
+              },
+            ]
+          : []),
       ],
     },
     {
@@ -175,7 +179,7 @@ export function getMainMenu(options?: { onImportWorkspace?: () => void }): MainM
     {
       label: "Legacy View",
       click() {
-        window.location.href = "/";
+        window.location.href = "/legacy";
       },
     },
   ];
