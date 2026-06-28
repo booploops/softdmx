@@ -48,7 +48,6 @@ provide('listViewProps', props);
   overflow-y: auto;
   box-sizing: border-box;
   background-color: #ffffff;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
 
   &--bordered {

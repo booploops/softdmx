@@ -97,7 +97,6 @@ function onClick(event: MouseEvent) {
   background: transparent;
   border: none;
   cursor: default;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-size: 13px;
   font-weight: 500;
   color: #555557;
@@ -170,6 +169,7 @@ function onClick(event: MouseEvent) {
     opacity: 0;
     transform: scaleX(0.8);
   }
+
   to {
     opacity: 1;
     transform: scaleX(1);

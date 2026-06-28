@@ -43,23 +43,91 @@
   --sdmx-color-plot-label: var(--sdmx-color-text-muted);
 
   /* Derived colors */
-  --sdmx-color-bg-inset: color-mix(in srgb, var(--sdmx-color-text) 3%, transparent);
-  --sdmx-color-bg-muted: color-mix(in srgb, var(--sdmx-color-text) 5%, transparent);
-  --sdmx-color-bg-hover-strong: color-mix(in srgb, var(--sdmx-color-text) 8%, transparent);
-  --sdmx-color-bg-active: color-mix(in srgb, var(--sdmx-color-text) 12%, transparent);
-  --sdmx-color-border-faint: color-mix(in srgb, var(--sdmx-color-text) 5%, transparent);
-  --sdmx-color-border-strong: color-mix(in srgb, var(--sdmx-color-text) 15%, transparent);
-  --sdmx-color-primary-soft: color-mix(in srgb, var(--sdmx-color-primary) 20%, transparent);
-  --sdmx-color-primary-ring: color-mix(in srgb, var(--sdmx-color-primary) 60%, transparent);
-  --sdmx-color-primary-strong: color-mix(in srgb, var(--sdmx-color-primary) 80%, transparent);
-  --sdmx-color-secondary-ring: color-mix(in srgb, var(--sdmx-color-secondary) 75%, transparent);
-  --sdmx-color-negative-soft: color-mix(in srgb, var(--sdmx-color-negative) 10%, transparent);
-  --sdmx-color-negative-border: color-mix(in srgb, var(--sdmx-color-negative) 30%, transparent);
-  --sdmx-color-negative-strong: color-mix(in srgb, var(--sdmx-color-negative) 85%, transparent);
-  --sdmx-color-warning-ring: color-mix(in srgb, var(--sdmx-color-warning) 60%, transparent);
-  --sdmx-color-active-soft: color-mix(in srgb, var(--sdmx-color-active) 18%, transparent);
-  --sdmx-color-armed-soft: color-mix(in srgb, var(--sdmx-color-armed) 18%, transparent);
-  --sdmx-color-flash-soft: color-mix(in srgb, var(--sdmx-color-flash) 25%, transparent);
+  --sdmx-color-bg-inset: color-mix(
+    in srgb,
+    var(--sdmx-color-text) 3%,
+    transparent
+  );
+  --sdmx-color-bg-muted: color-mix(
+    in srgb,
+    var(--sdmx-color-text) 5%,
+    transparent
+  );
+  --sdmx-color-bg-hover-strong: color-mix(
+    in srgb,
+    var(--sdmx-color-text) 8%,
+    transparent
+  );
+  --sdmx-color-bg-active: color-mix(
+    in srgb,
+    var(--sdmx-color-text) 12%,
+    transparent
+  );
+  --sdmx-color-border-faint: color-mix(
+    in srgb,
+    var(--sdmx-color-text) 5%,
+    transparent
+  );
+  --sdmx-color-border-strong: color-mix(
+    in srgb,
+    var(--sdmx-color-text) 15%,
+    transparent
+  );
+  --sdmx-color-primary-soft: color-mix(
+    in srgb,
+    var(--sdmx-color-primary) 20%,
+    transparent
+  );
+  --sdmx-color-primary-ring: color-mix(
+    in srgb,
+    var(--sdmx-color-primary) 60%,
+    transparent
+  );
+  --sdmx-color-primary-strong: color-mix(
+    in srgb,
+    var(--sdmx-color-primary) 80%,
+    transparent
+  );
+  --sdmx-color-secondary-ring: color-mix(
+    in srgb,
+    var(--sdmx-color-secondary) 75%,
+    transparent
+  );
+  --sdmx-color-negative-soft: color-mix(
+    in srgb,
+    var(--sdmx-color-negative) 10%,
+    transparent
+  );
+  --sdmx-color-negative-border: color-mix(
+    in srgb,
+    var(--sdmx-color-negative) 30%,
+    transparent
+  );
+  --sdmx-color-negative-strong: color-mix(
+    in srgb,
+    var(--sdmx-color-negative) 85%,
+    transparent
+  );
+  --sdmx-color-warning-ring: color-mix(
+    in srgb,
+    var(--sdmx-color-warning) 60%,
+    transparent
+  );
+  --sdmx-color-active-soft: color-mix(
+    in srgb,
+    var(--sdmx-color-active) 18%,
+    transparent
+  );
+  --sdmx-color-armed-soft: color-mix(
+    in srgb,
+    var(--sdmx-color-armed) 18%,
+    transparent
+  );
+  --sdmx-color-flash-soft: color-mix(
+    in srgb,
+    var(--sdmx-color-flash) 25%,
+    transparent
+  );
   --sdmx-color-shadow: color-mix(in srgb, #000 30%, transparent);
   --sdmx-color-shadow-strong: color-mix(in srgb, #000 40%, transparent);
   --sdmx-color-canvas-bg: var(--sdmx-color-plot-bg);
@@ -86,8 +154,9 @@
   );
 
   /* Typography */
-  --sdmx-font-family: "Roboto Flex Variable", system-ui, sans-serif;
-  --sdmx-font-family-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  --sdmx-font-family: "Segoe UI Variable", system-ui;
+  --sdmx-font-family-mono:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   --sdmx-font-weight: 500;
   --sdmx-font-weight-bold: 700;
   --sdmx-font-size-display: 20px;
@@ -204,13 +273,25 @@ body,
 
 /* Surface utilities */
 .body--dark {
-  .text-grey-3 { color: var(--sdmx-color-text) !important; }
-  .text-grey-4 { color: var(--sdmx-color-text-muted) !important; }
+  .text-grey-3 {
+    color: var(--sdmx-color-text) !important;
+  }
+  .text-grey-4 {
+    color: var(--sdmx-color-text-muted) !important;
+  }
   .text-grey-5,
-  .text-grey-6 { color: var(--sdmx-color-text-faint) !important; }
-  .bg-dark { background: var(--sdmx-color-bg-surface) !important; }
-  .bg-grey-8 { background: var(--sdmx-color-bg-elevated) !important; }
-  .bg-grey-9 { background: var(--sdmx-color-bg-drawer) !important; }
+  .text-grey-6 {
+    color: var(--sdmx-color-text-faint) !important;
+  }
+  .bg-dark {
+    background: var(--sdmx-color-bg-surface) !important;
+  }
+  .bg-grey-8 {
+    background: var(--sdmx-color-bg-elevated) !important;
+  }
+  .bg-grey-9 {
+    background: var(--sdmx-color-bg-drawer) !important;
+  }
 }
 
 .sdmx-surface {
@@ -278,7 +359,8 @@ body,
 
 .sdmx-widget--active {
   border-color: var(--sdmx-color-active);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--sdmx-color-active) 50%, transparent);
+  box-shadow: 0 0 0 1px
+    color-mix(in srgb, var(--sdmx-color-active) 50%, transparent);
 }
 
 .sdmx-widget--armed {
@@ -288,12 +370,17 @@ body,
 
 .sdmx-widget--flash {
   border-color: var(--sdmx-color-flash);
-  animation: sdmx-flash-pulse var(--sdmx-motion-duration-slow) var(--sdmx-motion-easing) infinite alternate;
+  animation: sdmx-flash-pulse var(--sdmx-motion-duration-slow)
+    var(--sdmx-motion-easing) infinite alternate;
 }
 
 @keyframes sdmx-flash-pulse {
-  from { box-shadow: 0 0 0 0 var(--sdmx-color-flash-soft); }
-  to { box-shadow: 0 0 0 3px var(--sdmx-color-flash-soft); }
+  from {
+    box-shadow: 0 0 0 0 var(--sdmx-color-flash-soft);
+  }
+  to {
+    box-shadow: 0 0 0 3px var(--sdmx-color-flash-soft);
+  }
 }
 
 .sdmx-border-bottom {
@@ -323,7 +410,8 @@ body,
 .sdmx-list-item {
   border-radius: var(--sdmx-radius-sm);
   background-color: var(--sdmx-color-bg-inset);
-  transition: background-color var(--sdmx-motion-duration-fast) var(--sdmx-motion-easing);
+  transition: background-color var(--sdmx-motion-duration-fast)
+    var(--sdmx-motion-easing);
 }
 
 .sdmx-list-item:hover {

@@ -57,15 +57,21 @@ function onClick(event: MouseEvent | KeyboardEvent) {
     @keydown.space.prevent="onClick"
     @keydown.enter.prevent="onClick"
   >
-    <div v-if="$slots.prepend" class="x-list-item__prepend">
+    <div
+      v-if="$slots.prepend"
+      class="x-list-item__prepend"
+    >
       <slot name="prepend"></slot>
     </div>
-    
+
     <div class="x-list-item__main">
       <slot></slot>
     </div>
 
-    <div v-if="$slots.append" class="x-list-item__append">
+    <div
+      v-if="$slots.append"
+      class="x-list-item__append"
+    >
       <slot name="append"></slot>
     </div>
   </div>
@@ -78,7 +84,6 @@ function onClick(event: MouseEvent | KeyboardEvent) {
   width: 100%;
   padding: 8px 12px;
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   color: #1d1d1f;
   user-select: none;
@@ -164,7 +169,7 @@ function onClick(event: MouseEvent | KeyboardEvent) {
     &.x-list-item--active {
       background-color: #0a84ff !important;
       color: #ffffff !important;
-      
+
       .x-list-item__prepend,
       .x-list-item__append {
         color: rgba(255, 255, 255, 0.8) !important;

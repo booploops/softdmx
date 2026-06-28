@@ -45,10 +45,16 @@ const trackStyle = computed(() => {
     :disabled="disable"
     @click="toggle"
   >
-    <span class="x-switch__track" :style="trackStyle">
+    <span
+      class="x-switch__track"
+      :style="trackStyle"
+    >
       <span class="x-switch__thumb" />
     </span>
-    <span v-if="label" class="x-switch__label">{{ label }}</span>
+    <span
+      v-if="label"
+      class="x-switch__label"
+    >{{ label }}</span>
   </button>
 </template>
 
@@ -62,7 +68,6 @@ const trackStyle = computed(() => {
   cursor: default;
   padding: 2px;
   color: #1d1d1f;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   user-select: none;
   vertical-align: middle;
@@ -75,7 +80,7 @@ const trackStyle = computed(() => {
     border-radius: 10px;
     box-sizing: border-box;
     position: relative;
-    
+
     // Light Mode Off
     background-color: #e5e5ea;
     border: 1px solid rgba(0, 0, 0, 0.15);

@@ -58,7 +58,10 @@ const clear = () => {
     }"
   >
     <!-- Prepend Slot -->
-    <div v-if="$slots.prepend" class="x-input__prepend">
+    <div
+      v-if="$slots.prepend"
+      class="x-input__prepend"
+    >
       <slot name="prepend" />
     </div>
 
@@ -83,14 +86,25 @@ const clear = () => {
         tabindex="-1"
         @click="clear"
       >
-        <svg viewBox="0 0 12 12" class="x-input__clear-icon">
-          <path d="M3.5 3.5L8.5 8.5M8.5 3.5L3.5 8.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
+        <svg
+          viewBox="0 0 12 12"
+          class="x-input__clear-icon"
+        >
+          <path
+            d="M3.5 3.5L8.5 8.5M8.5 3.5L3.5 8.5"
+            stroke="currentColor"
+            stroke-width="1.5"
+            stroke-linecap="round"
+          />
         </svg>
       </button>
     </div>
 
     <!-- Append Slot -->
-    <div v-if="$slots.append" class="x-input__append">
+    <div
+      v-if="$slots.append"
+      class="x-input__append"
+    >
       <slot name="append" />
     </div>
   </div>
@@ -101,7 +115,6 @@ const clear = () => {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   width: 100%;
   box-sizing: border-box;
@@ -118,7 +131,7 @@ const clear = () => {
     box-shadow: inset 0 1px 1.5px rgba(0, 0, 0, 0.05);
     box-sizing: border-box;
     width: 100%;
-    
+
     // Focus ring on the wrapper when input is focused
     &:has(.x-input__native:focus) {
       box-shadow: 0 0 0 2.5px rgba(0, 122, 255, 0.5) !important;
@@ -182,12 +195,12 @@ const clear = () => {
 
   &--dense {
     font-size: 11px;
-    
+
     .x-input__inner-wrapper {
       height: 20px;
       border-radius: 4px;
     }
-    
+
     .x-input__native {
       padding: 0 6px;
     }
@@ -202,7 +215,7 @@ const clear = () => {
   &--disabled {
     opacity: 0.45;
     pointer-events: none;
-    
+
     .x-input__inner-wrapper {
       background-color: #f5f5f7;
     }

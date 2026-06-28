@@ -29,7 +29,10 @@ const props = withDefaults(
     }"
   >
     <!-- Header -->
-    <div v-if="title || $slots.header" class="x-card__header">
+    <div
+      v-if="title || $slots.header"
+      class="x-card__header"
+    >
       <slot name="header">
         <h3 class="x-card__title">{{ title }}</h3>
       </slot>
@@ -41,7 +44,10 @@ const props = withDefaults(
     </div>
 
     <!-- Footer -->
-    <div v-if="$slots.footer" class="x-card__footer">
+    <div
+      v-if="$slots.footer"
+      class="x-card__footer"
+    >
       <slot name="footer"></slot>
     </div>
   </div>
@@ -54,10 +60,9 @@ const props = withDefaults(
   background-color: #ffffff;
   border-radius: 6px;
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   color: #1d1d1f;
-  
+
   &--bordered {
     border: 1px solid rgba(0, 0, 0, 0.1);
   }

@@ -29,7 +29,7 @@
       "gm": "#f472b6"
     },
     "typography": {
-      "fontFamily": "\"Roboto Flex Variable\", sans-serif",
+      "fontFamily": "\"Segoe UI Variable\", system-ui, sans-serif",
       "fontWeight": "500"
     },
     "radius": {

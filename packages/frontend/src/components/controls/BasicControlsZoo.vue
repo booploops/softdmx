@@ -101,28 +101,63 @@ const demoTabJustify = ref('tab-a');
 
     <!-- Showcase Grid -->
     <div class="zoo-grid">
-      
+
       <!-- Column 1: Buttons -->
       <XCard title="Buttons (<XButton>)">
         <div class="zoo-section">
           <div class="zoo-label">Colors & Sizes</div>
           <div class="zoo-row">
-            <XButton label="Default" size="sm" @click="buttonClickedCount++" />
-            <XButton label="Primary" color="primary" size="md" @click="buttonClickedCount++" />
-            <XButton label="Danger" color="danger" size="lg" @click="buttonClickedCount++" />
+            <XButton
+              label="Default"
+              size="sm"
+              @click="buttonClickedCount++"
+            />
+            <XButton
+              label="Primary"
+              color="primary"
+              size="md"
+              @click="buttonClickedCount++"
+            />
+            <XButton
+              label="Danger"
+              color="danger"
+              size="lg"
+              @click="buttonClickedCount++"
+            />
           </div>
         </div>
 
         <div class="zoo-section">
           <div class="zoo-label">Variants & States</div>
           <div class="zoo-row">
-            <XButton label="Flat (Ghost)" flat color="primary" />
-            <XButton label="Outline" outline color="primary" />
-            <XButton label="With Icon" icon="star" color="primary" />
+            <XButton
+              label="Flat (Ghost)"
+              flat
+              color="primary"
+            />
+            <XButton
+              label="Outline"
+              outline
+              color="primary"
+            />
+            <XButton
+              label="With Icon"
+              icon="star"
+              color="primary"
+            />
           </div>
           <div class="zoo-row q-mt-sm">
-            <XButton label="Disabled" disable color="primary" />
-            <XButton label="Click for Loader" :loading="buttonLoading" color="primary" @click="triggerLoading" />
+            <XButton
+              label="Disabled"
+              disable
+              color="primary"
+            />
+            <XButton
+              label="Click for Loader"
+              :loading="buttonLoading"
+              color="primary"
+              @click="triggerLoading"
+            />
           </div>
         </div>
 
@@ -130,26 +165,66 @@ const demoTabJustify = ref('tab-a');
           <div class="zoo-label">Button Groups (&lt;XButtonGroup&gt;)</div>
           <div class="zoo-row">
             <XButtonGroup>
-              <XButton label="Left" @click="buttonClickedCount++" />
-              <XButton label="Middle" @click="buttonClickedCount++" />
-              <XButton label="Right" @click="buttonClickedCount++" />
+              <XButton
+                label="Left"
+                @click="buttonClickedCount++"
+              />
+              <XButton
+                label="Middle"
+                @click="buttonClickedCount++"
+              />
+              <XButton
+                label="Right"
+                @click="buttonClickedCount++"
+              />
             </XButtonGroup>
           </div>
           <div class="zoo-row q-mt-sm">
-            <XButtonGroup color="primary" size="sm">
-              <XButton icon="align_horizontal_left" @click="buttonClickedCount++" />
-              <XButton icon="align_horizontal_center" @click="buttonClickedCount++" />
-              <XButton icon="align_horizontal_right" @click="buttonClickedCount++" />
+            <XButtonGroup
+              color="primary"
+              size="sm"
+            >
+              <XButton
+                icon="align_horizontal_left"
+                @click="buttonClickedCount++"
+              />
+              <XButton
+                icon="align_horizontal_center"
+                @click="buttonClickedCount++"
+              />
+              <XButton
+                icon="align_horizontal_right"
+                @click="buttonClickedCount++"
+              />
             </XButtonGroup>
-            <XButtonGroup color="danger" size="md" outline>
-              <XButton label="Cancel" @click="buttonClickedCount++" />
-              <XButton label="Confirm" @click="buttonClickedCount++" />
+            <XButtonGroup
+              color="danger"
+              size="md"
+              outline
+            >
+              <XButton
+                label="Cancel"
+                @click="buttonClickedCount++"
+              />
+              <XButton
+                label="Confirm"
+                @click="buttonClickedCount++"
+              />
             </XButtonGroup>
           </div>
           <div class="zoo-row q-mt-sm">
-            <XButtonGroup vertical size="sm">
-              <XButton icon="expand_less" @click="buttonClickedCount++" />
-              <XButton icon="expand_more" @click="buttonClickedCount++" />
+            <XButtonGroup
+              vertical
+              size="sm"
+            >
+              <XButton
+                icon="expand_less"
+                @click="buttonClickedCount++"
+              />
+              <XButton
+                icon="expand_more"
+                @click="buttonClickedCount++"
+              />
             </XButtonGroup>
           </div>
         </div>
@@ -167,25 +242,43 @@ const demoTabJustify = ref('tab-a');
           <div class="zoo-label">Boolean Inputs (Inside XWell)</div>
           <XWell>
             <div class="zoo-row gap-lg">
-              <XCheckbox v-model="checkboxValue" label="XCheckbox (v-model)" />
-              <XCheckbox :model-value="true" disable label="Disabled Checked" />
+              <XCheckbox
+                v-model="checkboxValue"
+                label="XCheckbox (v-model)"
+              />
+              <XCheckbox
+                :model-value="true"
+                disable
+                label="Disabled Checked"
+              />
             </div>
             <div class="zoo-row gap-lg q-mt-md">
-              <XSwitch v-model="switchValue" label="XSwitch (v-model)" />
-              <XSwitch :model-value="true" disable label="Disabled Checked" />
+              <XSwitch
+                v-model="switchValue"
+                label="XSwitch (v-model)"
+              />
+              <XSwitch
+                :model-value="true"
+                disable
+                label="Disabled Checked"
+              />
             </div>
           </XWell>
         </div>
 
         <div class="zoo-section">
           <div class="zoo-label">Sliders & Ranges</div>
-          
+
           <div class="slider-field">
             <div class="slider-field__header">
               <span>XSlider</span>
               <span class="sdmx-text-mono font-bold">{{ sliderValue }}</span>
             </div>
-            <XSlider v-model="sliderValue" :min="0" :max="100" />
+            <XSlider
+              v-model="sliderValue"
+              :min="0"
+              :max="100"
+            />
           </div>
 
           <div class="slider-field q-mt-md">
@@ -193,7 +286,12 @@ const demoTabJustify = ref('tab-a');
               <span>XRange</span>
               <span class="sdmx-text-mono font-bold">{{ rangeValue.min }} - {{ rangeValue.max }}</span>
             </div>
-            <XRange v-model="rangeValue" :min="0" :max="100" :step="5" />
+            <XRange
+              v-model="rangeValue"
+              :min="0"
+              :max="100"
+              :step="5"
+            />
           </div>
 
           <div class="slider-field q-mt-md">
@@ -202,29 +300,61 @@ const demoTabJustify = ref('tab-a');
               <span class="sdmx-text-mono font-bold">{{ stepperValue }}</span>
             </div>
             <div class="zoo-row">
-              <XStepper v-model="stepperValue" :min="0" :max="10" />
-              <XStepper v-model="stepperValue" :min="0" :max="10" dense />
-              <XStepper v-model="stepperValue" :min="0" :max="10" disable />
+              <XStepper
+                v-model="stepperValue"
+                :min="0"
+                :max="10"
+              />
+              <XStepper
+                v-model="stepperValue"
+                :min="0"
+                :max="10"
+                dense
+              />
+              <XStepper
+                v-model="stepperValue"
+                :min="0"
+                :max="10"
+                disable
+              />
             </div>
           </div>
         </div>
 
         <div class="zoo-section">
           <div class="zoo-label">Vertical Sliders & Ranges</div>
-          <div class="zoo-row q-mt-sm justify-around" style="height: 160px; align-items: stretch; flex-wrap: nowrap;">
+          <div
+            class="zoo-row q-mt-sm justify-around"
+            style="height: 160px; align-items: stretch; flex-wrap: nowrap;"
+          >
             <div class="text-center flex flex-col items-center justify-between">
               <span class="sdmx-text-caption font-bold q-mb-xs">{{ sliderValue }}</span>
-              <XSlider v-model="sliderValue" vertical :min="0" :max="100" />
+              <XSlider
+                v-model="sliderValue"
+                vertical
+                :min="0"
+                :max="100"
+              />
               <span class="sdmx-text-caption text-grey-6 q-mt-xs">Slider</span>
             </div>
             <div class="text-center flex flex-col items-center justify-between">
               <span class="sdmx-text-caption font-bold q-mb-xs">{{ rangeValue.min }}-{{ rangeValue.max }}</span>
-              <XRange v-model="rangeValue" vertical :min="0" :max="100" :step="5" />
+              <XRange
+                v-model="rangeValue"
+                vertical
+                :min="0"
+                :max="100"
+                :step="5"
+              />
               <span class="sdmx-text-caption text-grey-6 q-mt-xs">Range</span>
             </div>
             <div class="text-center flex flex-col items-center justify-between">
               <span class="sdmx-text-caption font-bold q-mb-xs">Dis.</span>
-              <XSlider :model-value="75" vertical disable />
+              <XSlider
+                :model-value="75"
+                vertical
+                disable
+              />
               <span class="sdmx-text-caption text-grey-6 q-mt-xs">Disabled</span>
             </div>
           </div>
@@ -235,22 +365,37 @@ const demoTabJustify = ref('tab-a');
       <XCard title="Selectors & Dropdowns">
         <div class="zoo-section">
           <div class="zoo-label">XSelect (Dropdown Selector)</div>
-          <XSelect v-model="selectedValue" :options="selectOptions" />
+          <XSelect
+            v-model="selectedValue"
+            :options="selectOptions"
+          />
           <div class="zoo-row q-mt-sm">
             <div class="zoo-text-info">
-              Selected value: <strong class="sdmx-text-mono">{{ typeof selectedValue === 'object' ? JSON.stringify(selectedValue) : selectedValue }}</strong>
+              Selected value: <strong class="sdmx-text-mono">{{ typeof selectedValue === 'object' ?
+                JSON.stringify(selectedValue) : selectedValue }}</strong>
             </div>
           </div>
         </div>
 
         <div class="zoo-section">
           <div class="zoo-label">XInput (Text Field)</div>
-          <XInput v-model="textValue" placeholder="Type something..." clearable />
+          <XInput
+            v-model="textValue"
+            placeholder="Type something..."
+            clearable
+          />
           <div class="zoo-row q-mt-sm">
-            <XInput v-model="denseTextValue" placeholder="Dense text field" dense />
+            <XInput
+              v-model="denseTextValue"
+              placeholder="Dense text field"
+              dense
+            />
           </div>
           <div class="zoo-row q-mt-sm">
-            <XInput model-value="Disabled text input" disable />
+            <XInput
+              model-value="Disabled text input"
+              disable
+            />
           </div>
           <div class="zoo-row q-mt-sm">
             <div class="zoo-text-info">
@@ -261,8 +406,15 @@ const demoTabJustify = ref('tab-a');
 
         <div class="zoo-section">
           <div class="zoo-label">XDropdown (Arbitrary Menu Slot)</div>
-          <XDropdown label="Actions Menu" color="default" outline>
-            <XListView :bordered="false" dense>
+          <XDropdown
+            label="Actions Menu"
+            color="default"
+            outline
+          >
+            <XListView
+              :bordered="false"
+              dense
+            >
               <XListItem @click="buttonClickedCount++">
                 <template #prepend><q-icon name="add" /></template>
                 Add Component
@@ -281,12 +433,18 @@ const demoTabJustify = ref('tab-a');
       </XCard>
 
       <!-- Column 4: Lists & Collapse Accordions -->
-      <XCard title="Lists & Accordions" class="zoo-card--full-width">
+      <XCard
+        title="Lists & Accordions"
+        class="zoo-card--full-width"
+      >
         <div class="zoo-flex-row">
           <!-- Lists Showcase -->
           <div class="zoo-flex-col">
             <div class="zoo-label">XListView (Zebra & Interactive)</div>
-            <XListView zebra class="custom-list-view">
+            <XListView
+              zebra
+              class="custom-list-view"
+            >
               <XListItem
                 v-for="item in listItems"
                 :key="item.id"
@@ -299,8 +457,14 @@ const demoTabJustify = ref('tab-a');
                 </template>
                 {{ item.label }}
                 <template #append>
-                  <span v-if="selectedListItem === item.id" class="badge">Active</span>
-                  <span v-else class="badge badge--ghost">Tag</span>
+                  <span
+                    v-if="selectedListItem === item.id"
+                    class="badge"
+                  >Active</span>
+                  <span
+                    v-else
+                    class="badge badge--ghost"
+                  >Tag</span>
                 </template>
               </XListItem>
             </XListView>
@@ -310,10 +474,17 @@ const demoTabJustify = ref('tab-a');
           <div class="zoo-flex-col">
             <div class="zoo-label">XCollapseItem (Disclosure Panel)</div>
             <XListView class="accordion-list">
-              <XCollapseItem v-model="collapseOpen1" label="Sound Preferences" icon="volume_up">
+              <XCollapseItem
+                v-model="collapseOpen1"
+                label="Sound Preferences"
+                icon="volume_up"
+              >
                 <div class="accordion-content">
                   <div class="zoo-row gap-lg">
-                    <XSwitch :model-value="true" label="Mute Sound Effects" />
+                    <XSwitch
+                      :model-value="true"
+                      label="Mute Sound Effects"
+                    />
                     <XSlider :model-value="65" />
                   </div>
                   <p class="q-mt-sm sdmx-text-caption">
@@ -322,11 +493,21 @@ const demoTabJustify = ref('tab-a');
                 </div>
               </XCollapseItem>
 
-              <XCollapseItem v-model="collapseOpen2" label="Display & Brightness Settings" icon="brightness_6">
+              <XCollapseItem
+                v-model="collapseOpen2"
+                label="Display & Brightness Settings"
+                icon="brightness_6"
+              >
                 <div class="accordion-content">
                   <div class="zoo-row gap-lg">
-                    <XCheckbox :model-value="false" label="Auto Adjust Brightness" />
-                    <XCheckbox :model-value="true" label="High Dynamic Display" />
+                    <XCheckbox
+                      :model-value="false"
+                      label="Auto Adjust Brightness"
+                    />
+                    <XCheckbox
+                      :model-value="true"
+                      label="High Dynamic Display"
+                    />
                   </div>
                   <p class="q-mt-sm sdmx-text-caption">
                     Adapt display colors and illumination levels dynamically to ambient light conditions.
@@ -334,7 +515,11 @@ const demoTabJustify = ref('tab-a');
                 </div>
               </XCollapseItem>
 
-              <XCollapseItem label="Network Diagnostics (Disabled)" icon="wifi_off" disable>
+              <XCollapseItem
+                label="Network Diagnostics (Disabled)"
+                icon="wifi_off"
+                disable
+              >
                 <div class="accordion-content">
                   This is disabled.
                 </div>
@@ -345,35 +530,78 @@ const demoTabJustify = ref('tab-a');
       </XCard>
 
       <!-- Column 5: Tabs Showcase -->
-      <XCard title="Tabs (<XTabs> & <XTab>)" class="zoo-card--full-width">
+      <XCard
+        title="Tabs (<XTabs> & <XTab>)"
+        class="zoo-card--full-width"
+      >
         <div class="zoo-flex-row">
-          
+
           <!-- Column 5a: Standard and Alignments -->
           <div class="zoo-flex-col">
             <div class="zoo-label">Standard & Alignments</div>
             <XWell class="q-pa-md">
               <div class="q-mb-md">
                 <span class="zoo-text-info font-bold">Align Left (Default):</span>
-                <XTabs v-model="demoTab1" class="q-mt-xs">
-                  <XTab name="fixtures" icon="hub" label="Fixtures" />
-                  <XTab name="pixel-maps" icon="grid_on" label="Pixel Maps" />
-                  <XTab name="disabled" icon="lock" label="Disabled" disable />
+                <XTabs
+                  v-model="demoTab1"
+                  class="q-mt-xs"
+                >
+                  <XTab
+                    name="fixtures"
+                    icon="hub"
+                    label="Fixtures"
+                  />
+                  <XTab
+                    name="pixel-maps"
+                    icon="grid_on"
+                    label="Pixel Maps"
+                  />
+                  <XTab
+                    name="disabled"
+                    icon="lock"
+                    label="Disabled"
+                    disable
+                  />
                 </XTabs>
               </div>
 
               <div class="q-mb-md">
                 <span class="zoo-text-info font-bold">Align Center:</span>
-                <XTabs v-model="demoTab1" align="center" class="q-mt-xs">
-                  <XTab name="fixtures" icon="hub" label="Fixtures" />
-                  <XTab name="pixel-maps" icon="grid_on" label="Pixel Maps" />
+                <XTabs
+                  v-model="demoTab1"
+                  align="center"
+                  class="q-mt-xs"
+                >
+                  <XTab
+                    name="fixtures"
+                    icon="hub"
+                    label="Fixtures"
+                  />
+                  <XTab
+                    name="pixel-maps"
+                    icon="grid_on"
+                    label="Pixel Maps"
+                  />
                 </XTabs>
               </div>
 
               <div>
                 <span class="zoo-text-info font-bold">Align Right:</span>
-                <XTabs v-model="demoTab1" align="right" class="q-mt-xs">
-                  <XTab name="fixtures" icon="hub" label="Fixtures" />
-                  <XTab name="pixel-maps" icon="grid_on" label="Pixel Maps" />
+                <XTabs
+                  v-model="demoTab1"
+                  align="right"
+                  class="q-mt-xs"
+                >
+                  <XTab
+                    name="fixtures"
+                    icon="hub"
+                    label="Fixtures"
+                  />
+                  <XTab
+                    name="pixel-maps"
+                    icon="grid_on"
+                    label="Pixel Maps"
+                  />
                 </XTabs>
               </div>
             </XWell>
@@ -389,19 +617,45 @@ const demoTabJustify = ref('tab-a');
             <XWell class="q-pa-md">
               <div class="q-mb-md">
                 <span class="zoo-text-info font-bold">Dense Layout:</span>
-                <XTabs v-model="demoTabDense" dense class="q-mt-xs">
-                  <XTab name="active-tab" label="Overview" />
-                  <XTab name="settings-tab" label="Settings" />
-                  <XTab name="logs-tab" label="Logs" />
+                <XTabs
+                  v-model="demoTabDense"
+                  dense
+                  class="q-mt-xs"
+                >
+                  <XTab
+                    name="active-tab"
+                    label="Overview"
+                  />
+                  <XTab
+                    name="settings-tab"
+                    label="Settings"
+                  />
+                  <XTab
+                    name="logs-tab"
+                    label="Logs"
+                  />
                 </XTabs>
               </div>
 
               <div class="q-mb-md">
                 <span class="zoo-text-info font-bold">Justified Layout (Auto-expanding):</span>
-                <XTabs v-model="demoTabJustify" align="justify" class="q-mt-xs">
-                  <XTab name="tab-a" icon="home" />
-                  <XTab name="tab-b" icon="star" />
-                  <XTab name="tab-c" icon="settings" />
+                <XTabs
+                  v-model="demoTabJustify"
+                  align="justify"
+                  class="q-mt-xs"
+                >
+                  <XTab
+                    name="tab-a"
+                    icon="home"
+                  />
+                  <XTab
+                    name="tab-b"
+                    icon="star"
+                  />
+                  <XTab
+                    name="tab-c"
+                    icon="settings"
+                  />
                 </XTabs>
               </div>
             </XWell>
@@ -409,10 +663,12 @@ const demoTabJustify = ref('tab-a');
             <!-- Working conditional Tab Panels -->
             <div class="zoo-text-info q-mt-md">
               <div v-if="demoTabDense === 'active-tab'">
-                👉 <strong>Overview Panel Content</strong>: SoftDMX integrates custom high-performance WebAssembly with reactive controls.
+                👉 <strong>Overview Panel Content</strong>: SoftDMX integrates custom high-performance WebAssembly with
+                reactive controls.
               </div>
               <div v-else-if="demoTabDense === 'settings-tab'">
-                👉 <strong>Settings Panel Content</strong>: Adjust performance, sampling rates, and hardware refresh timers.
+                👉 <strong>Settings Panel Content</strong>: Adjust performance, sampling rates, and hardware refresh
+                timers.
               </div>
               <div v-else-if="demoTabDense === 'logs-tab'">
                 👉 <strong>Logs Panel Content</strong>: All systems nominal. No warnings or errors reported.
@@ -438,7 +694,6 @@ const demoTabJustify = ref('tab-a');
   box-sizing: border-box;
   overflow-y: auto;
   height: 100%;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background-color: var(--sdmx-color-bg-page);
   color: #1d1d1f;
 }

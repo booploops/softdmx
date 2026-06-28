@@ -99,7 +99,6 @@ function handleClick(event: MouseEvent) {
   align-items: center;
   justify-content: center;
   position: relative;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   font-weight: 400;
   border-radius: 5px;
   cursor: default;
@@ -113,11 +112,11 @@ function handleClick(event: MouseEvent) {
   --border-color: rgba(0, 0, 0, 0.15);
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
   --active-shadow: none;
-  
+
   --default-bg: #ffffff;
   --default-border: rgba(0, 0, 0, 0.15);
   --default-text: #1d1d1f;
-  
+
   --primary-bg: #007aff;
   --primary-border: #007aff;
   --primary-text: #ffffff;
@@ -202,17 +201,29 @@ function handleClick(event: MouseEvent) {
     background: transparent !important;
     border-color: transparent !important;
     box-shadow: none !important;
-    
+
     &.x-btn--default {
       color: var(--default-text);
-      &:hover:not(.x-btn--disabled) { background: rgba(0, 0, 0, 0.05) !important; }
-      &:active:not(.x-btn--disabled) { background: rgba(0, 0, 0, 0.1) !important; }
+
+      &:hover:not(.x-btn--disabled) {
+        background: rgba(0, 0, 0, 0.05) !important;
+      }
+
+      &:active:not(.x-btn--disabled) {
+        background: rgba(0, 0, 0, 0.1) !important;
+      }
     }
 
     &.x-btn--primary {
       color: #007aff;
-      &:hover:not(.x-btn--disabled) { background: rgba(0, 122, 255, 0.08) !important; }
-      &:active:not(.x-btn--disabled) { background: rgba(0, 122, 255, 0.15) !important; }
+
+      &:hover:not(.x-btn--disabled) {
+        background: rgba(0, 122, 255, 0.08) !important;
+      }
+
+      &:active:not(.x-btn--disabled) {
+        background: rgba(0, 122, 255, 0.15) !important;
+      }
     }
   }
 
@@ -220,23 +231,26 @@ function handleClick(event: MouseEvent) {
   &--outline {
     background: transparent !important;
     box-shadow: none !important;
-    
+
     &.x-btn--default {
       border-color: var(--default-border);
       color: var(--default-text);
     }
+
     &.x-btn--primary {
       border-color: var(--primary-border);
       color: #007aff;
     }
+
     &.x-btn--danger {
       border-color: var(--danger-border);
       color: #ff453a;
     }
-    
+
     &:hover:not(.x-btn--disabled) {
       background: rgba(0, 0, 0, 0.03) !important;
     }
+
     &:active:not(.x-btn--disabled) {
       background: rgba(0, 0, 0, 0.08) !important;
     }
@@ -298,14 +312,14 @@ function handleClick(event: MouseEvent) {
     --border-color: rgba(255, 255, 255, 0.15) !important;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
     --active-shadow: none !important;
-    
+
     --default-bg: rgba(255, 255, 255, 0.1) !important;
     --default-border: rgba(255, 255, 255, 0.15) !important;
     --default-text: #f5f5f7 !important;
 
     --primary-bg: #0a84ff !important;
     --primary-border: #0a84ff !important;
-    
+
     --danger-bg: #ff453a !important;
     --danger-border: #ff453a !important;
 
@@ -313,6 +327,7 @@ function handleClick(event: MouseEvent) {
       &:hover:not(.x-btn--disabled) {
         background: rgba(255, 255, 255, 0.15) !important;
       }
+
       &:active:not(.x-btn--disabled) {
         background: rgba(255, 255, 255, 0.25) !important;
         border-color: rgba(255, 255, 255, 0.25) !important;
@@ -323,6 +338,7 @@ function handleClick(event: MouseEvent) {
       &:hover:not(.x-btn--disabled) {
         background: #0076eb !important;
       }
+
       &:active:not(.x-btn--disabled) {
         background: #0068d6 !important;
       }
@@ -332,6 +348,7 @@ function handleClick(event: MouseEvent) {
       &:hover:not(.x-btn--disabled) {
         background: #e03b30 !important;
       }
+
       &:active:not(.x-btn--disabled) {
         background: #c92d22 !important;
       }
@@ -340,13 +357,26 @@ function handleClick(event: MouseEvent) {
     &.x-btn--flat {
       &.x-btn--default {
         color: #f5f5f7 !important;
-        &:hover:not(.x-btn--disabled) { background: rgba(255, 255, 255, 0.08) !important; }
-        &:active:not(.x-btn--disabled) { background: rgba(255, 255, 255, 0.15) !important; }
+
+        &:hover:not(.x-btn--disabled) {
+          background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        &:active:not(.x-btn--disabled) {
+          background: rgba(255, 255, 255, 0.15) !important;
+        }
       }
+
       &.x-btn--primary {
         color: #0a84ff !important;
-        &:hover:not(.x-btn--disabled) { background: rgba(10, 132, 255, 0.08) !important; }
-        &:active:not(.x-btn--disabled) { background: rgba(10, 132, 255, 0.15) !important; }
+
+        &:hover:not(.x-btn--disabled) {
+          background: rgba(10, 132, 255, 0.08) !important;
+        }
+
+        &:active:not(.x-btn--disabled) {
+          background: rgba(10, 132, 255, 0.15) !important;
+        }
       }
     }
 
@@ -355,13 +385,16 @@ function handleClick(event: MouseEvent) {
         border-color: rgba(255, 255, 255, 0.15) !important;
         color: #f5f5f7 !important;
       }
+
       &.x-btn--primary {
         border-color: #0a84ff !important;
         color: #0a84ff !important;
       }
+
       &:hover:not(.x-btn--disabled) {
         background: rgba(255, 255, 255, 0.04) !important;
       }
+
       &:active:not(.x-btn--disabled) {
         background: rgba(255, 255, 255, 0.08) !important;
       }

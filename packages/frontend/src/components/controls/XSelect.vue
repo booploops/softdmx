@@ -71,7 +71,10 @@ function handleChange(event: Event) {
 </script>
 
 <template>
-  <div class="x-select" :class="{ 'x-select--disabled': disable }">
+  <div
+    class="x-select"
+    :class="{ 'x-select--disabled': disable }"
+  >
     <!-- Native select covering the button overlay -->
     <select
       :value="modelValue"
@@ -94,9 +97,18 @@ function handleChange(event: Event) {
       <span class="x-select__text">{{ displayLabel }}</span>
       <span class="x-select__arrows">
         <!-- Up and Down Caret macOS style double arrows -->
-        <svg viewBox="0 0 10 16" class="x-select__arrows-svg">
-          <path d="M5 2L1 6H9L5 2Z" fill="currentColor" />
-          <path d="M5 14L1 10H9L5 14Z" fill="currentColor" />
+        <svg
+          viewBox="0 0 10 16"
+          class="x-select__arrows-svg"
+        >
+          <path
+            d="M5 2L1 6H9L5 2Z"
+            fill="currentColor"
+          />
+          <path
+            d="M5 14L1 10H9L5 14Z"
+            fill="currentColor"
+          />
         </svg>
       </span>
     </div>
@@ -109,7 +121,6 @@ function handleChange(event: Event) {
   width: 100%;
   min-width: 120px;
   position: relative;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   box-sizing: border-box;
 
@@ -142,7 +153,7 @@ function handleChange(event: Event) {
     border-radius: 5px;
     box-sizing: border-box;
     pointer-events: none; // let clicks pass through to native select
-    
+
     // Light Mode Button Look (Flat Big Sur style)
     background: #ffffff;
     border: 1px solid rgba(0, 0, 0, 0.2);
@@ -151,12 +162,12 @@ function handleChange(event: Event) {
   }
 
   // Focus visible ring
-  &__native:focus-visible + &__button {
+  &__native:focus-visible+&__button {
     box-shadow: 0 0 0 2.5px rgba(0, 122, 255, 0.5);
   }
 
   // Active state style matching
-  &__native:active:not(:disabled) + &__button {
+  &__native:active:not(:disabled)+&__button {
     background: #e5e5ea;
   }
 
@@ -198,7 +209,7 @@ function handleChange(event: Event) {
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
   }
 
-  .x-select__native:active:not(:disabled) + .x-select__button {
+  .x-select__native:active:not(:disabled)+.x-select__button {
     background: rgba(255, 255, 255, 0.2) !important;
   }
 

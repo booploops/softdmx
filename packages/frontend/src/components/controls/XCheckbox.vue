@@ -37,7 +37,10 @@ const classes = computed(() => [
 </script>
 
 <template>
-  <label :class="classes" @click.prevent="toggle">
+  <label
+    :class="classes"
+    @click.prevent="toggle"
+  >
     <span
       class="x-checkbox__box"
       :tabindex="disable ? -1 : 0"
@@ -60,7 +63,10 @@ const classes = computed(() => [
         />
       </svg>
     </span>
-    <span v-if="label" class="x-checkbox__label">{{ label }}</span>
+    <span
+      v-if="label"
+      class="x-checkbox__label"
+    >{{ label }}</span>
   </label>
 </template>
 
@@ -69,7 +75,6 @@ const classes = computed(() => [
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   color: #1d1d1f;
   cursor: default;
@@ -85,7 +90,7 @@ const classes = computed(() => [
     border-radius: 3px;
     box-sizing: border-box;
     outline: none;
-    
+
     // Light Mode Unchecked (Flat Big Sur style)
     background: #ffffff;
     border: 1px solid rgba(0, 0, 0, 0.25);

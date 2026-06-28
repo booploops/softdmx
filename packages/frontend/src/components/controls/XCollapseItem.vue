@@ -64,16 +64,29 @@ function toggle() {
     >
       <span class="x-collapse-item__disclosure">
         <!-- macOS Catalina style disclosure triangle -->
-        <svg viewBox="0 0 10 10" class="x-collapse-item__triangle">
-          <path d="M2.5 1.5L7.5 5L2.5 8.5V1.5Z" fill="currentColor" />
+        <svg
+          viewBox="0 0 10 10"
+          class="x-collapse-item__triangle"
+        >
+          <path
+            d="M2.5 1.5L7.5 5L2.5 8.5V1.5Z"
+            fill="currentColor"
+          />
         </svg>
       </span>
-      <q-icon v-if="icon" :name="icon" class="x-collapse-item__icon" />
+      <q-icon
+        v-if="icon"
+        :name="icon"
+        class="x-collapse-item__icon"
+      />
       <span class="x-collapse-item__label">{{ label }}</span>
     </div>
 
     <!-- Content container — using v-show to instantly show/hide without animations -->
-    <div v-show="isOpen" class="x-collapse-item__content">
+    <div
+      v-show="isOpen"
+      class="x-collapse-item__content"
+    >
       <slot></slot>
     </div>
   </div>
@@ -83,7 +96,6 @@ function toggle() {
 .x-collapse-item {
   width: 100%;
   box-sizing: border-box;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   color: #1d1d1f;
   border-bottom: 1px solid rgba(0, 0, 0, 0.08);

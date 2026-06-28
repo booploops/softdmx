@@ -34,7 +34,6 @@ const props = withDefaults(
   padding: 12px;
   box-sizing: border-box;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.03);
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 13px;
   color: #1d1d1f;
 

@@ -6,7 +6,6 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import "@fontsource-variable/roboto-flex";
 import { useIOClient } from 'src/lib/io-client';
 
 useIOClient();
