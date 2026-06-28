@@ -8,5 +8,6 @@ export function showSettingsUI() {
     "/settings-audio",
     "/settings-plot",
     "/settings-theme",
+    "/settings-sidebar",
   ]);
 }

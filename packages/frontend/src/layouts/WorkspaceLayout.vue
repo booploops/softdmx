@@ -11,7 +11,7 @@ import XSidebarButton from 'src/components/controls/XSidebarButton.vue';
 import WSWorkspaceInstance from 'src/components/workspace/WSWorkspaceInstance.vue';
 import { getPanelsMenu, type PanelMenuItem } from 'src/lib/workspace/panels';
 import { getMainMenu, type MainMenuItem } from 'src/lib/main-menu';
-import { WorkspaceLayouts } from 'src/lib/workspace';
+import { WorkspaceLayouts, createWorkspaceWithPanels } from 'src/lib/workspace';
 import type { Route } from '@booploops/pod-router';
 import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type GetTabContextMenuItemsParams, type ContextMenuItem } from 'dockview-vue';
 import { useWorkspaceStore } from 'src/stores/workspace';
@@ -20,12 +20,25 @@ import { trpc } from 'src/lib/trpc';
 import { createMenu } from 'src/lib/menus';
 import 'dockview-core/dist/styles/dockview.css';
 import { showSettingsUI } from 'src/lib/settings-ui';
+import { useUIStore } from 'src/stores/ui';
+import { SIDEBAR_SHORTCUTS } from 'src/lib/sidebar-shortcuts';
 
 const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
+const ui = useUIStore();
 const components: Record<string, Component> = {
     WorkspaceInstance: WSWorkspaceInstance,
 };
+
+const sidebarShortcuts = computed(() => {
+    const enabled = new Set(Array.isArray(ui.sidebarShortcutIds) ? ui.sidebarShortcutIds : []);
+    return SIDEBAR_SHORTCUTS.filter((shortcut) => enabled.has(shortcut.id));
+});
+
+const sidebarShortcutGroupClass = computed(() => ({
+    'workspace-sidebar__shortcuts--dense': sidebarShortcuts.value.length >= 6,
+    'workspace-sidebar__shortcuts--empty': sidebarShortcuts.value.length === 0,
+}));
 
 function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMenuItem[] {
     return [
@@ -165,6 +178,31 @@ function spawnToolInActiveWorkspace(route: { path: string; label: string }) {
     }
 
     workspaceStore.requestSpawnPanel(targetWorkspaceId, panelPath, title);
+}
+
+function openToolInNewWorkspace(route: { path: string; label: string }) {
+    const panelPath = route.path.startsWith('/') ? route.path : `/${route.path}`;
+    const title = route.label || formatPath(route.path);
+
+    if (ui.sidebarShortcutNewWorkspacePolicy === 'reuse-existing' && outerApi) {
+        const existing = outerApi.panels.find((panel) => panel.title === title);
+        if (existing) {
+            existing.api.setActive();
+            workspaceStore.setActiveWorkspace(existing.id);
+            return;
+        }
+    }
+
+    createWorkspaceWithPanels(title, [panelPath]);
+}
+
+function handleSidebarShortcutClick(route: { path: string; label: string }) {
+    if (ui.sidebarShortcutOpenMode === 'current-workspace') {
+        spawnToolInActiveWorkspace(route);
+        return;
+    }
+
+    openToolInNewWorkspace(route);
 }
 
 function mapPanelMenuItem(item: PanelMenuItem): FrontendMenuItem {
@@ -397,22 +435,36 @@ function showNativeSpawnMenu() {
 <template>
     <div class="workspace-shell">
         <div class="workspace-sidebar">
-            <XSidebarButton
-                tooltip="Main Menu"
-                @click="isElectron ? showNativeMainMenu() : undefined"
-            >
-                <i class="codicon codicon-menu" />
-            </XSidebarButton>
-            <XSidebarButton
-                tooltip="Spawn Panel"
-                @click="isElectron ? showNativeSpawnMenu() : undefined"
-            >
-                <i class="codicon codicon-plus"></i>
-            </XSidebarButton>
-            <div class="ws-sidebar-spacing"></div>
-            <XSidebarButton @click="showSettingsUI">
-                <i class="codicon codicon-gear" />
-            </XSidebarButton>
+            <div class="workspace-sidebar__top">
+                <XSidebarButton
+                    tooltip="Main Menu"
+                    @click="isElectron ? showNativeMainMenu() : undefined"
+                >
+                    <i class="codicon codicon-menu" />
+                </XSidebarButton>
+                <XSidebarButton
+                    tooltip="Spawn Panel"
+                    @click="isElectron ? showNativeSpawnMenu() : undefined"
+                >
+                    <i class="codicon codicon-plus"></i>
+                </XSidebarButton>
+                <div class="workspace-sidebar__shortcuts" :class="sidebarShortcutGroupClass">
+                    <XSidebarButton
+                        v-for="shortcut in sidebarShortcuts"
+                        :key="shortcut.id"
+                        :tooltip="shortcut.label"
+                        @click="handleSidebarShortcutClick({ path: shortcut.path, label: shortcut.label })"
+                    >
+                        <i :class="`codicon codicon-${shortcut.icon}`" />
+                    </XSidebarButton>
+                </div>
+            </div>
+
+            <div class="workspace-sidebar__bottom">
+                <XSidebarButton @click="showSettingsUI">
+                    <i class="codicon codicon-gear" />
+                </XSidebarButton>
+            </div>
         </div>
         <div class="workspace-viewport">
             <DockviewVue
@@ -432,16 +484,40 @@ function showNativeSpawnMenu() {
     display: flex;
 }
 
-.ws-sidebar-spacing {
-    flex: 1;
-}
-
 .workspace-sidebar {
     background: var(--sdmx-color-bg-drawer);
     display: flex;
     flex-direction: column;
     align-items: center;
     border-right: 1px solid var(--sdmx-color-border-subtle);
+}
+
+.workspace-sidebar__top {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.workspace-sidebar__shortcuts {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.workspace-sidebar__shortcuts--dense {
+    gap: 0;
+}
+
+.workspace-sidebar__shortcuts--empty {
+    display: none;
+}
+
+.workspace-sidebar__bottom {
+    margin-top: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .workspace-viewport {

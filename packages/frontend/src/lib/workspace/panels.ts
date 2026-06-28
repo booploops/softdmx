@@ -211,6 +211,11 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     path: "settings-theme",
     component: () => import("components/settings/SettingsThemeSection.vue"),
   },
+  {
+    label: "Sidebar",
+    path: "settings-sidebar",
+    component: () => import("components/settings/SettingsSidebarSection.vue"),
+  },
 ];
 
 export type PanelMenuItem = {
