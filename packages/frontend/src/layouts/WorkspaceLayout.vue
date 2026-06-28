@@ -196,7 +196,37 @@ function openToolInNewWorkspace(route: { path: string; label: string }) {
     createWorkspaceWithPanels(title, [panelPath]);
 }
 
-function handleSidebarShortcutClick(route: { path: string; label: string }) {
+function openBindingsInCurrentWorkspace() {
+    spawnToolInActiveWorkspace({ path: '/bindings-midi', label: 'Bindings MIDI' });
+    spawnToolInActiveWorkspace({ path: '/bindings-osc', label: 'Bindings OSC' });
+}
+
+function openBindingsInNewWorkspace() {
+    const title = 'Bindings';
+
+    if (ui.sidebarShortcutNewWorkspacePolicy === 'reuse-existing' && outerApi) {
+        const existing = outerApi.panels.find((panel) => panel.title === title);
+        if (existing) {
+            existing.api.setActive();
+            workspaceStore.setActiveWorkspace(existing.id);
+            return;
+        }
+    }
+
+    createWorkspaceWithPanels(title, ['/bindings-midi', '/bindings-osc']);
+}
+
+function handleSidebarShortcutClick(route: { id: string; path: string; label: string }) {
+    if (route.id === 'bindings') {
+        if (ui.sidebarShortcutOpenMode === 'current-workspace') {
+            openBindingsInCurrentWorkspace();
+            return;
+        }
+
+        openBindingsInNewWorkspace();
+        return;
+    }
+
     if (ui.sidebarShortcutOpenMode === 'current-workspace') {
         spawnToolInActiveWorkspace(route);
         return;
@@ -461,7 +491,7 @@ function showNativeSpawnMenu() {
                         v-for="shortcut in sidebarShortcuts"
                         :key="shortcut.id"
                         :tooltip="shortcut.label"
-                        @click="handleSidebarShortcutClick({ path: shortcut.path, label: shortcut.label })"
+                        @click="handleSidebarShortcutClick({ id: shortcut.id, path: shortcut.path, label: shortcut.label })"
                     >
                         <i :class="`codicon codicon-${shortcut.icon}`" />
                     </XSidebarButton>

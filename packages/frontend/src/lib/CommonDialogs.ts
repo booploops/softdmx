@@ -11,7 +11,7 @@ import SettingsDialog from 'src/components/SettingsDialog.vue';
 import InterfaceSettingsDialog from 'src/components/InterfaceSettingsDialog.vue';
 import ThemeSettingsDialog from 'src/components/ThemeSettingsDialog.vue';
 import AudioSettingsDialog from 'src/components/AudioSettingsDialog.vue';
-import BindingsPanel from 'src/components/BindingsPanel.vue';
+import { createWorkspaceWithPanels } from './workspace';
 
 export function showSettingsDialog() {
   return createDialog({ component: SettingsDialog });
@@ -30,5 +30,5 @@ export function showAudioSettingsDialog() {
 }
 
 export function showBindingsDialog() {
-  return createDialog({ component: BindingsPanel });
+  return createWorkspaceWithPanels('Bindings', ['/bindings-midi', '/bindings-osc']);
 }

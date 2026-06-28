@@ -60,7 +60,19 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     label: "Bindings",
     path: "bindings",
     component: () => import("components/BindingsPanel.vue"),
-    showInSpawnMenu: true,
+    showInSpawnMenu: false,
+  },
+  {
+    label: "Bindings MIDI",
+    path: "bindings-midi",
+    component: () => import("components/BindingsMidiPanel.vue"),
+    showInSpawnMenu: false,
+  },
+  {
+    label: "Bindings OSC",
+    path: "bindings-osc",
+    component: () => import("components/BindingsOscPanel.vue"),
+    showInSpawnMenu: false,
   },
   {
     label: "Effects",

@@ -7,7 +7,6 @@
 -->
 <script setup lang="ts">
 import { computed, ref } from 'vue';
-import { useDialogPluginComponent } from 'quasar';
 import { useShowStore } from 'src/stores/show';
 import { useMidiStore } from 'src/stores/midi';
 import { useOscStore } from 'src/stores/osc';
@@ -15,20 +14,19 @@ import XTabs from 'src/components/controls/XTabs.vue';
 import XTab from 'src/components/controls/XTab.vue';
 import type { BindingTarget, BindingTargetType, MidiMapping, OscMapping } from '@softdmx/engine';
 
-defineEmits([
-  ...useDialogPluginComponent.emits
-]);
-
-const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+const props = withDefaults(defineProps<{ mode?: 'combined' | 'midi' | 'osc' }>(), {
+  mode: 'combined',
+});
 
 const showStore = useShowStore();
 const midiStore = useMidiStore();
 const oscStore = useOscStore();
 
-const tab = ref<'midi' | 'osc'>('midi');
+const tab = ref<'midi' | 'osc'>(props.mode === 'osc' ? 'osc' : 'midi');
+const showTabs = computed(() => props.mode === 'combined');
 
-const midiMappings = ref<MidiMapping[]>(cloneMidi(showStore.document.bindings.midi));
-const oscMappings = ref<OscMapping[]>(cloneOsc(showStore.document.bindings.osc));
+const midiMappings = ref<MidiMapping[]>([]);
+const oscMappings = ref<OscMapping[]>([]);
 
 const targetTypeOptions: { label: string; value: BindingTargetType }[] = [
   { label: 'Fixture Channel', value: 'fixture_channel' },
@@ -126,17 +124,21 @@ function stopLearning() {
   oscStore.stopLearning();
 }
 
+function reloadBindings() {
+  midiMappings.value = cloneMidi(showStore.document.bindings.midi);
+  oscMappings.value = cloneOsc(showStore.document.bindings.osc);
+}
+
 function saveBindings() {
   showStore.updateDocument((doc) => {
     doc.bindings.midi = cloneMidi(midiMappings.value);
     doc.bindings.osc = cloneOsc(oscMappings.value);
   });
-  onDialogOK();
 }
 
-function cancel() {
+function resetBindings() {
+  reloadBindings();
   stopLearning();
-  onDialogCancel();
 }
 
 function targetSummary(target: BindingTarget): string {
@@ -157,26 +159,29 @@ function targetSummary(target: BindingTarget): string {
       return 'Grandmaster';
   }
 }
+
+reloadBindings();
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide">
-    <q-card class="sdmx-dialog-card bindings-card q-dialog-plugin">
+  <div class="bindings-panel q-pa-md">
+    <q-card class="bindings-card">
       <q-card-section class="row items-center q-pb-sm sdmx-border-bottom">
-        <div class="text-h6">MIDI / OSC Bindings</div>
+        <div class="text-h6">
+          {{ props.mode === 'midi' ? 'MIDI Bindings' : props.mode === 'osc' ? 'OSC Bindings' : 'MIDI / OSC Bindings' }}
+        </div>
       <q-space />
       <q-chip v-if="currentLearningLabel" dense color="orange-8" text-color="white">
         {{ currentLearningLabel }}
       </q-chip>
-      <q-btn icon="close" flat round dense @click="cancel" />
     </q-card-section>
 
     <q-card-section class="q-pt-sm">
-      <XTabs v-model="tab" align="left">
+      <XTabs v-if="showTabs" v-model="tab" align="left">
         <XTab name="midi" label="MIDI" />
         <XTab name="osc" label="OSC" />
       </XTabs>
-      <q-separator class="q-mt-sm q-mb-md" dark />
+      <q-separator v-if="showTabs" class="q-mt-sm q-mb-md" dark />
 
       <q-tab-panels v-model="tab" animated dark>
         <q-tab-panel name="midi" class="q-pa-none">
@@ -367,16 +372,20 @@ function targetSummary(target: BindingTarget): string {
       <q-card-actions align="between" class="q-px-md q-pb-md">
         <q-btn flat color="orange-4" label="Stop Learn" @click="stopLearning" />
         <div class="row q-gutter-sm">
-          <q-btn flat color="grey-5" label="Cancel" @click="cancel" />
+          <q-btn flat color="grey-5" label="Reset" @click="resetBindings" />
           <q-btn color="primary" label="Save Bindings" @click="saveBindings" />
         </div>
       </q-card-actions>
     </q-card>
-  </q-dialog>
+  </div>
 </template>
 
 <style scoped>
+.bindings-panel {
+  width: 100%;
+}
+
 .bindings-card {
-  width: min(1000px, 96vw);
+  width: min(1100px, 100%);
 }
 </style>
