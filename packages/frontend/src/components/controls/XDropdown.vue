@@ -1,3 +1,11 @@
+<!--
+  Copyright (C) 2025-Present booploops and contributors
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+-->
+
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue';
 import XButton from './XButton.vue';
@@ -52,7 +60,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="x-dropdown" ref="dropdownRef">
+  <div class="x-dropdown" ref="dropdownRef" @keydown.esc="menuOpen = false">
     <XButton
       :disable="disable"
       :flat="flat"

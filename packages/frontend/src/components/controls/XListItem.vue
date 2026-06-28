@@ -1,3 +1,11 @@
+<!--
+  Copyright (C) 2025-Present booploops and contributors
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+-->
+
 <script setup lang="ts">
 import { inject, computed } from 'vue';
 
@@ -35,14 +43,20 @@ const classes = computed(() => [
   },
 ]);
 
-function onClick(event: MouseEvent) {
+function onClick(event: MouseEvent | KeyboardEvent) {
   if (props.disable || !props.clickable) return;
-  emit('click', event);
+  emit('click', event as MouseEvent);
 }
 </script>
 
 <template>
-  <div :class="classes" @click="onClick">
+  <div
+    :class="classes"
+    :tabindex="clickable && !disable ? 0 : -1"
+    @click="onClick"
+    @keydown.space.prevent="onClick"
+    @keydown.enter.prevent="onClick"
+  >
     <div v-if="$slots.prepend" class="x-list-item__prepend">
       <slot name="prepend"></slot>
     </div>
@@ -69,6 +83,11 @@ function onClick(event: MouseEvent) {
   color: #1d1d1f;
   user-select: none;
   line-height: 1.3;
+  outline: none;
+
+  &:focus-visible {
+    box-shadow: inset 0 0 0 2.5px rgba(0, 122, 255, 0.5) !important;
+  }
 
   &--dense {
     padding: 4px 8px;

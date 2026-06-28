@@ -1,3 +1,11 @@
+<!--
+  Copyright (C) 2025-Present booploops and contributors
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+-->
+
 <script setup lang="ts">
 import { computed } from 'vue';
 
@@ -30,7 +38,12 @@ const classes = computed(() => [
 
 <template>
   <label :class="classes" @click.prevent="toggle">
-    <span class="x-checkbox__box" tabindex="0" @keydown.space.prevent="toggle">
+    <span
+      class="x-checkbox__box"
+      :tabindex="disable ? -1 : 0"
+      @keydown.space.prevent="toggle"
+      @keydown.enter.prevent="toggle"
+    >
       <svg
         v-if="modelValue"
         class="x-checkbox__checkmark"
