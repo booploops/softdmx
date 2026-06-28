@@ -9,6 +9,11 @@
 import { computed, ref, watch } from 'vue';
 import { useShowStore } from 'src/stores/show';
 import type { PixelMapDefinition, PixelMapFixtureChannel } from '@softdmx/engine';
+import XButton from 'src/components/controls/XButton.vue';
+import XInput from 'src/components/controls/XInput.vue';
+import XSelect from 'src/components/controls/XSelect.vue';
+import XListView from 'src/components/controls/XListView.vue';
+import XListItem from 'src/components/controls/XListItem.vue';
 
 const showStore = useShowStore();
 const selectedPixelMapId = ref<string>('');
@@ -140,23 +145,20 @@ function parseWholeNumber(value: string | number | null | undefined, fallback: n
   <div class="pixel-map-panel">
     <div class="row q-col-gutter-sm items-center q-mb-md">
       <div class="col-4">
-        <q-select
+        <XSelect
           v-model="selectedPixelMapId"
           :options="pixelMaps.map((map) => ({ label: map.name, value: map.id }))"
           label="Pixel Map"
           emit-value
           map-options
-          dense
-          dark
-          filled
         />
       </div>
       <div class="col-auto">
-        <q-btn color="primary" icon="add" label="Add Pixel Map" @click="addPixelMap" />
+        <XButton color="primary" icon="add" label="Add Pixel Map" @click="addPixelMap" />
       </div>
       <div class="col-auto">
-        <q-btn
-          color="negative"
+        <XButton
+          color="danger"
           flat
           icon="delete"
           label="Remove"
@@ -169,55 +171,43 @@ function parseWholeNumber(value: string | number | null | undefined, fallback: n
     <template v-if="currentPixelMap">
       <div class="row q-col-gutter-md q-mb-md">
         <div class="col-4">
-          <q-input
+          <XInput
             :model-value="currentPixelMap.name"
             label="Name"
-            dense
-            dark
-            filled
             @update:model-value="
               (val) => updateCurrentMap((map) => ({ ...map, name: String(val ?? '') }))
             "
           />
         </div>
         <div class="col-2">
-          <q-input
+          <XInput
             :model-value="currentPixelMap.width"
             type="number"
             min="1"
             label="Width"
-            dense
-            dark
-            filled
             @update:model-value="
               (val) => updateCurrentMap((map) => ({ ...map, width: parseWholeNumber(val, map.width, 1) }))
             "
           />
         </div>
         <div class="col-2">
-          <q-input
+          <XInput
             :model-value="currentPixelMap.height"
             type="number"
             min="1"
             label="Height"
-            dense
-            dark
-            filled
             @update:model-value="
               (val) => updateCurrentMap((map) => ({ ...map, height: parseWholeNumber(val, map.height, 1) }))
             "
           />
         </div>
         <div class="col-4">
-          <q-select
+          <XSelect
             :model-value="currentPixelMap.channelOrder"
             :options="channelOrderOptions"
             label="Channel Order"
             emit-value
             map-options
-            dense
-            dark
-            filled
             @update:model-value="
               (val) =>
                 updateCurrentMap((map) => ({
@@ -240,82 +230,75 @@ function parseWholeNumber(value: string | number | null | undefined, fallback: n
         Patch fixtures first, then assign map cells to fixture channels.
       </q-banner>
 
-      <q-list bordered separator class="rounded-borders">
-        <q-item class="text-caption text-grey-5">
-          <q-item-section class="col-3">Fixture</q-item-section>
-          <q-item-section class="col-2">X</q-item-section>
-          <q-item-section class="col-2">Y</q-item-section>
-          <q-item-section class="col-3">Start Ch</q-item-section>
-          <q-item-section class="col-2 text-right">Actions</q-item-section>
-        </q-item>
+      <XListView :bordered="true">
+        <XListItem :clickable="false" class="text-caption text-grey-5">
+          <div class="row full-width items-center">
+            <div class="col-3">Fixture</div>
+            <div class="col-2">X</div>
+            <div class="col-2">Y</div>
+            <div class="col-3">Start Ch</div>
+            <div class="col-2 text-right">Actions</div>
+          </div>
+        </XListItem>
 
-        <q-item
+        <XListItem
           v-for="(fixtureChannel, index) in currentPixelMap.fixtureChannels"
           :key="`${fixtureChannel.fixtureName}-${fixtureChannel.x}-${fixtureChannel.y}-${index}`"
+          :clickable="false"
         >
-          <q-item-section class="col-3">
-            <q-select
-              :model-value="fixtureChannel.fixtureName"
-              :options="fixtureOptions"
-              emit-value
-              map-options
-              dense
-              dark
-              filled
-              @update:model-value="
-                (val) => updateFixtureChannel(index, { fixtureName: String(val ?? '') })
-              "
-            />
-          </q-item-section>
-          <q-item-section class="col-2">
-            <q-input
-              :model-value="fixtureChannel.x"
-              type="number"
-              min="0"
-              dense
-              dark
-              filled
-              @update:model-value="
-                (val) => updateFixtureChannel(index, { x: parseWholeNumber(val, fixtureChannel.x, 0) })
-              "
-            />
-          </q-item-section>
-          <q-item-section class="col-2">
-            <q-input
-              :model-value="fixtureChannel.y"
-              type="number"
-              min="0"
-              dense
-              dark
-              filled
-              @update:model-value="
-                (val) => updateFixtureChannel(index, { y: parseWholeNumber(val, fixtureChannel.y, 0) })
-              "
-            />
-          </q-item-section>
-          <q-item-section class="col-3">
-            <q-input
-              :model-value="fixtureChannel.startChannel"
-              type="number"
-              min="1"
-              dense
-              dark
-              filled
-              @update:model-value="
-                (val) =>
-                  updateFixtureChannel(index, { startChannel: parseWholeNumber(val, fixtureChannel.startChannel, 1) })
-              "
-            />
-          </q-item-section>
-          <q-item-section class="col-2 text-right">
-            <q-btn flat round icon="delete" color="negative" @click="removeFixtureChannel(index)" />
-          </q-item-section>
-        </q-item>
-      </q-list>
+          <div class="row full-width items-center q-col-gutter-sm">
+            <div class="col-3">
+              <XSelect
+                :model-value="fixtureChannel.fixtureName"
+                :options="fixtureOptions"
+                emit-value
+                map-options
+                @update:model-value="
+                  (val) => updateFixtureChannel(index, { fixtureName: String(val ?? '') })
+                "
+              />
+            </div>
+            <div class="col-2">
+              <XInput
+                :model-value="fixtureChannel.x"
+                type="number"
+                min="0"
+                @update:model-value="
+                  (val) => updateFixtureChannel(index, { x: parseWholeNumber(val, fixtureChannel.x, 0) })
+                "
+              />
+            </div>
+            <div class="col-2">
+              <XInput
+                :model-value="fixtureChannel.y"
+                type="number"
+                min="0"
+                @update:model-value="
+                  (val) => updateFixtureChannel(index, { y: parseWholeNumber(val, fixtureChannel.y, 0) })
+                "
+              />
+            </div>
+            <div class="col-3">
+              <XInput
+                :model-value="fixtureChannel.startChannel"
+                type="number"
+                min="1"
+                @update:model-value="
+                  (val) =>
+                    updateFixtureChannel(index, { startChannel: parseWholeNumber(val, fixtureChannel.startChannel, 1) })
+                "
+              />
+            </div>
+            <div class="col-2 text-right">
+              <XButton flat icon="delete" color="danger" @click="removeFixtureChannel(index)" />
+            </div>
+          </div>
+        </XListItem>
+      </XListView>
 
       <div class="q-mt-md">
-        <q-btn
-          color="secondary"
+        <XButton
+          color="primary"
           icon="add"
           label="Add Cell Mapping"
           :disable="fixtureOptions.length === 0"

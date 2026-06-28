@@ -6,6 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
+import { computed, ref } from 'vue';
 import { Dialog } from 'quasar';
 import { useShowStore } from 'src/stores/show';
 import { useScratchStore } from 'src/stores/scratch';
@@ -15,6 +16,7 @@ import { simpleWashShow } from 'src/shows/simple-wash';
 import { laserDemoShow } from 'src/shows/laser-demo';
 import { formatLastShowSavedAt, readLastShow } from 'src/utils/last-show';
 import type { ShowDocument } from '@softdmx/engine';
+import XButton from 'src/components/controls/XButton.vue';
 
 const showStore = useShowStore();
 const scratch = useScratchStore();
@@ -124,7 +126,7 @@ function loadDemo(show: ShowDocument) {
         <q-icon name="theater_comedy" size="32px" color="primary" />
       </q-card-section>
 
-      <q-separator />
+      <hr class="sdmx-separator">
 
       <q-card-section v-if="step === 'choose'" class="startup-options">
         <button v-info="'desk.startup.blank'" type="button" class="startup-option" @click="loadBlankShow">
@@ -189,10 +191,10 @@ function loadDemo(show: ShowDocument) {
         </button>
       </q-card-section>
 
-      <q-separator />
+      <hr class="sdmx-separator">
 
       <q-card-actions align="right">
-        <q-btn
+        <XButton
           v-if="step === 'demo'"
           flat
           label="Back"

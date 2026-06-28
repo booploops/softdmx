@@ -7,6 +7,14 @@
 -->
 <script setup lang="ts">
 import { useShowStore } from 'src/stores/show';
+import XButton from 'src/components/controls/XButton.vue';
+import XInput from 'src/components/controls/XInput.vue';
+import XSelect from 'src/components/controls/XSelect.vue';
+import XListView from 'src/components/controls/XListView.vue';
+import XListItem from 'src/components/controls/XListItem.vue';
+import XCard from 'src/components/controls/XCard.vue';
+import XCheckbox from 'src/components/controls/XCheckbox.vue';
+import XDropdown from 'src/components/controls/XDropdown.vue';
 
 const showStore = useShowStore();
 
@@ -150,105 +158,114 @@ function removeTarget(index: number) {
   <div class="preset-editor q-pa-md">
     <div class="row items-center justify-between q-mb-md">
       <div class="text-h6">Preset Editor</div>
-      <q-btn color="primary" icon="add" label="Add Preset" @click="addPreset" />
+      <XButton color="primary" icon="add" label="Add Preset" @click="addPreset" />
     </div>
 
     <div class="row q-col-gutter-md">
       <div class="col-4">
-        <q-list bordered separator class="rounded-borders">
-          <q-item
+        <XListView :bordered="true">
+          <XListItem
             v-for="preset in presets"
             :key="preset.id"
-            clickable
             :active="preset.id === selectedPresetId"
-            active-class="bg-primary text-white"
             @click="selectedPresetId = preset.id"
           >
-            <q-item-section>
-              <q-item-label>{{ preset.name }}</q-item-label>
-              <q-item-label caption>{{ preset.targets.length }} target(s)</q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-btn dense flat round icon="delete" color="negative" @click.stop="deletePreset(preset.id)" />
-            </q-item-section>
-          </q-item>
-          <q-item v-if="presets.length === 0">
-            <q-item-section class="text-grey-5">No presets yet</q-item-section>
-          </q-item>
-        </q-list>
+            <div>
+              <div class="text-weight-bold">{{ preset.name }}</div>
+              <div class="text-caption text-grey-5">{{ preset.targets.length }} target(s)</div>
+            </div>
+            <template #append>
+              <XButton flat icon="delete" color="danger" @click.stop="deletePreset(preset.id)" />
+            </template>
+          </XListItem>
+          <XListItem v-slot v-if="presets.length === 0" :clickable="false">
+            <div class="text-grey-5">No presets yet</div>
+          </XListItem>
+        </XListView>
       </div>
 
       <div class="col-8" v-if="selectedPreset">
-        <q-card flat bordered>
-          <q-card-section class="q-gutter-md">
-            <q-input
+        <XCard>
+          <div class="q-gutter-y-md q-pa-md">
+            <XInput
               :model-value="selectedPreset.name"
               label="Preset Name"
               @update:model-value="(value) => updatePreset(selectedPreset.id, { name: value || 'Preset' })"
             />
-            <q-input
+            <XInput
               :model-value="selectedPreset.color"
               label="Color (hex)"
               @update:model-value="(value) => updatePreset(selectedPreset.id, { color: value || undefined })"
             />
-          </q-card-section>
+          </div>
 
-          <q-separator />
-          <q-card-section>
+          <hr class="sdmx-separator" />
+          <div class="q-pa-md">
             <div class="row items-center justify-between q-mb-sm">
               <div class="text-subtitle1">Targets</div>
               <div class="row q-gutter-xs">
-                <q-btn dense flat icon="person_add" label="Fixture Target" @click="addFixtureTarget" />
-                <q-btn dense flat icon="group_add" label="Group Target" @click="addGroupTarget" />
+                <XButton flat icon="person_add" label="Fixture Target" @click="addFixtureTarget" />
+                <XButton flat icon="group_add" label="Group Target" @click="addGroupTarget" />
               </div>
             </div>
 
-            <q-list bordered separator class="rounded-borders">
-              <q-item v-for="(target, index) in selectedPreset.targets" :key="`${selectedPreset.id}-${index}`">
-                <q-item-section>
-                  <div class="row q-col-gutter-sm">
-                    <div class="col-5">
-                      <q-select
-                        v-if="target.group"
+            <XListView :bordered="true">
+              <XListItem v-for="(target, index) in selectedPreset.targets" :key="`${selectedPreset.id}-${index}`" :clickable="false">
+                <div class="row full-width items-center q-col-gutter-sm">
+                  <div class="col-5">
+                    <div v-if="target.group" class="column">
+                      <div class="q-mb-xs text-caption text-grey-4">Group</div>
+                      <XSelect
                         :model-value="target.group"
                         :options="groupOptions"
-                        emit-value
-                        map-options
-                        label="Group"
                         @update:model-value="(value) => updateTarget(index, 'group', value)"
                       />
-                      <q-select
-                        v-else
-                        :model-value="target.fixtures ?? []"
-                        :options="fixtureOptions"
-                        emit-value
-                        map-options
-                        multiple
-                        use-chips
-                        label="Fixtures"
-                        @update:model-value="(value) => updateTarget(index, 'fixtures', value)"
-                      />
                     </div>
-                    <div class="col-7">
-                      <q-input
+                    <div v-else class="column">
+                      <div class="q-mb-xs text-caption text-grey-4">Fixtures</div>
+                      <XDropdown :label="target.fixtures && target.fixtures.length > 0 ? `${target.fixtures.length} selected` : 'Select fixtures'">
+                        <div class="column q-pa-sm q-gutter-y-xs" style="max-height: 200px; overflow-y: auto; min-width: 160px;" @click.stop>
+                          <XCheckbox
+                            v-for="opt in fixtureOptions"
+                            :key="opt.value"
+                            :label="opt.label"
+                            :model-value="(target.fixtures ?? []).includes(opt.value)"
+                            @update:model-value="(checked) => {
+                              const current = [...(target.fixtures ?? [])];
+                              if (checked) {
+                                if (!current.includes(opt.value)) current.push(opt.value);
+                              } else {
+                                const idx = current.indexOf(opt.value);
+                                if (idx > -1) current.splice(idx, 1);
+                              }
+                              updateTarget(index, 'fixtures', current);
+                            }"
+                          />
+                        </div>
+                      </XDropdown>
+                    </div>
+                  </div>
+                  <div class="col-7">
+                    <div class="column">
+                      <div class="q-mb-xs text-caption text-grey-4">Attributes (name=value)</div>
+                      <XInput
                         :model-value="stringifyAttrs(target.attrs)"
-                        label="Attributes (name=value)"
-                        hint="Example: Dimmer=255, Red=180"
                         @update:model-value="(value) => updateTarget(index, 'attrs', parseAttrs(value || ''))"
                       />
                     </div>
+                    <div class="text-caption text-grey-5 q-mt-xs">Example: Dimmer=255, Red=180</div>
                   </div>
-                </q-item-section>
-                <q-item-section side>
-                  <q-btn dense flat round color="negative" icon="delete" @click="removeTarget(index)" />
-                </q-item-section>
-              </q-item>
-              <q-item v-if="selectedPreset.targets.length === 0">
-                <q-item-section class="text-grey-5">No targets configured</q-item-section>
-              </q-item>
-            </q-list>
-          </q-card-section>
-        </q-card>
+                </div>
+                <template #append>
+                  <XButton flat icon="delete" color="danger" @click="removeTarget(index)" />
+                </template>
+              </XListItem>
+              <XListItem v-if="selectedPreset.targets.length === 0" :clickable="false">
+                <div class="text-grey-5">No targets configured</div>
+              </XListItem>
+            </XListView>
+          </div>
+        </XCard>
       </div>
     </div>
   </div>

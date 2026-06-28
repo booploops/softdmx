@@ -11,6 +11,8 @@ import { useDialogPluginComponent } from 'quasar';
 import { useShowStore } from 'src/stores/show';
 import { useMidiStore } from 'src/stores/midi';
 import { useOscStore } from 'src/stores/osc';
+import XTabs from 'src/components/controls/XTabs.vue';
+import XTab from 'src/components/controls/XTab.vue';
 import type { BindingTarget, BindingTargetType, MidiMapping, OscMapping } from '@softdmx/engine';
 
 defineEmits([
@@ -170,10 +172,10 @@ function targetSummary(target: BindingTarget): string {
     </q-card-section>
 
     <q-card-section class="q-pt-sm">
-      <q-tabs v-model="tab" dense align="left" active-color="primary" indicator-color="primary">
-        <q-tab name="midi" label="MIDI" />
-        <q-tab name="osc" label="OSC" />
-      </q-tabs>
+      <XTabs v-model="tab" align="left">
+        <XTab name="midi" label="MIDI" />
+        <XTab name="osc" label="OSC" />
+      </XTabs>
       <q-separator class="q-mt-sm q-mb-md" dark />
 
       <q-tab-panels v-model="tab" animated dark>

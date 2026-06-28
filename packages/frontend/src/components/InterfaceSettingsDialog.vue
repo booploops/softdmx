@@ -13,6 +13,10 @@ import { useDeskViewStore } from 'src/stores/desk-view';
 const uiStore = useUIStore();
 const deskView = useDeskViewStore();
 
+import XButton from 'src/components/controls/XButton.vue';
+import XSelect from 'src/components/controls/XSelect.vue';
+import XSwitch from 'src/components/controls/XSwitch.vue';
+
 defineEmits([
   ...useDialogPluginComponent.emits
 ]);
@@ -26,47 +30,38 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginC
       <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
         <div class="text-h6 font-weight-bold">Interface</div>
         <q-space />
-        <q-btn icon="close" flat round dense @click="onDialogCancel" />
+        <XButton icon="close" flat size="sm" @click="onDialogCancel" />
       </q-card-section>
 
       <q-card-section class="q-gutter-y-md">
-        <q-toggle
+        <XSwitch
           :model-value="uiStore.operateLocked"
-          color="primary"
-          dark
           label="Operate lock (hide config UI in Live)"
           @update:model-value="uiStore.toggleOperateLock"
         />
 
-        <q-select
-          :model-value="deskView.activeViewId"
-          :options="deskView.views.map((v) => ({ label: v.name, value: v.id }))"
-          emit-value
-          map-options
-          label="Default desk view"
-          dark
-          outlined
-          dense
-          @update:model-value="deskView.setActiveView"
-        />
+        <div>
+          <div class="q-mb-xs text-subtitle2 text-grey-4">Default desk view</div>
+          <XSelect
+            :model-value="deskView.activeViewId"
+            :options="deskView.views.map((v) => ({ label: v.name, value: v.id }))"
+            @update:model-value="deskView.setActiveView"
+          />
+        </div>
 
-        <q-toggle
+        <XSwitch
           v-model="uiStore.programmerCollapsed"
-          color="primary"
-          dark
           label="Collapse programmer panel by default"
         />
 
-        <q-toggle
+        <XSwitch
           v-model="uiStore.cueBarCollapsed"
-          color="primary"
-          dark
           label="Collapse cue bar by default"
         />
       </q-card-section>
 
       <q-card-actions align="right" class="q-pa-md sdmx-border-top">
-        <q-btn label="Close" flat color="grey-5" @click="onDialogOK" />
+        <XButton label="Close" flat color="default" @click="onDialogOK" />
       </q-card-actions>
     </q-card>
   </q-dialog>

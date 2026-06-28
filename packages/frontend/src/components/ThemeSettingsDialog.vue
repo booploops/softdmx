@@ -10,6 +10,9 @@ import { Dialog, useDialogPluginComponent } from 'quasar';
 import { useThemeStore } from 'src/stores/theme';
 import { THEME_CSS_VAR_KEYS } from 'src/themes/css-vars';
 import ThemeGallery from 'src/components/ThemeGallery.vue';
+import XButton from 'src/components/controls/XButton.vue';
+import XSelect from 'src/components/controls/XSelect.vue';
+import XInput from 'src/components/controls/XInput.vue';
 
 const themeStore = useThemeStore();
 
@@ -122,86 +125,90 @@ function resetTheme() {
           <div class="text-caption sdmx-text-muted">Presets, token overrides, and custom CSS</div>
         </div>
         <q-space />
-        <q-btn icon="close" flat round dense @click="onDialogCancel" />
+        <XButton icon="close" flat size="sm" @click="onDialogCancel" />
       </q-card-section>
 
     <q-card-section class="q-gutter-y-md dialog-body">
       <div class="text-subtitle2">Theme gallery</div>
       <ThemeGallery />
 
-      <q-separator dark />
+      <hr class="sdmx-separator">
 
-      <q-select
+      <div class="q-mb-xs text-subtitle2 text-grey-4">Theme preset</div>
+      <XSelect
         :model-value="themeStore.activeThemeId"
         :options="themeOptions"
-        label="Theme preset"
-        dark
-        filled
-        dense
-        emit-value
-        map-options
         @update:model-value="themeStore.setActiveThemeId"
       />
 
       <div class="text-subtitle2">Quick token overrides</div>
       <div class="row q-col-gutter-sm">
         <div class="col-6 col-sm-4">
-          <q-input v-model="tokenDraft.primary" label="Primary" dark filled dense />
+          <div class="q-mb-xs text-caption text-grey-4">Primary</div>
+          <XInput v-model="tokenDraft.primary" />
         </div>
         <div class="col-6 col-sm-4">
-          <q-input v-model="tokenDraft.bgPage" label="Page background" dark filled dense />
+          <div class="q-mb-xs text-caption text-grey-4">Page background</div>
+          <XInput v-model="tokenDraft.bgPage" />
         </div>
         <div class="col-6 col-sm-4">
-          <q-input v-model="tokenDraft.bgSurface" label="Surface background" dark filled dense />
+          <div class="q-mb-xs text-caption text-grey-4">Surface background</div>
+          <XInput v-model="tokenDraft.bgSurface" />
         </div>
         <div class="col-6 col-sm-4">
-          <q-input v-model="tokenDraft.text" label="Text" dark filled dense />
+          <div class="q-mb-xs text-caption text-grey-4">Text</div>
+          <XInput v-model="tokenDraft.text" />
         </div>
         <div class="col-6 col-sm-4">
-          <q-input v-model="tokenDraft.scratch" label="Scratch bar" dark filled dense />
+          <div class="q-mb-xs text-caption text-grey-4">Scratch bar</div>
+          <XInput v-model="tokenDraft.scratch" />
         </div>
         <div class="col-6 col-sm-4">
-          <q-input v-model="tokenDraft.plotBackground" label="Plot background" dark filled dense />
+          <div class="q-mb-xs text-caption text-grey-4">Plot background</div>
+          <XInput v-model="tokenDraft.plotBackground" />
         </div>
         <div class="col-6 col-sm-4">
-          <q-input v-model="tokenDraft.plotFixture" label="Plot fixture" dark filled dense />
+          <div class="q-mb-xs text-caption text-grey-4">Plot fixture</div>
+          <XInput v-model="tokenDraft.plotFixture" />
         </div>
         <div class="col-6 col-sm-4">
-          <q-input v-model="tokenDraft.plotSelected" label="Plot selected" dark filled dense />
+          <div class="q-mb-xs text-caption text-grey-4">Plot selected</div>
+          <XInput v-model="tokenDraft.plotSelected" />
         </div>
         <div class="col-6 col-sm-4">
-          <q-input v-model="tokenDraft.plotGrid" label="Plot grid" dark filled dense />
+          <div class="q-mb-xs text-caption text-grey-4">Plot grid</div>
+          <XInput v-model="tokenDraft.plotGrid" />
         </div>
         <div class="col-6 col-sm-4">
-          <q-input v-model="tokenDraft.plotCenter" label="Plot center marker" dark filled dense />
+          <div class="q-mb-xs text-caption text-grey-4">Plot center marker</div>
+          <XInput v-model="tokenDraft.plotCenter" />
         </div>
         <div class="col-6 col-sm-4">
-          <q-input v-model="tokenDraft.plotLabel" label="Plot labels" dark filled dense />
+          <div class="q-mb-xs text-caption text-grey-4">Plot labels</div>
+          <XInput v-model="tokenDraft.plotLabel" />
         </div>
       </div>
       <div class="row q-gutter-sm">
-        <q-btn color="primary" dense label="Apply token overrides" @click="applyTokenDraft" />
-        <q-btn flat dense label="Reset overrides" @click="resetTheme" />
+        <XButton color="primary" label="Apply token overrides" @click="applyTokenDraft" />
+        <XButton flat label="Reset overrides" @click="resetTheme" />
       </div>
 
-      <q-separator dark />
+      <hr class="sdmx-separator">
 
       <div class="text-subtitle2">Custom CSS</div>
       <div class="text-caption sdmx-text-muted q-mb-sm">
         Injected after theme tokens. Override any token or target app classes directly.
       </div>
-      <q-input
+      <textarea
         v-model="customCss"
-        type="textarea"
-        autogrow
-        dark
-        filled
-        class="custom-css-input"
+        class="sdmx-textarea"
         placeholder=":root { --sdmx-color-primary: #ff00aa; }"
       />
-      <q-btn color="secondary" dense label="Apply custom CSS" @click="applyCustomCss" />
+      <div class="q-mt-sm">
+        <XButton color="primary" label="Apply custom CSS" @click="applyCustomCss" />
+      </div>
 
-      <q-separator dark />
+      <hr class="sdmx-separator">
 
       <div class="text-subtitle2">CSS variables</div>
       <div class="token-reference">
@@ -209,13 +216,13 @@ function resetTheme() {
       </div>
 
       <div class="row q-gutter-sm">
-        <q-btn flat dense icon="download" label="Export theme JSON" @click="exportTheme" />
-        <q-btn flat dense icon="upload" label="Import theme JSON" @click="importTheme" />
+        <XButton flat icon="download" label="Export theme JSON" @click="exportTheme" />
+        <XButton flat icon="upload" label="Import theme JSON" @click="importTheme" />
       </div>
     </q-card-section>
 
       <q-card-actions align="right" class="q-pa-md sdmx-border-top">
-        <q-btn label="Close" flat color="grey-5" @click="onDialogOK" />
+        <XButton label="Close" flat color="default" @click="onDialogOK" />
       </q-card-actions>
     </q-card>
   </q-dialog>
@@ -231,9 +238,23 @@ function resetTheme() {
   overflow-y: auto;
 }
 
-.custom-css-input :deep(textarea) {
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+.sdmx-textarea {
+  width: 100%;
   min-height: 120px;
+  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.2);
+  color: #f5f5f7;
+  padding: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', monospace;
+  font-size: 13px;
+  outline: none;
+  resize: vertical;
+}
+.sdmx-textarea:focus {
+  box-shadow: 0 0 0 2.5px rgba(10, 132, 255, 0.5);
+  border-color: #0a84ff;
 }
 
 .token-reference {

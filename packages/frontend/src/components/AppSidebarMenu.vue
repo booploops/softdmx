@@ -28,6 +28,10 @@ import {
 import { exampleVrClubShow } from 'src/shows/example-vr-club';
 import { simpleWashShow } from 'src/shows/simple-wash';
 import { laserDemoShow } from 'src/shows/laser-demo';
+import XButton from 'src/components/controls/XButton.vue';
+import XListView from 'src/components/controls/XListView.vue';
+import XListItem from 'src/components/controls/XListItem.vue';
+import XSwitch from 'src/components/controls/XSwitch.vue';
 
 const ui = useUIStore();
 const showStore = useShowStore();
@@ -122,187 +126,183 @@ function handleShowBindingsDialog() {
 
 <template>
   <div class="sidebar-menu">
-    <q-list
-      padding
-      dense
-    >
-      <q-btn
+    <XListView :bordered="false">
+      <XButton
         @click="$router.push('/new-workspace')"
         label="Workspace View"
         color="primary"
-        class="full-width"
-      ></q-btn>
-      <q-item-label header>Workspace</q-item-label>
-      <q-item
+        class="full-width q-mb-sm"
+      ></XButton>
+      <div class="sidebar-menu-header">Workspace</div>
+      <XListItem
         v-for="mode in QUICK_ACCESS_WORKSPACE_MODES"
         :key="mode"
         v-info="{ key: 'desk.nav.workspaceMode', vars: { label: WORKSPACE_MODE_META[mode].label } }"
         clickable
+        :active="ui.mode === mode"
         @click="selectMode(mode)"
       >
-        <q-item-section avatar><q-icon :name="WORKSPACE_MODE_META[mode].icon" /></q-item-section>
-        <q-item-section>{{ WORKSPACE_MODE_META[mode].label }}</q-item-section>
-        <q-item-section
+        <template #prepend><q-icon :name="WORKSPACE_MODE_META[mode].icon" /></template>
+        {{ WORKSPACE_MODE_META[mode].label }}
+        <template
+          #append
           v-if="ui.mode === mode"
-          side
-        ><q-icon
+        >
+          <q-icon
             name="check"
             color="primary"
-          /></q-item-section>
-      </q-item>
+          />
+        </template>
+      </XListItem>
 
       <template v-if="ui.isProgram">
-        <q-separator spaced />
-        <q-item-label header>Program sections</q-item-label>
-        <q-item
+        <hr class="sidebar-menu-separator" />
+        <div class="sidebar-menu-header">Program sections</div>
+        <XListItem
           v-for="(meta, section) in PROGRAM_SECTION_META"
           :key="section"
           v-info="{ key: 'desk.nav.programSection', vars: { label: meta.label } }"
           clickable
           :active="ui.programSection === section"
-          active-class="sidebar-active"
           @click="selectProgram(section as ProgramSection)"
         >
-          <q-item-section avatar><q-icon :name="meta.icon" /></q-item-section>
-          <q-item-section>{{ meta.label }}</q-item-section>
-        </q-item>
+          <template #prepend><q-icon :name="meta.icon" /></template>
+          {{ meta.label }}
+        </XListItem>
       </template>
 
       <template v-if="ui.isSetup">
-        <q-separator spaced />
-        <q-item-label header>Setup sections</q-item-label>
-        <q-item
+        <hr class="sidebar-menu-separator" />
+        <div class="sidebar-menu-header">Setup sections</div>
+        <XListItem
           v-for="(meta, section) in SETUP_SECTION_META"
           :key="section"
           v-info="{ key: 'desk.nav.setupSection', vars: { label: meta.label } }"
           clickable
           :active="ui.setupSection === section"
-          active-class="sidebar-active"
           @click="selectSetup(section as SetupSection)"
         >
-          <q-item-section avatar><q-icon :name="meta.icon" /></q-item-section>
-          <q-item-section>{{ meta.label }}</q-item-section>
-        </q-item>
+          <template #prepend><q-icon :name="meta.icon" /></template>
+          {{ meta.label }}
+        </XListItem>
       </template>
 
-      <q-separator spaced />
-      <q-item-label header>Show file</q-item-label>
-      <q-item
+      <hr class="sidebar-menu-separator" />
+      <div class="sidebar-menu-header">Show file</div>
+      <XListItem
         v-info="'desk.nav.reloadExample'"
         clickable
         @click="reloadExampleShow"
       >
-        <q-item-section avatar><q-icon name="refresh" /></q-item-section>
-        <q-item-section>Reload example show</q-item-section>
-      </q-item>
-      <q-item
+        <template #prepend><q-icon name="refresh" /></template>
+        Reload example show
+      </XListItem>
+      <XListItem
         v-info="'desk.nav.loadSimpleWash'"
         clickable
         @click="loadSimpleWash"
       >
-        <q-item-section avatar><q-icon name="light_mode" /></q-item-section>
-        <q-item-section>Load simple wash</q-item-section>
-      </q-item>
-      <q-item
+        <template #prepend><q-icon name="light_mode" /></template>
+        Load simple wash
+      </XListItem>
+      <XListItem
         v-info="'desk.nav.loadLaserDemo'"
         clickable
         @click="loadLaserDemo"
       >
-        <q-item-section avatar><q-icon name="flash_on" /></q-item-section>
-        <q-item-section>Load laser demo</q-item-section>
-      </q-item>
-      <q-item
+        <template #prepend><q-icon name="flash_on" /></template>
+        Load laser demo
+      </XListItem>
+      <XListItem
         v-info="'desk.nav.exportYaml'"
         clickable
         @click="exportShow"
       >
-        <q-item-section avatar><q-icon name="download" /></q-item-section>
-        <q-item-section>Export YAML</q-item-section>
-      </q-item>
-      <q-item
+        <template #prepend><q-icon name="download" /></template>
+        Export YAML
+      </XListItem>
+      <XListItem
         v-info="'desk.nav.importYaml'"
         clickable
         @click="importShow"
       >
-        <q-item-section avatar><q-icon name="upload" /></q-item-section>
-        <q-item-section>Import YAML</q-item-section>
-      </q-item>
+        <template #prepend><q-icon name="upload" /></template>
+        Import YAML
+      </XListItem>
 
-      <q-separator spaced />
-      <q-item-label header>Tools</q-item-label>
-      <q-item
+      <hr class="sidebar-menu-separator" />
+      <div class="sidebar-menu-header">Tools</div>
+      <XListItem
         v-info="'desk.nav.cueEditor'"
         clickable
         @click="openCueEditor"
       >
-        <q-item-section avatar><q-icon name="movie_edit" /></q-item-section>
-        <q-item-section>Cue editor</q-item-section>
-      </q-item>
-      <q-item
+        <template #prepend><q-icon name="movie_edit" /></template>
+        Cue editor
+      </XListItem>
+      <XListItem
         v-info="'desk.nav.bindings'"
         clickable
         @click="handleShowBindingsDialog"
       >
-        <q-item-section avatar><q-icon name="tune" /></q-item-section>
-        <q-item-section>Bindings</q-item-section>
-      </q-item>
-      <q-item
+        <template #prepend><q-icon name="tune" /></template>
+        Bindings
+      </XListItem>
+      <XListItem
         v-info="'desk.nav.audioAnalysis'"
         clickable
         @click="handleShowAudioSettingsDialog"
       >
-        <q-item-section avatar><q-icon name="graphic_eq" /></q-item-section>
-        <q-item-section>Audio analysis</q-item-section>
-      </q-item>
+        <template #prepend><q-icon name="graphic_eq" /></template>
+        Audio analysis
+      </XListItem>
 
-      <q-separator spaced />
-      <q-item-label header>Output</q-item-label>
-      <q-item
+      <hr class="sidebar-menu-separator" />
+      <div class="sidebar-menu-header">Output</div>
+      <XListItem
         v-info="'desk.nav.outputSync'"
         clickable
         @click="handleShowSettingsDialog"
       >
-        <q-item-section avatar><q-icon name="settings_input_component" /></q-item-section>
-        <q-item-section>Output &amp; sync</q-item-section>
-      </q-item>
-      <q-item
+        <template #prepend><q-icon name="settings_input_component" /></template>
+        Output &amp; sync
+      </XListItem>
+      <XListItem
         v-if="gridNodeOverlay.isAvailable"
         v-info="'desk.nav.gridNodeOverlay'"
         clickable
         @click="gridNodeOverlay.toggle()"
       >
-        <q-item-section avatar><q-icon name="grid_view" /></q-item-section>
-        <q-item-section>GridNode overlay</q-item-section>
-        <q-item-section side>
-          <q-toggle
+        <template #prepend><q-icon name="grid_view" /></template>
+        GridNode overlay
+        <template #append>
+          <XSwitch
             :model-value="gridNodeOverlay.overlayVisible"
-            color="primary"
-            dense
             @update:model-value="gridNodeOverlay.setVisible"
             @click.stop
           />
-        </q-item-section>
-      </q-item>
+        </template>
+      </XListItem>
 
-      <q-separator spaced />
-      <q-item-label header>Settings</q-item-label>
-      <q-item
+      <hr class="sidebar-menu-separator" />
+      <div class="sidebar-menu-header">Settings</div>
+      <XListItem
         v-info="'desk.nav.interfaceSettings'"
         clickable
         @click="handleShowInterfaceSettingsDialog"
       >
-        <q-item-section avatar><q-icon name="dashboard_customize" /></q-item-section>
-        <q-item-section>Interface</q-item-section>
-      </q-item>
-      <q-item
+        <template #prepend><q-icon name="dashboard_customize" /></template>
+        Interface
+      </XListItem>
+      <XListItem
         v-info="'desk.nav.themeSettings'"
         clickable
         @click="handleShowThemeSettingsDialog"
       >
-        <q-item-section avatar><q-icon name="palette" /></q-item-section>
-        <q-item-section>Theme</q-item-section>
-      </q-item>
-    </q-list>
+        <template #prepend><q-icon name="palette" /></template>
+        Theme
+      </XListItem>
+    </XListView>
   </div>
 </template>
 
@@ -311,7 +311,26 @@ function handleShowBindingsDialog() {
   min-height: 100%;
 }
 
-.sidebar-active {
-  background: var(--sdmx-color-selected);
+.sidebar-menu-header {
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #8e8e93;
+  letter-spacing: 0.5px;
+}
+
+.body--dark .sidebar-menu-header {
+  color: #a1a1aa;
+}
+
+.sidebar-menu-separator {
+  border: none;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  margin: 8px 0;
+}
+
+.body--dark .sidebar-menu-separator {
+  border-top-color: rgba(255, 255, 255, 0.08);
 }
 </style>

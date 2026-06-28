@@ -11,6 +11,11 @@ import { useQuasar } from 'quasar';
 import { useShowStore } from 'src/stores/show';
 import { useVideoStore } from 'src/stores/video';
 import type { PixelMapDefinition, VideoInputKind, VideoSampleFps, VideoSampleRegion } from '@softdmx/engine';
+import XButton from 'src/components/controls/XButton.vue';
+import XInput from 'src/components/controls/XInput.vue';
+import XSelect from 'src/components/controls/XSelect.vue';
+import XSwitch from 'src/components/controls/XSwitch.vue';
+import XCheckbox from 'src/components/controls/XCheckbox.vue';
 import {
   FULL_VIDEO_SAMPLE_REGION,
   normalizeSampleRegion,
@@ -408,20 +413,16 @@ watch(
         />
       </div>
       <div class="row q-gutter-sm items-center wrap">
-        <q-select
-          v-if="activeVideoMaps.length > 1"
-          dense
-          outlined
-          label="Edit ROI for"
-          :model-value="selectedRoiMapId"
-          :options="roiMapOptions"
-          emit-value
-          map-options
-          style="min-width: 180px"
-          @update:model-value="selectedRoiMapId = String($event ?? '')"
-        />
-        <q-btn dense flat label="Full frame" :disable="!selectedRoiMap" @click="resetRegion" />
-        <q-btn dense flat label="Lock map aspect" :disable="!selectedRoiMap" @click="lockMapAspect" />
+        <div v-if="activeVideoMaps.length > 1" class="column" style="min-width: 180px">
+          <div class="q-mb-xs text-caption text-grey-4">Edit ROI for</div>
+          <XSelect
+            :model-value="selectedRoiMapId"
+            :options="roiMapOptions"
+            @update:model-value="selectedRoiMapId = String($event ?? '')"
+          />
+        </div>
+        <XButton flat label="Full frame" :disable="!selectedRoiMap" @click="resetRegion" />
+        <XButton flat label="Lock map aspect" :disable="!selectedRoiMap" @click="lockMapAspect" />
         <span v-if="selectedRoiMap" class="text-caption text-grey-5">
           {{ selectedRoiMap.name }} ROI:
           x {{ (sampleRegion.x * 100).toFixed(1) }}%
@@ -432,33 +433,37 @@ watch(
       </div>
       <div v-if="selectedRoiMap" class="row q-col-gutter-md q-mt-xs">
         <div class="col-12 col-sm-6 col-md-3">
-          <q-input
-            type="number"
-            :label="`${selectedRoiMap.name} gain`"
-            :model-value="selectedMapGain"
-            step="0.05"
-            min="0"
-            max="2"
-            @update:model-value="patchPixelMap(selectedRoiMap.id, { videoGain: Number($event) })"
-          />
+          <div class="column">
+            <div class="q-mb-xs text-caption text-grey-4">{{ selectedRoiMap.name }} gain</div>
+            <XInput
+              type="number"
+              :model-value="selectedMapGain"
+              step="0.05"
+              min="0"
+              max="2"
+              @update:model-value="patchPixelMap(selectedRoiMap.id, { videoGain: Number($event) })"
+            />
+          </div>
         </div>
         <div class="col-12 col-sm-6 col-md-3">
-          <q-input
-            type="number"
-            :label="`${selectedRoiMap.name} smoothing (ms)`"
-            :model-value="selectedMapSmoothingMs"
-            step="10"
-            min="0"
-            @update:model-value="
-              patchPixelMap(selectedRoiMap.id, { videoSmoothingMs: Number($event) })
-            "
-          />
+          <div class="column">
+            <div class="q-mb-xs text-caption text-grey-4">{{ selectedRoiMap.name }} smoothing (ms)</div>
+            <XInput
+              type="number"
+              :model-value="selectedMapSmoothingMs"
+              step="10"
+              min="0"
+              @update:model-value="
+                patchPixelMap(selectedRoiMap.id, { videoSmoothingMs: Number($event) })
+              "
+            />
+          </div>
         </div>
       </div>
     </section>
 
     <section class="options-section column q-gutter-y-sm">
-      <q-toggle
+      <XSwitch
         :model-value="videoConfig?.enabled === true"
         label="Enable video mapping"
         @update:model-value="patchVideo({ enabled: $event })"
@@ -466,78 +471,88 @@ watch(
 
       <div class="row q-col-gutter-md">
         <div class="col-12 col-md-6">
-          <q-select
-            label="Pixel maps"
-            :model-value="activeVideoMapIds"
-            :options="pixelMapOptions"
-            emit-value
-            map-options
-            multiple
-            use-chips
-            @update:model-value="patchVideo({ pixelMapIds: ($event as string[]) ?? [] })"
-          />
+          <div class="column q-gutter-y-xs">
+            <div class="text-caption text-grey-4">Pixel maps</div>
+            <div class="column q-pl-xs q-gutter-y-xs">
+              <XCheckbox
+                v-for="opt in pixelMapOptions"
+                :key="opt.value"
+                :label="opt.label"
+                :model-value="activeVideoMapIds.includes(opt.value)"
+                @update:model-value="(checked) => {
+                  const current = [...activeVideoMapIds];
+                  if (checked) {
+                    if (!current.includes(opt.value)) current.push(opt.value);
+                  } else {
+                    const idx = current.indexOf(opt.value);
+                    if (idx > -1) current.splice(idx, 1);
+                  }
+                  patchVideo({ pixelMapIds: current });
+                }"
+              />
+            </div>
+          </div>
         </div>
 
         <div class="col-12 col-sm-6 col-md-3">
-          <q-select
-            label="Source"
-            :model-value="videoConfig?.inputKind ?? 'none'"
-            :options="inputKindOptions"
-            emit-value
-            map-options
-            @update:model-value="patchVideo({ inputKind: $event })"
-          />
+          <div class="column">
+            <div class="q-mb-xs text-caption text-grey-4">Source</div>
+            <XSelect
+              :model-value="videoConfig?.inputKind ?? 'none'"
+              :options="inputKindOptions"
+              @update:model-value="patchVideo({ inputKind: $event })"
+            />
+          </div>
         </div>
 
         <div v-if="videoConfig?.inputKind === 'webcam'" class="col-12 col-sm-6 col-md-3">
-          <q-select
-            label="Camera device"
-            :model-value="videoConfig?.deviceId"
-            :options="deviceOptions"
-            emit-value
-            map-options
-            clearable
-            @update:model-value="patchVideo({ deviceId: $event })"
-          />
+          <div class="column">
+            <div class="q-mb-xs text-caption text-grey-4">Camera device</div>
+            <XSelect
+              :model-value="videoConfig?.deviceId"
+              :options="deviceOptions"
+              @update:model-value="patchVideo({ deviceId: $event })"
+            />
+          </div>
         </div>
 
         <div
           v-if="videoConfig?.inputKind === 'syphon' || videoConfig?.inputKind === 'spout'"
           class="col-12 col-sm-6 col-md-3 row q-gutter-sm items-center"
         >
-          <q-select
-            class="col"
-            label="Sender"
-            :model-value="videoConfig?.senderName"
-            :options="senderOptions"
-            emit-value
-            map-options
-            clearable
-            @update:model-value="patchVideo({ senderName: $event })"
-          />
-          <q-btn flat icon="refresh" @click="videoStore.refreshSenders()" />
+          <div class="col column">
+            <div class="q-mb-xs text-caption text-grey-4">Sender</div>
+            <XSelect
+              :model-value="videoConfig?.senderName"
+              :options="senderOptions"
+              @update:model-value="patchVideo({ senderName: $event })"
+            />
+          </div>
+          <XButton flat icon="refresh" class="q-mt-md" @click="videoStore.refreshSenders()" />
         </div>
 
         <div class="col-12 col-sm-6 col-md-3">
-          <q-input
-            type="number"
-            label="Black level"
-            :model-value="videoConfig?.blackLevel ?? 0"
-            step="1"
-            min="0"
-            max="255"
-            @update:model-value="patchVideo({ blackLevel: Number($event) })"
-          />
+          <div class="column">
+            <div class="q-mb-xs text-caption text-grey-4">Black level</div>
+            <XInput
+              type="number"
+              :model-value="videoConfig?.blackLevel ?? 0"
+              step="1"
+              min="0"
+              max="255"
+              @update:model-value="patchVideo({ blackLevel: Number($event) })"
+            />
+          </div>
         </div>
         <div class="col-12 col-sm-6 col-md-3">
-          <q-select
-            label="Sample FPS"
-            :model-value="videoConfig?.fps ?? 30"
-            :options="sampleFpsOptions"
-            emit-value
-            map-options
-            @update:model-value="patchVideo({ fps: $event as VideoSampleFps })"
-          />
+          <div class="column">
+            <div class="q-mb-xs text-caption text-grey-4">Sample FPS</div>
+            <XSelect
+              :model-value="videoConfig?.fps ?? 30"
+              :options="sampleFpsOptions"
+              @update:model-value="patchVideo({ fps: $event as VideoSampleFps })"
+            />
+          </div>
         </div>
       </div>
 

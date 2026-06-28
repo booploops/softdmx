@@ -13,6 +13,8 @@ import { getAllFixtures, pluginRegistryVersion, registerRuntimeFixtureFromYaml }
 import { ref, computed } from 'vue';
 import type { FixtureDefinition } from '@softdmx/engine';
 import { Dialog, Notify } from 'quasar';
+import XButton from 'src/components/controls/XButton.vue';
+import XInput from 'src/components/controls/XInput.vue';
 
 const searchText = ref('');
 const selectedFixture = ref<FixtureDefinition | null>(null);
@@ -77,48 +79,47 @@ const onFixtureYamlPicked = async (event: Event) => {
 
     <div v-if="!selectedFixture" class="fixture-list">
       <div class="list-header">
-        <div class="header-title-row">
-          <h6>Available Fixtures</h6>
-          <q-btn
+        <div class="header-title-row q-mb-md">
+          <h6 class="q-ma-none font-weight-bold">Available Fixtures</h6>
+          <XButton
             color="primary"
             icon="upload_file"
             label="Import YAML"
-            dense
+            size="sm"
             @click="openFixtureImportPicker"
           />
         </div>
-        <q-input v-model="searchText" placeholder="Search fixtures..." dense class="search-input">
-          <template v-slot:prepend><q-icon name="search" /></template>
-        </q-input>
+        <XInput v-model="searchText" placeholder="Search fixtures..." class="search-input">
+          <template #prepend><q-icon name="search" /></template>
+        </XInput>
       </div>
 
       <div class="fixtures-grid">
-        <q-card
+        <div
           v-for="fixture in filteredFixtures"
           :key="fixture.id"
           class="fixture-card"
-          clickable
           @click="selectFixture(fixture)"
         >
-          <q-card-section>
+          <div class="fixture-card-body">
             <div class="fixture-name">{{ fixture.name }}</div>
             <div class="fixture-id">{{ fixture.id }}</div>
             <div class="fixture-channels">{{ fixture.channels.length }} channels</div>
 
             <div class="channel-preview">
-              <q-chip
+              <span
                 v-for="channel in fixture.channels.slice(0, 3)"
                 :key="channel.name"
-                :label="channel.name"
-                size="sm"
-                outline
-              />
+                class="sdmx-badge sdmx-badge--outline"
+              >
+                {{ channel.name }}
+              </span>
               <span v-if="fixture.channels.length > 3" class="more-channels">
                 +{{ fixture.channels.length - 3 }} more
               </span>
             </div>
-          </q-card-section>
-        </q-card>
+          </div>
+        </div>
       </div>
 
       <div v-if="filteredFixtures.length === 0" class="empty-state">
@@ -130,14 +131,13 @@ const onFixtureYamlPicked = async (event: Event) => {
 
     <div v-else class="fixture-details">
       <div class="details-header">
-        <q-btn
+        <XButton
           @click="clearSelection"
           icon="arrow_back"
           flat
-          round
           size="sm"
         />
-        <h6>{{ selectedFixture.name }}</h6>
+        <h6 class="q-ma-none font-weight-bold">{{ selectedFixture.name }}</h6>
       </div>
 
       <div class="fixture-info">
@@ -152,7 +152,7 @@ const onFixtureYamlPicked = async (event: Event) => {
       </div>
 
       <div class="channels-section">
-        <h6>Channels</h6>
+        <h6 class="font-weight-bold">Channels</h6>
         <div class="channels-list">
           <div
             v-for="(channel, index) in selectedFixture.channels"
@@ -213,10 +213,17 @@ const onFixtureYamlPicked = async (event: Event) => {
 
     .fixture-card {
       background: var(--sdmx-color-border-subtle);
+      border: 1px solid var(--sdmx-color-border);
+      border-radius: 6px;
+      cursor: default;
       transition: background-color 0.2s;
 
       &:hover {
         background: var(--sdmx-color-border);
+      }
+
+      .fixture-card-body {
+        padding: 16px;
       }
 
       .fixture-name {

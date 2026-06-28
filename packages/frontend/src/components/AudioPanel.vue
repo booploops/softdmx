@@ -13,6 +13,15 @@ import { useDMXStore } from 'src/stores/dmx';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useShowStore } from 'src/stores/show';
 import { SdmxEmptyState, SdmxIconButton } from 'src/components/ui';
+import XButton from 'src/components/controls/XButton.vue';
+import XButtonGroup from 'src/components/controls/XButtonGroup.vue';
+import XSelect from 'src/components/controls/XSelect.vue';
+import XInput from 'src/components/controls/XInput.vue';
+import XSwitch from 'src/components/controls/XSwitch.vue';
+import XSlider from 'src/components/controls/XSlider.vue';
+import XCard from 'src/components/controls/XCard.vue';
+import XListView from 'src/components/controls/XListView.vue';
+import XListItem from 'src/components/controls/XListItem.vue';
 
 type MappingTargetMode = 'channelPath' | 'groupAttr' | 'fixtureAttr';
 type MappingSourceForm = 'rms' | 'peak' | 'beat' | 'sub' | 'low' | 'mid' | 'high';
@@ -457,16 +466,12 @@ onMounted(() => {
     <div class="row items-center q-mb-md">
       <div class="text-h6">Audio</div>
       <q-space />
-      <q-chip
-        dense
-        :color="audioStore.enabled ? 'positive' : 'grey-7'"
-        :text-color="audioStore.enabled ? 'black' : 'grey-3'"
-      >
+      <span class="sdmx-badge" :class="audioStore.enabled ? 'sdmx-badge--positive' : 'sdmx-badge--grey'">
         Analysis {{ audioStore.enabled ? 'On' : 'Off' }}
-      </q-chip>
+      </span>
     </div>
 
-    <q-card flat bordered class="q-pa-md q-mb-md">
+    <XCard class="q-mb-md">
       <div class="row q-col-gutter-md">
         <div class="col-12 col-md-6">
           <q-banner
@@ -478,9 +483,8 @@ onMounted(() => {
             Audio capture is not supported in this runtime.
           </q-banner>
 
-          <q-toggle
+          <XSwitch
             :model-value="audioStore.enabled"
-            color="primary"
             label="Enable audio analysis"
             :disable="!audioStore.isSupported"
             @update:model-value="(value) => setAudioEnabled(Boolean(value))"
@@ -488,17 +492,11 @@ onMounted(() => {
 
           <div class="row items-center q-col-gutter-sm q-mt-sm">
             <div class="col">
-              <q-select
+              <div class="q-mb-xs text-subtitle2 text-grey-4">Audio input device</div>
+              <XSelect
                 :model-value="audioStore.selectedDeviceId"
                 :options="audioDeviceOptions"
-                label="Audio input device"
-                filled
-                dense
-                emit-value
-                map-options
-                clearable
                 :disable="!audioStore.isSupported || audioDeviceOptions.length === 0"
-                no-options-label="No audio input devices detected"
                 @update:model-value="(value) => setInputDevice((value as string | null) ?? null)"
               />
             </div>
@@ -518,26 +516,27 @@ onMounted(() => {
               <span class="text-subtitle2 text-grey-5">Input gain</span>
               <span class="text-caption text-grey-5">{{ audioStore.gain.toFixed(2) }}x</span>
             </div>
-            <q-slider
+            <XSlider
               v-model="audioStore.gain"
               :min="0"
               :max="4"
               :step="0.05"
-              color="primary"
               :disable="!audioStore.isSupported"
-              label
             />
           </div>
 
-          <q-input
-            v-model.number="audioLatencyMs"
-            type="number"
-            label="Output latency (ms)"
-            dense
-            min="0"
-            hint="Advance reactive mapping response for fixture/output lag"
-            @update:model-value="saveLatency"
-          />
+          <div class="q-mt-md">
+            <div class="q-mb-xs text-subtitle2 text-grey-4">Output latency (ms)</div>
+            <XInput
+              v-model.number="audioLatencyMs"
+              type="number"
+              min="0"
+              @update:model-value="saveLatency"
+            />
+            <div class="text-caption text-grey-5 q-mt-xs">
+              Advance reactive mapping response for fixture/output lag
+            </div>
+          </div>
         </div>
 
         <div class="col-12 col-md-6">
@@ -554,24 +553,20 @@ onMounted(() => {
             </div>
           </div>
 
-          <q-chip
-            dense
-            class="text-weight-medium q-mt-md"
-            :color="audioStore.beatPulse ? 'positive' : 'grey-8'"
-            :text-color="audioStore.beatPulse ? 'black' : 'grey-4'"
-          >
-            <q-icon name="graphic_eq" size="16px" class="q-mr-xs" />
-            Beat pulse {{ audioStore.beatPulse ? 'detected' : 'idle' }}
-          </q-chip>
+          <div class="q-mt-md">
+            <span class="sdmx-badge" :class="audioStore.beatPulse ? 'sdmx-badge--positive' : 'sdmx-badge--grey'">
+              <q-icon name="graphic_eq" size="14px" class="q-mr-xs" />
+              Beat pulse {{ audioStore.beatPulse ? 'detected' : 'idle' }}
+            </span>
+          </div>
         </div>
       </div>
-    </q-card>
+    </XCard>
 
     <div class="row items-center q-mb-sm">
       <div class="text-subtitle1">Audio Mappings</div>
       <q-space />
-      <q-btn
-        dense
+      <XButton
         flat
         icon="add"
         label="Add Mapping"
@@ -581,20 +576,20 @@ onMounted(() => {
 
     <div class="row items-center q-gutter-sm q-mb-sm">
       <span class="text-caption text-grey-5">Templates:</span>
-      <q-btn dense flat label="Kick -> Dimmer" @click="applyTemplate('kickDimmer')" />
-      <q-btn dense flat label="Bass -> Color Pulse" @click="applyTemplate('bassColorPulse')" />
-      <q-btn dense flat label="Beat -> Strobe" @click="applyTemplate('beatStrobe')" />
+      <XButton flat size="sm" label="Kick -> Dimmer" @click="applyTemplate('kickDimmer')" />
+      <XButton flat size="sm" label="Bass -> Color Pulse" @click="applyTemplate('bassColorPulse')" />
+      <XButton flat size="sm" label="Beat -> Strobe" @click="applyTemplate('beatStrobe')" />
     </div>
 
-    <q-list v-if="audioMappings.length" bordered class="rounded-borders">
-      <q-item v-for="mapping in audioMappings" :key="mapping.id">
-        <q-item-section>
-          <q-item-label>{{ describeTarget(mapping) }}</q-item-label>
-          <q-item-label caption>
+    <XListView v-if="audioMappings.length" :bordered="true">
+      <XListItem v-for="mapping in audioMappings" :key="mapping.id">
+        <div class="column full-width">
+          <div class="text-subtitle2">{{ describeTarget(mapping) }}</div>
+          <div class="text-caption text-grey-5">
             {{ mappingToFormSource(mapping).toUpperCase() }} · {{ mapping.min ?? 0 }}-{{ mapping.max ?? 255 }}
             · gain {{ (mapping.gain ?? 1).toFixed(2) }} · offset {{ (mapping.offset ?? 0).toFixed(2) }}
             · {{ mapping.invert ? 'inverted' : 'normal' }} · atk {{ mapping.attackMs ?? 20 }}ms · rel {{ mapping.releaseMs ?? 140 }}ms
-          </q-item-label>
+          </div>
           <div class="mapping-meter q-mt-xs">
             <q-linear-progress
               rounded
@@ -605,17 +600,19 @@ onMounted(() => {
             />
             <span class="mapping-meter-value">{{ meterRows.find((row) => row.id === mapping.id)?.output ?? 0 }}</span>
           </div>
-        </q-item-section>
-        <q-item-section side class="row no-wrap items-center q-gutter-xs">
-          <q-toggle
-            :model-value="mapping.enabled ?? true"
-            @update:model-value="(value) => toggleMapping(mapping.id, Boolean(value))"
-          />
-          <q-btn dense flat round icon="edit" @click="openEditMappingDialog(mapping)" />
-          <q-btn dense flat round icon="delete" color="negative" @click="removeMapping(mapping.id)" />
-        </q-item-section>
-      </q-item>
-    </q-list>
+        </div>
+        <template #append>
+          <div class="row no-wrap items-center q-gutter-sm">
+            <XSwitch
+              :model-value="mapping.enabled ?? true"
+              @update:model-value="(value) => toggleMapping(mapping.id, Boolean(value))"
+            />
+            <XButton icon="edit" flat size="sm" @click="openEditMappingDialog(mapping)" />
+            <XButton icon="delete" flat size="sm" color="danger" @click="removeMapping(mapping.id)" />
+          </div>
+        </template>
+      </XListItem>
+    </XListView>
     <SdmxEmptyState
       v-else
       icon="graphic_eq"
@@ -624,113 +621,118 @@ onMounted(() => {
     />
 
     <q-dialog v-model="showMappingDialog">
-      <q-card class="mapping-dialog">
-        <q-card-section>
-          <div class="text-h6">{{ editingMappingId ? 'Edit' : 'Add' }} Audio Mapping</div>
+      <q-card class="sdmx-dialog-card mapping-dialog">
+        <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
+          <div class="text-h6 font-weight-bold">{{ editingMappingId ? 'Edit' : 'Add' }} Audio Mapping</div>
+          <q-space />
+          <XButton icon="close" flat size="sm" @click="showMappingDialog = false" />
         </q-card-section>
 
-        <q-card-section class="q-gutter-md">
-          <q-toggle v-model="mappingForm.enabled" label="Enabled" color="primary" />
-          <q-toggle v-model="mappingForm.invert" label="Invert source value" color="primary" />
+        <q-card-section class="q-gutter-y-md q-pt-md">
+          <XSwitch v-model="mappingForm.enabled" label="Enabled" />
+          <XSwitch v-model="mappingForm.invert" label="Invert source value" />
 
-          <q-select
-            v-model="mappingForm.source"
-            :options="SOURCE_OPTIONS"
-            emit-value
-            map-options
-            label="Source"
-          />
+          <div>
+            <div class="q-mb-xs text-subtitle2 text-grey-4">Source</div>
+            <XSelect
+              v-model="mappingForm.source"
+              :options="SOURCE_OPTIONS"
+            />
+          </div>
 
-          <q-btn-toggle
-            v-model="mappingForm.targetMode"
-            unelevated
-            spread
-            toggle-color="primary"
-            :options="[
-              { label: 'Fixture + Attr', value: 'fixtureAttr' },
-              { label: 'Group + Attr', value: 'groupAttr' },
-              { label: 'Channel Path', value: 'channelPath' },
-            ]"
-          />
+          <div class="q-mb-sm">
+            <XButtonGroup class="row spread">
+              <XButton
+                :color="mappingForm.targetMode === 'fixtureAttr' ? 'primary' : 'default'"
+                label="Fixture + Attr"
+                @click="mappingForm.targetMode = 'fixtureAttr'"
+              />
+              <XButton
+                :color="mappingForm.targetMode === 'groupAttr' ? 'primary' : 'default'"
+                label="Group + Attr"
+                @click="mappingForm.targetMode = 'groupAttr'"
+              />
+              <XButton
+                :color="mappingForm.targetMode === 'channelPath' ? 'primary' : 'default'"
+                label="Channel Path"
+                @click="mappingForm.targetMode = 'channelPath'"
+              />
+            </XButtonGroup>
+          </div>
 
           <div v-if="mappingForm.targetMode === 'fixtureAttr'" class="row q-col-gutter-sm">
             <div class="col-7">
-              <q-select
+              <div class="q-mb-xs text-caption text-grey-4">Target fixture</div>
+              <XSelect
                 v-model="mappingForm.targetFixture"
                 :options="fixtureOptions"
-                emit-value
-                map-options
-                label="Target fixture"
-                use-input
-                fill-input
               />
             </div>
             <div class="col-5">
-              <q-select
+              <div class="q-mb-xs text-caption text-grey-4">Attribute</div>
+              <XSelect
                 v-model="mappingForm.targetAttribute"
                 :options="ATTRIBUTE_OPTIONS"
-                label="Attribute"
               />
             </div>
           </div>
 
           <div v-else-if="mappingForm.targetMode === 'groupAttr'" class="row q-col-gutter-sm">
             <div class="col-7">
-              <q-select
+              <div class="q-mb-xs text-caption text-grey-4">Target group</div>
+              <XSelect
                 v-model="mappingForm.targetGroup"
                 :options="groupOptions"
-                emit-value
-                map-options
-                label="Target group"
-                use-input
-                fill-input
               />
             </div>
             <div class="col-5">
-              <q-select
+              <div class="q-mb-xs text-caption text-grey-4">Attribute</div>
+              <XSelect
                 v-model="mappingForm.targetAttribute"
                 :options="ATTRIBUTE_OPTIONS"
-                label="Attribute"
               />
             </div>
           </div>
 
-          <q-select
-            v-else
-            v-model="mappingForm.targetPath"
-            :options="channelPathOptions"
-            emit-value
-            map-options
-            label="Target channel path"
-            use-input
-            fill-input
-            hint="Converted to fixture+attribute on save"
-          />
+          <div v-else>
+            <div class="q-mb-xs text-subtitle2 text-grey-4">Target channel path</div>
+            <XSelect
+              v-model="mappingForm.targetPath"
+              :options="channelPathOptions"
+            />
+            <div class="text-caption text-grey-5 q-mt-xs">Converted to fixture+attribute on save</div>
+          </div>
 
           <div class="row q-col-gutter-sm">
             <div class="col-6">
-              <q-input v-model.number="mappingForm.min" type="number" label="Min output" min="0" max="255" />
+              <div class="q-mb-xs text-caption text-grey-4">Min output</div>
+              <XInput v-model.number="mappingForm.min" type="number" />
             </div>
             <div class="col-6">
-              <q-input v-model.number="mappingForm.max" type="number" label="Max output" min="0" max="255" />
+              <div class="q-mb-xs text-caption text-grey-4">Max output</div>
+              <XInput v-model.number="mappingForm.max" type="number" />
             </div>
           </div>
 
           <div class="row q-col-gutter-sm">
             <div class="col-6">
-              <q-input v-model.number="mappingForm.gain" type="number" label="Gain" min="0" step="0.05" />
+              <div class="q-mb-xs text-caption text-grey-4">Gain</div>
+              <XInput v-model.number="mappingForm.gain" type="number" />
             </div>
             <div class="col-6">
-              <q-input v-model.number="mappingForm.offset" type="number" label="Offset" step="0.05" />
+              <div class="q-mb-xs text-caption text-grey-4">Offset</div>
+              <XInput v-model.number="mappingForm.offset" type="number" />
             </div>
           </div>
 
           <div class="row q-col-gutter-sm">
             <div class="col-6">
-              <q-input v-model.number="mappingForm.attackMs" type="number" label="Attack (ms)" min="0" />
+              <div class="q-mb-xs text-caption text-grey-4">Attack (ms)</div>
+              <XInput v-model.number="mappingForm.attackMs" type="number" />
             </div>
             <div class="col-6">
-              <q-input v-model.number="mappingForm.releaseMs" type="number" label="Release (ms)" min="0" />
+              <div class="q-mb-xs text-caption text-grey-4">Release (ms)</div>
+              <XInput v-model.number="mappingForm.releaseMs" type="number" />
             </div>
           </div>
 
@@ -746,9 +748,9 @@ onMounted(() => {
           </div>
         </q-card-section>
 
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" v-close-popup />
-          <q-btn color="primary" label="Save Mapping" :disable="!isFormValid" @click="saveMapping" />
+        <q-card-actions align="right" class="q-pa-md sdmx-border-top">
+          <XButton flat label="Cancel" @click="showMappingDialog = false" />
+          <XButton color="primary" label="Save Mapping" :disable="!isFormValid" @click="saveMapping" />
         </q-card-actions>
       </q-card>
     </q-dialog>
@@ -795,5 +797,22 @@ onMounted(() => {
 .mapping-preview {
   display: grid;
   gap: 6px;
+}
+
+.sdmx-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+.sdmx-badge--positive {
+  background: rgba(48, 209, 88, 0.15);
+  color: #30d158;
+}
+.sdmx-badge--grey {
+  background: rgba(255, 255, 255, 0.1);
+  color: #8e8e93;
 }
 </style>

@@ -14,6 +14,7 @@ import { useSelectionStore } from 'src/stores/selection';
 import { usePlotSettingsStore } from 'src/stores/plot-settings';
 import { SdmxButton } from 'src/components/ui';
 import { useInfoText } from 'src/composables/useInfoText';
+import { createMenu } from 'src/lib/menus';
 
 const showStore = useShowStore();
 const selection = useSelectionStore();
@@ -121,6 +122,59 @@ function autoAlignFixtures() {
     });
   });
 }
+
+function showSettingsMenu(event: MouseEvent) {
+  const menu = createMenu([
+    { label: '2D Plot', type: 'normal', enabled: false },
+    {
+      label: 'Show grid',
+      type: 'checkbox',
+      checked: plotSettings.showGrid2d,
+      click: () => { plotSettings.showGrid2d = !plotSettings.showGrid2d; }
+    },
+    {
+      label: 'Show fixture labels',
+      type: 'checkbox',
+      checked: plotSettings.showLabels2d,
+      click: () => { plotSettings.showLabels2d = !plotSettings.showLabels2d; }
+    },
+    {
+      label: 'Show stage center marker',
+      type: 'checkbox',
+      checked: plotSettings.showCenter2d,
+      click: () => { plotSettings.showCenter2d = !plotSettings.showCenter2d; }
+    },
+    { type: 'separator' },
+    { label: '3D Plot', type: 'normal', enabled: false },
+    {
+      label: 'Show grid helper',
+      type: 'checkbox',
+      checked: plotSettings.showGrid3d,
+      click: () => { plotSettings.showGrid3d = !plotSettings.showGrid3d; }
+    },
+    {
+      label: 'Show stage floor',
+      type: 'checkbox',
+      checked: plotSettings.showStagePlane3d,
+      click: () => { plotSettings.showStagePlane3d = !plotSettings.showStagePlane3d; }
+    },
+    {
+      label: 'Enable orbit/pan/zoom',
+      type: 'checkbox',
+      checked: plotSettings.enableOrbit3d,
+      click: () => { plotSettings.enableOrbit3d = !plotSettings.enableOrbit3d; }
+    },
+    { type: 'separator' },
+    { label: 'Interaction', type: 'normal', enabled: false },
+    {
+      label: 'Enable fixture drag',
+      type: 'checkbox',
+      checked: plotSettings.enableDrag,
+      click: () => { plotSettings.enableDrag = !plotSettings.enableDrag; }
+    }
+  ]);
+  menu.show(event.clientX, event.clientY);
+}
 </script>
 
 <template>
@@ -168,71 +222,14 @@ function autoAlignFixtures() {
         :info="info('desk.plot.alignDirection')"
         @click="cycleAutoAlignMode"
       />
-      <q-btn v-info="'desk.plot.settings'" color="grey-8" text-color="grey-3" dense flat icon="tune" label="Settings">
-        <q-menu class="plot-settings-menu" dark :auto-close="false">
-          <div class="plot-settings-menu__title">2D plot</div>
-          <q-toggle
-            v-info="'desk.plot.showGrid'"
-            v-model="plotSettings.showGrid2d"
-            dense
-            dark
-            color="primary"
-            label="Show grid"
-          />
-          <q-toggle
-            v-info="'desk.plot.showLabels'"
-            v-model="plotSettings.showLabels2d"
-            dense
-            dark
-            color="primary"
-            label="Show fixture labels"
-          />
-          <q-toggle
-            v-info="'desk.plot.showCenter'"
-            v-model="plotSettings.showCenter2d"
-            dense
-            dark
-            color="primary"
-            label="Show stage center marker"
-          />
-          <q-separator dark spaced />
-          <div class="plot-settings-menu__title">3D plot</div>
-          <q-toggle
-            v-info="'desk.plot.showGrid'"
-            v-model="plotSettings.showGrid3d"
-            dense
-            dark
-            color="primary"
-            label="Show grid helper"
-          />
-          <q-toggle
-            v-info="'desk.plot.showStageFloor'"
-            v-model="plotSettings.showStagePlane3d"
-            dense
-            dark
-            color="primary"
-            label="Show stage floor"
-          />
-          <q-toggle
-            v-info="'desk.plot.enableOrbit'"
-            v-model="plotSettings.enableOrbit3d"
-            dense
-            dark
-            color="primary"
-            label="Enable orbit/pan/zoom"
-          />
-          <q-separator dark spaced />
-          <div class="plot-settings-menu__title">Interaction</div>
-          <q-toggle
-            v-info="'desk.plot.enableDrag'"
-            v-model="plotSettings.enableDrag"
-            dense
-            dark
-            color="primary"
-            label="Enable fixture drag"
-          />
-        </q-menu>
-      </q-btn>
+      <SdmxButton
+        label="Settings"
+        size="sm"
+        variant="ghost"
+        icon="tune"
+        :info="info('desk.plot.settings')"
+        @click="showSettingsMenu"
+      />
     </div>
     <VisualizerPanel3D
       v-if="viewMode === '3d'"

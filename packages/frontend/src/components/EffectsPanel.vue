@@ -12,6 +12,11 @@ import { useShowStore } from 'src/stores/show';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import EffectEditor from './EffectEditor.vue';
 import { SdmxEmptyState, SdmxIconButton } from 'src/components/ui';
+import XButton from 'src/components/controls/XButton.vue';
+import XButtonGroup from 'src/components/controls/XButtonGroup.vue';
+import XListView from 'src/components/controls/XListView.vue';
+import XListItem from 'src/components/controls/XListItem.vue';
+import XSwitch from 'src/components/controls/XSwitch.vue';
 
 const showStore = useShowStore();
 const outputEngine = useOutputEngineStore();
@@ -55,78 +60,77 @@ function targetSummary(effect: EffectDefinition): string[] {
 <template>
   <div class="effects-panel q-pa-md">
     <div class="row items-center q-mb-sm">
-      <div class="text-h6">Effects</div>
-      <q-space />
-      <q-chip dense color="primary" text-color="white">Enabled {{ enabledCount }}</q-chip>
-      <q-chip dense color="secondary" text-color="white" class="q-ml-xs">Running {{ runningCount }}</q-chip>
-      <q-btn
-        v-info="'program.effects.addEffect'"
-        dense
-        flat
-        icon="open_in_new"
-        label="Open Editor"
-        class="q-ml-sm"
-        @click="showEffectEditor = true"
-      />
+      <div class="text-h6 font-weight-bold">Effects</div>
+      <div class="row items-center q-ml-auto q-gutter-x-xs">
+        <span class="sdmx-badge sdmx-badge--primary">Enabled {{ enabledCount }}</span>
+        <span class="sdmx-badge sdmx-badge--accent">Running {{ runningCount }}</span>
+        <XButton
+          v-info="'program.effects.addEffect'"
+          dense
+          flat
+          icon="open_in_new"
+          label="Open Editor"
+          @click="showEffectEditor = true"
+        />
+      </div>
     </div>
 
-    <div class="row items-center q-mb-md q-gutter-sm">
-      <q-btn-toggle
-        v-model="editorMode"
-        dense
-        no-caps
-        toggle-color="primary"
-        :options="[
-          { label: 'Inline editor', value: 'inline' },
-          { label: 'Modal editor', value: 'modal' },
-        ]"
-      />
+    <div class="row items-center q-mb-md">
+      <XButtonGroup>
+        <XButton
+          :color="editorMode === 'inline' ? 'primary' : 'default'"
+          label="Inline editor"
+          size="sm"
+          @click="editorMode = 'inline'"
+        />
+        <XButton
+          :color="editorMode === 'modal' ? 'primary' : 'default'"
+          label="Modal editor"
+          size="sm"
+          @click="editorMode = 'modal'"
+        />
+      </XButtonGroup>
     </div>
 
-    <q-list v-if="effects.length" bordered class="rounded-borders q-mb-md">
-      <q-item v-for="effect in effects" :key="effect.id">
-        <q-item-section>
-          <q-item-label>{{ effect.name }}</q-item-label>
-          <q-item-label caption>{{ effect.type }}</q-item-label>
+    <XListView v-if="effects.length" :bordered="true" class="q-mb-md">
+      <XListItem v-for="effect in effects" :key="effect.id" :clickable="false">
+        <div class="effects-panel-item-main">
+          <div class="effect-name">{{ effect.name }}</div>
+          <div class="effect-type text-grey-5">{{ effect.type }}</div>
           <div class="row items-center q-gutter-xs q-mt-xs">
-            <q-chip
+            <span
               v-for="chip in targetSummary(effect)"
               :key="`${effect.id}-${chip}`"
-              dense
-              size="sm"
-              color="grey-8"
-              text-color="grey-2"
+              class="sdmx-badge sdmx-badge--grey"
             >
               {{ chip }}
-            </q-chip>
+            </span>
           </div>
-        </q-item-section>
-        <q-item-section side class="row no-wrap items-center q-gutter-xs">
-          <q-chip
-            dense
-            size="sm"
-            :color="effect.enabled ? 'positive' : 'grey-7'"
-            :text-color="effect.enabled ? 'black' : 'grey-3'"
-          >
-            {{ effect.enabled ? 'Enabled' : 'Disabled' }}
-          </q-chip>
-          <q-chip
-            dense
-            size="sm"
-            :color="effect.enabled && outputEngine.isGlobalPlaying ? 'accent' : 'grey-7'"
-            :text-color="effect.enabled && outputEngine.isGlobalPlaying ? 'black' : 'grey-3'"
-          >
-            {{ effect.enabled && outputEngine.isGlobalPlaying ? 'Running' : 'Idle' }}
-          </q-chip>
-          <q-toggle
-            v-info="'program.effects.enableEffect'"
-            :model-value="effect.enabled"
-            @update:model-value="(value) => toggleEffect(effect.id, Boolean(value))"
-          />
-          <SdmxIconButton icon="content_copy" info-key="program.effects.duplicateEffect" @click="duplicateEffect(effect)" />
-        </q-item-section>
-      </q-item>
-    </q-list>
+        </div>
+        <template #append>
+          <div class="row items-center q-gutter-x-sm">
+            <span
+              class="sdmx-badge"
+              :class="effect.enabled ? 'sdmx-badge--positive' : 'sdmx-badge--grey'"
+            >
+              {{ effect.enabled ? 'Enabled' : 'Disabled' }}
+            </span>
+            <span
+              class="sdmx-badge"
+              :class="effect.enabled && outputEngine.isGlobalPlaying ? 'sdmx-badge--accent' : 'sdmx-badge--grey'"
+            >
+              {{ effect.enabled && outputEngine.isGlobalPlaying ? 'Running' : 'Idle' }}
+            </span>
+            <XSwitch
+              v-info="'program.effects.enableEffect'"
+              :model-value="effect.enabled"
+              @update:model-value="(value) => toggleEffect(effect.id, Boolean(value))"
+            />
+            <SdmxIconButton icon="content_copy" info-key="program.effects.duplicateEffect" @click="duplicateEffect(effect)" />
+          </div>
+        </template>
+      </XListItem>
+    </XListView>
 
     <SdmxEmptyState
       v-else
@@ -143,3 +147,72 @@ function targetSummary(effect: EffectDefinition): string[] {
     </q-dialog>
   </div>
 </template>
+
+<style scoped>
+.effects-panel-item-main {
+  display: flex;
+  flex-direction: column;
+}
+
+.effect-name {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.effect-type {
+  font-size: 11px;
+}
+
+/* Custom Semantic Badge Styles (Flat Big Sur macOS style) */
+.sdmx-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 4px;
+  line-height: 1;
+  border: 1px solid transparent;
+}
+
+.sdmx-badge--primary {
+  background-color: #007aff;
+  color: #ffffff;
+}
+
+.sdmx-badge--accent {
+  background-color: #af52de;
+  color: #ffffff;
+}
+
+.sdmx-badge--grey {
+  background-color: rgba(0, 0, 0, 0.05);
+  border-color: rgba(0, 0, 0, 0.1);
+  color: #1d1d1f;
+}
+
+.sdmx-badge--positive {
+  background-color: #34c759;
+  color: #ffffff;
+}
+
+/* Dark theme semantic badge overrides */
+.body--dark .sdmx-badge--grey {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: #f5f5f7;
+}
+
+.body--dark .sdmx-badge--primary {
+  background-color: #0a84ff;
+}
+
+.body--dark .sdmx-badge--accent {
+  background-color: #bf5af2;
+}
+
+.body--dark .sdmx-badge--positive {
+  background-color: #30d158;
+}
+</style>

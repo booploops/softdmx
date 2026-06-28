@@ -20,6 +20,8 @@ import { useChannelControl } from 'src/composables/useChannelControl';
 import { filterScratchEntries } from 'src/utils/programmer-filter';
 import { applyWingOffset, wingScaleForIndex } from '@softdmx/engine';
 import type { AlignMode, WingDirection } from '@softdmx/engine';
+import XTabs from 'src/components/controls/XTabs.vue';
+import XTab from 'src/components/controls/XTab.vue';
 
 const scratch = useScratchStore();
 const cueStore = useCueStore();
@@ -197,17 +199,15 @@ function onProgrammerKeydown(event: KeyboardEvent) {
         />
       </div>
 
-      <q-tabs
+      <XTabs
         v-model="programmerPage"
         dense
-        no-caps
         align="left"
-        indicator-color="primary"
         class="programmer-page-tabs q-px-sm"
       >
-        <q-tab v-info="'desk.programmer.scratchTab'" name="scratch" label="Scratch" />
-        <q-tab v-info="'desk.programmer.controlsTab'" name="controls" label="Controls" />
-      </q-tabs>
+        <XTab v-info="'desk.programmer.scratchTab'" name="scratch" label="Scratch" />
+        <XTab v-info="'desk.programmer.controlsTab'" name="controls" label="Controls" />
+      </XTabs>
 
       <q-tab-panels v-model="programmerPage" animated class="programmer-pages">
         <q-tab-panel name="scratch" class="programmer-page programmer-page--scratch q-pa-none">

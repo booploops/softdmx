@@ -19,6 +19,8 @@ import { useFixtureImport } from 'src/composables/useFixtureImport';
 import PatchGrid from './PatchGrid.vue';
 import PixelMapPanel from './PixelMapPanel.vue';
 import VisualizerPanel from './VisualizerPanel.vue';
+import XTabs from 'src/components/controls/XTabs.vue';
+import XTab from 'src/components/controls/XTab.vue';
 
 const showStore = useShowStore();
 const dmx = useDMXStore();
@@ -484,10 +486,10 @@ function addFixtureFromLibrary() {
       </div>
     </div>
 
-    <q-tabs v-model="selectedPatchTab" dense class="q-mb-md">
-      <q-tab name="fixtures" icon="hub" label="Fixtures" />
-      <q-tab name="pixel-maps" icon="grid_on" label="Pixel Maps" />
-    </q-tabs>
+    <XTabs v-model="selectedPatchTab" class="q-mb-md">
+      <XTab name="fixtures" icon="hub" label="Fixtures" />
+      <XTab name="pixel-maps" icon="grid_on" label="Pixel Maps" />
+    </XTabs>
 
     <div v-show="selectedPatchTab === 'fixtures'" class="row q-col-gutter-sm q-mb-md">
       <div class="col">

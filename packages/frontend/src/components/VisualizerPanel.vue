@@ -10,6 +10,7 @@ import type { FixturePosition } from '@softdmx/engine';
 import { resolveFixturePosition } from '@softdmx/engine';
 import { useThemeStore } from 'src/stores/theme';
 import { readThemeCanvasPalette } from 'src/utils/theme-css';
+import XCard from 'src/components/controls/XCard.vue';
 
 type VisualizerFixture = {
   name: string;
@@ -353,28 +354,26 @@ function onCanvasPointerEnd(event: PointerEvent) {
     class="visualizer-root"
     :class="{ 'visualizer-root--compact': compact }"
   >
-    <q-card v-if="!compact" flat bordered class="visualizer-card sdmx-panel--inset q-mb-md">
-      <q-card-section class="q-pb-sm">
+    <XCard v-if="!compact" :flat="true" :bordered="true" class="visualizer-card sdmx-panel--inset q-mb-md">
+      <template #header>
         <div class="text-subtitle1 text-weight-medium">Fixture Layout Visualizer</div>
         <div class="text-caption text-grey-5">
           Top-down layout using fixture positions (auto-grid fallback when x/y/z is missing).
         </div>
-      </q-card-section>
-      <q-card-section class="q-pt-none">
-        <div ref="containerRef" class="visualizer-canvas-wrap">
-          <canvas
-            ref="canvasRef"
-            class="visualizer-canvas"
-            @click="onCanvasClick"
-            @wheel="onCanvasWheel"
-            @pointerdown="onCanvasPointerDown"
-            @pointermove="onCanvasPointerMove"
-            @pointerup="onCanvasPointerEnd"
-            @pointercancel="onCanvasPointerEnd"
-          />
-        </div>
-      </q-card-section>
-    </q-card>
+      </template>
+      <div ref="containerRef" class="visualizer-canvas-wrap">
+        <canvas
+          ref="canvasRef"
+          class="visualizer-canvas"
+          @click="onCanvasClick"
+          @wheel="onCanvasWheel"
+          @pointerdown="onCanvasPointerDown"
+          @pointermove="onCanvasPointerMove"
+          @pointerup="onCanvasPointerEnd"
+          @pointercancel="onCanvasPointerEnd"
+        />
+      </div>
+    </XCard>
     <div v-else ref="containerRef" class="visualizer-stage">
       <canvas
         ref="canvasRef"

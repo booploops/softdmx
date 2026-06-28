@@ -30,6 +30,6 @@ const path = defineModel<string>();
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 </style>

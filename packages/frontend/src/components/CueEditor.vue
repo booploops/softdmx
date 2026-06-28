@@ -11,6 +11,7 @@
 <script setup lang="ts">
 import { useCueStore } from 'src/stores/cue';
 import { useShowStore } from 'src/stores/show';
+import { createMenu } from 'src/lib/menus';
 import { computed, ref, onMounted, onUnmounted } from 'vue';
 import type { CueLayer, RecordedFrame, StackStep } from '@softdmx/engine';
 import { formatSmpte, parseSmpteInput } from '@softdmx/engine';
@@ -312,39 +313,52 @@ onUnmounted(() => {
 
 // Frame context menu
 const frameContextMenu = ref<{ layerId: string, frameIndex: number } | null>(null);
-const showContextMenu = ref(false);
 
-const showFrameContextMenu = (layerId: string, frameIndex: number) => {
+const showFrameContextMenu = (event: MouseEvent, layerId: string, frameIndex: number) => {
   selectFrame(layerId, frameIndex);
   frameContextMenu.value = { layerId, frameIndex };
-  showContextMenu.value = true;
-};
 
-const duplicateFrame = () => {
-  if (!frameContextMenu.value || !cueStore.activeCue) return;
+  const menu = createMenu([
+    {
+      label: 'Copy Frame',
+      click: () => {
+        cueStore.copyFrames(layerId, [frameIndex]);
+        frameContextMenu.value = null;
+      }
+    },
+    {
+      label: 'Paste After',
+      enabled: cueStore.clipboard.length > 0,
+      click: () => {
+        cueStore.pasteFrames(layerId, frameIndex + 1);
+        frameContextMenu.value = null;
+      }
+    },
+    {
+      label: 'Duplicate Frame',
+      click: () => {
+        const layer = activeCueLayers.value.find(l => l.id === layerId);
+        if (layer) {
+          const frame = layer.frames[frameIndex];
+          if (frame) {
+            const duplicated = { ...frame, name: `${frame.name} Copy` };
+            layer.frames.splice(frameIndex + 1, 0, duplicated);
+            cueStore.updateCueModified();
+          }
+        }
+        frameContextMenu.value = null;
+      }
+    },
+    {
+      label: 'Delete Frame',
+      click: () => {
+        cueStore.deleteFrame(layerId, frameIndex);
+        frameContextMenu.value = null;
+      }
+    }
+  ]);
 
-  const { layerId, frameIndex } = frameContextMenu.value;
-  const layer = activeCueLayers.value.find(l => l.id === layerId);
-  if (!layer) return;
-
-  const frame = layer.frames[frameIndex];
-  if (frame) {
-    const duplicated = { ...frame, name: `${frame.name} Copy` };
-    layer.frames.splice(frameIndex + 1, 0, duplicated);
-    cueStore.updateCueModified();
-  }
-
-  frameContextMenu.value = null;
-  showContextMenu.value = false;
-};
-
-const deleteFrame = () => {
-  if (!frameContextMenu.value) return;
-
-  const { layerId, frameIndex } = frameContextMenu.value;
-  cueStore.deleteFrame(layerId, frameIndex);
-  frameContextMenu.value = null;
-  showContextMenu.value = false;
+  menu.show(event.clientX, event.clientY);
 };
 
 const copySelectedFrames = () => {
@@ -357,20 +371,6 @@ const pasteFramesAfterSelection = () => {
   if (!layerId) return;
   const atIndex = selectedFrame.value ? selectedFrame.value.frameIndex + 1 : activeCueLayers.value.find((l) => l.id === layerId)?.frames.length ?? 0;
   cueStore.pasteFrames(layerId, atIndex);
-};
-
-const copyFrameFromContext = () => {
-  if (!frameContextMenu.value) return;
-  cueStore.copyFrames(frameContextMenu.value.layerId, [frameContextMenu.value.frameIndex]);
-  frameContextMenu.value = null;
-  showContextMenu.value = false;
-};
-
-const pasteFrameFromContext = () => {
-  if (!frameContextMenu.value) return;
-  cueStore.pasteFrames(frameContextMenu.value.layerId, frameContextMenu.value.frameIndex + 1);
-  frameContextMenu.value = null;
-  showContextMenu.value = false;
 };
 
 const showPresetFrameDialog = ref(false);
@@ -759,7 +759,7 @@ const normalizeStackStep = (step: StackStep) => {
               }"
               @mousedown="handleFrameMouseDown($event, layer.id, frameIndex)"
               @click.stop="selectFrame(layer.id, frameIndex)"
-              @contextmenu.prevent="showFrameContextMenu(layer.id, frameIndex)"
+              @contextmenu.prevent="showFrameContextMenu($event, layer.id, frameIndex)"
             >
               <div class="frame-content">
                 <div class="frame-name">{{ frame.name }}</div>
@@ -929,27 +929,7 @@ const normalizeStackStep = (step: StackStep) => {
       </q-card>
     </q-dialog>
 
-    <!-- Frame Context Menu -->
-    <q-menu
-      v-if="frameContextMenu"
-      v-model="showContextMenu"
-      context-menu
-    >
-      <q-list>
-        <q-item clickable @click="copyFrameFromContext">
-          <q-item-section>Copy Frame</q-item-section>
-        </q-item>
-        <q-item clickable @click="pasteFrameFromContext" :disable="cueStore.clipboard.length === 0">
-          <q-item-section>Paste After</q-item-section>
-        </q-item>
-        <q-item clickable @click="duplicateFrame">
-          <q-item-section>Duplicate Frame</q-item-section>
-        </q-item>
-        <q-item clickable @click="deleteFrame">
-          <q-item-section>Delete Frame</q-item-section>
-        </q-item>
-      </q-list>
-    </q-menu>
+
 
     <q-dialog v-model="showPresetFrameDialog">
       <q-card style="min-width: 340px">

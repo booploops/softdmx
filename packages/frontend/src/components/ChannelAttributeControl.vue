@@ -14,6 +14,7 @@ import {
   indexToDmx,
   isIndexedChannel,
 } from '@softdmx/engine';
+import XSelect from 'src/components/controls/XSelect.vue';
 import { SdmxEncoder, SdmxValueField } from 'src/components/ui';
 import { useInfoText } from 'src/composables/useInfoText';
 
@@ -44,19 +45,16 @@ function onEncoderUpdate(value: number) {
 <template>
   <div class="channel-control">
     <template v-if="isIndexed">
-      <q-select
-        :model-value="selectedIndex"
-        :options="indexedOptions"
-        emit-value
-        map-options
-        dense
-        filled
-        dark
-        :label="channel.name"
-        class="indexed-select sdmx-focus-ring"
-        :data-sdmx-info="info('desk.fixtures.indexedChannel', { name: channel.name })"
-        @update:model-value="onIndexedChange"
-      />
+      <div class="indexed-select-container">
+        <div class="indexed-select-label">{{ channel.name }}</div>
+        <XSelect
+          :model-value="selectedIndex"
+          :options="indexedOptions"
+          class="indexed-select"
+          :data-sdmx-info="info('desk.fixtures.indexedChannel', { name: channel.name })"
+          @update:model-value="onIndexedChange"
+        />
+      </div>
       <SdmxValueField v-if="showDmxHint !== false" label="DMX" :value="dmxValue" size="sm" />
     </template>
     <template v-else>
@@ -78,6 +76,20 @@ function onEncoderUpdate(value: number) {
   display: flex;
   flex-direction: column;
   gap: var(--sdmx-space-xs);
+}
+
+.indexed-select-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.indexed-select-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sdmx-text-muted, #8e8e93);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .indexed-select {

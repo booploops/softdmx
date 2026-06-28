@@ -10,6 +10,13 @@ import { useShowStore } from 'src/stores/show';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useDMXStore } from 'src/stores/dmx';
 import type { EffectDefinition } from '@softdmx/engine';
+import XButton from 'src/components/controls/XButton.vue';
+import XListView from 'src/components/controls/XListView.vue';
+import XListItem from 'src/components/controls/XListItem.vue';
+import XSelect from 'src/components/controls/XSelect.vue';
+import XInput from 'src/components/controls/XInput.vue';
+import XSwitch from 'src/components/controls/XSwitch.vue';
+import XCheckbox from 'src/components/controls/XCheckbox.vue';
 
 const showStore = useShowStore();
 const engine = useOutputEngineStore();
@@ -149,47 +156,49 @@ function stringifySteps(steps: number[]): string {
 <template>
   <div class="effect-editor q-pa-md">
     <div class="row items-center justify-between q-mb-md">
-      <div class="text-h6">Effect Editor</div>
-      <q-btn color="primary" icon="add" label="Add Effect" @click="addEffect" />
+      <div class="text-h6 font-weight-bold">Effect Editor</div>
+      <XButton color="primary" icon="add" label="Add Effect" @click="addEffect" />
     </div>
 
     <div class="row q-col-gutter-md">
       <div class="col-4">
-        <q-list bordered separator class="rounded-borders">
-          <q-item
+        <XListView :bordered="true">
+          <XListItem
             v-for="effect in effects"
             :key="effect.id"
             clickable
             :active="effect.id === selectedEffectId"
-            active-class="bg-primary text-white"
             @click="selectedEffectId = effect.id"
           >
-            <q-item-section>
-              <q-item-label>{{ effect.name }}</q-item-label>
-              <q-item-label caption>{{ effect.type }} · {{ effect.target.attr }}</q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-btn dense flat round icon="delete" color="negative" @click.stop="deleteEffect(effect.id)" />
-            </q-item-section>
-          </q-item>
-          <q-item v-if="effects.length === 0">
-            <q-item-section class="text-grey-5">No effects yet</q-item-section>
-          </q-item>
-        </q-list>
+            <div class="effect-item-content">
+              <div class="effect-item-name">{{ effect.name }}</div>
+              <div class="effect-item-caption text-grey-5">{{ effect.type }} · {{ effect.target.attr }}</div>
+            </div>
+            <template #append>
+              <XButton flat size="sm" icon="delete" color="danger" @click.stop="deleteEffect(effect.id)" />
+            </template>
+          </XListItem>
+          <XListItem v-if="effects.length === 0" :clickable="false">
+            <div class="text-grey-5">No effects yet</div>
+          </XListItem>
+        </XListView>
       </div>
 
       <div class="col-8" v-if="selectedEffect">
-        <q-card flat bordered>
-          <q-card-section class="q-gutter-md">
-            <q-input
-              :model-value="selectedEffect.name"
-              label="Effect Name"
-              @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { effect.name = value || 'Effect'; })"
-            />
+        <div class="sdmx-editor-card">
+          <div class="sdmx-editor-card-body q-gutter-y-md">
+            <div>
+              <div class="q-mb-xs text-caption text-grey-4">Effect Name</div>
+              <XInput
+                :model-value="selectedEffect.name"
+                @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { effect.name = value || 'Effect'; })"
+              />
+            </div>
 
-            <div class="row q-col-gutter-sm">
+            <div class="row q-col-gutter-sm items-end">
               <div class="col-4">
-                <q-select
+                <div class="q-mb-xs text-caption text-grey-4">Type</div>
+                <XSelect
                   :model-value="selectedEffect.type"
                   :options="[
                     { label: 'Sine', value: 'sine' },
@@ -199,27 +208,22 @@ function stringifySteps(steps: number[]): string {
                     { label: 'Phaser', value: 'phaser' },
                     { label: 'Random Hold', value: 'random_hold' },
                   ]"
-                  emit-value
-                  map-options
-                  label="Type"
                   @update:model-value="(value) => changeEffectType(selectedEffect.id, value)"
                 />
               </div>
               <div class="col-4">
-                <q-select
+                <div class="q-mb-xs text-caption text-grey-4">Sync</div>
+                <XSelect
                   :model-value="selectedEffect.sync ?? 'free'"
                   :options="[
                     { label: 'Free', value: 'free' },
                     { label: 'Link', value: 'link' },
                   ]"
-                  emit-value
-                  map-options
-                  label="Sync"
                   @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { effect.sync = value; })"
                 />
               </div>
-              <div class="col-4">
-                <q-toggle
+              <div class="col-4 q-pb-xs">
+                <XSwitch
                   :model-value="selectedEffect.enabled"
                   label="Enabled"
                   @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { effect.enabled = !!value; })"
@@ -229,77 +233,87 @@ function stringifySteps(steps: number[]): string {
 
             <div class="row q-col-gutter-sm">
               <div class="col-6">
-                <q-select
-                  :model-value="selectedEffect.target.group"
-                  :options="groupOptions"
-                  emit-value
-                  map-options
-                  clearable
-                  label="Target Group"
+                <div class="q-mb-xs text-caption text-grey-4">Target Group</div>
+                <XSelect
+                  :model-value="selectedEffect.target.group ?? ''"
+                  :options="[{ label: 'None', value: '' }, ...groupOptions]"
                   @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { effect.target.group = value || undefined; if (value) delete effect.target.fixtures; })"
                 />
               </div>
               <div class="col-6">
-                <q-select
-                  :model-value="selectedEffect.target.fixtures ?? []"
-                  :options="fixtureOptions"
-                  emit-value
-                  map-options
-                  multiple
-                  use-chips
-                  label="Target Fixtures"
-                  @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { effect.target.fixtures = value; if (value.length > 0) delete effect.target.group; })"
-                />
+                <div class="q-mb-xs text-caption text-grey-4">Target Fixtures</div>
+                <div class="fixtures-checklist">
+                  <XCheckbox
+                    v-for="opt in fixtureOptions"
+                    :key="opt.value"
+                    :model-value="(selectedEffect.target.fixtures ?? []).includes(opt.value)"
+                    :label="opt.label"
+                    @update:model-value="(checked) => {
+                      const current = [...(selectedEffect.target.fixtures ?? [])];
+                      if (checked) {
+                        if (!current.includes(opt.value)) current.push(opt.value);
+                      } else {
+                        const index = current.indexOf(opt.value);
+                        if (index > -1) current.splice(index, 1);
+                      }
+                      updateEffect(selectedEffect.id, (effect) => {
+                        effect.target.fixtures = current;
+                        if (current.length > 0) delete effect.target.group;
+                      });
+                    }"
+                  />
+                </div>
               </div>
             </div>
 
-            <q-select
-              :model-value="selectedEffect.target.attr"
-              :options="attributeOptions"
-              emit-value
-              map-options
-              label="Target Attribute"
-              @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { effect.target.attr = value; })"
-            />
+            <div>
+              <div class="q-mb-xs text-caption text-grey-4">Target Attribute</div>
+              <XSelect
+                :model-value="selectedEffect.target.attr"
+                :options="attributeOptions"
+                @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { effect.target.attr = value; })"
+              />
+            </div>
 
-            <q-input
-              v-if="'rate' in selectedEffect"
-              :model-value="selectedEffect.rate"
-              type="number"
-              min="0"
-              step="0.1"
-              label="Rate (Hz)"
-              @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { (effect as { rate: number }).rate = Number(value) || 0; })"
-            />
+            <div v-if="'rate' in selectedEffect">
+              <div class="q-mb-xs text-caption text-grey-4">Rate (Hz)</div>
+              <XInput
+                :model-value="selectedEffect.rate"
+                type="number"
+                min="0"
+                step="0.1"
+                @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { (effect as { rate: number }).rate = Number(value) || 0; })"
+              />
+            </div>
 
             <div class="row q-col-gutter-sm" v-if="selectedEffect.type === 'sine' || selectedEffect.type === 'phaser'">
               <div class="col-4">
-                <q-input
+                <div class="q-mb-xs text-caption text-grey-4">Depth</div>
+                <XInput
                   :model-value="selectedEffect.depth"
                   type="number"
                   min="0"
                   max="255"
-                  label="Depth"
                   @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { (effect as { depth: number }).depth = Number(value) || 0; })"
                 />
               </div>
               <div class="col-4">
-                <q-input
+                <div class="q-mb-xs text-caption text-grey-4">Offset</div>
+                <XInput
                   :model-value="selectedEffect.offset ?? 128"
                   type="number"
                   min="0"
                   max="255"
-                  label="Offset"
                   @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { (effect as { offset?: number }).offset = Number(value) || 0; })"
                 />
               </div>
               <div class="col-4" v-if="selectedEffect.type === 'phaser'">
-                <q-input
+                <div class="q-mb-xs text-caption text-grey-4">Phase Spread</div>
+                <XInput
                   :model-value="selectedEffect.phaseSpread ?? 0.125"
                   type="number"
                   min="0"
                   step="0.01"
-                  label="Phase Spread"
                   @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { (effect as { phaseSpread?: number }).phaseSpread = Number(value) || 0; })"
                 />
               </div>
@@ -307,79 +321,127 @@ function stringifySteps(steps: number[]): string {
 
             <div class="row q-col-gutter-sm" v-if="selectedEffect.type === 'saw' || selectedEffect.type === 'random_hold'">
               <div class="col-6">
-                <q-input
+                <div class="q-mb-xs text-caption text-grey-4">Min</div>
+                <XInput
                   :model-value="selectedEffect.min"
                   type="number"
                   min="0"
                   max="255"
-                  label="Min"
                   @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { (effect as { min: number }).min = Number(value) || 0; })"
                 />
               </div>
               <div class="col-6">
-                <q-input
+                <div class="q-mb-xs text-caption text-grey-4">Max</div>
+                <XInput
                   :model-value="selectedEffect.max"
                   type="number"
                   min="0"
                   max="255"
-                  label="Max"
                   @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { (effect as { max: number }).max = Number(value) || 0; })"
                 />
               </div>
               <div class="col-6" v-if="selectedEffect.type === 'random_hold'">
-                <q-input
+                <div class="q-mb-xs text-caption text-grey-4">Seed</div>
+                <XInput
                   :model-value="selectedEffect.seed ?? 0"
                   type="number"
-                  label="Seed"
                   @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { (effect as { seed?: number }).seed = Number(value) || 0; })"
                 />
               </div>
             </div>
 
-            <q-input
-              v-if="selectedEffect.type === 'step'"
-              :model-value="stringifySteps(selectedEffect.steps)"
-              label="Steps"
-              hint="Comma-separated DMX values"
-              @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { (effect as { steps: number[] }).steps = parseSteps(value || ''); })"
-            />
+            <div v-if="selectedEffect.type === 'step'">
+              <div class="q-mb-xs text-caption text-grey-4">Steps</div>
+              <XInput
+                :model-value="stringifySteps(selectedEffect.steps)"
+                placeholder="Comma-separated DMX values"
+                @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { (effect as { steps: number[] }).steps = parseSteps(value || ''); })"
+              />
+              <div class="text-caption text-grey-5 q-mt-xs">Comma-separated DMX values</div>
+            </div>
 
             <div class="row q-col-gutter-sm" v-if="selectedEffect.type === 'chase'">
               <div class="col-4">
-                <q-input
+                <div class="q-mb-xs text-caption text-grey-4">Width</div>
+                <XInput
                   :model-value="selectedEffect.width"
                   type="number"
                   min="1"
-                  label="Width"
                   @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { (effect as { width: number }).width = Math.max(1, Number(value) || 1); })"
                 />
               </div>
               <div class="col-4">
-                <q-select
+                <div class="q-mb-xs text-caption text-grey-4">Direction</div>
+                <XSelect
                   :model-value="selectedEffect.direction"
                   :options="[
                     { label: 'Forward', value: 'forward' },
                     { label: 'Reverse', value: 'reverse' },
                   ]"
-                  emit-value
-                  map-options
-                  label="Direction"
                   @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { (effect as { direction: 'forward' | 'reverse' }).direction = value; })"
                 />
               </div>
               <div class="col-4">
-                <q-input
+                <div class="q-mb-xs text-caption text-grey-4">Wings</div>
+                <XInput
                   :model-value="selectedEffect.wings ?? 1"
                   type="number"
                   min="1"
-                  label="Wings"
                   @update:model-value="(value) => updateEffect(selectedEffect.id, (effect) => { (effect as { wings?: number }).wings = Math.max(1, Number(value) || 1); })"
                 />
               </div>
             </div>
-          </q-card-section>
-        </q-card>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </template>
+
+<style scoped>
+.effect-item-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.effect-item-name {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.effect-item-caption {
+  font-size: 11px;
+}
+
+.sdmx-editor-card {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 6px;
+  background-color: #ffffff;
+}
+
+.body--dark .sdmx-editor-card {
+  border-color: rgba(255, 255, 255, 0.15);
+  background-color: #1e1e1e;
+}
+
+.sdmx-editor-card-body {
+  padding: 16px;
+}
+
+.fixtures-checklist {
+  max-height: 120px;
+  overflow-y: auto;
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 5px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: #ffffff;
+}
+
+.body--dark .fixtures-checklist {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+</style>

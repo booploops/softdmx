@@ -10,6 +10,8 @@ import { useCueStore } from 'src/stores/cue';
 import { useShowStore } from 'src/stores/show';
 import { computed, ref } from 'vue';
 import PresetEditor from './PresetEditor.vue';
+import XButton from 'src/components/controls/XButton.vue';
+import XInput from 'src/components/controls/XInput.vue';
 
 const showStore = useShowStore();
 const cueStore = useCueStore();
@@ -28,18 +30,17 @@ function firePreset(presetId: string) {
     <div class="row items-center q-mb-md">
       <div class="text-h6">Presets</div>
       <q-space />
-      <q-input
+      <XInput
         v-model.number="presetFadeMs"
         type="number"
         min="0"
-        dense
         label="Fade (ms)"
         style="max-width: 130px"
       />
-      <q-btn v-info="'program.presets.editPreset'" dense flat icon="edit" label="Edit Presets" class="q-ml-sm" @click="showPresetEditor = true" />
+      <XButton v-info="'program.presets.editPreset'" flat icon="edit" label="Edit Presets" class="q-ml-sm" @click="showPresetEditor = true" />
     </div>
     <div class="row q-gutter-sm q-mb-lg">
-      <q-btn
+      <XButton
         v-for="preset in presets"
         :key="preset.id"
         :label="preset.name"
