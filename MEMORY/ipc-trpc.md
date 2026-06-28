@@ -67,9 +67,32 @@ interface FrontendMenuItem {
 ```
 
 ### How to Trigger a Menu from Vue Components
-We serialize the callbacks into temporary string identifiers (`clickId`) on the frontend, register the local click triggers in a callback map, and open a subscription to the backend tRPC router.
 
-Example from `WorkspaceLayout.vue`:
+While developers can manually handle serializing templates and managing subscriptions directly (detailed below), the frontend provides a robust, pre-built utility wrapper: **`createMenu`**. 
+
+> [!TIP]
+> **Recommended Approach**: Always use the high-level `createMenu` helper instead of manually managing subscriptions. See the full guide at **[Frontend Native Menus (`createMenu`)](./menus.md)**.
+
+#### 1. Standard High-Level Approach (`createMenu`)
+```typescript
+import { createMenu } from 'src/lib/menus';
+
+const menu = createMenu([
+    {
+        label: 'New Workspace',
+        click: () => {
+            createNewWorkspace(true);
+        }
+    }
+]);
+
+menu.show();
+```
+
+#### 2. Under the Hood (Raw Subscription Boilerplate)
+Under the hood, `createMenu` serializes the callbacks into temporary string identifiers (`clickId`) on the frontend, registers the local click triggers in a callback map, and opens a subscription to the backend tRPC router.
+
+Example of the low-level subscription plumbing:
 ```typescript
 import { trpc } from 'src/lib/trpc';
 

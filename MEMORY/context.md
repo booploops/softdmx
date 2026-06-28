@@ -27,6 +27,10 @@ Welcome! This folder houses memory files designed to help developer agents and h
    * Explains how native Electron context menus are serialized, streamed, and triggered.
    * Details the important environment-related `Symbol.asyncDispose` Gotcha.
 
+6. **[Frontend Native Menus (`createMenu`)](./menus.md)**
+   * Describes how to create and trigger native desktop context menus using the frontend `createMenu` utility helper.
+   * Details structural guidelines, types, positioning, and automatic memory cleanup.
+
 ---
 
 ## Monorepo Architecture Quick Pointers
