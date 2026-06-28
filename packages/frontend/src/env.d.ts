@@ -6,6 +6,22 @@ declare namespace NodeJS {
   }
 }
 
+interface FrontendMenuItem {
+  role?: 'undo' | 'redo' | 'cut' | 'copy' | 'paste' | 'pasteAndMatchStyle' | 'delete' | 'selectAll' | 'reload' | 'forceReload' | 'toggleDevTools' | 'resetZoom' | 'zoomIn' | 'zoomOut' | 'togglefullscreen' | 'window' | 'minimize' | 'close' | 'help' | 'about' | 'services' | 'hide' | 'hideOthers' | 'unhide' | 'quit' | 'startSpeaking' | 'stopSpeaking' | 'zoom' | 'front' | 'appMenu' | 'fileMenu' | 'editMenu' | 'viewMenu' | 'shareMenu' | 'recentDocuments' | 'toggleTabBar' | 'selectNextTab' | 'selectPreviousTab' | 'mergeAllWindows' | 'moveTabToNewWindow' | 'windowMenu';
+  type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
+  label?: string;
+  sublabel?: string;
+  toolTip?: string;
+  accelerator?: string;
+  icon?: string;
+  enabled?: boolean;
+  visible?: boolean;
+  checked?: boolean;
+  id?: string;
+  click?: () => void;
+  submenu?: FrontendMenuItem[];
+}
+
 interface Window {
   electronAPI?: {
     getRemoteApiToken?: () => string | undefined;

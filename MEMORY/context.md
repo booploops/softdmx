@@ -22,6 +22,11 @@ Welcome! This folder houses memory files designed to help developer agents and h
    * Outlines how the testing suite is structured in `packages/tests` (`@softdmx/tests`).
    * Explains how to run unit, integration, and property-based tests, and how Vitest with custom resolution plugins handles path alias resolution and compatibility bridges.
 
+5. **[tRPC Electron IPC & Native Menus](./ipc-trpc.md)**
+   * Outlines how the type-safe tRPC subscription bridge is structured between Electron Main and Vue 3.
+   * Explains how native Electron context menus are serialized, streamed, and triggered.
+   * Details the important environment-related `Symbol.asyncDispose` Gotcha.
+
 ---
 
 ## Monorepo Architecture Quick Pointers

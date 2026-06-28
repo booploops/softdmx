@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2025-Present booploops and contributors
- * 
+ *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
@@ -12,6 +12,10 @@ const routes: RouteRecordRaw[] = [
     path: "/",
     component: () => import("layouts/MainLayout.vue"),
     children: [{ path: "", component: () => import("pages/IndexPage.vue") }],
+  },
+  {
+    path: "/new-workspace",
+    component: () => import("layouts/WorkspaceLayout.vue"),
   },
   {
     path: "/remote",

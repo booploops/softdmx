@@ -7,6 +7,9 @@
  */
 
 import { contextBridge, ipcRenderer } from "electron";
+import { exposeElectronTRPC } from "electron-trpc-experimental/preload";
+
+exposeElectronTRPC();
 
 contextBridge.exposeInMainWorld("electronVideo", {
   listSenders: (): Promise<Array<{ name: string; appName?: string }>> =>
@@ -26,6 +29,7 @@ contextBridge.exposeInMainWorld("electronVideo", {
     ipcRenderer.removeAllListeners("video-frame");
   },
 });
+
 
 contextBridge.exposeInMainWorld("electronAPI", {
   getRemoteApiToken: (): string | undefined => {
