@@ -3053,6 +3053,7 @@ __metadata:
     "@softdmx/engine": "workspace:*"
     "@softdmx/wasm": "workspace:*"
     "@trpc/client": "npm:^11.18.0"
+    "@trpc/server": "npm:^11.18.0"
     "@types/lodash-es": "npm:^4.17.12"
     "@types/node": "npm:^22.15.0"
     "@types/three": "npm:^0.175.0"
