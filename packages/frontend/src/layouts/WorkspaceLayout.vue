@@ -11,6 +11,7 @@ import XSidebarButton from 'src/components/controls/XSidebarButton.vue';
 import WSWorkspaceInstance from 'src/components/workspace/WSWorkspaceInstance.vue';
 import { getPanelsMenu, type PanelMenuItem } from 'src/lib/workspace-panels';
 import { getMainMenu } from 'src/lib/main-menu';
+import { WorkspaceLayouts } from 'src/lib/workspace-layouts';
 import type { Route } from '@booploops/pod-router';
 import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type GetTabContextMenuItemsParams, type ContextMenuItem } from 'dockview-vue';
 import { useWorkspaceStore } from 'src/stores/workspace';
@@ -408,6 +409,15 @@ function showNativeSpawnMenu() {
             click: () => {
                 createNewWorkspace(true);
             }
+        },
+        {
+            label: 'Layouts',
+            submenu: WorkspaceLayouts.map((layoutPreset) => ({
+                label: layoutPreset.title,
+                click: () => {
+                    importWorkspaceData(layoutPreset.title, layoutPreset.layout);
+                }
+            }))
         },
         {
             type: 'separator'

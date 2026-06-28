@@ -187,7 +187,7 @@ export const appRouter = router({
     )
     .mutation(async ({ input, ctx }) => {
       const win = ctx.window;
-      if (!win) return { success: false, error: "No window found" };
+      if (!win) return { success: false, error: "No window found" as string | undefined };
 
       const result = await dialog.showSaveDialog(win, {
         title: "Export Workspace JSON",
@@ -196,7 +196,7 @@ export const appRouter = router({
       });
 
       if (result.canceled || !result.filePath) {
-        return { success: false };
+        return { success: false, error: undefined as string | undefined };
       }
 
       try {
@@ -212,16 +212,16 @@ export const appRouter = router({
           ),
           "utf-8"
         );
-        return { success: true };
+        return { success: true, error: undefined as string | undefined };
       } catch (err: any) {
-        return { success: false, error: err.message || String(err) };
+        return { success: false, error: (err.message || String(err)) as string | undefined };
       }
     }),
 
   importWorkspace: publicProcedure
     .mutation(async ({ ctx }) => {
       const win = ctx.window;
-      if (!win) return { success: false, error: "No window found" };
+      if (!win) return { success: false, error: "No window found" as string | undefined, data: undefined as any };
 
       const result = await dialog.showOpenDialog(win, {
         title: "Import Workspace JSON",
@@ -230,15 +230,15 @@ export const appRouter = router({
       });
 
       if (result.canceled || result.filePaths.length === 0) {
-        return { success: false };
+        return { success: false, error: undefined as string | undefined, data: undefined as any };
       }
 
       try {
         const content = await fs.readFile(result.filePaths[0], "utf-8");
         const parsed = JSON.parse(content);
-        return { success: true, data: parsed };
+        return { success: true, data: parsed, error: undefined as string | undefined };
       } catch (err: any) {
-        return { success: false, error: err.message || String(err) };
+        return { success: false, error: (err.message || String(err)) as string | undefined, data: undefined as any };
       }
     }),
 });

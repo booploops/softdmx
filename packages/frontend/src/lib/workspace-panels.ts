@@ -24,6 +24,26 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     component: () => import("components/desk/DeskShell.vue"),
   },
   {
+    label: "Timeline Desk",
+    path: "timeline-desk",
+    component: () => import("components/desk/TimelineDesk.vue"),
+  },
+  {
+    label: "Live Desk",
+    path: "live-desk",
+    component: () => import("components/desk/LiveDesk.vue"),
+  },
+  {
+    label: "Setup Desk",
+    path: "setup-desk",
+    component: () => import("components/desk/SetupDesk.vue"),
+  },
+  {
+    label: "Program Desk",
+    path: "program-desk",
+    component: () => import("components/desk/ProgramDesk.vue"),
+  },
+  {
     label: "Audio",
     path: "audio",
     component: () => import("components/AudioPanel.vue"),
@@ -84,7 +104,8 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     label: "Attribute Control",
     path: "attribute-control",
     parent: "desk-shell",
-    component: () => import("components/desk/windows/AttributeControlWindow.vue"),
+    component: () =>
+      import("components/desk/windows/AttributeControlWindow.vue"),
   },
   {
     label: "Fixture Sheet",
@@ -120,7 +141,8 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     label: "Quick Programmer",
     path: "quick-programmer",
     parent: "desk-shell",
-    component: () => import("components/desk/windows/QuickProgrammerWindow.vue"),
+    component: () =>
+      import("components/desk/windows/QuickProgrammerWindow.vue"),
   },
   {
     label: "Widgets",

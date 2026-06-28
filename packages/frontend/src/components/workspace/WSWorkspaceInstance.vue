@@ -69,18 +69,6 @@ function onReady(event: DockviewReadyEvent) {
     }
   }
 
-  // If no panels exist after restoration, spawn a default 'test' panel
-  if (innerApi.panels.length === 0) {
-    innerApi.addPanel({
-      id: `panel-test-${Date.now()}`,
-      component: 'WSPanelContent',
-      title: 'Test',
-      params: {
-        path: '/test',
-      },
-    });
-  }
-
   // Subscribe to inner layout changes to serialize and persist
   const layoutDisposable = innerApi.onDidLayoutChange(() => {
     if (!innerApi) return;
@@ -126,7 +114,10 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="ws-workspace-instance" @pointerdown="workspaceStore.setActiveWorkspace(workspaceId)">
+  <div
+    class="ws-workspace-instance"
+    @pointerdown="workspaceStore.setActiveWorkspace(workspaceId)"
+  >
     <DockviewVue
       class="dockview-theme-dark sdmx-dockview-inner"
       :components="components"
