@@ -21,6 +21,7 @@ import { createMainWindow } from "./windows/main-window";
 import { createOutputNodeWindow } from "./windows/output-node-window";
 
 app.setPath("userData", Paths.appData);
+app.commandLine.appendSwitch("disable-smooth-scrolling");
 
 const currentDir = fileURLToPath(new URL(".", import.meta.url));
 
