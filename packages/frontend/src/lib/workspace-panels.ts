@@ -7,9 +7,67 @@
  */
 import { Route } from "@booploops/pod-router";
 
-export const WorkspacePanels: Route[] = [
+export type WorkspaceRoute = Route & {
+  label: string;
+  parent?: string;
+};
+
+export const WorkspacePanels: WorkspaceRoute[] = [
   {
+    label: "Test Panel",
     path: "test",
     component: () => import("pages/TestPage.vue"),
   },
+  {
+    label: "Desk Shell",
+    path: "desk-shell",
+    component: () => import("components/desk/DeskShell.vue"),
+  },
+  {
+    label: "Programmer",
+    path: "programmer-window",
+    parent: "desk-shell",
+    component: () => import("components/desk/windows/ProgrammerWindow.vue"),
+  },
 ];
+
+export type PanelMenuItem = {
+  label: string;
+  path: string;
+  children: PanelMenuItem[];
+};
+
+export function getPanelsMenu(): PanelMenuItem[] {
+  // Create a menu based on WorkspacePanels, have submenus based on parent
+  const menu: PanelMenuItem[] = [];
+  const parentGroups = new Map<string, PanelMenuItem[]>();
+
+  for (const panel of WorkspacePanels) {
+    if (panel.parent) {
+      if (!parentGroups.has(panel.parent)) {
+        parentGroups.set(panel.parent, []);
+      }
+      parentGroups.get(panel.parent)!.push({
+        label: panel.label,
+        path: panel.path,
+        children: [],
+      });
+    } else {
+      menu.push({
+        label: panel.label,
+        path: panel.path,
+        children: [],
+      });
+    }
+  }
+
+  for (const [parent, items] of parentGroups.entries()) {
+    menu.push({
+      label: parent,
+      path: "",
+      children: items,
+    });
+  }
+
+  return menu;
+}

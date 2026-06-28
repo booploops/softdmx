@@ -9,7 +9,7 @@
 import { ref, computed } from 'vue';
 import XSidebarButton from 'src/components/controls/XSidebarButton.vue';
 import WSWorkspaceInstance from 'src/components/workspace/WSWorkspaceInstance.vue';
-import { WorkspacePanels } from 'src/lib/workspace-panels';
+import { getPanelsMenu, type PanelMenuItem } from 'src/lib/workspace-panels';
 import { getMainMenu } from 'src/lib/main-menu';
 import type { Route } from '@booploops/pod-router';
 import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type GetTabContextMenuItemsParams, type ContextMenuItem } from 'dockview-vue';
@@ -84,12 +84,12 @@ function createNewWorkspace(focus = true): string {
     return workspaceId;
 }
 
-function spawnToolInActiveWorkspace(route: Route) {
+function spawnToolInActiveWorkspace(route: { path: string; label: string }) {
     if (!outerApi) return;
 
     let targetWorkspaceId = workspaceStore.activeWorkspaceId;
     const panelPath = route.path.startsWith('/') ? route.path : `/${route.path}`;
-    const title = route.name || route.meta?.title || formatPath(route.path);
+    const title = route.label || formatPath(route.path);
 
     // Check if active workspace is still valid in outer layout
     if (!targetWorkspaceId || !outerApi.getPanel(targetWorkspaceId)) {
@@ -103,6 +103,20 @@ function spawnToolInActiveWorkspace(route: Route) {
     }
 
     workspaceStore.requestSpawnPanel(targetWorkspaceId, panelPath, title);
+}
+
+function mapPanelMenuItem(item: PanelMenuItem): FrontendMenuItem {
+    const mapped: FrontendMenuItem = {
+        label: item.label,
+    };
+    if (item.children && item.children.length > 0) {
+        mapped.submenu = item.children.map(mapPanelMenuItem);
+    } else {
+        mapped.click = () => {
+            spawnToolInActiveWorkspace({ path: item.path, label: item.label });
+        };
+    }
+    return mapped;
 }
 
 function onReady(event: DockviewReadyEvent) {
@@ -253,12 +267,7 @@ function showNativeSpawnMenu() {
         {
             type: 'separator'
         },
-        ...WorkspacePanels.map(panel => ({
-            label: panel.name || panel.meta?.title || formatPath(panel.path),
-            click: () => {
-                spawnToolInActiveWorkspace(panel);
-            }
-        }))
+        ...getPanelsMenu().map(mapPanelMenuItem)
     ];
 
     showNativeContextMenu(template);
