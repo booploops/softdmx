@@ -27,6 +27,56 @@ contextBridge.exposeInMainWorld("electronVideo", {
   },
 });
 
+let nextClickId = 0;
+const clickCallbacks = new Map<string, () => void>();
+
+function serializeTemplate(items: any[]): any[] {
+  if (!Array.isArray(items)) return [];
+  return items.map((item) => {
+    const serialized: any = {
+      role: item.role,
+      type: item.type,
+      label: item.label,
+      sublabel: item.sublabel,
+      toolTip: item.toolTip,
+      accelerator: item.accelerator,
+      enabled: item.enabled,
+      visible: item.visible,
+      checked: item.checked,
+      id: item.id,
+    };
+
+    if (item.click && typeof item.click === "function") {
+      const clickId = `click-${nextClickId++}`;
+      clickCallbacks.set(clickId, item.click);
+      serialized.clickId = clickId;
+    }
+
+    if (Array.isArray(item.submenu)) {
+      serialized.submenu = serializeTemplate(item.submenu);
+    }
+
+    return serialized;
+  });
+}
+
+ipcRenderer.on("menu-item-clicked", (_event, clickId: string) => {
+  const cb = clickCallbacks.get(clickId);
+  if (cb) {
+    try {
+      cb();
+    } catch (err) {
+      console.error("Error executing context menu item callback", err);
+    }
+  }
+});
+
+ipcRenderer.on("menu-closed", () => {
+  setTimeout(() => {
+    clickCallbacks.clear();
+  }, 100);
+});
+
 contextBridge.exposeInMainWorld("electronAPI", {
   getRemoteApiToken: (): string | undefined => {
     const token = process.env.SOFTDMX_API_TOKEN?.trim();
@@ -37,6 +87,10 @@ contextBridge.exposeInMainWorld("electronAPI", {
   },
   removeOscListener: () => {
     ipcRenderer.removeAllListeners("osc-received");
+  },
+  createMenu: (template: any[]) => {
+    const serialized = serializeTemplate(template);
+    ipcRenderer.send("show-context-menu", { template: serialized });
   },
 });
 

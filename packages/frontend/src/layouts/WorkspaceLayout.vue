@@ -6,11 +6,12 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import XSidebarButton from 'src/components/controls/XSidebarButton.vue';
 import WSWorkspaceInstance from 'src/components/workspace/WSWorkspaceInstance.vue';
 import MainMenu from 'src/components/workspace/MainMenu.vue';
 import { WorkspacePanels } from 'src/lib/workspace-panels';
+import { getMainMenu } from 'src/lib/main-menu';
 import type { Route } from '@booploops/pod-router';
 import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type GetTabContextMenuItemsParams, type ContextMenuItem } from 'dockview-vue';
 import { useWorkspaceStore } from 'src/stores/workspace';
@@ -148,14 +149,66 @@ function onReady(event: DockviewReadyEvent) {
         }
     });
 }
+
+const isElectron = computed(() => typeof window.electronAPI?.createMenu === 'function');
+
+function showNativeMainMenu() {
+    if (!isElectron.value) return;
+
+    const mapMenu = (items: any[]): FrontendMenuItem[] => {
+        return items.map(item => {
+            const mapped: FrontendMenuItem = {
+                label: item.label,
+                id: item.label,
+            };
+            if (item.click) {
+                mapped.click = item.click;
+            }
+            if (item.children) {
+                mapped.submenu = mapMenu(item.children);
+            }
+            return mapped;
+        });
+    };
+
+    const template = mapMenu(getMainMenu());
+    window.electronAPI?.createMenu!(template);
+}
+
+function showNativeSpawnMenu() {
+    if (!isElectron.value) return;
+
+    const template: FrontendMenuItem[] = [
+        {
+            label: 'New Workspace',
+            click: () => {
+                createNewWorkspace(true);
+            }
+        },
+        {
+            type: 'separator'
+        },
+        ...WorkspacePanels.map(panel => ({
+            label: panel.name || panel.meta?.title || formatPath(panel.path),
+            click: () => {
+                spawnToolInActiveWorkspace(panel);
+            }
+        }))
+    ];
+
+    window.electronAPI?.createMenu!(template);
+}
 </script>
 
 <template>
     <div class="workspace-shell">
         <div class="workspace-sidebar">
-            <XSidebarButton tooltip="Spawn Panel">
+            <XSidebarButton
+                tooltip="Spawn Panel"
+                @click="isElectron ? showNativeSpawnMenu() : undefined"
+            >
                 <i class="codicon codicon-plus"></i>
-                <template #menu>
+                <template #menu v-if="!isElectron">
                     <q-menu
                         anchor="bottom right"
                         self="top left"
@@ -209,9 +262,12 @@ function onReady(event: DockviewReadyEvent) {
                     </q-menu>
                 </template>
             </XSidebarButton>
-            <XSidebarButton tooltip="Main Menu">
+            <XSidebarButton
+                tooltip="Main Menu"
+                @click="isElectron ? showNativeMainMenu() : undefined"
+            >
                 <i class="codicon codicon-menu" />
-                <template #menu>
+                <template #menu v-if="!isElectron">
                     <MainMenu touch-position />
                 </template>
             </XSidebarButton>

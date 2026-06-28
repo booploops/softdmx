@@ -13,6 +13,7 @@ import { Paths } from "./runtime/paths";
 import { closeOscListener } from "./ipc/osc-ipc";
 import { closeAbletonLink } from "./ipc/link-ipc";
 import { setupGridNodeOverlayIpc, closeGridNodeOverlayIpc } from "./ipc/gridnode-ipc";
+import { setupMenuIpc, closeMenuIpc } from "./ipc/menu-ipc";
 import { closeVideoIpc } from "./ipc/video-ipc";
 import { isOutputNodeMode } from "./modes/output-node";
 import { createMainWindow } from "./windows/main-window";
@@ -38,6 +39,7 @@ function runShutdownCleanup() {
   closeAbletonLink();
   closeGridNodeOverlayIpc();
   void closeVideoIpc();
+  closeMenuIpc();
   destroyAuxiliaryWindows();
 }
 
@@ -57,6 +59,7 @@ async function shutdownAndQuit() {
 async function createWindow() {
   startServer();
   setupGridNodeOverlayIpc();
+  setupMenuIpc();
 
   if (isOutputNodeMode()) {
     mainWindow = await createOutputNodeWindow(currentDir);
