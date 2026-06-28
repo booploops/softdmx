@@ -441,6 +441,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@booploops/pod-router@npm:^0.1.4":
+  version: 0.1.4
+  resolution: "@booploops/pod-router@npm:0.1.4"
+  dependencies:
+    rou3: "npm:^0.7.12"
+  peerDependencies:
+    vue: ^3.0.0
+  checksum: 10c0/41d5752be0c6907f041ce7cede4a425fa2f1d7c4c695e59aaef5738d0787daa304ba2bbb2aa5f0b2973945ce39f771e49fa0b31dc3b527aaf6fcfd35274820dc
+  languageName: node
+  linkType: hard
+
 "@codemirror/commands@npm:^6.7.1":
   version: 6.10.3
   resolution: "@codemirror/commands@npm:6.10.3"
@@ -3029,6 +3040,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@softdmx/frontend@workspace:packages/frontend"
   dependencies:
+    "@booploops/pod-router": "npm:^0.1.4"
     "@fontsource-variable/roboto-flex": "npm:^5.2.8"
     "@histoire/plugin-vue": "npm:1.0.0-beta.1"
     "@intlify/unplugin-vue-i18n": "npm:^11.2.4"
@@ -9133,6 +9145,13 @@ __metadata:
   bin:
     rollup: dist/bin/rollup
   checksum: 10c0/83ff5f4a1fea3fa05db2ef56beceee8c33d4a72b818e19c562f1e85c41076fe5b12aadc44048bb73e60b83336df82154b017fa6bf0186f3141643e6f215fbdcb
+  languageName: node
+  linkType: hard
+
+"rou3@npm:^0.7.12":
+  version: 0.7.12
+  resolution: "rou3@npm:0.7.12"
+  checksum: 10c0/2ea87ddd91a5d0f9d9671fa2bb714f57566eae33ecb24e8a61bb298aca8c226483e59cafe1c60297ac9aa58b2b6ad506447374cdbff4e99cf0f9f72a9dae09dc
   languageName: node
   linkType: hard
 

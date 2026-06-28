@@ -16,7 +16,6 @@ const routes: RouteRecordRaw[] = [
   {
     path: "/new-workspace",
     component: () => import("layouts/WorkspaceLayout.vue"),
-    children: [{ path: "", component: () => import("pages/TestPage.vue") }],
   },
   {
     path: "/remote",

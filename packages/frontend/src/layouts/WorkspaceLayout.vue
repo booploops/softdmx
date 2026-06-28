@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import XSidebarButton from 'src/components/controls/XSidebarButton.vue';
+import WSPanelContent from 'src/components/workspace/WSPanelContent.vue';
 
-
+const a = ref('/test')
 </script>
 
 <template>
@@ -15,7 +16,7 @@ import XSidebarButton from 'src/components/controls/XSidebarButton.vue';
             </XSidebarButton>
         </div>
         <div class="workspace-viewport">
-            <router-view />
+            <WSPanelContent v-model="a" />
         </div>
     </div>
 </template>
