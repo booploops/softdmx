@@ -7,7 +7,8 @@
 -->
 <script setup lang="ts">
 import { ref, watch, onUnmounted } from 'vue';
-import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type IDockviewPanelProps } from 'dockview-vue';
+import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type IDockviewPanelProps, type GetTabContextMenuItemsParams, type ContextMenuItem } from 'dockview-vue';
+import { useQuasar } from 'quasar';
 import WSWorkspacePanel from './WSWorkspacePanel.vue';
 import { useWorkspaceStore } from 'src/stores/workspace';
 
@@ -15,12 +16,42 @@ const props = defineProps<{
   params: IDockviewPanelProps<{ workspaceId: string }>;
 }>();
 
+const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
 const workspaceId = props.params.params?.workspaceId || props.params.api.id;
 
 const components = {
   WSPanelContent: WSWorkspacePanel as any,
 };
+
+function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMenuItem[] {
+  return [
+    {
+      label: 'Rename',
+      action: () => {
+        $q.dialog({
+          title: 'Rename Panel',
+          message: 'Enter a new name for this panel:',
+          prompt: {
+            model: params.panel.title || '',
+            type: 'text',
+          },
+          cancel: true,
+          persistent: true,
+          dark: true,
+        }).onOk((newName: string) => {
+          if (newName && newName.trim()) {
+            params.panel.api.setTitle(newName.trim());
+          }
+        });
+      },
+    },
+    'separator',
+    'close',
+    'closeOthers',
+    'closeAll',
+  ];
+}
 
 let innerApi: DockviewApi | undefined;
 const disposables: (() => void)[] = [];
@@ -99,6 +130,7 @@ onUnmounted(() => {
     <DockviewVue
       class="dockview-theme-dark sdmx-dockview-inner"
       :components="components"
+      :getTabContextMenuItems="getTabContextMenuItems"
       @ready="onReady"
     />
   </div>

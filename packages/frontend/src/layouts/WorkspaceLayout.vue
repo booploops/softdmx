@@ -11,14 +11,45 @@ import XSidebarButton from 'src/components/controls/XSidebarButton.vue';
 import WSWorkspaceInstance from 'src/components/workspace/WSWorkspaceInstance.vue';
 import { WorkspacePanels } from 'src/lib/workspace-panels';
 import type { Route } from '@booploops/pod-router';
-import { DockviewVue, type DockviewApi, type DockviewReadyEvent } from 'dockview-vue';
+import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type GetTabContextMenuItemsParams, type ContextMenuItem } from 'dockview-vue';
 import { useWorkspaceStore } from 'src/stores/workspace';
+import { useQuasar } from 'quasar';
 import 'dockview-core/dist/styles/dockview.css';
 
+const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
 const components = {
   WorkspaceInstance: WSWorkspaceInstance as any,
 };
+
+function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMenuItem[] {
+  return [
+    {
+      label: 'Rename',
+      action: () => {
+        $q.dialog({
+          title: 'Rename Workspace',
+          message: 'Enter a new name for this workspace:',
+          prompt: {
+            model: params.panel.title || '',
+            type: 'text',
+          },
+          cancel: true,
+          persistent: true,
+          dark: true,
+        }).onOk((newName: string) => {
+          if (newName && newName.trim()) {
+            params.panel.api.setTitle(newName.trim());
+          }
+        });
+      },
+    },
+    'separator',
+    'close',
+    'closeOthers',
+    'closeAll',
+  ];
+}
 
 let outerApi: DockviewApi | undefined;
 const workspaceCounter = ref(1);
@@ -172,6 +203,7 @@ function onReady(event: DockviewReadyEvent) {
       <DockviewVue
         class="dockview-theme-dark sdmx-dockview"
         :components="components"
+        :getTabContextMenuItems="getTabContextMenuItems"
         @ready="onReady"
       />
     </div>
