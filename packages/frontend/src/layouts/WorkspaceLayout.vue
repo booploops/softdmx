@@ -449,6 +449,7 @@ function showNativeSpawnMenu() {
                     <i class="codicon codicon-plus"></i>
                 </XSidebarButton>
                 <XSidebarButton
+                    v-if="ui.showOperateLockIcon"
                     :active="ui.operateLocked"
                     :tooltip="ui.operateLocked ? 'Operate Lock: On' : 'Operate Lock: Off'"
                     @click="ui.toggleOperateLock()"

@@ -69,11 +69,11 @@ function setShortcutEnabled(id: string, value: boolean) {
         <div class="behavior-layout__right q-gutter-y-sm">
           <div class="shortcut-row">
             <div class="shortcut-label">
-              <span>Operate lock (hide config UI in Live)</span>
+              <span>Show operate lock icon</span>
             </div>
             <XSwitch
-              :model-value="uiStore.operateLocked"
-              @update:model-value="uiStore.toggleOperateLock"
+              :model-value="uiStore.showOperateLockIcon"
+              @update:model-value="uiStore.toggleShowOperateLockIcon"
             />
           </div>
 

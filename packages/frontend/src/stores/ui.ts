@@ -16,6 +16,7 @@ export type SidebarShortcutOpenMode = 'current-workspace' | 'new-workspace';
 export type SidebarShortcutNewWorkspacePolicy = 'always-new' | 'reuse-existing';
 
 const OPERATE_LOCKED_KEY = 'softdmx-operate-locked';
+const SHOW_OPERATE_LOCK_ICON_KEY = 'softdmx-show-operate-lock-icon';
 const SIDEBAR_SHORTCUTS_KEY = 'softdmx-sidebar-shortcuts';
 const SIDEBAR_SHORTCUT_OPEN_MODE_KEY = 'softdmx-sidebar-shortcut-open-mode';
 const SIDEBAR_SHORTCUT_NEW_WORKSPACE_POLICY_KEY = 'softdmx-sidebar-shortcut-new-workspace-policy';
@@ -23,6 +24,13 @@ const SIDEBAR_SHORTCUT_NEW_WORKSPACE_POLICY_KEY = 'softdmx-sidebar-shortcut-new-
 function readOperateLocked(): boolean {
   if (typeof localStorage === 'undefined') return true;
   const stored = localStorage.getItem(OPERATE_LOCKED_KEY);
+  if (stored === null) return true;
+  return stored === 'true';
+}
+
+function readShowOperateLockIcon(): boolean {
+  if (typeof localStorage === 'undefined') return true;
+  const stored = localStorage.getItem(SHOW_OPERATE_LOCK_ICON_KEY);
   if (stored === null) return true;
   return stored === 'true';
 }
@@ -66,6 +74,7 @@ export const useUIStore = defineStore('ui', () => {
   const widgetsViewMode = ref<'groups' | 'individual'>('groups');
   const leftDrawerOpen = ref(false);
   const operateLocked = ref(readOperateLocked());
+  const showOperateLockIcon = ref(readShowOperateLockIcon());
   const programmerCollapsed = ref(false);
   const cueBarCollapsed = ref(false);
   const infoMode = ref(false);
@@ -101,6 +110,13 @@ export const useUIStore = defineStore('ui', () => {
     operateLocked.value = force ?? !operateLocked.value;
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(OPERATE_LOCKED_KEY, operateLocked.value ? 'true' : 'false');
+    }
+  }
+
+  function toggleShowOperateLockIcon(force?: boolean) {
+    showOperateLockIcon.value = force ?? !showOperateLockIcon.value;
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(SHOW_OPERATE_LOCK_ICON_KEY, showOperateLockIcon.value ? 'true' : 'false');
     }
   }
 
@@ -176,6 +192,7 @@ export const useUIStore = defineStore('ui', () => {
     widgetsViewMode,
     leftDrawerOpen,
     operateLocked,
+    showOperateLockIcon,
     programmerCollapsed,
     cueBarCollapsed,
     infoMode,
@@ -193,6 +210,7 @@ export const useUIStore = defineStore('ui', () => {
     setSetupSection,
     setProgramSection,
     toggleOperateLock,
+    toggleShowOperateLockIcon,
     toggleLeftDrawer,
     openDialog,
     closeDialog,
