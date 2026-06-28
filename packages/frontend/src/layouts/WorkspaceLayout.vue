@@ -406,8 +406,6 @@ async function importWorkspaceJSON() {
 }
 
 function showNativeMainMenu() {
-    if (!isElectron.value) return;
-
     const mapMenu = (items: any[]): FrontendMenuItem[] => {
         return items.map(item => {
             const mapped: FrontendMenuItem = {

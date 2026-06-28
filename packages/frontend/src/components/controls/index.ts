@@ -7,6 +7,7 @@
  */
 
 export { default as XButton } from './XButton.vue';
+export { default as XButtonGroup } from './XButtonGroup.vue';
 export { default as XSelect } from './XSelect.vue';
 export { default as XCheckbox } from './XCheckbox.vue';
 export { default as XRange } from './XRange.vue';
@@ -21,6 +22,9 @@ export { default as XWell } from './XWell.vue';
 export { default as XInput } from './XInput.vue';
 export { default as XStepper } from './XStepper.vue';
 export { default as XSidebarButton } from './XSidebarButton.vue';
+export { default as XTabs } from './XTabs.vue';
+export { default as XTab } from './XTab.vue';
+
 
 
 

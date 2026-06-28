@@ -7,50 +7,55 @@
 -->
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 
 type ColorVariant = 'default' | 'primary' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
-const props = withDefaults(
-  defineProps<{
-    label?: string;
-    icon?: string;
-    disable?: boolean;
-    loading?: boolean;
-    color?: ColorVariant;
-    flat?: boolean;
-    outline?: boolean;
-    size?: ButtonSize;
-    type?: 'button' | 'submit' | 'reset';
-  }>(),
-  {
-    disable: false,
-    loading: false,
-    color: 'default',
-    flat: false,
-    outline: false,
-    size: 'md',
-    type: 'button',
-  }
-);
+const props = defineProps<{
+  label?: string;
+  icon?: string;
+  disable?: boolean;
+  loading?: boolean;
+  color?: ColorVariant;
+  flat?: boolean;
+  outline?: boolean;
+  size?: ButtonSize;
+  type?: 'button' | 'submit' | 'reset';
+}>();
 
 const emit = defineEmits<{ click: [MouseEvent] }>();
 
+const groupContext = inject<{
+  size?: ButtonSize;
+  color?: ColorVariant;
+  flat?: boolean;
+  outline?: boolean;
+  disable?: boolean;
+} | null>('x-btn-group', null);
+
+const computedSize = computed(() => props.size ?? groupContext?.size ?? 'md');
+const computedColor = computed(() => props.color ?? groupContext?.color ?? 'default');
+const computedFlat = computed(() => props.flat ?? groupContext?.flat ?? false);
+const computedOutline = computed(() => props.outline ?? groupContext?.outline ?? false);
+const computedDisable = computed(() => props.disable ?? groupContext?.disable ?? false);
+const computedLoading = computed(() => props.loading ?? false);
+const computedType = computed(() => props.type ?? 'button');
+
 const classes = computed(() => [
   'x-btn',
-  `x-btn--${props.size}`,
-  `x-btn--${props.color}`,
+  `x-btn--${computedSize.value}`,
+  `x-btn--${computedColor.value}`,
   {
-    'x-btn--flat': props.flat,
-    'x-btn--outline': props.outline,
-    'x-btn--disabled': props.disable || props.loading,
-    'x-btn--loading': props.loading,
+    'x-btn--flat': computedFlat.value,
+    'x-btn--outline': computedOutline.value,
+    'x-btn--disabled': computedDisable.value || computedLoading.value,
+    'x-btn--loading': computedLoading.value,
   },
 ]);
 
 function handleClick(event: MouseEvent) {
-  if (props.disable || props.loading) {
+  if (computedDisable.value || computedLoading.value) {
     event.preventDefault();
     event.stopPropagation();
     return;
@@ -61,14 +66,14 @@ function handleClick(event: MouseEvent) {
 
 <template>
   <button
-    :type="type"
+    :type="computedType"
     :class="classes"
-    :disabled="disable || loading"
+    :disabled="computedDisable || computedLoading"
     @click="handleClick"
   >
     <div class="x-btn__content">
       <span
-        v-if="loading"
+        v-if="computedLoading"
         class="x-btn__spinner"
       ></span>
       <template v-else>

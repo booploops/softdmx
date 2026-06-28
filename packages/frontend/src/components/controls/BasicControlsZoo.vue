@@ -11,6 +11,7 @@ import { ref } from 'vue';
 import { useQuasar } from 'quasar';
 import {
   XButton,
+  XButtonGroup,
   XSelect,
   XCheckbox,
   XSwitch,
@@ -23,7 +24,9 @@ import {
   XCard,
   XWell,
   XInput,
-  XStepper
+  XStepper,
+  XTabs,
+  XTab
 } from './index';
 
 const $q = useQuasar();
@@ -75,6 +78,11 @@ const listItems = [
 
 const collapseOpen1 = ref(true);
 const collapseOpen2 = ref(false);
+
+// Interactive tab states
+const demoTab1 = ref('fixtures');
+const demoTabDense = ref('active-tab');
+const demoTabJustify = ref('tab-a');
 </script>
 
 <template>
@@ -115,6 +123,34 @@ const collapseOpen2 = ref(false);
           <div class="zoo-row q-mt-sm">
             <XButton label="Disabled" disable color="primary" />
             <XButton label="Click for Loader" :loading="buttonLoading" color="primary" @click="triggerLoading" />
+          </div>
+        </div>
+
+        <div class="zoo-section">
+          <div class="zoo-label">Button Groups (&lt;XButtonGroup&gt;)</div>
+          <div class="zoo-row">
+            <XButtonGroup>
+              <XButton label="Left" @click="buttonClickedCount++" />
+              <XButton label="Middle" @click="buttonClickedCount++" />
+              <XButton label="Right" @click="buttonClickedCount++" />
+            </XButtonGroup>
+          </div>
+          <div class="zoo-row q-mt-sm">
+            <XButtonGroup color="primary" size="sm">
+              <XButton icon="align_horizontal_left" @click="buttonClickedCount++" />
+              <XButton icon="align_horizontal_center" @click="buttonClickedCount++" />
+              <XButton icon="align_horizontal_right" @click="buttonClickedCount++" />
+            </XButtonGroup>
+            <XButtonGroup color="danger" size="md" outline>
+              <XButton label="Cancel" @click="buttonClickedCount++" />
+              <XButton label="Confirm" @click="buttonClickedCount++" />
+            </XButtonGroup>
+          </div>
+          <div class="zoo-row q-mt-sm">
+            <XButtonGroup vertical size="sm">
+              <XButton icon="expand_less" @click="buttonClickedCount++" />
+              <XButton icon="expand_more" @click="buttonClickedCount++" />
+            </XButtonGroup>
           </div>
         </div>
 
@@ -284,6 +320,85 @@ const collapseOpen2 = ref(false);
               </XCollapseItem>
             </XListView>
           </div>
+        </div>
+      </XCard>
+
+      <!-- Column 5: Tabs Showcase -->
+      <XCard title="Tabs (<XTabs> & <XTab>)" class="zoo-card--full-width">
+        <div class="zoo-flex-row">
+          
+          <!-- Column 5a: Standard and Alignments -->
+          <div class="zoo-flex-col">
+            <div class="zoo-label">Standard & Alignments</div>
+            <XWell class="q-pa-md">
+              <div class="q-mb-md">
+                <span class="zoo-text-info font-bold">Align Left (Default):</span>
+                <XTabs v-model="demoTab1" class="q-mt-xs">
+                  <XTab name="fixtures" icon="hub" label="Fixtures" />
+                  <XTab name="pixel-maps" icon="grid_on" label="Pixel Maps" />
+                  <XTab name="disabled" icon="lock" label="Disabled" disable />
+                </XTabs>
+              </div>
+
+              <div class="q-mb-md">
+                <span class="zoo-text-info font-bold">Align Center:</span>
+                <XTabs v-model="demoTab1" align="center" class="q-mt-xs">
+                  <XTab name="fixtures" icon="hub" label="Fixtures" />
+                  <XTab name="pixel-maps" icon="grid_on" label="Pixel Maps" />
+                </XTabs>
+              </div>
+
+              <div>
+                <span class="zoo-text-info font-bold">Align Right:</span>
+                <XTabs v-model="demoTab1" align="right" class="q-mt-xs">
+                  <XTab name="fixtures" icon="hub" label="Fixtures" />
+                  <XTab name="pixel-maps" icon="grid_on" label="Pixel Maps" />
+                </XTabs>
+              </div>
+            </XWell>
+
+            <div class="zoo-text-info q-mt-md">
+              Active Value: <strong class="sdmx-text-mono">{{ demoTab1 }}</strong>
+            </div>
+          </div>
+
+          <!-- Column 5b: Dense, Justify & Content -->
+          <div class="zoo-flex-col">
+            <div class="zoo-label">Dense, Justify & Slots</div>
+            <XWell class="q-pa-md">
+              <div class="q-mb-md">
+                <span class="zoo-text-info font-bold">Dense Layout:</span>
+                <XTabs v-model="demoTabDense" dense class="q-mt-xs">
+                  <XTab name="active-tab" label="Overview" />
+                  <XTab name="settings-tab" label="Settings" />
+                  <XTab name="logs-tab" label="Logs" />
+                </XTabs>
+              </div>
+
+              <div class="q-mb-md">
+                <span class="zoo-text-info font-bold">Justified Layout (Auto-expanding):</span>
+                <XTabs v-model="demoTabJustify" align="justify" class="q-mt-xs">
+                  <XTab name="tab-a" icon="home" />
+                  <XTab name="tab-b" icon="star" />
+                  <XTab name="tab-c" icon="settings" />
+                </XTabs>
+              </div>
+            </XWell>
+
+            <!-- Working conditional Tab Panels -->
+            <div class="zoo-text-info q-mt-md">
+              <div v-if="demoTabDense === 'active-tab'">
+                👉 <strong>Overview Panel Content</strong>: SoftDMX integrates custom high-performance WebAssembly with reactive controls.
+              </div>
+              <div v-else-if="demoTabDense === 'settings-tab'">
+                👉 <strong>Settings Panel Content</strong>: Adjust performance, sampling rates, and hardware refresh timers.
+              </div>
+              <div v-else-if="demoTabDense === 'logs-tab'">
+                👉 <strong>Logs Panel Content</strong>: All systems nominal. No warnings or errors reported.
+              </div>
+            </div>
+          </div>
+
         </div>
       </XCard>
 
