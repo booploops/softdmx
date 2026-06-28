@@ -5,6 +5,10 @@ on:
     branches:
       - '**'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -43,7 +47,7 @@ jobs:
           path: packages/tests/coverage/
           retention-days: 14
 
-  build-spa:
+  spa-linux:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     needs: test
@@ -78,7 +82,7 @@ jobs:
   electron-build:
     runs-on: macos-latest
     timeout-minutes: 30
-    needs: build-spa
+    needs: test
 
     steps:
       - name: Checkout
