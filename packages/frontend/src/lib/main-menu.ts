@@ -19,7 +19,6 @@ import {
 import { exampleVrClubShow } from "src/shows/example-vr-club";
 import { simpleWashShow } from "src/shows/simple-wash";
 import { laserDemoShow } from "src/shows/laser-demo";
-import { useRouter } from "vue-router";
 
 type MainMenuItem = {
   label: string;
@@ -28,7 +27,7 @@ type MainMenuItem = {
   children?: MainMenuItem[];
 };
 
-export function getMainMenu(): MainMenuItem[] {
+export function getMainMenu(options?: { onImportWorkspace?: () => void }): MainMenuItem[] {
   const ui = useUIStore();
   const showStore = useShowStore();
   const gridNodeOverlay = useGridNodeOverlayStore();
@@ -94,6 +93,13 @@ export function getMainMenu(): MainMenuItem[] {
             input.click();
           },
         },
+        ...(options?.onImportWorkspace ? [
+          {
+            label: "Import Workspace JSON",
+            icon: "upload",
+            click: options.onImportWorkspace,
+          }
+        ] : []),
       ],
     },
     {

@@ -8,7 +8,8 @@
 
 import { initTRPC } from "@trpc/server";
 import { z } from "zod";
-import { Menu, BrowserWindow, type IpcMainInvokeEvent } from "electron";
+import { Menu, BrowserWindow, dialog, type IpcMainInvokeEvent } from "electron";
+import * as fs from "fs/promises";
 
 export interface CreateContextOptions {
   event: IpcMainInvokeEvent;
@@ -175,6 +176,70 @@ export const appRouter = router({
       }
 
       return toPlainAsyncIterable(runSubscription());
+    }),
+
+  exportWorkspace: publicProcedure
+    .input(
+      z.object({
+        title: z.string(),
+        layout: z.any(),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const win = ctx.window;
+      if (!win) return { success: false, error: "No window found" };
+
+      const result = await dialog.showSaveDialog(win, {
+        title: "Export Workspace JSON",
+        defaultPath: `${input.title}.json`,
+        filters: [{ name: "JSON Files", extensions: ["json"] }],
+      });
+
+      if (result.canceled || !result.filePath) {
+        return { success: false };
+      }
+
+      try {
+        await fs.writeFile(
+          result.filePath,
+          JSON.stringify(
+            {
+              title: input.title,
+              layout: input.layout,
+            },
+            null,
+            2
+          ),
+          "utf-8"
+        );
+        return { success: true };
+      } catch (err: any) {
+        return { success: false, error: err.message || String(err) };
+      }
+    }),
+
+  importWorkspace: publicProcedure
+    .mutation(async ({ ctx }) => {
+      const win = ctx.window;
+      if (!win) return { success: false, error: "No window found" };
+
+      const result = await dialog.showOpenDialog(win, {
+        title: "Import Workspace JSON",
+        filters: [{ name: "JSON Files", extensions: ["json"] }],
+        properties: ["openFile"],
+      });
+
+      if (result.canceled || result.filePaths.length === 0) {
+        return { success: false };
+      }
+
+      try {
+        const content = await fs.readFile(result.filePaths[0], "utf-8");
+        const parsed = JSON.parse(content);
+        return { success: true, data: parsed };
+      } catch (err: any) {
+        return { success: false, error: err.message || String(err) };
+      }
     }),
 });
 

@@ -6,7 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, toRaw } from 'vue';
 import XSidebarButton from 'src/components/controls/XSidebarButton.vue';
 import WSWorkspaceInstance from 'src/components/workspace/WSWorkspaceInstance.vue';
 import { getPanelsMenu, type PanelMenuItem } from 'src/lib/workspace-panels';
@@ -44,6 +44,65 @@ function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMe
                         params.panel.api.setTitle(newName.trim());
                     }
                 });
+            },
+        },
+        {
+            label: 'Export Workspace',
+            action: async () => {
+                const workspaceId = params.panel.id;
+                const title = params.panel.title || 'Workspace';
+                const savedLayout = workspaceStore.getWorkspaceLayout(workspaceId);
+
+                if (!savedLayout) {
+                    $q.dialog({
+                        title: 'Export Failed',
+                        message: 'No layout data found for this workspace.',
+                        dark: true,
+                    });
+                    return;
+                }
+
+                const layout = JSON.parse(JSON.stringify(toRaw(savedLayout)));
+
+                if (!isElectron.value) {
+                    // Browser download fallback
+                    try {
+                        const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify({ title, layout }, null, 2));
+                        const downloadAnchor = document.createElement('a');
+                        downloadAnchor.setAttribute('href', dataStr);
+                        downloadAnchor.setAttribute('download', `${title}.json`);
+                        document.body.appendChild(downloadAnchor);
+                        downloadAnchor.click();
+                        downloadAnchor.remove();
+                    } catch (err: any) {
+                        $q.dialog({
+                            title: 'Export Failed',
+                            message: err.message || String(err),
+                            dark: true,
+                        });
+                    }
+                    return;
+                }
+
+                // Electron save
+                try {
+                    const res = await trpc.exportWorkspace.mutate({ title, layout });
+                    if (res.success) {
+                        // Successfully exported
+                    } else if (res.error) {
+                        $q.dialog({
+                            title: 'Export Failed',
+                            message: res.error,
+                            dark: true,
+                        });
+                    }
+                } catch (err: any) {
+                    $q.dialog({
+                        title: 'Export Failed',
+                        message: err.message || String(err),
+                        dark: true,
+                    });
+                }
             },
         },
         'separator',
@@ -231,6 +290,90 @@ function showNativeContextMenu(template: FrontendMenuItem[], x?: number, y?: num
     );
 }
 
+function importWorkspaceData(title: string, layout: any) {
+    if (!outerApi) return;
+    const workspaceId = `workspace-${Date.now()}-${workspaceCounter.value++}`;
+
+    // Save the layout to store first
+    workspaceStore.saveWorkspaceLayout(workspaceId, layout);
+
+    const panel = outerApi.addPanel({
+        id: workspaceId,
+        component: 'WorkspaceInstance',
+        title: title || `Workspace ${workspaceCounter.value - 1}`,
+        params: {
+            workspaceId,
+        },
+    });
+
+    if (panel) {
+        panel.api.setActive();
+    }
+    workspaceStore.setActiveWorkspace(workspaceId);
+}
+
+function handleImportedJSON(parsed: any) {
+    let title = '';
+    let layout = parsed;
+    if (parsed && typeof parsed === 'object') {
+        if ('layout' in parsed) {
+            layout = parsed.layout;
+            if (typeof parsed.title === 'string') {
+                title = parsed.title;
+            }
+        }
+        importWorkspaceData(title, layout);
+    } else {
+        throw new Error('Invalid workspace JSON structure');
+    }
+}
+
+async function importWorkspaceJSON() {
+    if (!isElectron.value) {
+        // Browser file selection fallback
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.json';
+        input.onchange = async (event) => {
+            const file = (event.target as HTMLInputElement).files?.[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                const parsed = JSON.parse(text);
+                handleImportedJSON(parsed);
+            } catch (err: any) {
+                $q.dialog({
+                    title: 'Import Failed',
+                    message: err.message || String(err),
+                    dark: true,
+                });
+            }
+        };
+        input.click();
+        return;
+    }
+
+    // Electron file import via tRPC
+    try {
+        const res = await trpc.importWorkspace.mutate();
+        if (res.success && res.data) {
+            handleImportedJSON(res.data);
+        } else if (res.error) {
+            $q.dialog({
+                title: 'Import Failed',
+                message: res.error,
+                dark: true,
+            });
+        }
+    } catch (err: any) {
+        $q.dialog({
+            title: 'Import Failed',
+            message: err.message || String(err),
+            dark: true,
+        });
+    }
+}
+
 function showNativeMainMenu() {
     if (!isElectron.value) return;
 
@@ -250,7 +393,9 @@ function showNativeMainMenu() {
         });
     };
 
-    const template = mapMenu(getMainMenu());
+    const template = mapMenu(getMainMenu({
+        onImportWorkspace: importWorkspaceJSON,
+    }));
     showNativeContextMenu(template);
 }
 
@@ -289,6 +434,7 @@ function showNativeSpawnMenu() {
             >
                 <i class="codicon codicon-plus"></i>
             </XSidebarButton>
+            <div class="ws-sidebar-spacing"></div>
             <XSidebarButton>
                 <i class="codicon codicon-gear" />
             </XSidebarButton>
@@ -309,6 +455,10 @@ function showNativeSpawnMenu() {
     height: 100%;
     overflow: hidden;
     display: flex;
+}
+
+.ws-sidebar-spacing {
+    flex: 1;
 }
 
 .workspace-sidebar {
