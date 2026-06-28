@@ -13,6 +13,7 @@ import AutoImport from "unplugin-auto-import/vite";
 import vueI18n from "@intlify/unplugin-vue-i18n/vite";
 import { quasar, transformAssetUrls } from "@quasar/vite-plugin";
 import VueDevTools from "vite-plugin-vue-devtools";
+import Components from "unplugin-vue-components/vite";
 
 export default defineConfig({
   base: "./",
@@ -27,28 +28,26 @@ export default defineConfig({
       sassVariables: "src/css/quasar.variables.scss",
     }),
     AutoImport({
-      include: [
-        /\.vue$/,
-        /\.vue\?vue/,
-      ],
-      imports: [
-        "vue",
-        "pinia",
-      ],
+      include: [/\.vue$/, /\.vue\?vue/],
+      imports: ["vue", "pinia"],
     }),
     vueI18n({
       ssr: false,
       include: [fileURLToPath(new URL("./src/i18n", import.meta.url))],
     }),
+    Components({
+      dts: "src/types/components.d.ts",
+      dirs: ["src/components/controls"],
+    }),
   ],
   resolve: {
     alias: {
-      "src": fileURLToPath(new URL("./src", import.meta.url)),
-      "layouts": fileURLToPath(new URL("./src/layouts", import.meta.url)),
-      "pages": fileURLToPath(new URL("./src/pages", import.meta.url)),
-      "components": fileURLToPath(new URL("./src/components", import.meta.url)),
-      "assets": fileURLToPath(new URL("./src/assets", import.meta.url)),
-      "boot": fileURLToPath(new URL("./src/boot", import.meta.url)),
+      src: fileURLToPath(new URL("./src", import.meta.url)),
+      layouts: fileURLToPath(new URL("./src/layouts", import.meta.url)),
+      pages: fileURLToPath(new URL("./src/pages", import.meta.url)),
+      components: fileURLToPath(new URL("./src/components", import.meta.url)),
+      assets: fileURLToPath(new URL("./src/assets", import.meta.url)),
+      boot: fileURLToPath(new URL("./src/boot", import.meta.url)),
     },
   },
   define: {

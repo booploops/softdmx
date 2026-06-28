@@ -9,6 +9,7 @@
 import { useDMXStore } from 'src/stores/dmx';
 import { storeToRefs } from 'pinia';
 import { ActiveChannel, type OutputDestination } from '@softdmx/engine';
+import { useIOClient } from 'src/lib/io-client';
 
 interface AppSettings {
   Port?: number;
