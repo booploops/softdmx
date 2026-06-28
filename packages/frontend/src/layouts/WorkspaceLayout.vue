@@ -6,18 +6,19 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { ref, computed, toRaw } from 'vue';
+import { ref, computed, toRaw, watch } from 'vue';
 import XSidebarButton from 'src/components/controls/XSidebarButton.vue';
 import WSWorkspaceInstance from 'src/components/workspace/WSWorkspaceInstance.vue';
-import { getPanelsMenu, type PanelMenuItem } from 'src/lib/workspace-panels';
+import { getPanelsMenu, type PanelMenuItem } from 'src/lib/workspace/panels';
 import { getMainMenu } from 'src/lib/main-menu';
-import { WorkspaceLayouts } from 'src/lib/workspace-layouts';
+import { WorkspaceLayouts } from 'src/lib/workspace';
 import type { Route } from '@booploops/pod-router';
 import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type GetTabContextMenuItemsParams, type ContextMenuItem } from 'dockview-vue';
 import { useWorkspaceStore } from 'src/stores/workspace';
 import { useQuasar } from 'quasar';
 import { trpc } from 'src/lib/trpc';
 import 'dockview-core/dist/styles/dockview.css';
+import { showSettingsUI } from 'src/lib/settings-ui';
 
 const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
@@ -223,6 +224,35 @@ function onReady(event: DockviewReadyEvent) {
         }
     });
 }
+
+watch(
+    () => workspaceStore.createWorkspaceRequest,
+    (req) => {
+        if (!req || !outerApi) return;
+
+        // Check if panel already exists to prevent duplicate addition
+        const existingPanel = outerApi.getPanel(req.id);
+        if (existingPanel) {
+            existingPanel.api.setActive();
+            workspaceStore.setActiveWorkspace(req.id);
+            return;
+        }
+
+        const panel = outerApi.addPanel({
+            id: req.id,
+            component: 'WorkspaceInstance',
+            title: req.name,
+            params: {
+                workspaceId: req.id,
+            },
+        });
+
+        if (panel) {
+            panel.api.setActive();
+        }
+        workspaceStore.setActiveWorkspace(req.id);
+    }
+);
 
 const isElectron = computed(() => typeof (window as any).electronTRPC !== 'undefined');
 
@@ -445,7 +475,7 @@ function showNativeSpawnMenu() {
                 <i class="codicon codicon-plus"></i>
             </XSidebarButton>
             <div class="ws-sidebar-spacing"></div>
-            <XSidebarButton>
+            <XSidebarButton @click="showSettingsUI">
                 <i class="codicon codicon-gear" />
             </XSidebarButton>
         </div>

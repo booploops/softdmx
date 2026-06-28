@@ -24,6 +24,13 @@ interface SpawnRequest {
   timestamp: number;
 }
 
+interface CreateWorkspaceRequest {
+  id: string;
+  name: string;
+  layout?: any;
+  timestamp: number;
+}
+
 function loadState(): WorkspaceState {
   const defaultState: WorkspaceState = {
     outerLayout: null,
@@ -102,16 +109,34 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     };
   }
 
+  const createWorkspaceRequest = ref<CreateWorkspaceRequest | null>(null);
+
+  function requestCreateWorkspace(name: string, layout?: any) {
+    const id = `workspace-${Date.now()}`;
+    if (layout) {
+      saveWorkspaceLayout(id, layout);
+    }
+    createWorkspaceRequest.value = {
+      id,
+      name,
+      layout,
+      timestamp: Date.now(),
+    };
+    return id;
+  }
+
   return {
     outerLayout,
     workspaceLayouts,
     activeWorkspaceId,
     spawnRequest,
+    createWorkspaceRequest,
     saveOuterLayout,
     saveWorkspaceLayout,
     deleteWorkspaceLayout,
     setActiveWorkspace,
     getWorkspaceLayout,
     requestSpawnPanel,
+    requestCreateWorkspace,
   };
 });

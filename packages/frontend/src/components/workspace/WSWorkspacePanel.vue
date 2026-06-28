@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue';
 import type { IDockviewPanelProps } from 'dockview-vue';
 import WSPanelContent from './WSPanelContent.vue';
-import { WorkspacePanels } from 'src/lib/workspace-panels';
+import { WorkspacePanels } from 'src/lib/workspace/panels.ts';
 
 const props = defineProps<{
   params: IDockviewPanelProps<{ path: string }>;

@@ -7,7 +7,7 @@
 -->
 <script setup lang="ts">
 import { PodRouter } from '@booploops/pod-router';
-import { WorkspacePanels } from 'src/lib/workspace-panels';
+import { WorkspacePanels } from 'src/lib/workspace/panels';
 
 const path = defineModel<string>();
 
