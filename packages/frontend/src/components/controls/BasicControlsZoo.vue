@@ -13,7 +13,8 @@ import {
   XListItem,
   XCollapseItem,
   XCard,
-  XWell
+  XWell,
+  XInput
 } from './index';
 
 const $q = useQuasar();
@@ -48,6 +49,9 @@ const selectOptions = [
   { label: 'Option 5', value: 'opt-5' }
 ];
 const selectedValue = ref('Option 1');
+
+const textValue = ref('Hello World');
+const denseTextValue = ref('');
 
 // List selection state
 const selectedListItem = ref('item-1');
@@ -156,6 +160,22 @@ const collapseOpen2 = ref(false);
           <div class="zoo-row q-mt-sm">
             <div class="zoo-text-info">
               Selected value: <strong class="sdmx-text-mono">{{ typeof selectedValue === 'object' ? JSON.stringify(selectedValue) : selectedValue }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="zoo-section">
+          <div class="zoo-label">XInput (Text Field)</div>
+          <XInput v-model="textValue" placeholder="Type something..." clearable />
+          <div class="zoo-row q-mt-sm">
+            <XInput v-model="denseTextValue" placeholder="Dense text field" dense />
+          </div>
+          <div class="zoo-row q-mt-sm">
+            <XInput model-value="Disabled text input" disable />
+          </div>
+          <div class="zoo-row q-mt-sm">
+            <div class="zoo-text-info">
+              Value: <strong class="sdmx-text-mono">{{ textValue }}</strong>
             </div>
           </div>
         </div>
