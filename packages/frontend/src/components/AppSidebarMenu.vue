@@ -126,6 +126,12 @@ function handleShowBindingsDialog() {
       padding
       dense
     >
+      <q-btn
+        @click="$router.push('/new-workspace')"
+        label="Workspace View"
+        color="primary"
+        class="full-width"
+      ></q-btn>
       <q-item-label header>Workspace</q-item-label>
       <q-item
         v-for="mode in QUICK_ACCESS_WORKSPACE_MODES"
@@ -296,11 +302,6 @@ function handleShowBindingsDialog() {
         <q-item-section avatar><q-icon name="palette" /></q-item-section>
         <q-item-section>Theme</q-item-section>
       </q-item>
-      <q-btn
-        @click="$router.push('/new-workspace')"
-        label="New Workspace"
-      ></q-btn>
-
     </q-list>
   </div>
 </template>

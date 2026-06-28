@@ -19,6 +19,7 @@ import {
 import { exampleVrClubShow } from "src/shows/example-vr-club";
 import { simpleWashShow } from "src/shows/simple-wash";
 import { laserDemoShow } from "src/shows/laser-demo";
+import { useRouter } from "vue-router";
 
 type MainMenuItem = {
   label: string;
@@ -63,7 +64,10 @@ export function getMainMenu(): MainMenuItem[] {
           click: () => {
             const ok = showStore.downloadShow();
             if (!ok) {
-              Dialog.create({ title: "Export Failed", message: "Could not export show file." });
+              Dialog.create({
+                title: "Export Failed",
+                message: "Could not export show file.",
+              });
             }
           },
         },
@@ -82,7 +86,8 @@ export function getMainMenu(): MainMenuItem[] {
               } catch (error) {
                 Dialog.create({
                   title: "Import Failed",
-                  message: error instanceof Error ? error.message : "Unknown error",
+                  message:
+                    error instanceof Error ? error.message : "Unknown error",
                 });
               }
             };
@@ -130,7 +135,9 @@ export function getMainMenu(): MainMenuItem[] {
         ...(gridNodeOverlay.isAvailable
           ? [
               {
-                label: gridNodeOverlay.overlayVisible ? "Hide GridNode overlay" : "Show GridNode overlay",
+                label: gridNodeOverlay.overlayVisible
+                  ? "Hide GridNode overlay"
+                  : "Show GridNode overlay",
                 icon: "grid_view",
                 click: () => {
                   gridNodeOverlay.toggle();
@@ -158,6 +165,12 @@ export function getMainMenu(): MainMenuItem[] {
           },
         },
       ],
+    },
+    {
+      label: "Legacy View",
+      click() {
+        window.location.href = "/";
+      },
     },
   ];
 }
