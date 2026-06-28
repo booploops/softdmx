@@ -29,7 +29,12 @@ interface SampleMsg {
 
 type WorkerMsg = InitMsg | SampleMsg;
 
-const ctx: any = self;
+interface WorkerContext {
+  postMessage: (message: unknown, transfer?: Transferable[]) => void;
+  onmessage: ((this: unknown, ev: MessageEvent<WorkerMsg>) => unknown) | null;
+}
+
+const ctx = self as unknown as WorkerContext;
 
 let wasmInstance: WebAssembly.Instance | null = null;
 let wasmExports: SoftDmxWasmExports | null = null;
@@ -49,6 +54,12 @@ async function initWasm() {
 
   wasmInstance = result.instance;
   wasmExports = wasmInstance.exports as SoftDmxWasmExports;
+}
+
+interface SampleResult {
+  width: number;
+  height: number;
+  buffer: ArrayBuffer;
 }
 
 function processSample(msg: SampleMsg) {
@@ -74,7 +85,7 @@ function processSample(msg: SampleMsg) {
   );
   wasmFrameBuffer.set(frameBytes);
 
-  const samples = new Map<string, any>();
+  const samples = new Map<string, SampleResult>();
 
   for (const map of maps) {
     const outSize = map.width * map.height * 3; // RGB
@@ -139,7 +150,8 @@ ctx.onmessage = async (e: MessageEvent<WorkerMsg>) => {
       }
       processSample(e.data);
     }
-  } catch (err: any) {
-    ctx.postMessage({ type: 'error', error: err.message });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    ctx.postMessage({ type: 'error', error: errorMsg });
   }
 };

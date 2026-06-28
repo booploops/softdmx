@@ -21,12 +21,14 @@ const props = withDefaults(
     max?: number;
     step?: number;
     disable?: boolean;
+    vertical?: boolean;
   }>(),
   {
     min: 0,
     max: 100,
     step: 1,
     disable: false,
+    vertical: false,
   }
 );
 
@@ -47,6 +49,51 @@ const pctMax = computed(() => {
   return Math.min(Math.max(((props.modelValue.max - props.min) / range) * 100, 0), 100);
 });
 
+const activeTrackStyle = computed(() => {
+  if (props.vertical) {
+    return {
+      bottom: `${pctMin.value}%`,
+      height: `${pctMax.value - pctMin.value}%`,
+      left: '50%',
+      transform: 'translateX(-50%)',
+    };
+  }
+  return {
+    left: `${pctMin.value}%`,
+    width: `${pctMax.value - pctMin.value}%`,
+  };
+});
+
+const minThumbStyle = computed(() => {
+  if (props.vertical) {
+    return {
+      bottom: `${pctMin.value}%`,
+      left: '50%',
+      transform: 'translate(-50%, 50%)',
+    };
+  }
+  return {
+    left: `${pctMin.value}%`,
+    top: '50%',
+    transform: 'translate(-50%, -50%)',
+  };
+});
+
+const maxThumbStyle = computed(() => {
+  if (props.vertical) {
+    return {
+      bottom: `${pctMax.value}%`,
+      left: '50%',
+      transform: 'translate(-50%, 50%)',
+    };
+  }
+  return {
+    left: `${pctMax.value}%`,
+    top: '50%',
+    transform: 'translate(-50%, -50%)',
+  };
+});
+
 function clampValue(val: number): number {
   let value = Math.min(Math.max(val, props.min), props.max);
   if (props.step > 0) {
@@ -56,18 +103,26 @@ function clampValue(val: number): number {
   return parseFloat(value.toFixed(4));
 }
 
-function getPercentageFromClientX(clientX: number): number {
+function getPercentageFromClientCoords(clientX: number, clientY: number): number {
   if (!trackRef.value) return 0;
   const rect = trackRef.value.getBoundingClientRect();
-  const width = rect.width;
-  if (width === 0) return 0;
-  const clickX = clientX - rect.left;
-  return Math.min(Math.max(clickX / width, 0), 1);
+  
+  if (props.vertical) {
+    const height = rect.height;
+    if (height === 0) return 0;
+    const clickY = rect.bottom - clientY;
+    return Math.min(Math.max(clickY / height, 0), 1);
+  } else {
+    const width = rect.width;
+    if (width === 0) return 0;
+    const clickX = clientX - rect.left;
+    return Math.min(Math.max(clickX / width, 0), 1);
+  }
 }
 
 function onMouseDown(event: MouseEvent) {
   if (props.disable) return;
-  const pct = getPercentageFromClientX(event.clientX);
+  const pct = getPercentageFromClientCoords(event.clientX, event.clientY);
   const clickVal = props.min + pct * (props.max - props.min);
   
   // Decide which handle is closer
@@ -76,14 +131,14 @@ function onMouseDown(event: MouseEvent) {
   
   activeHandle.value = distMin < distMax ? 'min' : 'max';
   
-  updateValueFromCoords(event.clientX);
+  updateValueFromCoords(event.clientX, event.clientY);
   window.addEventListener('mousemove', onMouseMove);
   window.addEventListener('mouseup', onMouseUp);
 }
 
 function onMouseMove(event: MouseEvent) {
   if (!activeHandle.value) return;
-  updateValueFromCoords(event.clientX);
+  updateValueFromCoords(event.clientX, event.clientY);
 }
 
 function onMouseUp() {
@@ -95,7 +150,8 @@ function onMouseUp() {
 function onTouchStart(event: TouchEvent) {
   if (props.disable || event.touches.length === 0) return;
   const clientX = event.touches[0].clientX;
-  const pct = getPercentageFromClientX(clientX);
+  const clientY = event.touches[0].clientY;
+  const pct = getPercentageFromClientCoords(clientX, clientY);
   const clickVal = props.min + pct * (props.max - props.min);
   
   const distMin = Math.abs(clickVal - props.modelValue.min);
@@ -103,7 +159,7 @@ function onTouchStart(event: TouchEvent) {
   
   activeHandle.value = distMin < distMax ? 'min' : 'max';
   
-  updateValueFromCoords(clientX);
+  updateValueFromCoords(clientX, clientY);
   window.addEventListener('touchmove', onTouchMove, { passive: false });
   window.addEventListener('touchend', onTouchEnd);
 }
@@ -111,7 +167,7 @@ function onTouchStart(event: TouchEvent) {
 function onTouchMove(event: TouchEvent) {
   if (!activeHandle.value || event.touches.length === 0) return;
   event.preventDefault();
-  updateValueFromCoords(event.touches[0].clientX);
+  updateValueFromCoords(event.touches[0].clientX, event.touches[0].clientY);
 }
 
 function onTouchEnd() {
@@ -120,9 +176,9 @@ function onTouchEnd() {
   window.removeEventListener('touchend', onTouchEnd);
 }
 
-function updateValueFromCoords(clientX: number) {
+function updateValueFromCoords(clientX: number, clientY: number) {
   if (!activeHandle.value) return;
-  const pct = getPercentageFromClientX(clientX);
+  const pct = getPercentageFromClientCoords(clientX, clientY);
   const rawValue = props.min + pct * (props.max - props.min);
   const clamped = clampValue(rawValue);
   
@@ -170,7 +226,12 @@ onBeforeUnmount(() => {
 <template>
   <div
     class="x-range"
-    :class="{ 'x-range--disabled': disable, 'x-range--dragging': !!activeHandle }"
+    :class="{
+      'x-range--disabled': disable,
+      'x-range--dragging': !!activeHandle,
+      'x-range--vertical': vertical,
+      'x-range--horizontal': !vertical
+    }"
   >
     <div
       ref="trackRef"
@@ -181,16 +242,13 @@ onBeforeUnmount(() => {
       <div class="x-range__track" />
       <div
         class="x-range__active-track"
-        :style="{
-          left: `${pctMin}%`,
-          width: `${pctMax - pctMin}%`
-        }"
+        :style="activeTrackStyle"
       />
       
       <!-- Min Handle -->
       <div
         class="x-range__thumb-wrap"
-        :style="{ left: `${pctMin}%` }"
+        :style="minThumbStyle"
       >
         <div
           class="x-range__thumb"
@@ -202,7 +260,7 @@ onBeforeUnmount(() => {
       <!-- Max Handle -->
       <div
         class="x-range__thumb-wrap"
-        :style="{ left: `${pctMax}%` }"
+        :style="maxThumbStyle"
       >
         <div
           class="x-range__thumb"
@@ -218,49 +276,95 @@ onBeforeUnmount(() => {
 .x-range {
   display: inline-flex;
   align-items: center;
-  width: 100%;
-  min-width: 140px;
-  height: 24px;
   box-sizing: border-box;
   outline: none;
   cursor: default;
 
-  &__track-container {
-    position: relative;
+  &--horizontal {
     width: 100%;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-  }
-
-  &__track {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 4px;
-    border-radius: 2px;
-    background-color: #d1d1d6;
-    border: 0.5px solid rgba(0, 0, 0, 0.05);
-  }
-
-  &__active-track {
-    position: absolute;
-    height: 4px;
-    border-radius: 2px;
-    background-color: #007aff;
-  }
-
-  &__thumb-wrap {
-    position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
+    min-width: 140px;
     height: 24px;
+
+    .x-range__track-container {
+      position: relative;
+      width: 100%;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .x-range__track {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 4px;
+      border-radius: 2px;
+      background-color: #d1d1d6;
+      border: 0.5px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .x-range__active-track {
+      position: absolute;
+      height: 4px;
+      border-radius: 2px;
+      background-color: #007aff;
+    }
+
+    .x-range__thumb-wrap {
+      position: absolute;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  &--vertical {
+    flex-direction: column;
+    height: 100%;
+    min-height: 140px;
+    width: 24px;
+
+    .x-range__track-container {
+      position: relative;
+      height: 100%;
+      width: 18px;
+      display: flex;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .x-range__track {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      border-radius: 2px;
+      background-color: #d1d1d6;
+      border: 0.5px solid rgba(0, 0, 0, 0.05);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .x-range__active-track {
+      position: absolute;
+      width: 4px;
+      border-radius: 2px;
+      background-color: #007aff;
+    }
+
+    .x-range__thumb-wrap {
+      position: absolute;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+    }
   }
 
   &__thumb {

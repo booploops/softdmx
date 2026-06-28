@@ -16,12 +16,14 @@ const props = withDefaults(
     max?: number;
     step?: number;
     disable?: boolean;
+    vertical?: boolean;
   }>(),
   {
     min: 0,
     max: 100,
     step: 1,
     disable: false,
+    vertical: false,
   }
 );
 
@@ -37,6 +39,36 @@ const percentage = computed(() => {
   return Math.min(Math.max(pct, 0), 100);
 });
 
+const activeTrackStyle = computed(() => {
+  if (props.vertical) {
+    return {
+      height: `${percentage.value}%`,
+      bottom: 0,
+      left: '50%',
+      transform: 'translateX(-50%)',
+    };
+  }
+  return {
+    width: `${percentage.value}%`,
+    left: 0,
+  };
+});
+
+const thumbWrapStyle = computed(() => {
+  if (props.vertical) {
+    return {
+      bottom: `${percentage.value}%`,
+      left: '50%',
+      transform: 'translate(-50%, 50%)',
+    };
+  }
+  return {
+    left: `${percentage.value}%`,
+    top: '50%',
+    transform: 'translate(-50%, -50%)',
+  };
+});
+
 // Clamp value to min/max and round to nearest step
 function clampValue(val: number): number {
   let value = Math.min(Math.max(val, props.min), props.max);
@@ -48,29 +80,38 @@ function clampValue(val: number): number {
   return parseFloat(value.toFixed(4));
 }
 
-function updateValueFromCoords(clientX: number) {
+function updateValueFromCoords(clientX: number, clientY: number) {
   if (!trackRef.value) return;
   const rect = trackRef.value.getBoundingClientRect();
-  const width = rect.width;
-  if (width === 0) return;
   
-  const clickX = clientX - rect.left;
-  const pct = clickX / width;
-  const rawValue = props.min + pct * (props.max - props.min);
-  emit('update:modelValue', clampValue(rawValue));
+  if (props.vertical) {
+    const height = rect.height;
+    if (height === 0) return;
+    const clickY = rect.bottom - clientY;
+    const pct = clickY / height;
+    const rawValue = props.min + pct * (props.max - props.min);
+    emit('update:modelValue', clampValue(rawValue));
+  } else {
+    const width = rect.width;
+    if (width === 0) return;
+    const clickX = clientX - rect.left;
+    const pct = clickX / width;
+    const rawValue = props.min + pct * (props.max - props.min);
+    emit('update:modelValue', clampValue(rawValue));
+  }
 }
 
 function onMouseDown(event: MouseEvent) {
   if (props.disable) return;
   isDragging.value = true;
-  updateValueFromCoords(event.clientX);
+  updateValueFromCoords(event.clientX, event.clientY);
   window.addEventListener('mousemove', onMouseMove);
   window.addEventListener('mouseup', onMouseUp);
 }
 
 function onMouseMove(event: MouseEvent) {
   if (!isDragging.value) return;
-  updateValueFromCoords(event.clientX);
+  updateValueFromCoords(event.clientX, event.clientY);
 }
 
 function onMouseUp() {
@@ -82,7 +123,7 @@ function onMouseUp() {
 function onTouchStart(event: TouchEvent) {
   if (props.disable || event.touches.length === 0) return;
   isDragging.value = true;
-  updateValueFromCoords(event.touches[0].clientX);
+  updateValueFromCoords(event.touches[0].clientX, event.touches[0].clientY);
   window.addEventListener('touchmove', onTouchMove, { passive: false });
   window.addEventListener('touchend', onTouchEnd);
 }
@@ -90,7 +131,7 @@ function onTouchStart(event: TouchEvent) {
 function onTouchMove(event: TouchEvent) {
   if (!isDragging.value || event.touches.length === 0) return;
   event.preventDefault(); // Stop scrolling
-  updateValueFromCoords(event.touches[0].clientX);
+  updateValueFromCoords(event.touches[0].clientX, event.touches[0].clientY);
 }
 
 function onTouchEnd() {
@@ -131,7 +172,12 @@ onBeforeUnmount(() => {
 <template>
   <div
     class="x-slider"
-    :class="{ 'x-slider--disabled': disable, 'x-slider--dragging': isDragging }"
+    :class="{
+      'x-slider--disabled': disable,
+      'x-slider--dragging': isDragging,
+      'x-slider--vertical': vertical,
+      'x-slider--horizontal': !vertical
+    }"
     @keydown="onKeyDown"
   >
     <div
@@ -141,10 +187,10 @@ onBeforeUnmount(() => {
       @touchstart="onTouchStart"
     >
       <div class="x-slider__track" />
-      <div class="x-slider__active-track" :style="{ width: `${percentage}%` }" />
+      <div class="x-slider__active-track" :style="activeTrackStyle" />
       <div
         class="x-slider__thumb-wrap"
-        :style="{ left: `${percentage}%` }"
+        :style="thumbWrapStyle"
       >
         <div
           class="x-slider__thumb"
@@ -159,50 +205,95 @@ onBeforeUnmount(() => {
 .x-slider {
   display: inline-flex;
   align-items: center;
-  width: 100%;
-  min-width: 120px;
-  height: 24px;
   box-sizing: border-box;
   outline: none;
   cursor: default;
 
-  &__track-container {
-    position: relative;
+  &--horizontal {
     width: 100%;
-    height: 18px;
-    display: flex;
-    align-items: center;
-    cursor: pointer;
-  }
-
-  &__track {
-    position: absolute;
-    left: 0;
-    right: 0;
-    height: 4px;
-    border-radius: 2px;
-    background-color: #d1d1d6;
-    border: 0.5px solid rgba(0, 0, 0, 0.05);
-  }
-
-  &__active-track {
-    position: absolute;
-    left: 0;
-    height: 4px;
-    border-radius: 2px;
-    background-color: #007aff;
-  }
-
-  &__thumb-wrap {
-    position: absolute;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    pointer-events: none; // Let click events bubble to the track container
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
+    min-width: 120px;
     height: 24px;
+
+    .x-slider__track-container {
+      position: relative;
+      width: 100%;
+      height: 18px;
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .x-slider__track {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 4px;
+      border-radius: 2px;
+      background-color: #d1d1d6;
+      border: 0.5px solid rgba(0, 0, 0, 0.05);
+    }
+
+    .x-slider__active-track {
+      position: absolute;
+      height: 4px;
+      border-radius: 2px;
+      background-color: #007aff;
+    }
+
+    .x-slider__thumb-wrap {
+      position: absolute;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+    }
+  }
+
+  &--vertical {
+    flex-direction: column;
+    height: 100%;
+    min-height: 120px;
+    width: 24px;
+
+    .x-slider__track-container {
+      position: relative;
+      height: 100%;
+      width: 18px;
+      display: flex;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .x-slider__track {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      border-radius: 2px;
+      background-color: #d1d1d6;
+      border: 0.5px solid rgba(0, 0, 0, 0.05);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .x-slider__active-track {
+      position: absolute;
+      width: 4px;
+      border-radius: 2px;
+      background-color: #007aff;
+    }
+
+    .x-slider__thumb-wrap {
+      position: absolute;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+    }
   }
 
   &__thumb {

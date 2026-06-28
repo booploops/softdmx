@@ -8,8 +8,12 @@
 <script setup lang="ts">
 import { useDMXStore } from 'src/stores/dmx';
 import { storeToRefs } from 'pinia';
-import { useIOClient } from 'src/lib/io-client';
-import { ActiveChannel } from '@softdmx/engine';
+import { ActiveChannel, type OutputDestination } from '@softdmx/engine';
+
+interface AppSettings {
+  Port?: number;
+  OutputDestinations?: OutputDestination[];
+}
 
 /**
  * DMX (Digital Multiplex) Grid Node Display
@@ -137,9 +141,9 @@ function stopListeningForUpdates() {
   io.off('channels:update');
 }
 
-function handleSettings(settings: any) {
+function handleSettings(settings: AppSettings | null | undefined) {
   if (settings && settings.OutputDestinations) {
-    const firstGridNode = settings.OutputDestinations.find((d: any) => d.type === 'gridnode');
+    const firstGridNode = settings.OutputDestinations.find((d) => d.type === 'gridnode');
     if (firstGridNode && firstGridNode.id !== destinationId.value) {
       stopListeningForUpdates();
       destinationId.value = firstGridNode.id;

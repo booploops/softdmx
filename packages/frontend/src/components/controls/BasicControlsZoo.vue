@@ -208,6 +208,27 @@ const demoTabJustify = ref('tab-a');
             </div>
           </div>
         </div>
+
+        <div class="zoo-section">
+          <div class="zoo-label">Vertical Sliders & Ranges</div>
+          <div class="zoo-row q-mt-sm justify-around" style="height: 160px; align-items: stretch; flex-wrap: nowrap;">
+            <div class="text-center flex flex-col items-center justify-between">
+              <span class="sdmx-text-caption font-bold q-mb-xs">{{ sliderValue }}</span>
+              <XSlider v-model="sliderValue" vertical :min="0" :max="100" />
+              <span class="sdmx-text-caption text-grey-6 q-mt-xs">Slider</span>
+            </div>
+            <div class="text-center flex flex-col items-center justify-between">
+              <span class="sdmx-text-caption font-bold q-mb-xs">{{ rangeValue.min }}-{{ rangeValue.max }}</span>
+              <XRange v-model="rangeValue" vertical :min="0" :max="100" :step="5" />
+              <span class="sdmx-text-caption text-grey-6 q-mt-xs">Range</span>
+            </div>
+            <div class="text-center flex flex-col items-center justify-between">
+              <span class="sdmx-text-caption font-bold q-mb-xs">Dis.</span>
+              <XSlider :model-value="75" vertical disable />
+              <span class="sdmx-text-caption text-grey-6 q-mt-xs">Disabled</span>
+            </div>
+          </div>
+        </div>
       </XCard>
 
       <!-- Column 3: Selectors & Dropdowns -->

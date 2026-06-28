@@ -46,12 +46,11 @@ const lightMoverModel = computed((): LightMoverModel | null => {
     return null;
   }
 
-  // The channels from ShowfileFixtureMapped already have references
   return {
-    panChannel: panChannel as any,
-    panFineChannel: panFineChannel as any,
-    tiltChannel: tiltChannel as any,
-    tiltFineChannel: tiltFineChannel as any,
+    panChannel,
+    panFineChannel,
+    tiltChannel,
+    tiltFineChannel,
   };
 });
 
@@ -72,11 +71,10 @@ const colorPickerModel = computed((): ColorPickerModel | null => {
     return null;
   }
 
-  // The channels from ShowfileFixtureMapped already have references
   return {
-    redChannel: redChannel as any,
-    greenChannel: greenChannel as any,
-    blueChannel: blueChannel as any
+    redChannel,
+    greenChannel,
+    blueChannel
   };
 });
 
@@ -95,9 +93,8 @@ const dimmerSliderModel = computed((): DimmerSliderModel | null => {
     return null;
   }
 
-  // The channels from ShowfileFixtureMapped already have references
   return {
-    dimmerChannel: dimmerChannel as any
+    dimmerChannel
   };
 });
 
@@ -116,9 +113,8 @@ const strobeModel = computed((): StrobeModel | null => {
     return null;
   }
 
-  // The channels from ShowfileFixtureMapped already have references
   return {
-    strobeChannel: strobeChannel as any
+    strobeChannel
   };
 });
 
@@ -138,7 +134,7 @@ const indexedSelectModel = computed((): IndexedSelectModel | null => {
   }
 
   return {
-    channel: channel as any,
+    channel,
   };
 });
 </script>

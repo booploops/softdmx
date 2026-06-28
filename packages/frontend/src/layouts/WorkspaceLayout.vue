@@ -6,11 +6,11 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { ref, computed, toRaw, watch } from 'vue';
+import { ref, computed, toRaw, watch, type Component } from 'vue';
 import XSidebarButton from 'src/components/controls/XSidebarButton.vue';
 import WSWorkspaceInstance from 'src/components/workspace/WSWorkspaceInstance.vue';
 import { getPanelsMenu, type PanelMenuItem } from 'src/lib/workspace/panels';
-import { getMainMenu } from 'src/lib/main-menu';
+import { getMainMenu, type MainMenuItem } from 'src/lib/main-menu';
 import { WorkspaceLayouts } from 'src/lib/workspace';
 import type { Route } from '@booploops/pod-router';
 import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type GetTabContextMenuItemsParams, type ContextMenuItem } from 'dockview-vue';
@@ -22,8 +22,8 @@ import { showSettingsUI } from 'src/lib/settings-ui';
 
 const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
-const components = {
-    WorkspaceInstance: WSWorkspaceInstance as any,
+const components: Record<string, Component> = {
+    WorkspaceInstance: WSWorkspaceInstance,
 };
 
 function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMenuItem[] {
@@ -76,10 +76,10 @@ function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMe
                         document.body.appendChild(downloadAnchor);
                         downloadAnchor.click();
                         downloadAnchor.remove();
-                    } catch (err: any) {
+                    } catch (err: unknown) {
                         $q.dialog({
                             title: 'Export Failed',
-                            message: err.message || String(err),
+                            message: err instanceof Error ? err.message : String(err),
                             dark: true,
                         });
                     }
@@ -98,10 +98,10 @@ function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMe
                             dark: true,
                         });
                     }
-                } catch (err: any) {
+                } catch (err: unknown) {
                     $q.dialog({
                         title: 'Export Failed',
-                        message: err.message || String(err),
+                        message: err instanceof Error ? err.message : String(err),
                         dark: true,
                     });
                 }
@@ -254,16 +254,32 @@ watch(
     }
 );
 
-const isElectron = computed(() => typeof (window as any).electronTRPC !== 'undefined');
+const isElectron = computed(() => typeof window.electronTRPC !== 'undefined');
 
 let nextClickId = 0;
 
 function showNativeContextMenu(template: FrontendMenuItem[], x?: number, y?: number) {
     const clickCallbacks = new Map<string, () => void>();
 
-    const serializeTemplate = (items: FrontendMenuItem[]): any[] => {
+    interface SerializedMenuItem {
+        clickId?: string;
+        role?: string;
+        type?: 'normal' | 'separator' | 'submenu' | 'checkbox' | 'radio';
+        label?: string;
+        sublabel?: string;
+        toolTip?: string;
+        accelerator?: string;
+        icon?: string;
+        enabled?: boolean;
+        visible?: boolean;
+        checked?: boolean;
+        id?: string;
+        submenu?: SerializedMenuItem[];
+    }
+
+    const serializeTemplate = (items: FrontendMenuItem[]): SerializedMenuItem[] => {
         return items.map((item) => {
-            const serialized: any = {
+            const serialized: SerializedMenuItem = {
                 role: item.role,
                 type: item.type,
                 label: item.label,
@@ -321,7 +337,7 @@ function showNativeContextMenu(template: FrontendMenuItem[], x?: number, y?: num
     );
 }
 
-function importWorkspaceData(title: string, layout: any) {
+function importWorkspaceData(title: string, layout: unknown) {
     if (!outerApi) return;
     const workspaceId = `workspace-${Date.now()}-${workspaceCounter.value++}`;
 
@@ -343,14 +359,15 @@ function importWorkspaceData(title: string, layout: any) {
     workspaceStore.setActiveWorkspace(workspaceId);
 }
 
-function handleImportedJSON(parsed: any) {
+function handleImportedJSON(parsed: unknown) {
     let title = '';
     let layout = parsed;
-    if (parsed && typeof parsed === 'object') {
-        if ('layout' in parsed) {
-            layout = parsed.layout;
-            if (typeof parsed.title === 'string') {
-                title = parsed.title;
+    if (parsed && typeof parsed === 'object' && parsed !== null) {
+        const parsedRecord = parsed as Record<string, unknown>;
+        if ('layout' in parsedRecord) {
+            layout = parsedRecord.layout;
+            if (typeof parsedRecord.title === 'string') {
+                title = parsedRecord.title;
             }
         }
         importWorkspaceData(title, layout);
@@ -372,10 +389,10 @@ async function importWorkspaceJSON() {
                 const text = await file.text();
                 const parsed = JSON.parse(text);
                 handleImportedJSON(parsed);
-            } catch (err: any) {
+            } catch (err: unknown) {
                 $q.dialog({
                     title: 'Import Failed',
-                    message: err.message || String(err),
+                    message: err instanceof Error ? err.message : String(err),
                     dark: true,
                 });
             }
@@ -396,17 +413,17 @@ async function importWorkspaceJSON() {
                 dark: true,
             });
         }
-    } catch (err: any) {
+    } catch (err: unknown) {
         $q.dialog({
             title: 'Import Failed',
-            message: err.message || String(err),
+            message: err instanceof Error ? err.message : String(err),
             dark: true,
         });
     }
 }
 
 function showNativeMainMenu() {
-    const mapMenu = (items: any[]): FrontendMenuItem[] => {
+    const mapMenu = (items: MainMenuItem[]): FrontendMenuItem[] => {
         return items.map(item => {
             const mapped: FrontendMenuItem = {
                 label: item.label,

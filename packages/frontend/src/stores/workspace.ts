@@ -12,8 +12,8 @@ import { defineStore } from 'pinia';
 const STORAGE_KEY = 'softdmx-workspace-state';
 
 interface WorkspaceState {
-  outerLayout: any;
-  workspaceLayouts: Record<string, any>;
+  outerLayout: unknown;
+  workspaceLayouts: Record<string, unknown>;
   activeWorkspaceId: string;
 }
 
@@ -27,7 +27,7 @@ interface SpawnRequest {
 interface CreateWorkspaceRequest {
   id: string;
   name: string;
-  layout?: any;
+  layout?: unknown;
   timestamp: number;
 }
 
@@ -53,8 +53,8 @@ function loadState(): WorkspaceState {
 export const useWorkspaceStore = defineStore('workspace', () => {
   const state = loadState();
 
-  const outerLayout = ref<any>(state.outerLayout);
-  const workspaceLayouts = ref<Record<string, any>>(state.workspaceLayouts);
+  const outerLayout = ref<unknown>(state.outerLayout);
+  const workspaceLayouts = ref<Record<string, unknown>>(state.workspaceLayouts);
   const activeWorkspaceId = ref<string>(state.activeWorkspaceId);
   const spawnRequest = ref<SpawnRequest | null>(null);
 
@@ -68,12 +68,12 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
   }
 
-  function saveOuterLayout(layout: any) {
+  function saveOuterLayout(layout: unknown) {
     outerLayout.value = layout;
     saveToLocalStorage();
   }
 
-  function saveWorkspaceLayout(id: string, layout: any) {
+  function saveWorkspaceLayout(id: string, layout: unknown) {
     workspaceLayouts.value = {
       ...workspaceLayouts.value,
       [id]: layout,
@@ -96,7 +96,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     saveToLocalStorage();
   }
 
-  function getWorkspaceLayout(id: string): any {
+  function getWorkspaceLayout(id: string): unknown {
     return workspaceLayouts.value[id] || null;
   }
 
@@ -111,7 +111,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
 
   const createWorkspaceRequest = ref<CreateWorkspaceRequest | null>(null);
 
-  function requestCreateWorkspace(name: string, layout?: any) {
+  function requestCreateWorkspace(name: string, layout?: unknown) {
     const id = `workspace-${Date.now()}`;
     if (layout) {
       saveWorkspaceLayout(id, layout);

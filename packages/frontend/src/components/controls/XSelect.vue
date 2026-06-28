@@ -6,21 +6,21 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 
-<script setup lang="ts">
+<script setup lang="ts" generic="T = string | number | boolean">
 import { computed } from 'vue';
 
-interface OptionObject {
+interface OptionObject<V> {
   label: string;
-  value: any;
+  value: V;
   disable?: boolean;
 }
 
-type OptionType = string | number | OptionObject;
+type OptionType<V> = V | OptionObject<V>;
 
 const props = withDefaults(
   defineProps<{
-    modelValue: any;
-    options: OptionType[];
+    modelValue: T;
+    options: OptionType<T>[];
     disable?: boolean;
   }>(),
   {
@@ -29,22 +29,23 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  'update:modelValue': [any];
-  'change': [any];
+  'update:modelValue': [T];
+  'change': [T];
 }>();
 
-const normalizedOptions = computed<OptionObject[]>(() => {
+const normalizedOptions = computed<OptionObject<T>[]>(() => {
   return props.options.map((opt) => {
     if (typeof opt === 'object' && opt !== null) {
+      const optionObj = opt as OptionObject<T>;
       return {
-        label: opt.label !== undefined ? String(opt.label) : String(opt.value),
-        value: opt.value,
-        disable: !!opt.disable,
+        label: optionObj.label !== undefined ? String(optionObj.label) : String(optionObj.value),
+        value: optionObj.value,
+        disable: !!optionObj.disable,
       };
     }
     return {
       label: String(opt),
-      value: opt,
+      value: opt as T,
       disable: false,
     };
   });
@@ -63,7 +64,7 @@ function handleChange(event: Event) {
   const val = target.value;
   // Match stringified value back to actual type if possible
   const matched = normalizedOptions.value.find(o => String(o.value) === val);
-  const finalVal = matched ? matched.value : val;
+  const finalVal = (matched ? matched.value : val) as T;
   emit('update:modelValue', finalVal);
   emit('change', finalVal);
 }

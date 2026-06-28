@@ -6,7 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { ref, watch, onUnmounted } from 'vue';
+import { ref, watch, onUnmounted, type Component } from 'vue';
 import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type IDockviewPanelProps, type GetTabContextMenuItemsParams, type ContextMenuItem } from 'dockview-vue';
 import { useQuasar } from 'quasar';
 import WSWorkspacePanel from './WSWorkspacePanel.vue';
@@ -20,8 +20,8 @@ const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
 const workspaceId = props.params.params?.workspaceId || props.params.api.id;
 
-const components = {
-  WSPanelContent: WSWorkspacePanel as any,
+const components: Record<string, Component> = {
+  WSPanelContent: WSWorkspacePanel,
 };
 
 function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMenuItem[] {

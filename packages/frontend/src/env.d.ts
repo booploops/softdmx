@@ -1,9 +1,25 @@
+/*
+ * Copyright (C) 2025-Present booploops and contributors
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 declare namespace NodeJS {
   interface ProcessEnv {
     NODE_ENV: string;
     VUE_ROUTER_MODE: 'hash' | 'history' | 'abstract' | undefined;
     VUE_ROUTER_BASE: string | undefined;
   }
+}
+
+interface LinkTickData {
+  bpm: number;
+  beat: number;
+  phase: number;
+  numPeers: number;
+  isNewBeat: boolean;
 }
 
 interface FrontendMenuItem {
@@ -23,21 +39,22 @@ interface FrontendMenuItem {
 }
 
 interface Window {
+  electronTRPC?: unknown;
   electronAPI?: {
     getRemoteApiToken?: () => string | undefined;
-    onOscMessage: (callback: (event: any, data: { address: string; args: any[] }) => void) => void;
+    onOscMessage: (callback: (event: unknown, data: { address: string; args: unknown[] }) => void) => void;
     removeOscListener: () => void;
   };
   electronLink?: {
-    onTick: (callback: (event: any, data: any) => void) => void;
-    onPeersChanged: (callback: (event: any, numPeers: number) => void) => void;
+    onTick: (callback: (event: unknown, data: LinkTickData) => void) => void;
+    onPeersChanged: (callback: (event: unknown, numPeers: number) => void) => void;
     setBpm: (bpm: number) => void;
     setEnabled: (enabled: boolean) => void;
   };
   electronGridNode?: {
     setVisible: (visible: boolean) => void;
     getVisible: () => Promise<boolean>;
-    onChanged: (callback: (event: any, visible: boolean) => void) => void;
+    onChanged: (callback: (event: unknown, visible: boolean) => void) => void;
   };
   electronVideo?: {
     listSenders: () => Promise<Array<{ name: string; appName?: string }>>;

@@ -9,11 +9,29 @@
 import { useWorkspaceStore } from "src/stores/workspace";
 import { WorkspacePanels } from "./panels";
 
+export interface DockviewPanelLayout {
+  id: string;
+  contentComponent: string;
+  params?: Record<string, unknown>;
+  title?: string;
+}
+
+export interface DockviewLayout {
+  grid: {
+    root: unknown;
+    width: number;
+    height: number;
+    orientation: "HORIZONTAL" | "VERTICAL";
+  };
+  panels: Record<string, DockviewPanelLayout>;
+  activeGroup: string;
+}
+
 /**
  * Generates a standard Dockview layout configuration populated with the specified panels.
  */
-function generateDockviewLayout(panels: string[]): any {
-  const panelsMap: Record<string, any> = {};
+function generateDockviewLayout(panels: string[]): DockviewLayout {
+  const panelsMap: Record<string, DockviewPanelLayout> = {};
   const panelIds: string[] = [];
 
   panels.forEach((path) => {
@@ -68,7 +86,7 @@ function generateDockviewLayout(panels: string[]): any {
 /**
  * Creates a new workspace with a given name and optional layout.
  */
-export function createWorkspace(name: string, layout?: any): string {
+export function createWorkspace(name: string, layout?: unknown): string {
   const store = useWorkspaceStore();
   return store.requestCreateWorkspace(name, layout);
 }
@@ -84,7 +102,7 @@ export function createWorkspaceWithPanels(name: string, panels: string[]): strin
 /**
  * Creates a new workspace from a pre-defined layout structure.
  */
-export function createWorkspaceFromLayout(name: string, layout: any): string {
+export function createWorkspaceFromLayout(name: string, layout: unknown): string {
   return createWorkspace(name, layout);
 }
 

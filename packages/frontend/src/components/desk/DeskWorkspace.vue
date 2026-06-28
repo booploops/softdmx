@@ -6,6 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
+import type { Component } from 'vue';
 import { DESK_GRID_COLS, type DeskPane } from '@softdmx/engine';
 import { DESK_WINDOW_META } from 'src/desk/workspace-modes';
 import DeskDockviewPanel from './DeskDockviewPanel.vue';
@@ -21,8 +22,8 @@ const $q = useQuasar();
 
 let dockviewApi: DockviewApi | undefined;
 
-const components = {
-  default: DeskDockviewPanel as any,
+const components: Record<string, Component> = {
+  default: DeskDockviewPanel,
 };
 
 const panes = computed(() => deskView.activePanes);
