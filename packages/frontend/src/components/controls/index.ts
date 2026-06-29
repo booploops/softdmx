@@ -24,6 +24,10 @@ export { default as XStepper } from './XStepper.vue';
 export { default as XSidebarButton } from './XSidebarButton.vue';
 export { default as XTabs } from './XTabs.vue';
 export { default as XTab } from './XTab.vue';
+export { default as XDialog } from './XDialog.vue';
+export { default as XDialogHeader } from './XDialogHeader.vue';
+export { default as XDialogBody } from './XDialogBody.vue';
+export { default as XDialogFooter } from './XDialogFooter.vue';
 
 
 

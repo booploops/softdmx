@@ -10,6 +10,7 @@ import PlaybackSlot from './PlaybackSlot.vue';
 import { useExecutorStore } from 'src/stores/executor';
 
 const executorStore = useExecutorStore();
+
 const railRef = ref<HTMLElement | null>(null);
 const layoutVersion = ref(0);
 
@@ -48,7 +49,7 @@ onBeforeUnmount(() => {
 
       <div class="playback-slots">
         <PlaybackSlot
-          v-for="slot in executorStore.visibleSlots"
+          v-for="slot in executorStore.visibleRailSlots"
           :key="`${slot.id}-${layoutVersion}`"
           :slot="slot"
         />

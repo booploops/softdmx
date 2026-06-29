@@ -6,7 +6,7 @@ export const SIDEBAR_SHORTCUTS = [
   { id: 'bindings', label: 'Bindings', icon: 'link', path: '/bindings' },
   { id: 'timeline-desk', label: 'Timeline Desk', icon: 'timeline-view-icon', path: '/timeline-desk' },
   { id: 'settings-general', label: 'Settings: General', icon: 'settings', path: '/settings-general' },
-  { id: 'settings-output', label: 'Settings: Output & Sync', icon: 'broadcast', path: '/settings-output-sync' },
+  { id: 'settings-output', label: 'Settings: Output', icon: 'broadcast', path: '/settings-output-sync' },
 ] as const;
 
 export type SidebarShortcutId = (typeof SIDEBAR_SHORTCUTS)[number]['id'];

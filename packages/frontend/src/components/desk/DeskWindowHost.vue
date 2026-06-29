@@ -16,6 +16,7 @@ import PlotWindow from './windows/PlotWindow.vue';
 import PresetGridWindow from './windows/PresetGridWindow.vue';
 import AttributeControlWindow from './windows/AttributeControlWindow.vue';
 import PlaybackRailWindow from './windows/PlaybackRailWindow.vue';
+import DmxOutputDebugWindow from './windows/DmxOutputDebugWindow.vue';
 
 const props = defineProps<{ pane: DeskPane }>();
 </script>
@@ -31,6 +32,7 @@ const props = defineProps<{ pane: DeskPane }>();
     <PresetGridWindow v-else-if="props.pane.windowType === 'presets'" />
     <AttributeControlWindow v-else-if="props.pane.windowType === 'attribute-control'" />
     <PlaybackRailWindow v-else-if="props.pane.windowType === 'playback-rail'" />
+    <DmxOutputDebugWindow v-else-if="props.pane.windowType === 'dmx-debug'" />
     <div v-else class="q-pa-md sdmx-text-muted">Unknown window: {{ props.pane.windowType }}</div>
   </div>
 </template>

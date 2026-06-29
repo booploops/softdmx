@@ -15,7 +15,8 @@ export type DeskWindowType =
   | "plot"
   | "presets"
   | "attribute-control"
-  | "playback-rail";
+  | "playback-rail"
+  | "dmx-debug";
 
 export interface DeskPaneRect {
   x: number;

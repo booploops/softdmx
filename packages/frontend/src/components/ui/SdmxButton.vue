@@ -67,7 +67,9 @@ function onClick(event: MouseEvent) {
     ]"
     :data-sdmx-info="info"
     @click="onClick"
-  />
+  >
+    <slot />
+  </q-btn>
 </template>
 
 <style scoped>

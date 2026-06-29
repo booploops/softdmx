@@ -132,8 +132,74 @@ export const LC_LatrixLasers: FixtureDefinition = {
   ],
 };
 
+export const Generic_RGB_Strobe_GoboMode_7CH: FixtureDefinition = {
+  id: 'Generic_RGB_Strobe_GoboMode_7CH',
+  name: 'Generic RGB Strobe Gobo Mode 7CH',
+  channels: [
+    { name: 'Master Dimmer', type: 'intensity', minValue: 0, maxValue: 255, defaultValue: 255 },
+    { name: 'Red Dimmer', type: 'color', minValue: 0, maxValue: 255, defaultValue: 0 },
+    { name: 'Green Dimmer', type: 'color', minValue: 0, maxValue: 255, defaultValue: 0 },
+    { name: 'Blue Dimmer', type: 'color', minValue: 0, maxValue: 255, defaultValue: 0 },
+    { name: 'Macro', type: 'effect', minValue: 0, maxValue: 255, defaultValue: 0 },
+    { name: 'Strobe Speed', type: 'effect', minValue: 1, maxValue: 255, defaultValue: 1 },
+    {
+      name: 'Mode',
+      type: 'effect',
+      minValue: 1,
+      maxValue: 255,
+      defaultValue: 1,
+      controlMode: 'indexed',
+      indexedSlots: 16,
+      indexedLabels: [
+        'Open',
+        'Gobo 1',
+        'Gobo 2',
+        'Gobo 3',
+        'Gobo 4',
+        'Gobo 5',
+        'Gobo 6',
+        'Gobo 7',
+        'Gobo 8',
+        'Gobo 9',
+        'Gobo 10',
+        'Gobo 11',
+        'Gobo 12',
+        'Gobo 13',
+        'Gobo 14',
+        'Gobo 15',
+      ],
+    },
+  ],
+  widgets: [
+    {
+      type: 'colorPicker',
+      name: 'RGB Color',
+      channels: {
+        redChannel: 'Red Dimmer',
+        greenChannel: 'Green Dimmer',
+        blueChannel: 'Blue Dimmer',
+      },
+    },
+    {
+      type: 'dimmerSlider',
+      name: 'Master Dimmer',
+      channels: { dimmerChannel: 'Master Dimmer' },
+    },
+    {
+      type: 'strobe',
+      name: 'Strobe Speed',
+      channels: { strobeChannel: 'Strobe Speed' },
+    },
+    {
+      type: 'indexedSelect',
+      name: 'Mode (Gobo Index)',
+      channels: { channel: 'Mode' },
+    },
+  ],
+};
+
 export const builtinPlugin: SoftDMXPlugin = {
   id: 'builtin',
   version: '1.0.0',
-  fixtures: [VRSL_Spotlight, VRSL_Light5CH, LC_LatrixLasers],
+  fixtures: [VRSL_Spotlight, VRSL_Light5CH, LC_LatrixLasers, Generic_RGB_Strobe_GoboMode_7CH],
 };

@@ -11,12 +11,12 @@ import { useShowStore } from 'src/stores/show';
 import { useUIStore } from 'src/stores/ui';
 import { useGridNodeOverlayStore } from 'src/stores/gridnode-overlay';
 import {
-  showSettingsDialog,
   showInterfaceSettingsDialog,
   showThemeSettingsDialog,
   showAudioSettingsDialog,
   showBindingsDialog,
 } from 'src/lib/CommonDialogs';
+import { showSettingsUI } from 'src/lib/settings-ui';
 import {
   QUICK_ACCESS_WORKSPACE_MODES,
   SETUP_SECTION_META,
@@ -100,7 +100,7 @@ function openCueEditor() {
 
 function handleShowSettingsDialog() {
   ui.toggleLeftDrawer(false);
-  showSettingsDialog();
+  showSettingsUI('interface');
 }
 
 function handleShowInterfaceSettingsDialog() {

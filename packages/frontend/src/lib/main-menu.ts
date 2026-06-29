@@ -9,13 +9,14 @@ import { createDialog } from "src/lib/Dialog";
 import { useShowStore } from "src/stores/show";
 import { useUIStore } from "src/stores/ui";
 import { useGridNodeOverlayStore } from "src/stores/gridnode-overlay";
+import { useDeskViewStore } from "src/stores/desk-view";
 import {
-  showSettingsDialog,
   showInterfaceSettingsDialog,
   showThemeSettingsDialog,
   showAudioSettingsDialog,
   showBindingsDialog,
 } from "src/lib/CommonDialogs";
+import { showSettingsUI } from "./settings-ui";
 import { exampleVrClubShow } from "src/shows/example-vr-club";
 import { simpleWashShow } from "src/shows/simple-wash";
 import { laserDemoShow } from "src/shows/laser-demo";
@@ -35,6 +36,7 @@ export function getMainMenu(options?: {
   const ui = useUIStore();
   const showStore = useShowStore();
   const gridNodeOverlay = useGridNodeOverlayStore();
+  const deskView = useDeskViewStore();
   const demoShowOptions = [
     {
       label: "Simple Wash",
@@ -215,10 +217,17 @@ export function getMainMenu(options?: {
       label: "Output",
       children: [
         {
-          label: "Output & sync",
-          icon: "settings_input_component",
+          label: "Output",
+          icon: "output",
           click: () => {
-            showSettingsDialog();
+            showSettingsUI("output");
+          },
+        },
+        {
+          label: "Sync",
+          icon: "sync",
+          click: () => {
+            showSettingsUI("sync");
           },
         },
         ...(gridNodeOverlay.isAvailable
@@ -236,6 +245,25 @@ export function getMainMenu(options?: {
           : []),
       ],
     },
+    ...(showStore.document.general?.debugToolsEnabled ?? true
+      ? [
+          {
+            label: "Debug Tools",
+            children: [
+              {
+                label: "Open DMX Debug Panel",
+                icon: "bug_report",
+                click: () => {
+                  const hasDebugPane = deskView.activePanes.some((pane) => pane.windowType === "dmx-debug");
+                  if (!hasDebugPane) {
+                    deskView.addPane("dmx-debug");
+                  }
+                },
+              },
+            ],
+          },
+        ]
+      : []),
     {
       label: "Settings",
       children: [

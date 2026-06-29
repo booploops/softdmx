@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { OutputDestination, TimecodeSource } from '@softdmx/engine';
+import type { OutputDestination } from '@softdmx/engine';
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
 import { SdmxIconButton } from 'src/components/ui';
 import XButton from 'src/components/controls/XButton.vue';
@@ -8,38 +8,18 @@ import XInput from 'src/components/controls/XInput.vue';
 import XListItem from 'src/components/controls/XListItem.vue';
 import XListView from 'src/components/controls/XListView.vue';
 import XSelect from 'src/components/controls/XSelect.vue';
-import XSlider from 'src/components/controls/XSlider.vue';
 import XSwitch from 'src/components/controls/XSwitch.vue';
 import { useIOClient } from 'src/lib/io-client';
-import { useAudioStore } from 'src/stores/audio';
 import { useGridNodeOverlayStore } from 'src/stores/gridnode-overlay';
-import { useLtcTimecodeStore } from 'src/stores/ltc-timecode';
 import { useShowStore } from 'src/stores/show';
-import { useTimecodeStore } from 'src/stores/timecode';
 
 const socket = useIOClient();
 const showStore = useShowStore();
-const audioStore = useAudioStore();
 const gridNodeOverlay = useGridNodeOverlayStore();
-const timecodeStore = useTimecodeStore();
-const ltcStore = useLtcTimecodeStore();
 
 const destinations = ref<OutputDestination[]>([]);
 const selectedDestId = ref<string | null>(null);
 const availablePorts = ref<Array<{ path: string }>>([]);
-
-const timecodeEnabled = ref(false);
-const timecodeSource = ref<TimecodeSource>('osc');
-const timecodeFps = ref(30);
-const timecodeLatencyMs = ref(0);
-const timecodeGlobalOffsetMs = ref(0);
-const linkOutputLatencyMs = ref(0);
-const linkPhaseOffset = ref(0);
-const oscMediaLatencyMs = ref(0);
-const oscMediaOffsetMs = ref(0);
-const ltcInputDeviceId = ref<string | null>(null);
-const ltcChannel = ref<'left' | 'right' | 'mono'>('mono');
-const ltcGain = ref(1);
 
 const outputOptions: { label: string; value: OutputDestination['type'] }[] = [
   { label: 'GridNode Overlay', value: 'gridnode' },
@@ -53,43 +33,10 @@ const usbProtocolOptions = [
   { label: 'FTDI / OpenDMX (FT232R)', value: 'open_dmx' },
 ];
 
-const timecodeSourceOptions: { label: string; value: TimecodeSource }[] = [
-  { label: 'OSC (/softdmx/timecode/smpte)', value: 'osc' },
-  { label: 'LTC (audio input)', value: 'ltc' },
-  { label: 'MTC (MIDI quarter-frame)', value: 'mtc' },
-];
-
-const ltcChannelOptions = [
-  { label: 'Mono', value: 'mono' },
-  { label: 'Left', value: 'left' },
-  { label: 'Right', value: 'right' },
-];
-
-const audioDeviceOptions = computed(() =>
-  audioStore.devices.map((device, index) => ({
-    label: device.label || `Audio Input ${index + 1}`,
-    value: device.deviceId,
-  }))
-);
-
-const ltcInputSelect = computed({
-  get: () => ltcInputDeviceId.value ?? '__none__',
-  set: (value: string) => {
-    ltcInputDeviceId.value = value === '__none__' ? null : value;
-  },
-});
-
 const selectedDest = computed(() =>
   destinations.value.find((dest) => dest.id === selectedDestId.value) ?? null
 );
 const selectedDestActive = computed(() => selectedDest.value as OutputDestination);
-
-const timecodeLocked = computed(() => {
-  if (!timecodeEnabled.value) return false;
-  if (timecodeSource.value === 'ltc') return ltcStore.signalLocked;
-  if (timecodeStore.lastUpdatedAtMs === null) return false;
-  return performance.now() - timecodeStore.lastUpdatedAtMs < 1500;
-});
 
 function asNumber(value: string | number, fallback = 0): number {
   const parsed = Number(value);
@@ -99,24 +46,6 @@ function asNumber(value: string | number, fallback = 0): number {
 function loadSettings() {
   destinations.value = JSON.parse(JSON.stringify(showStore.document.destinations ?? []));
   selectedDestId.value = destinations.value[0]?.id ?? null;
-
-  const tc = showStore.document.timecode;
-  timecodeEnabled.value = tc?.enabled === true;
-  timecodeSource.value = tc?.source ?? 'osc';
-  timecodeFps.value = tc?.fps ?? 30;
-  timecodeLatencyMs.value = tc?.latencyMs ?? 0;
-  timecodeGlobalOffsetMs.value = tc?.globalOffsetMs ?? 0;
-  ltcInputDeviceId.value = tc?.ltcInputDeviceId ?? null;
-  ltcChannel.value = tc?.ltcChannel ?? 'mono';
-  ltcGain.value = tc?.ltcGain ?? 1;
-
-  const link = showStore.document.link;
-  linkOutputLatencyMs.value = link?.outputLatencyMs ?? 0;
-  linkPhaseOffset.value = link?.phaseOffset ?? 0;
-
-  const oscSync = showStore.document.oscSync;
-  oscMediaLatencyMs.value = oscSync?.mediaLatencyMs ?? 0;
-  oscMediaOffsetMs.value = oscSync?.mediaOffsetMs ?? 0;
 }
 
 function addDestination() {
@@ -132,6 +61,7 @@ function addDestination() {
       Net: 0,
       Subnet: 0,
       PortPath: '',
+      UsbProtocol: 'enttec_pro',
     },
   };
   destinations.value.push(destination);
@@ -163,26 +93,7 @@ function ensureDestSettings(dest: OutputDestination) {
 function applySettings() {
   showStore.updateDocument((doc) => {
     doc.destinations = JSON.parse(JSON.stringify(destinations.value));
-    doc.timecode = {
-      enabled: timecodeEnabled.value,
-      fps: Math.max(1, asNumber(timecodeFps.value, 30)),
-      source: timecodeSource.value,
-      ltcInputDeviceId: ltcInputDeviceId.value ?? undefined,
-      ltcChannel: ltcChannel.value,
-      ltcGain: Math.max(0, asNumber(ltcGain.value, 1)),
-      latencyMs: Math.max(0, asNumber(timecodeLatencyMs.value, 0)),
-      globalOffsetMs: asNumber(timecodeGlobalOffsetMs.value, 0),
-    };
-    doc.link = {
-      outputLatencyMs: Math.max(0, asNumber(linkOutputLatencyMs.value, 0)),
-      phaseOffset: asNumber(linkPhaseOffset.value, 0),
-    };
-    doc.oscSync = {
-      mediaLatencyMs: Math.max(0, asNumber(oscMediaLatencyMs.value, 0)),
-      mediaOffsetMs: asNumber(oscMediaOffsetMs.value, 0),
-    };
   });
-
   socket.emit('show:state', showStore.document);
 }
 
@@ -203,7 +114,6 @@ onMounted(() => {
   socket.on('show:state', handleShowState);
   socket.on('ports:available', handlePorts);
   refreshPorts();
-  void audioStore.refreshDevices();
 });
 
 onBeforeUnmount(() => {
@@ -213,7 +123,7 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <XCard title="Output And Sync" class="settings-card--wide">
+  <XCard title="Output" class="settings-card--wide">
     <div class="row q-col-gutter-md">
       <div class="col-12 col-lg-4">
         <div class="row justify-between items-center q-mb-sm">
@@ -308,61 +218,8 @@ onBeforeUnmount(() => {
           </div>
         </div>
 
-        <div class="settings-subtitle">Timecode Sync</div>
-        <XSwitch v-model="timecodeEnabled" label="Enable SMPTE timecode sync" />
-        <XSelect v-model="timecodeSource" :options="timecodeSourceOptions" label="Timecode source" :disable="!timecodeEnabled" />
-
-        <div class="row q-col-gutter-sm">
-          <div class="col-6">
-            <XInput :model-value="timecodeFps" type="number" label="FPS" :disable="!timecodeEnabled" @update:model-value="(value) => (timecodeFps = asNumber(value, 30))" />
-          </div>
-          <div class="col-6">
-            <XInput :model-value="timecodeLatencyMs" type="number" label="Latency (ms)" :disable="!timecodeEnabled" @update:model-value="(value) => (timecodeLatencyMs = asNumber(value, 0))" />
-          </div>
-        </div>
-
-        <XInput :model-value="timecodeGlobalOffsetMs" type="number" label="Show offset (ms)" :disable="!timecodeEnabled" @update:model-value="(value) => (timecodeGlobalOffsetMs = asNumber(value, 0))" />
-
-        <div v-if="timecodeEnabled" class="text-caption text-grey-5">
-          {{ timecodeStore.smpteLabel }} - {{ timecodeSource.toUpperCase() }} - {{ timecodeLocked ? 'locked' : 'waiting' }}
-        </div>
-
-        <div v-if="timecodeEnabled && timecodeSource === 'ltc'" class="q-gutter-y-sm">
-          <q-banner v-if="!ltcStore.isSupported && ltcStore.lastError" dense class="bg-negative text-white rounded-borders">
-            {{ ltcStore.lastError }}
-          </q-banner>
-
-          <XSelect
-            v-model="ltcInputSelect"
-            :options="[{ label: 'Auto device', value: '__none__' }, ...audioDeviceOptions]"
-            label="LTC audio input"
-          />
-
-          <XSelect v-model="ltcChannel" :options="ltcChannelOptions" label="LTC channel" />
-
-          <div>
-            <div class="row items-center justify-between q-mb-xs">
-              <span class="text-subtitle2 text-grey-4">LTC input gain</span>
-              <span class="text-caption text-grey-5">{{ ltcGain.toFixed(2) }}x</span>
-            </div>
-            <XSlider v-model="ltcGain" :min="0" :max="4" :step="0.05" />
-          </div>
-        </div>
-
-        <div class="settings-subtitle">Ableton Link</div>
-        <div class="row q-col-gutter-sm">
-          <div class="col-6"><XInput :model-value="linkOutputLatencyMs" type="number" label="Output latency (ms)" @update:model-value="(value) => (linkOutputLatencyMs = asNumber(value, 0))" /></div>
-          <div class="col-6"><XInput :model-value="linkPhaseOffset" type="number" label="Phase offset (beats)" @update:model-value="(value) => (linkPhaseOffset = asNumber(value, 0))" /></div>
-        </div>
-
-        <div class="settings-subtitle">OSC Media Transport</div>
-        <div class="row q-col-gutter-sm">
-          <div class="col-6"><XInput :model-value="oscMediaLatencyMs" type="number" label="Media latency (ms)" @update:model-value="(value) => (oscMediaLatencyMs = asNumber(value, 0))" /></div>
-          <div class="col-6"><XInput :model-value="oscMediaOffsetMs" type="number" label="Media offset (ms)" @update:model-value="(value) => (oscMediaOffsetMs = asNumber(value, 0))" /></div>
-        </div>
-
         <div class="row q-gutter-sm q-pt-sm">
-          <XButton color="primary" label="Apply output and sync" @click="applySettings" />
+          <XButton color="primary" label="Apply output settings" @click="applySettings" />
         </div>
       </div>
     </div>

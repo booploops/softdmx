@@ -23,6 +23,10 @@ import XSwitch from 'src/components/controls/XSwitch.vue';
 import XSlider from 'src/components/controls/XSlider.vue';
 import XListView from 'src/components/controls/XListView.vue';
 import XListItem from 'src/components/controls/XListItem.vue';
+import XDialog from 'src/components/controls/XDialog.vue';
+import XDialogHeader from 'src/components/controls/XDialogHeader.vue';
+import XDialogBody from 'src/components/controls/XDialogBody.vue';
+import XDialogFooter from 'src/components/controls/XDialogFooter.vue';
 
 const socket = useIOClient();
 const showStore = useShowStore();
@@ -71,6 +75,11 @@ const outputOptions = [
   { label: 'Art-Net (UDP)', value: 'artnet' },
   { label: 'sACN / E1.31 (UDP)', value: 'sacn' },
   { label: 'DMX USB Pro (Serial)', value: 'dmx_usb' },
+];
+
+const usbProtocolOptions = [
+  { label: 'Enttec DMX USB Pro', value: 'enttec_pro' },
+  { label: 'FTDI / OpenDMX (FT232R)', value: 'open_dmx' },
 ];
 
 const audioDeviceOptions = computed(() =>
@@ -156,6 +165,7 @@ function addDestination() {
       Net: 0,
       Subnet: 0,
       PortPath: '',
+      UsbProtocol: 'enttec_pro',
     },
   };
   destinations.value.push(newDest);
@@ -204,15 +214,13 @@ function saveSettings() {
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide">
-    <q-card class="sdmx-dialog-card settings-card q-dialog-plugin">
-      <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
-        <div class="text-h6 font-weight-bold">Output &amp; Sync</div>
+  <XDialog :dialog-ref="dialogRef" card-class="settings-card" @hide="onDialogHide">
+      <XDialogHeader title="Output &amp; Sync">
         <q-space />
         <XButton icon="close" flat size="sm" @click="onDialogCancel" />
-      </q-card-section>
+      </XDialogHeader>
 
-      <q-card-section class="row q-col-gutter-md q-pt-md settings-body">
+      <XDialogBody class="row q-col-gutter-md settings-body">
         <div class="col-4 sdmx-border-right destinations-column">
           <div class="row justify-between items-center q-mb-sm">
             <span class="text-subtitle2 text-grey-4">Destinations</span>
@@ -289,7 +297,12 @@ function saveSettings() {
             </div>
 
             <div v-if="selectedDest.type === 'dmx_usb'" class="q-gutter-y-sm">
-              <div class="text-subtitle2 text-grey-4">DMX USB Pro Serial Configuration</div>
+              <div class="text-subtitle2 text-grey-4">DMX USB Serial Configuration</div>
+              <XSelect
+                v-model="selectedDest.settings.UsbProtocol"
+                :options="usbProtocolOptions"
+                label="USB protocol"
+              />
               <div class="row items-center q-gutter-x-sm">
                 <XSelect
                   v-model="selectedDest.settings.PortPath"
@@ -462,14 +475,13 @@ function saveSettings() {
             </div>
           </div>
         </div>
-      </q-card-section>
+      </XDialogBody>
 
-      <q-card-actions align="right" class="q-pa-md sdmx-border-top">
+      <XDialogFooter>
         <XButton label="Cancel" flat color="default" @click="onDialogCancel" />
         <XButton label="Save" color="primary" class="q-px-md" @click="saveSettings" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+      </XDialogFooter>
+  </XDialog>
 </template>
 
 <style scoped>

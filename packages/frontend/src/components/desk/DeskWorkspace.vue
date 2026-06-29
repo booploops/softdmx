@@ -185,6 +185,17 @@ watch(
     }
   }
 );
+
+// Rebuild layout when panes are added/removed/resized in the active view.
+watch(
+  panes,
+  () => {
+    if (dockviewApi) {
+      initializeLayout(dockviewApi);
+    }
+  },
+  { deep: true }
+);
 </script>
 
 <template>

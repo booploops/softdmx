@@ -204,9 +204,14 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     component: () => import("components/settings/SettingsInterfaceSection.vue"),
   },
   {
-    label: "Output & Sync",
+    label: "Output",
     path: "settings-output-sync",
-    component: () => import("components/settings/SettingsOutputSyncSection.vue"),
+    component: () => import("components/settings/SettingsOutputSection.vue"),
+  },
+  {
+    label: "Sync",
+    path: "settings-sync",
+    component: () => import("components/settings/SettingsSyncSection.vue"),
   },
   {
     label: "Audio",

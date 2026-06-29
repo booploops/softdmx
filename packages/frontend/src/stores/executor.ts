@@ -13,6 +13,18 @@ import type { ShowDocument } from '@softdmx/engine';
 import { useShowStore } from './show';
 import { useOutputEngineStore } from './output-playback';
 
+export type ExecutorRailSlot =
+  | ExecutorSlot
+  | {
+      id: '__grand-master__';
+      name: 'GM';
+      page: number;
+      index: number;
+      mode: 'special-gm';
+      level: number;
+      isGrandMaster: true;
+    };
+
 interface SlotRuntimeState {
   activeCueId?: string;
   isFlashing?: boolean;
@@ -56,6 +68,18 @@ export const useExecutorStore = defineStore('executor', () => {
       .filter((slot) => slot.page === activePage.value)
       .sort((a, b) => a.index - b.index)
   );
+  const visibleRailSlots = computed<ExecutorRailSlot[]>(() => [
+    {
+      id: '__grand-master__',
+      name: 'GM',
+      page: activePage.value,
+      index: -1,
+      mode: 'special-gm',
+      level: output.grandMaster,
+      isGrandMaster: true,
+    },
+    ...visibleSlots.value,
+  ]);
   const submasters = computed(() => showStore.document.submasters ?? []);
 
   watch(
@@ -333,6 +357,7 @@ export const useExecutorStore = defineStore('executor', () => {
     slots,
     pageCount,
     visibleSlots,
+    visibleRailSlots,
     submasters,
     assignSlot,
     updateExecutor,
