@@ -76,18 +76,34 @@ export const useDMXStore = defineStore('dmx', () => {
   }
 
   function applyMergedOutput(merged: ActiveChannel[]) {
+    const baseByPath = new Map(baseChannels.value.map((channel) => [channel.path, channel]));
+    const normalized = merged.map((channel) => {
+      const base = baseByPath.get(channel.path);
+      if (!base) return channel;
+      return {
+        ...channel,
+        id: typeof channel.id === 'number' && channel.id > 0 ? channel.id : base.id,
+        universe: channel.universe ?? base.universe,
+        attributeType: channel.attributeType ?? base.attributeType,
+      };
+    });
+
     const current = channels.value;
     if (
-      current.length === merged.length &&
+      current.length === normalized.length &&
       current.every(
-        (ch, i) => ch.path === merged[i]?.path && ch.value === merged[i]?.value
+        (ch, i) =>
+          ch.path === normalized[i]?.path &&
+          ch.value === normalized[i]?.value &&
+          ch.id === normalized[i]?.id &&
+          ch.universe === normalized[i]?.universe
       )
     ) {
       return;
     }
 
-    channels.value = merged;
-    useIOClient().emit('channels:state', merged);
+    channels.value = normalized;
+    useIOClient().emit('channels:state', normalized);
   }
 
   const getChannelByPath = (path: string): ActiveChannel | undefined => {

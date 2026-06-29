@@ -17,7 +17,12 @@ import { registerRemoteHandlers } from "./socket/remote";
 import { registerSettingsHandlers } from "./socket/settings";
 import { createRemoteContext, httpServer, io, outputManager } from "./context";
 
+let serverStarted = false;
+
 export function startServer() {
+  if (serverStarted) return;
+  serverStarted = true;
+
   const __dirname = fileURLToPath(new URL(".", import.meta.url));
   const assetsPath = join(__dirname, "../dist/spa");
 
@@ -51,4 +56,22 @@ export function startServer() {
 
   console.log("Server started on port 5353");
   console.log("WebSocket server started on port 5353");
+}
+
+export async function stopServer() {
+  if (!serverStarted) {
+    await outputManager.destroy();
+    return;
+  }
+
+  serverStarted = false;
+
+  await outputManager.destroy();
+
+  await new Promise<void>((resolve) => {
+    io.close(() => resolve());
+  });
+
+  await httpServer.close();
+  AppState.io = null;
 }

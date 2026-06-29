@@ -7,7 +7,7 @@
  */
 import { app, BrowserWindow } from "electron";
 import { fileURLToPath } from "url";
-import { startServer } from "./server";
+import { startServer, stopServer } from "./server";
 import { AppState } from "./state/main";
 import { Paths } from "./runtime/paths";
 import { closeOscListener } from "./ipc/osc-ipc";
@@ -36,11 +36,12 @@ function destroyAuxiliaryWindows() {
   AppState.artnetWindow = null;
 }
 
-function runShutdownCleanup() {
+async function runShutdownCleanup() {
+  await stopServer();
   closeOscListener();
   closeAbletonLink();
   closeGridNodeOverlayIpc();
-  void closeVideoIpc();
+  await closeVideoIpc();
   destroyAuxiliaryWindows();
 }
 
@@ -48,7 +49,7 @@ async function shutdownAndQuit() {
   if (shutdownStarted) return;
   shutdownStarted = true;
 
-  runShutdownCleanup();
+  await runShutdownCleanup();
 
   // Give native ThreadSafeFunction callbacks and the Link worker thread time to drain.
   await new Promise((resolve) => setTimeout(resolve, 200));

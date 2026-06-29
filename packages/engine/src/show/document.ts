@@ -25,6 +25,7 @@ export interface OutputDestination {
     Net?: number;
     Subnet?: number;
     PortPath?: string;
+    UsbProtocol?: "enttec_pro" | "open_dmx";
   };
 }
 
@@ -125,6 +126,10 @@ export interface ShowLinkSyncConfig {
 export interface ShowOscSyncConfig {
   mediaLatencyMs?: number;
   mediaOffsetMs?: number;
+}
+
+export interface ShowGeneralConfig {
+  debugToolsEnabled?: boolean;
 }
 
 export interface ShowTimelineAudioAsset {
@@ -286,6 +291,7 @@ export interface ShowDocument {
   timecode?: ShowTimecodeConfig;
   link?: ShowLinkSyncConfig;
   oscSync?: ShowOscSyncConfig;
+  general?: ShowGeneralConfig;
   timeline?: ShowTimelineConfig;
   audioMappings?: ShowAudioMapping[];
   executors?: ShowExecutor[];
@@ -343,6 +349,9 @@ export function createEmptyShow(name = "Untitled Show"): ShowDocument {
     oscSync: {
       mediaLatencyMs: 0,
       mediaOffsetMs: 0,
+    },
+    general: {
+      debugToolsEnabled: true,
     },
     timeline: {
       durationMs: 300_000,

@@ -26,6 +26,7 @@ import { useOutputEngineStore } from './output-playback';
 import { useScratchStore } from './scratch';
 
 const HISTORY_LIMIT = 100;
+let showSyncConnectHookInstalled = false;
 
 function cloneDocument(doc: ShowDocument): ShowDocument {
   return JSON.parse(JSON.stringify(doc)) as ShowDocument;
@@ -41,6 +42,16 @@ export const useShowStore = defineStore('show', () => {
   const name = computed(() => document.value.meta.name);
   const canUndo = computed(() => undoStack.value.length > 0);
   const canRedo = computed(() => redoStack.value.length > 0);
+
+  if (!showSyncConnectHookInstalled) {
+    showSyncConnectHookInstalled = true;
+    useIOClient().on('connect', () => {
+      // Ensure backend always has latest show after reconnects.
+      queueMicrotask(() => {
+        useIOClient().emit('show:state', document.value);
+      });
+    });
+  }
 
   function resetHistory() {
     undoStack.value = [];

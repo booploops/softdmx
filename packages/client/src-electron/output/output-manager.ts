@@ -15,6 +15,15 @@ import { setHasGridnodeDestination } from "../windows/gridnode-overlay";
 import { type UniverseHealthStatus } from "@softdmx/engine";
 import { AppState } from "../state/main";
 
+export interface OutputFrameDebugSnapshot {
+  destinationId: string;
+  protocol: "artnet" | "sacn" | "dmx_usb" | "gridnode";
+  emittedAtMs: number;
+  firstChannels: number[];
+  nonZeroChannels: Array<{ address: number; value: number }>;
+  dmxUsbPacketPreview?: number[];
+}
+
 const currentDir = path.dirname(fileURLToPath(import.meta.url));
 // The output-worker.js file is compiled directly alongside main.js in dist-electron/
 const workerPath = path.resolve(currentDir, "output-worker.js");
@@ -23,6 +32,10 @@ export class OutputManager {
   private worker: Worker;
   private healthStatuses: UniverseHealthStatus[] = [];
   private healthListeners = new Set<(statuses: UniverseHealthStatus[]) => void>();
+  private frameDebugByDestination = new Map<string, OutputFrameDebugSnapshot>();
+  private frameDebugListeners = new Set<(snapshots: OutputFrameDebugSnapshot[]) => void>();
+  private destroyPromise: Promise<void> | null = null;
+  private destroyed = false;
 
   public initPromise: Promise<void>;
 
@@ -34,6 +47,9 @@ export class OutputManager {
         if (msg.type === "health-status") {
           this.healthStatuses = msg.statuses;
           this.emitHealth();
+        } else if (msg.type === "frame-debug") {
+          this.frameDebugByDestination.set(msg.snapshot.destinationId, msg.snapshot);
+          this.emitFrameDebug();
         } else if (msg.type === "gridnode-send") {
           if (AppState.io) {
             AppState.io.emit(`channels:update:${msg.destinationId}`, msg.buffer);
@@ -96,10 +112,27 @@ export class OutputManager {
     return this.healthStatuses;
   }
 
+  onFrameDebug(listener: (snapshots: OutputFrameDebugSnapshot[]) => void) {
+    this.frameDebugListeners.add(listener);
+    listener(this.getFrameDebugSnapshots());
+    return () => this.frameDebugListeners.delete(listener);
+  }
+
+  getFrameDebugSnapshots(): OutputFrameDebugSnapshot[] {
+    return Array.from(this.frameDebugByDestination.values());
+  }
+
   private emitHealth() {
     const statuses = this.getHealthStatuses();
     for (const listener of this.healthListeners) {
       listener(statuses);
+    }
+  }
+
+  private emitFrameDebug() {
+    const snapshots = this.getFrameDebugSnapshots();
+    for (const listener of this.frameDebugListeners) {
+      listener(snapshots);
     }
   }
 
@@ -112,6 +145,80 @@ export class OutputManager {
   }
 
   async destroy(): Promise<void> {
-    await this.worker.terminate();
+    if (this.destroyPromise) return this.destroyPromise;
+
+    this.destroyPromise = (async () => {
+      if (this.destroyed) return;
+
+      try {
+        await this.requestWorkerShutdown();
+      } catch (err) {
+        console.warn("OutputManager worker graceful shutdown timed out, forcing terminate:", err);
+      }
+
+      try {
+        await this.worker.terminate();
+      } catch (err) {
+        console.warn("OutputManager worker terminate failed:", err);
+      }
+
+      this.destroyed = true;
+      this.healthListeners.clear();
+      this.frameDebugListeners.clear();
+      this.frameDebugByDestination.clear();
+    })();
+
+    return this.destroyPromise;
+  }
+
+  private requestWorkerShutdown(timeoutMs = 1500): Promise<void> {
+    if (this.destroyed) return Promise.resolve();
+
+    return new Promise<void>((resolve, reject) => {
+      let settled = false;
+
+      const cleanup = () => {
+        clearTimeout(timer);
+        this.worker.off("message", onMessage);
+        this.worker.off("exit", onExit);
+      };
+
+      const finishResolve = () => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve();
+      };
+
+      const finishReject = (reason: Error) => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(reason);
+      };
+
+      const onMessage = (msg: any) => {
+        if (msg?.type === "shutdown-complete") {
+          finishResolve();
+        }
+      };
+
+      const onExit = () => {
+        finishResolve();
+      };
+
+      const timer = setTimeout(() => {
+        finishReject(new Error("Output worker did not acknowledge shutdown in time"));
+      }, timeoutMs);
+
+      this.worker.on("message", onMessage);
+      this.worker.on("exit", onExit);
+
+      try {
+        this.worker.postMessage({ type: "shutdown" });
+      } catch (err) {
+        finishReject(err instanceof Error ? err : new Error(String(err)));
+      }
+    });
   }
 }
