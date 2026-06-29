@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { Dialog } from "quasar";
+import { createDialog } from "src/lib/Dialog";
 import { useShowStore } from "src/stores/show";
 import { useUIStore } from "src/stores/ui";
 import { useGridNodeOverlayStore } from "src/stores/gridnode-overlay";
@@ -19,6 +19,8 @@ import {
 import { exampleVrClubShow } from "src/shows/example-vr-club";
 import { simpleWashShow } from "src/shows/simple-wash";
 import { laserDemoShow } from "src/shows/laser-demo";
+import StockMessageDialog from "src/components/dialogs/StockMessageDialog.vue";
+import DemoShowPickerDialog from "src/components/dialogs/DemoShowPickerDialog.vue";
 
 type MainMenuItem = {
   label: string;
@@ -33,64 +35,141 @@ export function getMainMenu(options?: {
   const ui = useUIStore();
   const showStore = useShowStore();
   const gridNodeOverlay = useGridNodeOverlayStore();
+  const demoShowOptions = [
+    {
+      label: "Simple Wash",
+      value: "simple-wash",
+      icon: "light_mode",
+      show: simpleWashShow,
+    },
+    {
+      label: "Laser Demo",
+      value: "laser-demo",
+      icon: "flash_on",
+      show: laserDemoShow,
+    },
+    {
+      label: "VR Club",
+      value: "vr-club",
+      icon: "nightlife",
+      show: exampleVrClubShow,
+    },
+  ] as const;
+
+  async function showMessageDialog(title: string, message: string) {
+    await createDialog<boolean>({
+      component: StockMessageDialog,
+      componentProps: {
+        title,
+        message,
+      },
+    });
+  }
+
+  async function confirmDiscard(message: string): Promise<boolean> {
+    const confirmed = await createDialog<boolean>({
+      component: StockMessageDialog,
+      componentProps: {
+        title: "Discard Unsaved Changes?",
+        message,
+        confirmLabel: "Discard",
+        cancelLabel: "Cancel",
+        showCancel: true,
+      },
+    });
+    return confirmed === true;
+  }
+
+  function loadDemoShowById(demoId: string) {
+    const selectedDemo = demoShowOptions.find((option) => option.value === demoId);
+    if (!selectedDemo) return;
+    showStore.loadShow(selectedDemo.show);
+  }
 
   return [
     {
       label: "File",
       children: [
         {
-          label: "Reload example show",
-          icon: "refresh",
-          click: () => {
-            showStore.loadShow(exampleVrClubShow);
+          label: "New Show",
+          icon: "note_add",
+          click: async () => {
+            if (showStore.isDirty) {
+              const confirmed = await confirmDiscard(
+                "Create a new show and discard current unsaved changes?"
+              );
+              if (!confirmed) return;
+            }
+            showStore.newShow();
           },
         },
         {
-          label: "Load simple wash",
-          icon: "light_mode",
-          click: () => {
-            showStore.loadShow(simpleWashShow);
+          label: "Load Demo Show",
+          icon: "auto_awesome",
+          click: async () => {
+            const selectedDemoId = await createDialog<string>({
+              component: DemoShowPickerDialog,
+              componentProps: {
+                title: "Load Demo Show",
+                message: "Choose a demo show to load.",
+                options: demoShowOptions,
+              },
+            });
+
+            if (!selectedDemoId) {
+              return;
+            }
+
+            if (showStore.isDirty) {
+              const confirmed = await confirmDiscard(
+                "Load a demo show and discard current unsaved changes?"
+              );
+              if (!confirmed) return;
+            }
+
+            loadDemoShowById(selectedDemoId);
           },
         },
         {
-          label: "Load laser demo",
-          icon: "flash_on",
-          click: () => {
-            showStore.loadShow(laserDemoShow);
-          },
-        },
-        {
-          label: "Export YAML",
+          label: "Export Show",
           icon: "download",
-          click: () => {
+          click: async () => {
             const ok = showStore.downloadShow();
             if (!ok) {
-              Dialog.create({
-                title: "Export Failed",
-                message: "Could not export show file.",
-              });
+              await showMessageDialog("Export Failed", "Could not export show file.");
             }
           },
         },
         {
-          label: "Import YAML",
+          label: "Open Show",
           icon: "upload",
-          click: () => {
+          click: async () => {
             const input = document.createElement("input");
             input.type = "file";
             input.accept = ".yml,.yaml";
             input.onchange = async (event) => {
               const file = (event.target as HTMLInputElement).files?.[0];
               if (!file) return;
-              try {
-                await showStore.loadShowFromFile(file);
-              } catch (error) {
-                Dialog.create({
-                  title: "Import Failed",
-                  message:
-                    error instanceof Error ? error.message : "Unknown error",
-                });
+
+              const loadSelectedShow = async () => {
+                try {
+                  await showStore.loadShowFromFile(file);
+                } catch (error) {
+                  await showMessageDialog(
+                    "Import Failed",
+                    error instanceof Error ? error.message : "Unknown error"
+                  );
+                }
+              };
+
+              if (showStore.isDirty) {
+                const confirmed = await confirmDiscard(
+                  "Open a show file and discard current unsaved changes?"
+                );
+                if (!confirmed) return;
               }
+
+              await loadSelectedShow();
             };
             input.click();
           },
