@@ -7,6 +7,7 @@
  */
 
 import type { ActiveChannel, LayerContribution, SoftDmxWasmExports } from "@softdmx/engine";
+import type { ScratchClientLayer, MergeStackSnapshot } from "@softdmx/engine";
 import { mergeLayers } from "@softdmx/engine";
 
 export interface SerializedChannelValue {
@@ -21,11 +22,16 @@ export interface SerializedLayerContribution {
   source: LayerContribution["source"];
   priority: number;
   channels: SerializedChannelValue[];
+  clientId?: string;
+  label?: string;
+  color?: string;
 }
 
 export interface MergeSnapshot {
   baseChannels: ActiveChannel[];
   layers: SerializedLayerContribution[];
+  clientScratchLayers?: ScratchClientLayer[];
+  mergeStack?: MergeStackSnapshot;
   options: {
     blackout: boolean;
     grandMaster: number;
@@ -33,7 +39,10 @@ export interface MergeSnapshot {
   };
 }
 
-function serializeLayer(layer: LayerContribution): SerializedLayerContribution {
+function serializeLayer(
+  layer: LayerContribution,
+  meta?: Pick<SerializedLayerContribution, "clientId" | "label" | "color">,
+): SerializedLayerContribution {
   return {
     source: layer.source,
     priority: layer.priority,
@@ -44,6 +53,7 @@ function serializeLayer(layer: LayerContribution): SerializedLayerContribution {
       priority: channel.priority,
       source: channel.source,
     })),
+    ...meta,
   };
 }
 
@@ -154,10 +164,20 @@ export function buildMergeSnapshot(
   baseChannels: ActiveChannel[],
   layers: LayerContribution[],
   options: MergeSnapshot["options"],
+  extras?: {
+    clientScratchLayers?: ScratchClientLayer[];
+    mergeStack?: MergeStackSnapshot;
+    layerMeta?: Array<Pick<SerializedLayerContribution, "clientId" | "label" | "color"> | undefined>;
+  },
 ): MergeSnapshot {
   return {
     baseChannels: baseChannels.map((channel) => ({ ...channel })),
-    layers: layers.map(serializeLayer),
+    layers: layers.map((layer, index) => serializeLayer(layer, extras?.layerMeta?.[index])),
+    clientScratchLayers: extras?.clientScratchLayers?.map((layer) => ({
+      ...layer,
+      entries: layer.entries.map((entry) => ({ ...entry })),
+    })),
+    mergeStack: extras?.mergeStack,
     options,
   };
 }

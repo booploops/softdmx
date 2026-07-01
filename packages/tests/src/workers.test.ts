@@ -203,7 +203,8 @@ test('DMX Output Node Worker correctly processes channel outputs and updates hea
 
   // Health status and output driver send should occur
   assert.ok(mockPostMessage.mock.calls.length > 0);
-  const updateMsg = mockPostMessage.mock.calls[0][0];
+  const updateMsg = mockPostMessage.mock.calls.find((call) => call[0]?.type === 'health-status')?.[0];
+  assert.ok(updateMsg, 'expected health-status message');
   assert.equal(updateMsg.type, 'health-status');
   assert.equal(updateMsg.statuses[0].channelCount, 1);
 });

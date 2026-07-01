@@ -8,9 +8,10 @@
 
 import fastify from "fastify";
 import { Server } from "socket.io";
-import type { ShowDocument } from "@softdmx/engine";
+import type { ConflictResolutionMode, ShowDocument } from "@softdmx/engine";
 import { OutputManager } from "../output/output-manager";
 import { ConfigFile } from "./app-settings";
+import { ScratchAuthority } from "./scratch-authority";
 import {
   extractTokenFromSocketHandshake,
   getRequiredRemoteApiToken,
@@ -20,6 +21,7 @@ import {
 export interface RemoteContext {
   io: Server;
   outputManager: OutputManager;
+  scratchAuthority: ScratchAuthority;
   getShow: () => ShowDocument | null;
   setShow: (show: ShowDocument) => void;
   onMergeRequest?: () => void;
@@ -65,10 +67,17 @@ export function setCurrentShow(show: ShowDocument | null): void {
   currentShow = show;
 }
 
+function resolveScratchConflictMode(): ConflictResolutionMode {
+  return currentShow?.programmer?.conflictMode ?? "attribute-merge";
+}
+
+const scratchAuthority = new ScratchAuthority(resolveScratchConflictMode);
+
 export function createRemoteContext(): RemoteContext {
   return {
     io,
     outputManager,
+    scratchAuthority,
     getShow: () => currentShow,
     setShow: (show: ShowDocument) => {
       currentShow = show;

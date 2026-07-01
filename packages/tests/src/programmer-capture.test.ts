@@ -6,11 +6,36 @@ import {
   removePresetAttributes,
 } from '../../frontend/src/utils/programmer-capture.ts';
 import type { ScratchEntry } from '../../frontend/src/engine/layers/scratch.ts';
-import { filterScratchEntries } from '../../frontend/src/utils/programmer-filter.ts';
+import {
+  filterScratchEntries,
+  scratchEntryMatchesCustomGroup,
+} from '../../frontend/src/utils/programmer-filter.ts';
 
 const entries: ScratchEntry[] = [
-  { path: 'show://Light 1/1', value: 200, attributeType: 'intensity', feature: 'dimmer', touchedAt: 1 },
-  { path: 'show://Light 1/2', value: 128, attributeType: 'color', feature: 'color', touchedAt: 1 },
+  {
+    path: 'show://Light 1/1',
+    value: 200,
+    attributeType: 'intensity',
+    feature: 'dimmer',
+    touchedAt: 1,
+    clientId: 'operator-a',
+  },
+  {
+    path: 'show://Light 1/2',
+    value: 128,
+    attributeType: 'color',
+    feature: 'color',
+    touchedAt: 1,
+    clientId: 'operator-b',
+  },
+  {
+    path: 'show://Light 2/1',
+    value: 64,
+    attributeType: 'intensity',
+    feature: 'dimmer',
+    touchedAt: 1,
+    clientId: 'operator-a',
+  },
 ];
 
 const mapped = [
@@ -25,15 +50,45 @@ const mapped = [
       ],
     },
   },
+  {
+    fixtureName: 'Light 2',
+    def: {
+      id: 'f2',
+      name: 'F2',
+      channels: [
+        { name: 'Dimmer', type: 'intensity', minValue: 0, maxValue: 255, defaultValue: 0, reference: { id: 3, path: 'show://Light 2/1', value: 0 } },
+      ],
+    },
+  },
 ];
 
 const mergedByPath = new Map(entries.map((entry) => [entry.path, entry.value]));
 const capture = captureScratchPreset(entries, mapped as never, mergedByPath, ['dimmer']);
-assert.equal(capture.targets.length, 1);
+assert.equal(capture.targets.length, 2);
 assert.equal(capture.targets[0]?.attrs.Dimmer, 200);
 
 const colorOnly = filterScratchEntries(entries, ['color']);
 assert.equal(colorOnly.length, 1);
+
+const clientAOnly = filterScratchEntries(entries, undefined, { clientId: 'operator-a' });
+assert.equal(clientAOnly.length, 2);
+
+const activeOnly = captureScratchPreset(entries, mapped as never, mergedByPath, ['dimmer'], {
+  activeOnly: true,
+  activePaths: ['show://Light 1/1'],
+});
+assert.equal(activeOnly.targets.length, 1);
+assert.equal(activeOnly.targets[0]?.fixtures[0], 'Light 1');
+
+const customGroupMatch = scratchEntryMatchesCustomGroup(
+  { ...entries[1]!, attributeName: 'Red' },
+  {
+    id: 'warm',
+    label: 'Warm',
+    channelNameIncludes: ['red'],
+  },
+);
+assert.equal(customGroupMatch, true);
 
 const merged = mergePresetTargets(
   [{ fixtures: ['Light 1'], attrs: { Dimmer: 100 } }],

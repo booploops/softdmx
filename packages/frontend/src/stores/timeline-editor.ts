@@ -13,7 +13,7 @@ import { useTimecodeStore } from './timecode';
 import { useOutputEngineStore } from './output-playback';
 import { computeSetTimelineDurationMs } from '@softdmx/engine';
 import { msToSeconds, secondsToMs } from '@softdmx/engine';
-import type { ShowDocument } from '@softdmx/engine';
+import type { ProgrammerSession, ShowDocument } from '@softdmx/engine';
 import { detectTimelineConflicts } from 'src/utils/timeline-conflicts';
 
 export const useTimelineEditorStore = defineStore('timeline-editor', () => {
@@ -27,6 +27,7 @@ export const useTimelineEditorStore = defineStore('timeline-editor', () => {
   const scrollLeftPx = ref(0);
   const selectedCueId = ref<string | null>(null);
   const previewEnabled = ref(false);
+  const operatorFilterClientId = ref<string | null>(null);
 
   let playbackStartMs = 0;
   let playbackOriginMs = 0;
@@ -38,6 +39,31 @@ export const useTimelineEditorStore = defineStore('timeline-editor', () => {
   const cueTimelineTrack = computed(
     () => timelineTracks.value.find((track) => track.kind === 'cue' && track.enabled !== false) ?? null
   );
+  const automationTrack = computed(
+    () => timelineTracks.value.find((track) => track.kind === 'automation' && track.enabled !== false) ?? null
+  );
+  const programmerSessions = computed(() => timelineConfig.value?.programmerSessions ?? []);
+  const automationSessionClips = computed(() => automationTrack.value?.clips ?? []);
+  const sessionsByOperator = computed(() => {
+    const groups = new Map<string, ProgrammerSession[]>();
+    for (const session of programmerSessions.value) {
+      const clientIds = new Set(
+        session.events.map((event) => event.clientId).filter((clientId): clientId is string => Boolean(clientId))
+      );
+      if (clientIds.size === 0) {
+        const existing = groups.get('all') ?? [];
+        existing.push(session);
+        groups.set('all', existing);
+        continue;
+      }
+      for (const clientId of clientIds) {
+        const existing = groups.get(clientId) ?? [];
+        existing.push(session);
+        groups.set(clientId, existing);
+      }
+    }
+    return groups;
+  });
   const syncMode = computed({
     get: () => timelineConfig.value?.syncMode ?? 'free',
     set: (mode: 'free' | 'timecode') => {
@@ -123,6 +149,86 @@ export const useTimelineEditorStore = defineStore('timeline-editor', () => {
       }
     }
     return bestDelta <= Math.max(0.05, thresholdSec / 2) ? closest : base;
+  }
+
+  function ensureAutomationTrack(doc = showStore.document): string {
+    const timeline = doc.timeline;
+    if (!timeline) return 'timeline-automation-track';
+    timeline.tracks = timeline.tracks ?? [];
+    const existing = timeline.tracks.find((track) => track.kind === 'automation');
+    if (existing) return existing.id;
+    const trackId = 'timeline-automation-track';
+    timeline.tracks.push({
+      id: trackId,
+      name: 'Sessions',
+      kind: 'automation',
+      order: 1,
+      enabled: true,
+      solo: false,
+      clips: [],
+    });
+    return trackId;
+  }
+
+  function upsertAutomationClip(sessionId: string, options?: { clientId?: string }) {
+    showStore.updateDocument((doc) => {
+      const sessions = doc.timeline?.programmerSessions ?? [];
+      const session = sessions.find((entry) => entry.id === sessionId);
+      if (!session) return;
+
+      let events = session.events;
+      if (options?.clientId) {
+        events = events.filter((event) => !event.clientId || event.clientId === options.clientId);
+      }
+      if (events.length === 0) return;
+
+      const startSec = session.anchorSec + Math.min(...events.map((event) => event.tSec));
+      const endSec = session.anchorSec + Math.max(...events.map((event) => event.tSec));
+      const clipSuffix = options?.clientId ? `-${options.clientId}` : '';
+      const clipId = `session-clip-${sessionId}${clipSuffix}`;
+      const operatorLabel = options?.clientId
+        ? events.find((event) => event.clientId === options.clientId)?.meta?.operatorLabel
+        : undefined;
+      const clipName = operatorLabel ? `${session.name} (${operatorLabel})` : session.name;
+
+      doc.timeline = doc.timeline ?? {
+        durationMs: 300_000,
+        fps: 30,
+        syncMode: 'free',
+        snapEnabled: true,
+        snapMode: 'seconds',
+        snapStep: 1,
+        snapToMarkers: false,
+        snapToAudioTransients: false,
+        showConflictDiagnostics: true,
+        showMarkers: true,
+        showSections: true,
+        primaryAudioAssetId: null,
+        audioAssets: [],
+        tracks: [],
+        markers: [],
+        sections: [],
+      };
+
+      const trackId = ensureAutomationTrack(doc);
+      const track = doc.timeline.tracks?.find((entry) => entry.id === trackId);
+      if (!track) return;
+
+      const existingClip = track.clips.find((clip) => clip.id === clipId);
+      const nextClip = {
+        id: clipId,
+        name: clipName,
+        startSec,
+        endSec: Math.max(endSec, startSec + 0.1),
+        color: events[0]?.meta?.color,
+      };
+
+      if (existingClip) {
+        Object.assign(existingClip, nextClip);
+      } else {
+        track.clips.push(nextClip);
+      }
+    });
   }
 
   function ensureCueTrack(doc = showStore.document): string {
@@ -401,8 +507,13 @@ export const useTimelineEditorStore = defineStore('timeline-editor', () => {
     scrollLeftPx,
     selectedCueId,
     previewEnabled,
+    operatorFilterClientId,
     timelineConfig,
     timelineTracks,
+    automationTrack,
+    programmerSessions,
+    automationSessionClips,
+    sessionsByOperator,
     markers,
     sections,
     conflictDiagnostics,
@@ -422,6 +533,7 @@ export const useTimelineEditorStore = defineStore('timeline-editor', () => {
     ensureTimelineCue,
     addMarker,
     addSection,
+    upsertAutomationClip,
     syncPlayheadFromTimecode,
     stopPlaybackLoop,
   };

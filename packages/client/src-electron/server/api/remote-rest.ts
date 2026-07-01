@@ -18,8 +18,8 @@ import {
 } from "../auth/remote-token";
 
 type ScratchSetPayload =
-  | { path: string; value: number; attributeType?: string }
-  | { channels: { path: string; value: number; attributeType?: string }[] };
+  | { path: string; value: number; attributeType?: string; clientId?: string }
+  | { channels: { path: string; value: number; attributeType?: string }[]; clientId?: string };
 type AudioMappingUpdatePayload = {
   id: string;
   mapping: Partial<ShowAudioMapping>;
@@ -98,6 +98,59 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
         reply.send(show);
       });
 
+      instance.get("/scratch", protectedRouteOptions, (_request, reply) => {
+        reply.send(ctx.scratchAuthority.getSnapshot());
+      });
+
+      instance.get("/scratch/clients", protectedRouteOptions, (_request, reply) => {
+        reply.send({
+          clients: ctx.scratchAuthority.listClients(),
+          layers: ctx.scratchAuthority.getLayers(),
+        });
+      });
+
+      instance.get("/sessions", protectedRouteOptions, (_request, reply) => {
+        const show = ctx.getShow();
+        reply.send({
+          sessions: show?.timeline?.programmerSessions ?? [],
+        });
+      });
+
+      instance.get<{ Params: { id: string } }>("/sessions/:id", protectedRouteOptions, (request, reply) => {
+        const show = ctx.getShow();
+        const session = show?.timeline?.programmerSessions?.find((entry) => entry.id === request.params.id);
+        if (!session) {
+          reply.code(404).send({ error: "Session not found" });
+          return;
+        }
+        reply.send(session);
+      });
+
+      instance.post<{ Body: { sessionId?: string; clock?: string } }>(
+        "/sessions/arm",
+        protectedRouteOptions,
+        (request, reply) => {
+          const sessionId = request.body?.sessionId ?? `session-${Date.now()}`;
+          ctx.io.emit("programmer-session:arm", {
+            sessionId,
+            clock: request.body?.clock ?? "session",
+          });
+          reply.send({ ok: true, sessionId });
+        },
+      );
+
+      instance.post<{ Body: { sessionId?: string; persist?: boolean } }>(
+        "/sessions/disarm",
+        protectedRouteOptions,
+        (request, reply) => {
+          ctx.io.emit("programmer-session:disarm", {
+            sessionId: request.body?.sessionId,
+            persist: request.body?.persist !== false,
+          });
+          reply.send({ ok: true });
+        },
+      );
+
       instance.post<{ Body: ShowDocument }>("/show", protectedRouteOptions, (request, reply) => {
         const body = request.body;
         if (!isShowDocument(body)) {
@@ -112,14 +165,52 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
       });
 
       instance.post<{ Body: ScratchSetPayload }>("/scratch/set", protectedRouteOptions, (request, reply) => {
-        ctx.io.emit("remote:scratch:set", request.body);
-        reply.send({ ok: true });
+        const clientId = request.body?.clientId ?? `rest:${resolveClientKey(request)}`;
+        const ack = ctx.scratchAuthority.applySetPayload(clientId, request.body);
+        const snapshot = ctx.scratchAuthority.getSnapshot();
+        ctx.io.emit("scratch:layers", snapshot);
+        ctx.io.emit("scratch:state", snapshot);
+        if (snapshot.conflicts.length > 0) {
+          ctx.io.emit("scratch:conflicts", snapshot.conflicts);
+        }
+        if (snapshot.merged.length === 0) {
+          ctx.io.emit("remote:scratch:clear");
+        } else if (snapshot.merged.length === 1) {
+          const entry = snapshot.merged[0]!;
+          ctx.io.emit("remote:scratch:set", {
+            path: entry.path,
+            value: entry.value,
+            attributeType: entry.attributeType,
+          });
+        } else {
+          ctx.io.emit("remote:scratch:set", {
+            channels: snapshot.merged.map((entry) => ({
+              path: entry.path,
+              value: entry.value,
+              attributeType: entry.attributeType,
+            })),
+          });
+        }
+        reply.send({ ok: true, ack, seq: snapshot.seq });
       });
 
-      instance.post("/scratch/clear", protectedRouteOptions, (_request, reply) => {
-        ctx.io.emit("remote:scratch:clear");
-        reply.send({ ok: true });
-      });
+      instance.post<{ Body: { clientId?: string } | undefined }>(
+        "/scratch/clear",
+        protectedRouteOptions,
+        (request, reply) => {
+          const clientId = request.body?.clientId;
+          if (clientId) {
+            ctx.scratchAuthority.clear(clientId);
+          } else {
+            ctx.scratchAuthority.clear();
+          }
+          const snapshot = ctx.scratchAuthority.getSnapshot();
+          ctx.io.emit("scratch:layers", snapshot);
+          ctx.io.emit("scratch:state", snapshot);
+          ctx.io.emit("remote:scratch:clear");
+          reply.send({ ok: true, seq: snapshot.seq });
+        },
+      );
 
       instance.post<{ Body: { presetId: string; fade?: number } }>(
         "/preset/fire",
@@ -217,16 +308,24 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
         reply.send({ ok: true });
       });
 
-      // Convenience route for CLI-level channel updates.
       instance.post<{
-        Body: { path: string; value: number; attributeType?: string };
+        Body: { path: string; value: number; attributeType?: string; clientId?: string };
       }>("/channel/set", protectedRouteOptions, (request, reply) => {
+        const clientId = request.body.clientId ?? `rest:${resolveClientKey(request)}`;
+        const ack = ctx.scratchAuthority.applySetPayload(clientId, {
+          path: request.body.path,
+          value: request.body.value,
+          attributeType: request.body.attributeType ?? "generic",
+        });
+        const snapshot = ctx.scratchAuthority.getSnapshot();
+        ctx.io.emit("scratch:layers", snapshot);
+        ctx.io.emit("scratch:state", snapshot);
         ctx.io.emit("remote:scratch:set", {
           path: request.body.path,
           value: request.body.value,
           attributeType: request.body.attributeType ?? "generic",
         });
-        reply.send({ ok: true });
+        reply.send({ ok: true, ack, seq: snapshot.seq });
       });
 
       done();

@@ -1,0 +1,87 @@
+version: "1.6"
+meta:
+  name: Golden 1.6
+  created: 2020-01-01T00:00:00.000Z
+  modified: 2020-01-01T00:00:00.000Z
+plugins:
+  - builtin
+destinations:
+  - id: default-gridnode
+    name: Default GridNode Overlay
+    type: gridnode
+    settings: {}
+fixtures: []
+groups: []
+presets: []
+presetPools:
+  - id: default-pool
+    name: All
+    kind: all
+    slots: []
+    pageSize: 25
+effects: []
+cues: []
+bindings:
+  midi: []
+  osc: []
+timecode:
+  enabled: false
+  fps: 30
+  source: osc
+  ltcChannel: mono
+  ltcGain: 1
+  latencyMs: 0
+  globalOffsetMs: 0
+link:
+  outputLatencyMs: 0
+  phaseOffset: 0
+oscSync:
+  mediaLatencyMs: 0
+  mediaOffsetMs: 0
+timeline:
+  durationMs: 300000
+  fps: 30
+  syncMode: free
+  primaryAudioAssetId: null
+  audioAssets: []
+  programmerSessions: []
+audioMappings: []
+executors:
+  - id: main-executor
+    name: Main
+    pages: 1
+    activePage: 1
+    defaultReleaseMs: 400
+    slots:
+      - id: main-executor-slot-1
+        name: Slot 1
+        page: 1
+        index: 0
+        mode: go
+submasters: []
+playback:
+  busMaster: 1
+  cueLevels: {}
+pixelMaps: []
+video:
+  enabled: false
+  pixelMapIds: []
+  inputKind: none
+  deviceId: null
+  senderName: null
+  gain: 1
+  smoothingMs: 80
+  blackLevel: 0
+  followDimmer: false
+  fps: 30
+backup:
+  enabled: false
+  role: primary
+  takeoverMode: manual
+  heartbeatMs: 500
+programmer:
+  storeProfiles: []
+  customFeatureGroups: []
+  operators: []
+  conflictMode: attribute-merge
+  macros: []

@@ -8,18 +8,25 @@
 
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
-import type { ScratchEntry } from '@softdmx/engine';
+import type { ScratchEntry, ScratchClientLayer } from '@softdmx/engine';
+import { clientLayersToSingleEntries } from '@softdmx/engine';
+import type { ScratchWriteMeta } from '@softdmx/engine';
 import { writeCrashSnapshot } from 'src/utils/crash-snapshot';
+import { useIOClient } from 'src/lib/io-client';
 
 const HISTORY_LIMIT = 100;
+let layersSyncHookInstalled = false;
 
-type ScratchChannelUpdate = {
+export type ScratchChannelUpdate = {
   path: string;
   value: number;
   attributeType: string;
   attributeName?: string;
   attributeId?: string;
   feature?: ScratchEntry['feature'];
+  meta?: ScratchWriteMeta;
+  clientId?: string;
+  seq?: number;
 };
 
 function cloneEntries(entries: Map<string, ScratchEntry>): Map<string, ScratchEntry> {
@@ -28,14 +35,29 @@ function cloneEntries(entries: Map<string, ScratchEntry>): Map<string, ScratchEn
 
 export const useScratchStore = defineStore('scratch', () => {
   const entries = ref<Map<string, ScratchEntry>>(new Map());
+  const clientLayers = ref<ScratchClientLayer[]>([]);
   const blindMode = ref(false);
   const undoStack = ref<Map<string, ScratchEntry>[]>([]);
   const redoStack = ref<Map<string, ScratchEntry>[]>([]);
 
   const activeCount = computed(() => entries.value.size);
-  const isActive = computed(() => entries.value.size > 0);
+  const isActive = computed(() => entries.value.size > 0 || clientLayers.value.length > 0);
   const canUndo = computed(() => undoStack.value.length > 0);
   const canRedo = computed(() => redoStack.value.length > 0);
+
+  const entriesByClient = computed(() => {
+    const grouped = new Map<string, ScratchEntry[]>();
+    for (const entry of entries.value.values()) {
+      const clientId = entry.clientId ?? 'local';
+      const bucket = grouped.get(clientId);
+      if (bucket) {
+        bucket.push(entry);
+      } else {
+        grouped.set(clientId, [entry]);
+      }
+    }
+    return grouped;
+  });
 
   function pushUndoSnapshot() {
     undoStack.value.push(cloneEntries(entries.value));
@@ -66,6 +88,9 @@ export const useScratchStore = defineStore('scratch', () => {
       attributeId: meta?.attributeId,
       feature: meta?.feature,
       touchedAt: Date.now(),
+      meta: meta?.meta,
+      clientId: meta?.clientId,
+      seq: meta?.seq,
     });
     persistCrashSnapshot();
   }
@@ -81,6 +106,9 @@ export const useScratchStore = defineStore('scratch', () => {
         attributeId: ch.attributeId,
         feature: ch.feature,
         touchedAt: Date.now(),
+        meta: ch.meta,
+        clientId: ch.clientId,
+        seq: ch.seq,
       });
     }
     persistCrashSnapshot();
@@ -148,8 +176,35 @@ export const useScratchStore = defineStore('scratch', () => {
     persistCrashSnapshot();
   }
 
+  function syncFromLayers(layers: ScratchClientLayer[]) {
+    clientLayers.value = layers.map((layer) => ({
+      ...layer,
+      entries: layer.entries.map((entry) => ({ ...entry })),
+    }));
+    if (layers.length > 0) {
+      setEntries(clientLayersToSingleEntries(clientLayers.value));
+    } else {
+      entries.value.clear();
+    }
+  }
+
+  function clearClientLayers() {
+    clientLayers.value = [];
+  }
+
+  if (!layersSyncHookInstalled) {
+    layersSyncHookInstalled = true;
+    const socket = useIOClient();
+    socket.on('scratch:layers', (payload: unknown) => {
+      if (!Array.isArray(payload)) return;
+      syncFromLayers(payload as ScratchClientLayer[]);
+    });
+  }
+
   return {
     entries,
+    entriesByClient,
+    clientLayers,
     blindMode,
     activeCount,
     isActive,
@@ -166,5 +221,7 @@ export const useScratchStore = defineStore('scratch', () => {
     toggleBlind,
     undo,
     redo,
+    syncFromLayers,
+    clearClientLayers,
   };
 });

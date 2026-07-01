@@ -6,6 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import type { ScratchWriteMeta } from "../../types/programmer.ts";
+
 export interface ScratchEntry {
   path: string;
   value: number;
@@ -14,6 +16,9 @@ export interface ScratchEntry {
   attributeId?: string;
   feature?: import("../../types/attributes").AttributeFeature;
   touchedAt: number;
+  clientId?: string;
+  seq?: number;
+  meta?: ScratchWriteMeta;
 }
 
 export function scratchToLayer(entries: ScratchEntry[]) {

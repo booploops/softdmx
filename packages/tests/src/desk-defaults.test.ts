@@ -32,7 +32,7 @@ const v11 = { ...createEmptyShow('Migrate'), version: '1.1' as const };
 delete v11.desk;
 delete v11.touch;
 const migrated = migrateShowDocument(v11);
-assert.equal(migrated.version, '1.5');
+assert.equal(migrated.version, '1.6');
 assert.ok(migrated.desk?.views.length);
 assert.ok(migrated.touch?.pages.length);
 

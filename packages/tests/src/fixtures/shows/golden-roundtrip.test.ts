@@ -12,7 +12,7 @@ import type { ShowDocumentVersion } from '../../../../frontend/src/show/document
 import { CURRENT_SHOW_VERSION } from '../../../../frontend/src/show/version.ts';
 import { readGoldenShow } from '../../helpers/show-builders.ts';
 
-const GOLDEN_VERSIONS: ShowDocumentVersion[] = ['1.0', '1.1', '1.2', '1.3', '1.4', '1.5'];
+const GOLDEN_VERSIONS: ShowDocumentVersion[] = ['1.0', '1.1', '1.2', '1.3', '1.4', '1.5', '1.6'];
 
 for (const version of GOLDEN_VERSIONS) {
   test(`golden ${version} migrates to ${CURRENT_SHOW_VERSION}`, () => {

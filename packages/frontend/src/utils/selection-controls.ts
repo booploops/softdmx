@@ -6,7 +6,13 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { WidgetConfiguration, ShowfileFixtureMapped } from '@softdmx/engine';
+import type {
+  FixtureDefinition,
+  ProgrammerControl,
+  ShowfileFixtureMapped,
+  WidgetConfiguration,
+} from '@softdmx/engine';
+import { resolveProgrammerControls } from '@softdmx/engine';
 import type { ProgrammerFeatureGroup } from '../stores/programmer';
 
 export function widgetMatchesFeatureGroup(
@@ -37,6 +43,32 @@ export function filterWidgetsForFeatureGroup(
   featureGroup: ProgrammerFeatureGroup
 ): WidgetConfiguration[] {
   return widgets.filter((widget) => widgetMatchesFeatureGroup(widget, featureGroup));
+}
+
+export function resolveSelectionProgrammerControls(
+  fixtureDefs: FixtureDefinition[],
+  featureGroup: ProgrammerFeatureGroup,
+): ProgrammerControl[] {
+  const featureFilter = featureGroup === 'all' ? 'all' : featureGroup;
+  return resolveProgrammerControls(fixtureDefs, { featureFilter });
+}
+
+export function resolveMappedSelectionControls(
+  mappedFixtures: ShowfileFixtureMapped[],
+  featureGroup: ProgrammerFeatureGroup,
+): ProgrammerControl[] {
+  return resolveSelectionProgrammerControls(
+    mappedFixtures.map((fixture) => fixture.def),
+    featureGroup,
+  );
+}
+
+export function programmerControlsToWidgets(controls: ProgrammerControl[]): WidgetConfiguration[] {
+  return controls
+    .filter((control): control is ProgrammerControl & { widget: WidgetConfiguration } =>
+      control.kind === 'widget' && Boolean(control.widget),
+    )
+    .map((control) => control.widget);
 }
 
 export function buildGroupControlFixture(

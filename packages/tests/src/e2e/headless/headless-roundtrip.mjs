@@ -22,7 +22,7 @@ test('headless: show serialize/parse roundtrip', () => {
   const parsed = parseShowDocument(serialized);
 
   assert.equal(parsed.meta.name, 'Headless Roundtrip');
-  assert.equal(parsed.version, '1.5');
+  assert.equal(parsed.version, '1.6');
   assert.equal(parsed.fixtures.length, 1);
   assert.equal(parsed.groups[0]?.fixtures[0], 'Wash 1');
 });

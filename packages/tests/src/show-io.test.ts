@@ -28,7 +28,7 @@ assert.equal(parsed.meta.name, 'Test');
 assert.equal(parsed.fixtures.length, 1);
 assert.equal(parsed.presets.length, 1);
 assert.equal(parsed.groups[0]?.color, '#1e88e5');
-assert.equal(parsed.version, '1.5');
+assert.equal(parsed.version, '1.6');
 assert.ok(parsed.presetPools?.length);
 assert.ok(parsed.backup);
 assert.ok(parsed.video);
@@ -122,7 +122,7 @@ bindings:
   osc: []
 `;
 const migrated = parseShowDocument(legacyV10Yaml);
-assert.equal(migrated.version, '1.5');
+assert.equal(migrated.version, '1.6');
 assert.equal(migrated.video?.enabled, false);
 assert.ok(migrated.desk?.views.length);
 assert.ok(migrated.touch?.pages.length);
@@ -192,7 +192,7 @@ pixelMaps:
         startChannel: 1
 `;
 const advanced = parseShowDocument(v11Yaml);
-assert.equal(advanced.version, '1.5');
+assert.equal(advanced.version, '1.6');
 assert.equal(advanced.audio?.bpm, 128);
 assert.equal(advanced.audioMappings?.length, 1);
 assert.equal(advanced.executors?.[0]?.id, 'exec-1');

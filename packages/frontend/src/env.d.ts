@@ -44,6 +44,7 @@ interface Window {
     getRemoteApiToken?: () => string | undefined;
     onOscMessage: (callback: (event: unknown, data: { address: string; args: unknown[] }) => void) => void;
     removeOscListener: () => void;
+    sendOsc?: (address: string, args: unknown[]) => void;
   };
   electronLink?: {
     onTick: (callback: (event: unknown, data: LinkTickData) => void) => void;

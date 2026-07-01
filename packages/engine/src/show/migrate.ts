@@ -78,6 +78,7 @@ function ensureTimelineDefaults(doc: Partial<ShowDocument>): Partial<ShowDocumen
       tracks,
       markers: timeline.markers ?? [],
       sections: timeline.sections ?? [],
+      programmerSessions: timeline.programmerSessions ?? [],
     },
   };
 }
@@ -230,6 +231,24 @@ function migrateV1_4ToV1_5(doc: Partial<ShowDocument>): Partial<ShowDocument> {
   });
 }
 
+function migrateV1_5ToV1_6(doc: Partial<ShowDocument>): Partial<ShowDocument> {
+  return ensureTimelineDefaults({
+    ...doc,
+    version: "1.6",
+    programmer: {
+      storeProfiles: doc.programmer?.storeProfiles ?? [],
+      customFeatureGroups: doc.programmer?.customFeatureGroups ?? [],
+      operators: doc.programmer?.operators ?? [],
+      conflictMode: doc.programmer?.conflictMode ?? "attribute-merge",
+      macros: doc.programmer?.macros ?? [],
+    },
+    timeline: {
+      ...(doc.timeline ?? {}),
+      programmerSessions: doc.timeline?.programmerSessions ?? [],
+    },
+  });
+}
+
 export function migrateShowDocument(doc: Partial<ShowDocument>): Partial<ShowDocument> {
   const normalized = normalizeLegacyGroups(doc as LegacyShowDocument);
 
@@ -247,6 +266,9 @@ export function migrateShowDocument(doc: Partial<ShowDocument>): Partial<ShowDoc
   }
   if (normalized.version === "1.4") {
     return migrateShowDocument(migrateV1_4ToV1_5(normalized));
+  }
+  if (normalized.version === "1.5") {
+    return migrateShowDocument(migrateV1_5ToV1_6(normalized));
   }
   return ensureTimelineDefaults(normalized);
 }

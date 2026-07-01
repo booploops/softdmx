@@ -134,5 +134,33 @@ export type {
 
 export type { UniverseHealthStatus } from "./output-health";
 
+export type {
+  ProgrammerEventKind,
+  ScratchWriteSource,
+  ScratchWriteMeta,
+  ProgrammerSessionEvent,
+  ProgrammerSession,
+  StoreProfile,
+  CustomFeatureGroup,
+  ProgrammerOperator,
+  ProgrammerMacroDefinition,
+  ProgrammerConfig,
+  ProgrammerPaneOptions,
+  SessionRecordingPolicy,
+} from "./programmer";
+
+export type {
+  ConflictResolutionMode,
+  ClientIdentity,
+  ScratchClientLayer,
+  ScratchChannelUpdate,
+  ScratchCommand,
+  ScratchCommandAck,
+  ScratchConflict,
+  MergeStackLayerSnapshot,
+  MergeStackSnapshot,
+  MultiScratchMergeResult,
+} from "./multi-user";
+
 /** @deprecated Use MappedShowFixture */
 export type ShowfileFixtureMapped = import("./fixture").MappedShowFixture;

@@ -13,6 +13,10 @@ import type { useTimelineEditorStore } from 'src/stores/timeline-editor';
 import type { useOutputEngineStore } from 'src/stores/output-playback';
 import type { useExecutorStore } from 'src/stores/executor';
 import type { useScratchStore } from 'src/stores/scratch';
+import type { useProgrammerSessionStore } from 'src/stores/programmer-session';
+import type { useProgrammerStore } from 'src/stores/programmer';
+import type { useCueStore } from 'src/stores/cue';
+import type { ProgrammerMacroDefinition } from '@softdmx/engine';
 import { emitRemoteCueCommand, emitRemotePresetCommand } from './remote-command-executor';
 import { COMMAND_DEFINITIONS, parseCommandLine } from './command-line';
 
@@ -72,13 +76,26 @@ export type MacroAst = {
   args: string[];
 };
 
+export type SessionAst = {
+  kind: 'session';
+  command: 'arm' | 'disarm' | 'marker';
+  args: string[];
+};
+
+export type StoreAst = {
+  kind: 'store';
+  name?: string;
+  activeOnly: boolean;
+  mode?: 'store' | 'update' | 'merge' | 'remove';
+};
+
 export type LegacyAst = {
   kind: 'legacy';
   command: string;
   args: string[];
 };
 
-export type CommandAst = SelectionAst | VerbAst | TimelineAst | AudioAst | SpatialAst | IntentAst | MacroAst | LegacyAst;
+export type CommandAst = SelectionAst | VerbAst | TimelineAst | AudioAst | SpatialAst | IntentAst | MacroAst | SessionAst | StoreAst | LegacyAst;
 
 export type ExecutionPlan = {
   kind: CommandAst['kind'];
@@ -110,6 +127,9 @@ type ExecutionDeps = {
   outputStore: ReturnType<typeof useOutputEngineStore>;
   executorStore: ReturnType<typeof useExecutorStore>;
   scratchStore: ReturnType<typeof useScratchStore>;
+  programmerSessionStore: ReturnType<typeof useProgrammerSessionStore>;
+  programmerStore: ReturnType<typeof useProgrammerStore>;
+  cueStore: ReturnType<typeof useCueStore>;
   socket: {
     connected: boolean;
     emit: (event: string, payload?: unknown) => void;
@@ -137,6 +157,15 @@ function buildProgrammerHelpText(): string {
     '  edit <cue-id>',
     '  label <cue-id> <new name>',
     '  time <seconds>',
+    '  store [name] [--active] [--mode store|update|merge|remove]',
+    '',
+    'Session Recording',
+    '  session arm [--clock session|set-playhead|timecode|audio]',
+    '  session disarm [--no-persist]',
+    '  session marker <label>',
+    '',
+    'Intent (when enabled)',
+    '  wash stage left in blue over 3s',
     '',
     'Timeline',
     '  timeline marker <name>',
@@ -175,6 +204,21 @@ export function listMacros(): MacroDefinition[] {
   return safeRead<MacroDefinition[]>(MACROS_KEY, []);
 }
 
+export function showMacrosToDefinitions(macros: ProgrammerMacroDefinition[] | undefined): MacroDefinition[] {
+  return (macros ?? []).map((macro) => ({
+    id: macro.id,
+    name: macro.name,
+    template: macro.template,
+    params: macro.params,
+  }));
+}
+
+export function listAllMacros(showMacros?: ProgrammerMacroDefinition[]): MacroDefinition[] {
+  const fromShow = showMacrosToDefinitions(showMacros);
+  const local = listMacros().filter((item) => !fromShow.some((show) => show.name === item.name));
+  return [...fromShow, ...local];
+}
+
 export function saveMacro(macro: MacroDefinition): MacroDefinition[] {
   const next = [macro, ...listMacros().filter((item) => item.name !== macro.name)].slice(0, 100);
   safeWrite(MACROS_KEY, next);
@@ -207,13 +251,22 @@ function looksLikeIntent(input: string) {
 }
 
 export function parseIntentToCanonical(input: string): string | null {
-  const wash = input.match(/wash\s+stage\s+(left|right|center)\s+in\s+([a-z]+)\s+over\s+(\d+(?:\.\d+)?)s?/i);
-  if (!wash) return null;
-  const side = wash[1]?.toLowerCase();
-  const seconds = wash[3];
-  if (side === 'left') return `zone stage-left @ full time ${seconds}`;
-  if (side === 'right') return `zone stage-right @ full time ${seconds}`;
-  return `zone stage-center @ full time ${seconds}`;
+  const wash = input.match(/wash\s+stage\s+(left|right|center)\s+in\s+([a-z]+)\s+over\s+(\d+(?:\.\d+)?)\s*s?/i);
+  if (wash) {
+    const side = wash[1]?.toLowerCase();
+    const seconds = wash[3];
+    if (side === 'left') return `zone stage-left @ full time ${seconds}`;
+    if (side === 'right') return `zone stage-right @ full time ${seconds}`;
+    return `zone stage-center @ full time ${seconds}`;
+  }
+
+  const fade = input.match(/fade\s+(all|selection)\s+(in|out)\s+over\s+(\d+(?:\.\d+)?)\s*s?/i);
+  if (fade) {
+    const direction = fade[2]?.toLowerCase() === 'out' ? '0' : 'full';
+    return `1 Thru 10 @ ${direction} time ${fade[3]}`;
+  }
+
+  return null;
 }
 
 export function parseCommandLineV2(
@@ -284,6 +337,43 @@ export function parseCommandLineV2(
   const head = tokens[0]?.value.toLowerCase();
   const args = tokens.slice(1).map((token) => token.value);
   if (!head) return { ast: null, diagnostics, tokens, canonicalInput: effective };
+
+  if (head === 'session' || head === 'session-arm' || head === 'session-disarm' || head === 'session-marker') {
+    const cmd =
+      head === 'session-arm' || (head === 'session' && args[0]?.toLowerCase() === 'arm')
+        ? 'arm'
+        : head === 'session-disarm' || (head === 'session' && args[0]?.toLowerCase() === 'disarm')
+          ? 'disarm'
+          : head === 'session-marker' || (head === 'session' && args[0]?.toLowerCase() === 'marker')
+            ? 'marker'
+            : null;
+    if (cmd) {
+      const sessionArgs = head === 'session' ? args.slice(1) : args;
+      return {
+        ast: { kind: 'session', command: cmd, args: sessionArgs },
+        diagnostics,
+        tokens,
+        canonicalInput: effective,
+      };
+    }
+  }
+
+  if (head === 'store') {
+    const activeOnly = args.includes('--active');
+    const modeIndex = args.indexOf('--mode');
+    const modeArg = modeIndex >= 0 ? args[modeIndex + 1] : undefined;
+    const mode =
+      modeArg === 'store' || modeArg === 'update' || modeArg === 'merge' || modeArg === 'remove'
+        ? modeArg
+        : undefined;
+    const name = args.find((arg) => !arg.startsWith('--') && arg !== modeArg);
+    return {
+      ast: { kind: 'store', name, activeOnly, mode },
+      diagnostics,
+      tokens,
+      canonicalInput: effective,
+    };
+  }
 
   if (['record', 'update', 'edit', 'copy', 'move', 'delete', 'label', 'time'].includes(head)) {
     return {
@@ -396,18 +486,96 @@ function resolveSelectionNumbers(tokens: string[]): number[] {
 
 export function buildExecutionPlan(ast: CommandAst, deps: ExecutionDeps, canonicalInput: string): ExecutionPlan {
   if (ast.kind === 'intent') {
+    const nested = parseCommandLineV2(ast.canonical);
+    const nestedPlan = nested.ast
+      ? buildExecutionPlan(nested.ast, deps, ast.canonical)
+      : null;
     return {
       kind: 'intent',
       summary: `Intent translated to: ${ast.canonical}`,
+      risky: nestedPlan?.risky ?? false,
+      tags: ['intent', ...(nestedPlan?.tags ?? [])],
+      canonicalInput: ast.canonical,
+      apply: () => {
+        if (!nestedPlan) throw new Error(`Intent could not compile: ${ast.original}`);
+        return nestedPlan.apply();
+      },
+    };
+  }
+
+  if (ast.kind === 'session') {
+    return {
+      kind: 'session',
+      summary: `Session ${ast.command}`,
       risky: false,
-      tags: ['intent'],
+      tags: ['session', ast.command],
       canonicalInput,
-      apply: () => `Intent compiled: ${ast.canonical}`,
+      apply: () => {
+        if (ast.command === 'arm') {
+          const clockIndex = ast.args.indexOf('--clock');
+          const clockArg = clockIndex >= 0 ? ast.args[clockIndex + 1] : undefined;
+          const clock =
+            clockArg === 'set-playhead' || clockArg === 'timecode' || clockArg === 'audio'
+              ? clockArg
+              : 'session';
+          deps.programmerSessionStore.arm({ clock });
+          deps.socket.emit('programmer-session:arm', { clock });
+          return `Session armed (${clock} clock).`;
+        }
+        if (ast.command === 'disarm') {
+          const persist = !ast.args.includes('--no-persist');
+          deps.programmerSessionStore.disarm({ persist });
+          deps.socket.emit('programmer-session:disarm', { persist });
+          return persist ? 'Session disarmed and persisted.' : 'Session disarmed without persist.';
+        }
+        const label = ast.args.join(' ').trim() || `Marker ${Date.now()}`;
+        deps.programmerSessionStore.appendEvent({
+          tSec: performance.now() / 1000,
+          kind: 'marker',
+          label,
+        });
+        deps.socket.emit('programmer-session:marker', { label });
+        return `Session marker "${label}" dropped.`;
+      },
+    };
+  }
+
+  if (ast.kind === 'store') {
+    return {
+      kind: 'store',
+      summary: `Store scratch${ast.activeOnly ? ' (active only)' : ''}`,
+      risky: false,
+      tags: ['store', 'verb'],
+      canonicalInput,
+      apply: () => {
+        let entries = deps.scratchStore.getEntries();
+        if (ast.activeOnly) {
+          const activePaths = deps.programmerStore.activeAttributes;
+          entries = entries.filter((entry) => activePaths.has(entry.path));
+          if (entries.length === 0) throw new Error('No active scratch channels to store.');
+        } else if (entries.length === 0) {
+          throw new Error('Scratch buffer is empty.');
+        }
+        const previousEntries = deps.scratchStore.getEntries();
+        deps.scratchStore.setEntries(entries);
+        const mode = ast.mode ?? deps.programmerStore.storeMode;
+        deps.programmerStore.setStoreMode(mode);
+        deps.cueStore.recordScratchAsPreset(ast.name ?? `CLI Store ${new Date().toLocaleTimeString()}`, {
+          mode,
+          attributeFilter: deps.programmerStore.attributeFilter(),
+          poolId: deps.programmerStore.selectedPoolId,
+          poolSlot: deps.programmerStore.selectedPoolSlot,
+        });
+        deps.scratchStore.setEntries(previousEntries);
+        return `Stored ${entries.length} channel(s) as preset (${mode}).`;
+      },
     };
   }
 
   if (ast.kind === 'macro') {
-    const macro = listMacros().find((item) => item.name === ast.name);
+    const macro =
+      listAllMacros(deps.showStore.document.programmer?.macros).find((item) => item.name === ast.name)
+      ?? listMacros().find((item) => item.name === ast.name);
     return {
       kind: 'macro',
       summary: `Run macro ${ast.name}`,
@@ -718,6 +886,9 @@ export function suggestCommands(
     'help',
     'go',
     'stop',
+    'session arm',
+    'session disarm',
+    'store --active',
     'timeline marker Intro',
     'timeline section Verse 0 16',
     'audio bind fixture-1 beat',

@@ -15,8 +15,10 @@ import { useCueStore } from 'src/stores/cue';
 import { useExecutorStore } from 'src/stores/executor';
 import { useShowStore } from 'src/stores/show';
 import { useAudioStore } from 'src/stores/audio';
-import type { ShowAudioMapping, ShowDocument } from '@softdmx/engine';
+import { useProgrammerSessionStore } from 'src/stores/programmer-session';
+import type { ProgrammerSession, ShowAudioMapping, ShowDocument } from '@softdmx/engine';
 import { isSupportedShowVersion } from '@softdmx/engine';
+import type { ScratchConflict } from '@softdmx/engine';
 
 export default boot(() => {
   const socket = useIOClient();
@@ -26,8 +28,10 @@ export default boot(() => {
   const executorStore = useExecutorStore();
   const showStore = useShowStore();
   const audioStore = useAudioStore();
+  const sessionStore = useProgrammerSessionStore();
   let pendingRemoteShow: ShowDocument | null = null;
   let dismissConflictNotice: (() => void) | null = null;
+  let lastScratchSeq = 0;
 
   function cloneValue<T>(value: T): T {
     return JSON.parse(JSON.stringify(value)) as T;
@@ -99,6 +103,41 @@ export default boot(() => {
   socket.on('remote:scratch:clear', () => {
     scratch.clear();
     engine.requestMerge();
+  });
+
+  socket.on(
+    'scratch:layers',
+    (snapshot: { seq?: number; merged?: import('@softdmx/engine').ScratchEntry[]; conflicts?: ScratchConflict[] }) => {
+      if (typeof snapshot?.seq === 'number' && snapshot.seq < lastScratchSeq) {
+        return;
+      }
+      if (typeof snapshot?.seq === 'number') {
+        lastScratchSeq = snapshot.seq;
+      }
+      if (Array.isArray(snapshot?.merged)) {
+        scratch.setEntries(snapshot.merged);
+        engine.requestMerge();
+      }
+      if (snapshot?.conflicts?.length) {
+        console.info(`Scratch conflicts: ${snapshot.conflicts.length}`);
+      }
+    },
+  );
+
+  socket.on('scratch:conflicts', (conflicts: ScratchConflict[]) => {
+    if (!Array.isArray(conflicts) || conflicts.length === 0) return;
+    console.info(`Scratch conflicts updated: ${conflicts.length}`);
+  });
+
+  socket.on('programmer-session:arm', (payload: { sessionId?: string; clock?: ProgrammerSession['clock'] }) => {
+    sessionStore.arm({
+      sessionId: payload?.sessionId,
+      clock: payload?.clock,
+    });
+  });
+
+  socket.on('programmer-session:disarm', (payload?: { persist?: boolean }) => {
+    sessionStore.disarm({ persist: payload?.persist !== false });
   });
 
   socket.on('remote:scratch:set', (payload: { path: string; value: number; attributeType?: string } | { channels: { path: string; value: number; attributeType?: string }[] }) => {

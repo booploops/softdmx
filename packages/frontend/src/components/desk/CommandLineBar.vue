@@ -14,6 +14,9 @@ import { useSelectionStore } from 'src/stores/selection';
 import { useTimelineEditorStore } from 'src/stores/timeline-editor';
 import { useShowStore } from 'src/stores/show';
 import { useScratchStore } from 'src/stores/scratch';
+import { useProgrammerSessionStore } from 'src/stores/programmer-session';
+import { useProgrammerStore } from 'src/stores/programmer';
+import { useCueStore } from 'src/stores/cue';
 import { useCommandContextStore } from 'src/stores/command-context';
 import { useCommandHistoryStore } from 'src/stores/command-history';
 import { getCommandLineFlags, updateCommandLineFlags, type CommandLineFlags } from 'src/config/command-line-flags';
@@ -26,6 +29,7 @@ import {
   saveMacro,
   saveCommandPack,
   listCommandPacks,
+  listAllMacros,
   type ExecutionPlan,
 } from 'src/lib/command-line-v2';
 import { evaluateCommandPolicy } from 'src/lib/command-policy';
@@ -40,6 +44,9 @@ const selection = useSelectionStore();
 const timeline = useTimelineEditorStore();
 const showStore = useShowStore();
 const scratch = useScratchStore();
+const programmerSession = useProgrammerSessionStore();
+const programmer = useProgrammerStore();
+const cueStore = useCueStore();
 const contextStore = useCommandContextStore();
 const historyStore = useCommandHistoryStore();
 const { info } = useInfoText();
@@ -58,7 +65,7 @@ const parserState = computed(() =>
   flags.value.commandLineV2Enabled
     ? parseCommandLineV2(input.value, {
       intentEnabled: flags.value.commandIntentEnabled,
-      knownMacros: listMacros(),
+      knownMacros: listAllMacros(showStore.document.programmer?.macros),
     })
     : { ast: null, diagnostics: [], tokens: [], canonicalInput: input.value.trim() }
 );
@@ -102,7 +109,7 @@ async function execute(raw: string, options?: { forceRiskyApply?: boolean }) {
   const state = flags.value.commandLineV2Enabled
     ? parseCommandLineV2(trimmed, {
       intentEnabled: flags.value.commandIntentEnabled,
-      knownMacros: listMacros(),
+      knownMacros: listAllMacros(showStore.document.programmer?.macros),
     })
     : {
       ast: {
@@ -127,6 +134,9 @@ async function execute(raw: string, options?: { forceRiskyApply?: boolean }) {
     outputStore: output,
     executorStore: executor,
     scratchStore: scratch,
+    programmerSessionStore: programmerSession,
+    programmerStore: programmer,
+    cueStore,
     socket,
   }, state.canonicalInput);
 

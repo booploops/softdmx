@@ -8,13 +8,15 @@
 
 import { computed } from 'vue';
 import { storeToRefs } from 'pinia';
-import type { ShowfileFixtureMapped, WidgetConfiguration } from '@softdmx/engine';
+import type { ProgrammerControl, ShowfileFixtureMapped, WidgetConfiguration } from '@softdmx/engine';
 import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
 import { useProgrammerStore } from 'src/stores/programmer';
 import {
   buildGroupControlFixture,
   filterWidgetsForFeatureGroup,
+  programmerControlsToWidgets,
+  resolveMappedSelectionControls,
   selectionSummaryLabel,
 } from 'src/utils/selection-controls';
 
@@ -44,6 +46,17 @@ export function useSelectionControl() {
 
   const selectedFixtureNames = computed(() => getSelectedFixtureNames());
 
+  const selectedMappedFixtures = computed((): ShowfileFixtureMapped[] => {
+    return selectedFixtureNames.value
+      .map((name) => dmx.showfileFixturesMapped.find((fixture) => fixture.fixtureName === name))
+      .filter((fixture): fixture is ShowfileFixtureMapped => Boolean(fixture));
+  });
+
+  const isMixedSelection = computed(() => {
+    if (selectedFixtureNames.value.length > 1) return true;
+    return selectedGroups.value.size > 0 && selectedFixtures.value.size > 0;
+  });
+
   const controlFixture = computed((): ShowfileFixtureMapped | null => {
     const names = selectedFixtureNames.value;
     if (names.length === 0) return null;
@@ -68,9 +81,22 @@ export function useSelectionControl() {
     };
   });
 
+  const programmerControls = computed((): ProgrammerControl[] => {
+    if (selectedMappedFixtures.value.length === 0) return [];
+    if (!isMixedSelection.value && controlFixture.value) {
+      return resolveMappedSelectionControls([controlFixture.value], programmer.activeFeatureGroup);
+    }
+    return resolveMappedSelectionControls(selectedMappedFixtures.value, programmer.activeFeatureGroup);
+  });
+
   const controlWidgets = computed((): WidgetConfiguration[] => {
     const fixture = controlFixture.value;
     if (!fixture) return [];
+
+    if (isMixedSelection.value || selectedFixtureNames.value.length > 1) {
+      return programmerControlsToWidgets(programmerControls.value);
+    }
+
     const widgets = fixture.def.widgets ?? [];
     return filterWidgetsForFeatureGroup(widgets, programmer.activeFeatureGroup);
   });
@@ -84,8 +110,10 @@ export function useSelectionControl() {
   return {
     controlFixture,
     controlWidgets,
+    programmerControls,
     selectionLabel,
     hasSelection,
     selectedFixtureNames,
+    isMixedSelection,
   };
 }

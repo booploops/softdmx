@@ -14,9 +14,25 @@ import type {
   TouchControl,
   TouchPage,
 } from "../types/desk.ts";
+import type { ProgrammerPaneOptions } from "../types/programmer.ts";
 import type { ShowDocument } from "../show/document";
 
 export const DESK_GRID_COLS = 12;
+
+export const DEFAULT_PROGRAMMER_PANE_OPTIONS: ProgrammerPaneOptions = {
+  defaultFeatureGroup: 'all',
+  layout: 'split',
+  showOnlyTouched: false,
+  autoActivateOnTouch: true,
+  autoArmSession: false,
+  recordGranularity: 'delta',
+  keyframeIdleMs: 500,
+  applyOnDigit: false,
+};
+
+function programmerPaneOptions(overrides?: Partial<ProgrammerPaneOptions>): ProgrammerPaneOptions {
+  return { ...DEFAULT_PROGRAMMER_PANE_OPTIONS, ...overrides };
+}
 
 export const DEFAULT_DESK_VIEWS: DeskView[] = [
   {
@@ -37,11 +53,13 @@ export const DEFAULT_DESK_VIEWS: DeskView[] = [
         id: "busking-programmer",
         windowType: "programmer",
         rect: { x: 0, y: 6, w: 6, h: 6 },
+        options: programmerPaneOptions(),
       },
       {
         id: "busking-quick-programmer",
         windowType: "quick-programmer",
         rect: { x: 6, y: 6, w: 6, h: 6 },
+        options: programmerPaneOptions({ layout: 'controls-first' }),
       },
       {
         id: "busking-playback-rail",
@@ -68,6 +86,7 @@ export const DEFAULT_DESK_VIEWS: DeskView[] = [
         id: "focus-programmer",
         windowType: "programmer",
         rect: { x: 8, y: 6, w: 4, h: 6 },
+        options: programmerPaneOptions(),
       },
       {
         id: "focus-playback-rail",

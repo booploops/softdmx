@@ -184,6 +184,10 @@ export function validateShowDocument(data: unknown): ShowDocument {
             ? Math.max(0, Math.min(1, asset.volume))
             : 1,
       })),
+      tracks: doc.timeline?.tracks ?? [],
+      markers: doc.timeline?.markers ?? [],
+      sections: doc.timeline?.sections ?? [],
+      programmerSessions: doc.timeline?.programmerSessions ?? [],
     },
     audioMappings: doc.audioMappings ?? [],
     executors: doc.executors ?? [],
@@ -243,6 +247,14 @@ export function validateShowDocument(data: unknown): ShowDocument {
     },
     desk,
     touch,
+    programmer: {
+      storeProfiles: doc.programmer?.storeProfiles ?? [],
+      customFeatureGroups: doc.programmer?.customFeatureGroups ?? [],
+      operators: doc.programmer?.operators ?? [],
+      conflictMode: doc.programmer?.conflictMode ?? "attribute-merge",
+      macros: doc.programmer?.macros ?? [],
+      defaultStoreProfileId: doc.programmer?.defaultStoreProfileId,
+    },
   };
 }
 

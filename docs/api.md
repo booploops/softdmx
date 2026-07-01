@@ -11,6 +11,13 @@ OpenAPI spec: [`openapi/remote-api.yaml`](../openapi/remote-api.yaml).
 | `show:state` | Show document (schema 1.5) | Full show document |
 | `channels:state` | `ActiveChannel[]` | Merged DMX output |
 | `settings:current` | App config | Port and app prefs |
+| `scratch:layers` | `{ seq, layers, conflicts, merged }` | Canonical multi-client scratch snapshot |
+| `scratch:state` | Same as `scratch:layers` | Alias for scratch snapshot |
+| `scratch:conflicts` | `ScratchConflict[]` | Paths with competing client values |
+| `scratch:ack` | `{ seq, clientId, appliedAt }` | Per-command acknowledgement |
+| `client:identity` | `{ clientId, operatorLabel?, color? }` | Assigned operator identity |
+| `programmer-session:arm` | `{ sessionId?, clock? }` | Arm session recording |
+| `programmer-session:disarm` | `{ sessionId?, persist? }` | Disarm session recording |
 
 ## Write events (client → server)
 
@@ -19,8 +26,10 @@ OpenAPI spec: [`openapi/remote-api.yaml`](../openapi/remote-api.yaml).
 | `show:get` | — | Request current show |
 | `show:load` | Show document (schema 1.5) | Load show |
 | `show:state` | Show document (schema 1.5) | Broadcast show update |
-| `scratch:set` | `{ path, value }` or `{ channels: [...] }` | Set live scratch channels |
-| `scratch:clear` | — | Clear scratch layer |
+| `client:hello` | `{ clientId?, operatorLabel?, color? }` | Register operator identity |
+| `scratch:set` | `{ path, value, clientId? }` or `{ channels, clientId? }` | Set live scratch channels (server authority) |
+| `scratch:clear` | `{ clientId? }` | Clear scratch layer (one client or all) |
+| `scratch:clear-client` | — | Clear only the calling client's scratch layer |
 | `preset:fire` | `{ presetId, fade? }` | Fire preset with optional fade ms |
 | `cue:play` | `{ cueId }` | Start cue playback |
 | `cue:stop` | `{ cueId }` | Stop cue |
@@ -43,6 +52,7 @@ OpenAPI spec: [`openapi/remote-api.yaml`](../openapi/remote-api.yaml).
 - `/softdmx/group/{name}/master`
 - `/softdmx/cue/{id}/go`
 - `/softdmx/preset/{id}`
+- `/softdmx/scratch/changed` (optional outbound when `softdmx.osc_emit_scratch_changed=1` in localStorage)
 
 SoftDMX also accepts common media-time OSC routes used by Resolume-style controllers, including:
 
@@ -76,9 +86,15 @@ Optional auth (REST and Socket.IO):
 | Method | Route | Body | Description |
 |---|---|---|---|
 | `GET` | `/show` | — | Get current show document |
+| `GET` | `/scratch` | — | Get merged scratch snapshot (`layers`, `conflicts`, `merged`, `seq`) |
+| `GET` | `/scratch/clients` | — | List connected clients and per-client layers |
+| `GET` | `/sessions` | — | List `timeline.programmerSessions` from loaded show |
+| `GET` | `/sessions/:id` | — | Get one programmer session |
+| `POST` | `/sessions/arm` | `{ sessionId?, clock? }` | Arm session recording (broadcast) |
+| `POST` | `/sessions/disarm` | `{ sessionId?, persist? }` | Disarm session recording (broadcast) |
 | `POST` | `/show` | Show document (schema 1.5) | Load full show document |
-| `POST` | `/scratch/set` | `{ path, value, attributeType? }` or `{ channels: [...] }` | Set live scratch values |
-| `POST` | `/scratch/clear` | — | Clear scratch layer |
+| `POST` | `/scratch/set` | `{ path, value, attributeType?, clientId? }` or `{ channels, clientId? }` | Set live scratch values (returns `ack`, `seq`) |
+| `POST` | `/scratch/clear` | `{ clientId? }` | Clear scratch layer |
 | `POST` | `/preset/fire` | `{ presetId, fade? }` | Fire preset |
 | `POST` | `/cue/play` | `{ cueId }` | Start cue playback |
 | `POST` | `/cue/stop` | `{ cueId }` | Stop cue playback |

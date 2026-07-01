@@ -1,11 +1,11 @@
-# Show schema (1.5)
+# Show schema (1.6)
 
-YAML show files validated at load time. Older versions migrate to `1.5` automatically.
+YAML show files validated at load time. Older versions migrate to `1.6` automatically.
 
 ## Top-level object
 
 ```yaml
-version: "1.5"
+version: "1.6"
 meta: {}
 plugins: []
 destinations: []
@@ -25,6 +25,7 @@ video: {}
 backup: {}
 desk: {}
 touch: {}
+programmer: {}
 ```
 
 ## Field reference
@@ -414,6 +415,25 @@ Gain and smoothing are configured per pixel map (`videoGain`, `videoSmoothingMs`
 - `x: number`
 - `y: number`
 - `startChannel: number`
+
+### `programmer`
+
+- Type: `ProgrammerConfig` (optional)
+
+Fields:
+
+- `storeProfiles?: StoreProfile[]` — named one-tap store targets
+- `customFeatureGroups?: CustomFeatureGroup[]` — show-level attribute group overrides
+- `operators?: ProgrammerOperator[]` — `{ id, label, color?, priority? }`
+- `conflictMode?: "attribute-merge" | "last-writer" | "operator-priority"`
+- `macros?: ProgrammerMacroDefinition[]`
+- `defaultStoreProfileId?: string`
+
+### `timeline.programmerSessions`
+
+- Type: `ProgrammerSession[]` (optional)
+
+Busk session transcripts anchored to the set timeline. Each session has `id`, `name`, `anchorSec`, `clock`, `events[]` with kinds `channel`, `channels`, `clear`, `store`, `marker`, `blind`.
 
 ## Minimal valid document example
 

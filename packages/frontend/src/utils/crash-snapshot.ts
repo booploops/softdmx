@@ -6,15 +6,25 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { ScratchEntry } from '@softdmx/engine';
+import type { ScratchEntry, ProgrammerSessionEvent } from '@softdmx/engine';
 import type { ShowDocument } from '@softdmx/engine';
 
 const CRASH_SNAPSHOT_KEY = 'softdmx.crash-snapshot.v1';
+
+export interface SessionBufferSnapshot {
+  sessionId: string;
+  events: ProgrammerSessionEvent[];
+  clientId?: string;
+  armed: boolean;
+  clockMode?: 'session' | 'set-playhead' | 'timecode' | 'audio';
+  sessionStartedAt?: string;
+}
 
 export interface CrashSnapshot {
   savedAt: string;
   document?: ShowDocument;
   scratch?: ScratchEntry[];
+  sessionBuffer?: SessionBufferSnapshot;
 }
 
 function canUseLocalStorage(): boolean {
@@ -34,7 +44,11 @@ export function readCrashSnapshot(): CrashSnapshot | null {
   }
 }
 
-export function writeCrashSnapshot(partial: { document?: ShowDocument; scratch?: ScratchEntry[] }) {
+export function writeCrashSnapshot(partial: {
+  document?: ShowDocument;
+  scratch?: ScratchEntry[];
+  sessionBuffer?: SessionBufferSnapshot;
+}) {
   if (!canUseLocalStorage()) return;
 
   const current = readCrashSnapshot() ?? { savedAt: new Date().toISOString() };
@@ -43,6 +57,10 @@ export function writeCrashSnapshot(partial: { document?: ShowDocument; scratch?:
     ...partial,
     savedAt: new Date().toISOString(),
   };
+
+  if (partial.sessionBuffer === undefined && 'sessionBuffer' in partial) {
+    delete next.sessionBuffer;
+  }
 
   try {
     window.localStorage.setItem(CRASH_SNAPSHOT_KEY, JSON.stringify(next));

@@ -12,6 +12,9 @@ import { useTimecodeStore } from 'src/stores/timecode';
 import { useTimelineAudioStore } from 'src/stores/timeline-audio';
 import { useTimelineEditorStore } from 'src/stores/timeline-editor';
 import { useUIStore } from 'src/stores/ui';
+import { useProgrammerSessionStore } from 'src/stores/programmer-session';
+import { useDialog } from 'quasar';
+import SessionBakeDialog from 'src/components/timeline/SessionBakeDialog.vue';
 import {
   getCueTimecodeInSeconds,
   getCueTimecodeOutSeconds,
@@ -20,6 +23,7 @@ import { getCueTotalDuration } from '@softdmx/engine';
 import { formatSmpte, formatTimelineSeconds, msToSeconds, parseSmpteInput, secondsToMs } from '@softdmx/engine';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
 import { SdmxIconButton } from 'src/components/ui';
+import TimelineSessionLane from 'src/components/timeline/TimelineSessionLane.vue';
 
 const props = withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false });
 const emit = defineEmits<{ close: [] }>();
@@ -30,6 +34,8 @@ const timecodeStore = useTimecodeStore();
 const timelineEditor = useTimelineEditorStore();
 const timelineAudio = useTimelineAudioStore();
 const ui = useUIStore();
+const sessionStore = useProgrammerSessionStore();
+const dialog = useDialog();
 
 const timelineViewport = ref<HTMLElement | null>(null);
 const audioCanvas = ref<HTMLCanvasElement | null>(null);
@@ -173,12 +179,47 @@ const timelineCueOptions = computed(() =>
   timelineEditor.timelineCues.map((cue) => ({ label: cue.name, value: cue.id }))
 );
 const markerList = computed(() => timelineEditor.markers);
+const operatorFilterOptions = computed(() => {
+  const operators = showStore.document.programmer?.operators ?? [];
+  return [
+    { label: 'All operators', value: null },
+    ...operators.map((operator) => ({ label: operator.label, value: operator.id })),
+  ];
+});
 const sectionList = computed(() => timelineEditor.sections);
 const transientMarkerList = computed(() => timelineAudio.transientMarkers);
 
 const showAdvancedControls = ref(false);
 const markerName = ref('Marker');
 const sectionName = ref('Section');
+const selectedSessionId = ref<string | null>(null);
+
+const sessionOptions = computed(() =>
+  timelineEditor.programmerSessions.map((session) => ({
+    label: session.name,
+    value: session.id,
+  }))
+);
+
+function toggleSessionRecording() {
+  if (sessionStore.armed) {
+    sessionStore.disarm();
+    return;
+  }
+  sessionStore.arm({ clock: 'set-playhead' });
+}
+
+function openSessionBakeDialog() {
+  const sessionId = selectedSessionId.value ?? timelineEditor.programmerSessions[0]?.id;
+  if (!sessionId) return;
+  const session = timelineEditor.programmerSessions.find((entry) => entry.id === sessionId);
+  if (!session) return;
+
+  dialog({
+    component: SessionBakeDialog,
+    componentProps: { session },
+  });
+}
 
 function pxToSeconds(px: number) {
   return Math.max(0, px / pixelsPerSecond.value);
@@ -475,6 +516,43 @@ onUnmounted(() => {
           />
           <q-btn dense flat icon="upload_file" label="Import audio" @click="triggerAudioImport" />
           <q-btn dense flat icon="bookmark_add" label="Add marker" @click="addMarkerAtPlayhead" />
+          <q-select
+            v-model="timelineEditor.operatorFilterClientId"
+            dense
+            outlined
+            emit-value
+            map-options
+            clearable
+            label="Operator"
+            :options="operatorFilterOptions"
+            style="min-width: 140px"
+          />
+          <q-btn
+            dense
+            flat
+            :icon="sessionStore.armed ? 'stop_circle' : 'fiber_manual_record'"
+            :label="sessionStore.armed ? 'Stop session' : 'Record session'"
+            :color="sessionStore.armed ? 'negative' : undefined"
+            @click="toggleSessionRecording"
+          />
+          <q-select
+            v-if="sessionOptions.length > 0"
+            v-model="selectedSessionId"
+            :options="sessionOptions"
+            emit-value
+            map-options
+            dense
+            label="Session"
+            style="min-width: 160px"
+          />
+          <q-btn
+            v-if="sessionOptions.length > 0"
+            dense
+            flat
+            icon="bakery_dining"
+            label="Bake session"
+            @click="openSessionBakeDialog"
+          />
           <q-btn dense flat icon="crop_16_9" label="Add section" @click="addSectionFromSelection" />
           <q-btn dense flat icon="movie_edit" label="Edit cue" @click="openCueContentEditor" />
           <q-btn
@@ -651,6 +729,11 @@ onUnmounted(() => {
                 />
               </div>
             </div>
+
+            <TimelineSessionLane
+              :pixels-per-second="pixelsPerSecond"
+              :timeline-width-px="timelineWidthPx"
+            />
 
             <div class="playhead" :style="{ left: `${playheadLeftPx}px` }" />
             <div

@@ -7,19 +7,25 @@
 -->
 <script setup lang="ts">
 import { useShowStore } from 'src/stores/show';
+import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
 import { useProgrammerStore, PROGRAMMER_FEATURE_GROUPS } from 'src/stores/programmer';
 import { useScratchStore } from 'src/stores/scratch';
 import { SdmxButton, SdmxEmptyState } from 'src/components/ui';
 import { useInfoText } from 'src/composables/useInfoText';
+import { useActiveAttribute } from 'src/composables/useActiveAttribute';
+import { resolveOperatorColor } from 'src/utils/resolve-channel-path';
 import ChannelAttributeControl from 'src/components/ChannelAttributeControl.vue';
 import type { AttributeFeature, FixtureChannelDefinition } from '@softdmx/engine';
+import { inferAttributeFeature } from '@softdmx/engine';
 
 const showStore = useShowStore();
+const dmx = useDMXStore();
 const selection = useSelectionStore();
 const programmer = useProgrammerStore();
 const scratch = useScratchStore();
 const { info } = useInfoText();
+const { setActive, isActive } = useActiveAttribute();
 
 const activeGroupIndex = ref(0);
 const featureGroups = PROGRAMMER_FEATURE_GROUPS;
@@ -28,7 +34,7 @@ const selectedFixtures = computed(() => {
   const names = selection.selectedFixtures.size
     ? Array.from(selection.selectedFixtures)
     : showStore.document.fixtures.slice(0, 4).map((f) => f.name);
-  return showStore.document.fixtures.filter((f) => names.includes(f.name));
+  return dmx.showfileFixturesMapped.filter((fixture) => names.includes(fixture.fixtureName));
 });
 
 interface ChannelRow {
@@ -44,20 +50,42 @@ const channelRows = computed<ChannelRow[]>(() => {
 
   for (const fixture of selectedFixtures.value) {
     for (const channel of fixture.def.channels) {
-      if (group !== 'all' && channel.feature !== group) continue;
+      const feature = inferAttributeFeature(channel.type, channel.name);
+      if (group !== 'all' && feature !== group) continue;
+      const path = channel.reference?.path;
+      if (!path) continue;
       rows.push({
-        path: channel.reference.path,
-        name: `${fixture.name} · ${channel.name}`,
+        path,
+        name: `${fixture.fixtureName} · ${channel.name}`,
         channel,
-        feature: channel.feature,
+        feature,
       });
     }
   }
   return rows;
 });
 
+function scratchEntry(path: string) {
+  return scratch.entries.get(path);
+}
+
 function isChanged(path: string): boolean {
   return scratch.entries.has(path);
+}
+
+function changedStyle(path: string): Record<string, string> | undefined {
+  const entry = scratchEntry(path);
+  if (!entry) return undefined;
+  const color = resolveOperatorColor(entry);
+  if (!color) return undefined;
+  return {
+    borderLeftColor: color,
+    background: `color-mix(in srgb, ${color} 12%, var(--sdmx-color-bg-surface))`,
+  };
+}
+
+function onCellTap(path: string) {
+  setActive(path);
 }
 
 function prevGroup() {
@@ -94,13 +122,25 @@ function nextGroup() {
         v-for="row in channelRows"
         :key="row.path"
         class="attribute-control-surface__cell"
+        :class="{
+          'attribute-control-surface__changed': isChanged(row.path),
+          'attribute-control-surface__active': isActive(row.path),
+        }"
+        :style="changedStyle(row.path)"
+        @click="onCellTap(row.path)"
       >
-        <span class="sdmx-text-caption attribute-control-surface__cell-label">{{ row.name }}</span>
+        <div class="attribute-control-surface__cell-header">
+          <span
+            v-if="resolveOperatorColor(scratchEntry(row.path) ?? {})"
+            class="attribute-control-surface__operator"
+            :style="{ backgroundColor: resolveOperatorColor(scratchEntry(row.path) ?? {}) }"
+          />
+          <span class="sdmx-text-caption attribute-control-surface__cell-label">{{ row.name }}</span>
+        </div>
         <ChannelAttributeControl
           :channel="row.channel"
           :path="row.path"
           :show-dmx-hint="true"
-          :class="{ 'attribute-control-surface__changed': isChanged(row.path) }"
         />
       </div>
     </div>
@@ -146,16 +186,37 @@ function nextGroup() {
   border-radius: var(--sdmx-radius-sm);
   background: var(--sdmx-color-bg-surface);
   padding: var(--sdmx-space-xs);
+  cursor: pointer;
+}
+
+.attribute-control-surface__cell-header {
+  display: flex;
+  align-items: center;
+  gap: var(--sdmx-space-xs);
+  margin-bottom: var(--sdmx-space-xs);
 }
 
 .attribute-control-surface__cell-label {
   display: block;
-  margin-bottom: var(--sdmx-space-xs);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.attribute-control-surface__operator {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--sdmx-radius-full);
+  flex-shrink: 0;
 }
 
 .attribute-control-surface__changed {
   border-left: 3px solid var(--sdmx-color-scratch);
-  border-radius: var(--sdmx-radius-sm);
-  padding-left: var(--sdmx-space-xs);
+}
+
+.attribute-control-surface__active {
+  border-color: var(--sdmx-color-active);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sdmx-color-active) 35%, transparent);
 }
 </style>

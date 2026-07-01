@@ -17,6 +17,7 @@ import PresetGridWindow from './windows/PresetGridWindow.vue';
 import AttributeControlWindow from './windows/AttributeControlWindow.vue';
 import PlaybackRailWindow from './windows/PlaybackRailWindow.vue';
 import DmxOutputDebugWindow from './windows/DmxOutputDebugWindow.vue';
+import MergeStackWindow from './windows/MergeStackWindow.vue';
 
 const props = defineProps<{ pane: DeskPane }>();
 </script>
@@ -27,12 +28,13 @@ const props = defineProps<{ pane: DeskPane }>();
     <GroupWindow v-else-if="props.pane.windowType === 'groups'" />
     <WidgetWindow v-else-if="props.pane.windowType === 'widgets'" />
     <ProgrammerWindow v-else-if="props.pane.windowType === 'programmer'" />
-    <QuickProgrammerWindow v-else-if="props.pane.windowType === 'quick-programmer'" />
+    <QuickProgrammerWindow v-else-if="props.pane.windowType === 'quick-programmer'" :pane="props.pane" />
     <PlotWindow v-else-if="props.pane.windowType === 'plot'" />
     <PresetGridWindow v-else-if="props.pane.windowType === 'presets'" />
     <AttributeControlWindow v-else-if="props.pane.windowType === 'attribute-control'" />
     <PlaybackRailWindow v-else-if="props.pane.windowType === 'playback-rail'" />
     <DmxOutputDebugWindow v-else-if="props.pane.windowType === 'dmx-debug'" />
+    <MergeStackWindow v-else-if="props.pane.windowType === 'merge-stack'" />
     <div v-else class="q-pa-md sdmx-text-muted">Unknown window: {{ props.pane.windowType }}</div>
   </div>
 </template>

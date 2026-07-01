@@ -30,7 +30,7 @@ test('serializeShowDocument(parseShowDocument(x)) preserves meta.name, fixture c
 
       assert.equal(roundTripped.meta.name, name.trim());
       assert.equal(roundTripped.fixtures.length, fixtureCount);
-      assert.equal(roundTripped.version, '1.5');
+      assert.equal(roundTripped.version, '1.6');
     }),
     { numRuns: 75 },
   );

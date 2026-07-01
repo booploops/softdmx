@@ -15,6 +15,7 @@ import {
   isRemoteApiTokenAuthorized,
 } from '../../../client/src-electron/server/auth/remote-token.ts';
 import type { RemoteContext } from '../../../client/src-electron/server/context.ts';
+import { ScratchAuthority } from '../../../client/src-electron/server/scratch-authority.ts';
 import { registerRemoteHandlers } from '../../../client/src-electron/server/socket/remote.ts';
 import type { ShowDocument } from '../../../frontend/src/show/document.ts';
 
@@ -73,9 +74,12 @@ export async function createTestServer(
     });
   }
 
+  const scratchAuthority = new ScratchAuthority(() => currentShow?.programmer?.conflictMode ?? 'attribute-merge');
+
   const ctx: RemoteContext = {
     io,
     outputManager: outputManager as unknown as RemoteContext['outputManager'],
+    scratchAuthority,
     getShow: () => currentShow,
     setShow: (show: ShowDocument) => {
       currentShow = show;

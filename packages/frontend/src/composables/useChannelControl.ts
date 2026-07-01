@@ -10,24 +10,21 @@ import { useScratchStore } from 'src/stores/scratch';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
-import { inferAttributeFeature } from '@softdmx/engine';
+import { useClientIdentityStore } from 'src/stores/client-identity';
+import { useProgrammerSessionStore } from 'src/stores/programmer-session';
+import { inferAttributeFeature, type ScratchWriteMeta } from '@softdmx/engine';
+import type { ScratchChannelUpdate } from 'src/stores/scratch';
 
 export function useChannelControl() {
   const scratch = useScratchStore();
   const engine = useOutputEngineStore();
   const dmx = useDMXStore();
   const selection = useSelectionStore();
+  const clientIdentity = useClientIdentityStore();
+  const programmerSession = useProgrammerSessionStore();
 
   type GroupPath = { groupName: string; attributeName: string };
   type FixturePath = { fixtureName: string; channelIndex: number };
-  type ScratchChannelUpdate = {
-    path: string;
-    value: number;
-    attributeType: string;
-    attributeName?: string;
-    attributeId?: string;
-    feature?: import('@softdmx/engine').AttributeFeature;
-  };
 
   function parseGroupPath(path: string): GroupPath | null {
     if (!path.startsWith('group://')) return null;
@@ -119,19 +116,56 @@ export function useChannelControl() {
     return updates;
   }
 
+  function buildScratchMeta(
+    source: ScratchWriteMeta['source'] = 'attribute-control',
+    feature?: ScratchChannelUpdate['feature'],
+  ): ScratchChannelUpdate['meta'] {
+    return programmerSession.buildWriteMeta(source, { feature });
+  }
+
+  function buildChannelUpdateMeta(
+    meta?: Pick<ScratchChannelUpdate, 'attributeName' | 'attributeId' | 'feature'>,
+    source: ScratchWriteMeta['source'] = 'attribute-control',
+  ): Omit<ScratchChannelUpdate, 'path' | 'value' | 'attributeType'> {
+    return {
+      ...meta,
+      clientId: clientIdentity.clientId,
+      meta: buildScratchMeta(source, meta?.feature),
+    };
+  }
+
+  function recordScratchUpdates(updates: ScratchChannelUpdate[], source: ScratchWriteMeta['source'] = 'attribute-control') {
+    if (!programmerSession.armed) return;
+    programmerSession.recordChannels(
+      updates.map((update) => ({
+        path: update.path,
+        value: update.value,
+        attributeType: update.attributeType,
+      })),
+      { source },
+    );
+  }
+
   function setScratchChannel(
     path: string,
     value: number,
     attributeType = 'generic',
     meta?: Pick<ScratchChannelUpdate, 'attributeName' | 'attributeId' | 'feature'>
   ) {
-    scratch.setChannel(path, Math.round(value), attributeType, meta);
+    const channelMeta = buildChannelUpdateMeta(meta);
+    scratch.setChannel(path, Math.round(value), attributeType, channelMeta);
+    recordScratchUpdates([{ path, value: Math.round(value), attributeType, ...channelMeta }]);
   }
 
   function setChannel(path: string, value: number, attributeType = 'generic') {
     const scopedUpdates = getScopedSelectionUpdates(path, value);
     if (scopedUpdates.length > 0) {
-      scratch.setChannels(scopedUpdates);
+      const enriched = scopedUpdates.map((update) => ({
+        ...update,
+        ...buildChannelUpdateMeta(update),
+      }));
+      scratch.setChannels(enriched);
+      recordScratchUpdates(enriched);
       engine.requestMerge();
       return;
     }
@@ -180,7 +214,12 @@ export function useChannelControl() {
         );
       }
       if (scopedUpdates.length > 0) {
-        scratch.setChannels(scopedUpdates);
+        const enriched = scopedUpdates.map((update) => ({
+          ...update,
+          ...buildChannelUpdateMeta(update),
+        }));
+        scratch.setChannels(enriched);
+        recordScratchUpdates(enriched);
         engine.requestMerge();
         return;
       }
@@ -189,7 +228,7 @@ export function useChannelControl() {
     const group = show.groups.find((g) => g.name === groupName);
     if (!group) return;
 
-    const updates: { path: string; value: number; attributeType: string }[] = [];
+    const updates: ScratchChannelUpdate[] = [];
     for (const fixtureName of group.fixtures) {
       const mapped = dmx.showfileFixturesMapped.find((f) => f.fixtureName === fixtureName);
       if (!mapped) continue;
@@ -197,13 +236,19 @@ export function useChannelControl() {
       for (const [attrName, value] of Object.entries(attrs)) {
         const channel = mapped.def.channels.find((c) => c.name === attrName);
         if (channel?.reference) {
+          const feature = inferAttributeFeature(channel.type, channel.name);
           updates.push({
             path: channel.reference.path,
             value,
             attributeType: channel.type,
             attributeName: channel.name,
             attributeId: channel.attributeId ?? channel.name,
-            feature: inferAttributeFeature(channel.type, channel.name),
+            feature,
+            ...buildChannelUpdateMeta({
+              attributeName: channel.name,
+              attributeId: channel.attributeId ?? channel.name,
+              feature,
+            }),
           });
         }
       }
@@ -211,6 +256,7 @@ export function useChannelControl() {
 
     if (updates.length > 0) {
       scratch.setChannels(updates);
+      recordScratchUpdates(updates);
     }
     engine.requestMerge();
   }

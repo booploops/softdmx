@@ -14,6 +14,7 @@ import { useShowStore } from './show';
 import { useDMXStore } from './dmx';
 import { useOutputEngineStore } from './output-playback';
 import { useScratchStore } from './scratch';
+import { useProgrammerSessionStore } from './programmer-session';
 import { getCueTotalDuration } from '@softdmx/engine';
 import type { AttributeFeature } from '@softdmx/engine';
 import type { ProgrammerStoreMode } from './programmer';
@@ -26,6 +27,7 @@ export const useCueStore = defineStore('cue', () => {
   const dmx = useDMXStore();
   const engine = useOutputEngineStore();
   const scratch = useScratchStore();
+  const sessionStore = useProgrammerSessionStore();
 
   const activeCueId = ref<string | null>(null);
   const activeLayerId = ref<string | null>(null);
@@ -36,7 +38,7 @@ export const useCueStore = defineStore('cue', () => {
   const snapInterval = ref(250);
   const selectedFrames = ref<Set<string>>(new Set());
   const clipboard = ref<RecordedFrame[]>([]);
-  const isRecording = ref(false);
+  const isRecording = computed(() => sessionStore.armed);
 
   const cues = computed(() => showStore.document.cues);
 

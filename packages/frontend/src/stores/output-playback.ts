@@ -9,9 +9,9 @@
 import { ref, watch } from 'vue';
 import { defineStore } from 'pinia';
 import type { ActiveChannel, Cue, CuePlaybackState } from '@softdmx/engine';
-import type { LayerContribution } from '@softdmx/engine';
+import type { LayerContribution, MergeStackSnapshot, ScratchConflict } from '@softdmx/engine';
 import { mergeLayers, scalesWithIntensityMaster } from '@softdmx/engine';
-import { scratchToLayer } from '@softdmx/engine';
+import { scratchToLayer, mergeClientScratchLayers } from '@softdmx/engine';
 import { evaluateTimelineCueAtTime, getCueTotalDuration } from '@softdmx/engine';
 import { getActiveTimelineCuesAtTimecode } from '@softdmx/engine';
 import { evaluateStackCueAtTime, initStackPlayback, advanceStackStep } from '@softdmx/engine';
@@ -27,6 +27,7 @@ import {
 import { presetToChannels } from '@softdmx/engine';
 import { useShowStore } from './show';
 import { useScratchStore } from './scratch';
+import { useProgrammerStore } from './programmer';
 import { useDMXStore } from './dmx';
 import { useLinkStore } from './link';
 import { useAudioStore } from './audio';
@@ -42,7 +43,7 @@ import { resolveVideoPixelMapIds } from '@softdmx/engine';
 import { resolvePresetIdFromPoolSlot } from '@softdmx/engine';
 import { recordRuntimeMetric } from 'src/utils/runtime-metrics';
 import { getRuntimeOptimizationFlags } from 'src/config/runtime-optimization-flags';
-import { buildMergeSnapshot } from 'src/lib/output-merge-runtime';
+import { buildMergeSnapshot, type MergeSnapshot } from 'src/lib/output-merge-runtime';
 import { mergeOutputSnapshotInWorker } from 'src/lib/output-merge-worker-client';
 
 interface CuePlayOptions {
@@ -69,6 +70,8 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
   let linkPhase = 0;
   let previousTimecodePositionSeconds = 0;
   let mergeRequestVersion = 0;
+  const lastScratchConflicts = ref<ScratchConflict[]>([]);
+  const lastMergeStack = ref<MergeStackSnapshot | null>(null);
 
   function maybeAdvanceStackCue(cueId: string, state: CuePlaybackState, cue: Cue) {
     const stack = cue.stack ?? [];
@@ -333,6 +336,7 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     const dmx = useDMXStore();
     const showStore = useShowStore();
     const scratchStore = useScratchStore();
+    const programmerStore = useProgrammerStore();
     const linkStore = useLinkStore();
     const show = showStore.document;
     const now = performance.now();
@@ -446,15 +450,132 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
 
     // Scratch layer (highest priority)
     const allowBlindScratch = options?.includeBlindScratch === true;
-    if ((allowBlindScratch || !scratchStore.blindMode) && scratchStore.isActive) {
+    const clientLayers = scratchStore.clientLayers;
+    if ((allowBlindScratch || !scratchStore.blindMode) && clientLayers.length > 0) {
+      const merged = mergeClientScratchLayers(clientLayers, programmerStore.conflictMode);
+      layers.push(merged.layer);
+      lastScratchConflicts.value = merged.conflicts;
+    } else if ((allowBlindScratch || !scratchStore.blindMode) && scratchStore.getEntries().length > 0) {
+      lastScratchConflicts.value = [];
       layers.push(scratchToLayer(scratchStore.getEntries()));
+    } else {
+      lastScratchConflicts.value = [];
     }
+
+    lastMergeStack.value = buildMergeStackSnapshot(baseChannels, layers, clientLayers, lastScratchConflicts.value);
 
     return {
       show,
       baseChannels,
       layers,
+      clientLayers,
+      scratchConflicts: lastScratchConflicts.value,
+      mergeStack: lastMergeStack.value,
     };
+  }
+
+  function buildMergeStackSnapshot(
+    baseChannels: ActiveChannel[],
+    layers: LayerContribution[],
+    clientLayers: ReturnType<typeof useScratchStore>['clientLayers'],
+    conflicts: ScratchConflict[],
+  ): MergeStackSnapshot {
+    const stackLayers = [
+      {
+        source: 'base',
+        label: 'Base / Patch',
+        priority: 0,
+        channelCount: baseChannels.length,
+      },
+      ...layers.map((layer, index) => ({
+        source: layer.source,
+        label: layer.source === 'scratch' && index === layers.length - 1 && clientLayers.length > 0
+          ? 'Scratch (merged)'
+          : layer.source,
+        priority: layer.priority,
+        channelCount: layer.channels.size,
+      })),
+      ...clientLayers.map((clientLayer) => ({
+        source: 'scratch',
+        label: clientLayer.operatorLabel ?? clientLayer.clientId,
+        priority: 100,
+        channelCount: clientLayer.entries.length,
+        clientId: clientLayer.clientId,
+        color: clientLayer.color,
+      })),
+    ];
+
+    const mergedChannelCount = layers.reduce((count, layer) => count + layer.channels.size, 0);
+
+    return {
+      layers: stackLayers,
+      conflicts,
+      mergedChannelCount,
+    };
+  }
+
+  function getMergeStackSnapshot(): MergeStackSnapshot | null {
+    return lastMergeStack.value;
+  }
+
+  function getChannelSourceBreakdown(): Map<
+    string,
+    { source: string; value: number; clientId?: string; color?: string; label?: string }
+  > {
+    const { baseChannels, layers, clientLayers } = buildMergeData();
+    const byPath = new Map<
+      string,
+      { source: string; value: number; clientId?: string; color?: string; label?: string }
+    >();
+
+    for (const channel of baseChannels) {
+      byPath.set(channel.path, { source: 'base', value: channel.value });
+    }
+
+    const sortedLayers = [...layers].sort((a, b) => a.priority - b.priority);
+    for (const layer of sortedLayers) {
+      for (const channel of layer.channels.values()) {
+        byPath.set(channel.path, {
+          source: layer.source,
+          value: channel.value,
+        });
+      }
+    }
+
+    for (const clientLayer of clientLayers) {
+      for (const entry of clientLayer.entries) {
+        const existing = byPath.get(entry.path);
+        if (existing?.source === 'scratch') {
+          byPath.set(entry.path, {
+            source: 'scratch',
+            value: entry.value,
+            clientId: clientLayer.clientId,
+            color: clientLayer.color,
+            label: clientLayer.operatorLabel ?? clientLayer.clientId,
+          });
+        }
+      }
+    }
+
+    return byPath;
+  }
+
+  function getLastMergeSnapshot(): MergeSnapshot {
+    const flags = getRuntimeOptimizationFlags();
+    const { baseChannels, layers, clientLayers, mergeStack } = buildMergeData();
+    return buildMergeSnapshot(
+      baseChannels,
+      layers,
+      {
+        grandMaster: grandMaster.value,
+        blackout: blackout.value,
+        mergeWasmEnabled: flags.mergeWasmEnabled,
+      },
+      {
+        clientScratchLayers: clientLayers,
+        mergeStack: mergeStack ?? undefined,
+      },
+    );
   }
 
   function computeMergedOutput(options?: { includeBlindScratch?: boolean }) {
@@ -472,12 +593,20 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     const flags = getRuntimeOptimizationFlags();
     const requestVersion = ++mergeRequestVersion;
     const startedAt = performance.now();
-    const { show, baseChannels, layers } = buildMergeData();
-    const snapshot = buildMergeSnapshot(baseChannels, layers, {
-      grandMaster: grandMaster.value,
-      blackout: blackout.value,
-      mergeWasmEnabled: flags.mergeWasmEnabled,
-    });
+    const mergeData = buildMergeData();
+    const snapshot = buildMergeSnapshot(
+      mergeData.baseChannels,
+      mergeData.layers,
+      {
+        grandMaster: grandMaster.value,
+        blackout: blackout.value,
+        mergeWasmEnabled: flags.mergeWasmEnabled,
+      },
+      {
+        clientScratchLayers: mergeData.clientLayers,
+        mergeStack: mergeData.mergeStack ?? undefined,
+      },
+    );
     const merged = await mergeOutputSnapshotInWorker(snapshot);
     if (requestVersion !== mergeRequestVersion) {
       return;
@@ -486,7 +615,7 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
       'output.merge.computeMergedOutput.worker',
       performance.now() - startedAt
     );
-    dmx.applyMergedOutput(applyGroupSubmasters(merged, show));
+    dmx.applyMergedOutput(applyGroupSubmasters(merged, mergeData.show));
   }
 
   function mergeAndApply() {
@@ -852,6 +981,12 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     ensureTick,
     setExternalTimecodePosition,
     setTimelinePreviewPosition,
+    lastScratchConflicts,
+    lastMergeStack,
+    getMergeStackSnapshot,
+    getChannelSourceBreakdown,
+    getLastMergeSnapshot,
+    buildMergeData,
   };
 });
 

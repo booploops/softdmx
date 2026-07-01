@@ -10,6 +10,7 @@ import type { ShowBindings } from "../types/bindings";
 import type { Cue } from "../types/cue";
 import type { TimelineMarker, TimelineSection, TimelineTrack } from "../types/cue";
 import type { ShowDeskConfig, ShowTouchConfig } from "../types/desk";
+import type { ProgrammerConfig, ProgrammerSession } from "../types/programmer.ts";
 import type { EffectDefinition } from "../types/effects";
 
 export interface OutputDestination {
@@ -160,6 +161,7 @@ export interface ShowTimelineConfig {
   tracks?: TimelineTrack[];
   markers?: TimelineMarker[];
   sections?: TimelineSection[];
+  programmerSessions?: ProgrammerSession[];
 }
 
 export interface ShowAudioMapping {
@@ -273,7 +275,7 @@ export interface ShowVideoConfig {
   fps?: VideoSampleFps;
 }
 
-export type ShowDocumentVersion = "1.0" | "1.1" | "1.2" | "1.3" | "1.4" | "1.5";
+export type ShowDocumentVersion = "1.0" | "1.1" | "1.2" | "1.3" | "1.4" | "1.5" | "1.6";
 
 export interface ShowDocument {
   version: ShowDocumentVersion;
@@ -302,12 +304,13 @@ export interface ShowDocument {
   backup?: ShowBackupConfig;
   desk?: ShowDeskConfig;
   touch?: ShowTouchConfig;
+  programmer?: ProgrammerConfig;
 }
 
 export function createEmptyShow(name = "Untitled Show"): ShowDocument {
   const now = new Date().toISOString();
   const doc: ShowDocument = {
-    version: "1.5",
+    version: "1.6",
     meta: { name, created: now, modified: now },
     plugins: ["builtin"],
     destinations: [

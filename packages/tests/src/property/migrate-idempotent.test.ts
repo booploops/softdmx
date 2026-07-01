@@ -12,7 +12,7 @@ import * as fc from 'fast-check';
 import type { ShowDocument } from '../../../frontend/src/show/document.ts';
 import { migrateShowDocument } from '../../../frontend/src/show/migrate.ts';
 
-const legacyVersionArb = fc.constantFrom('1.0', '1.1', '1.2', '1.3', '1.4', '1.5');
+const legacyVersionArb = fc.constantFrom('1.0', '1.1', '1.2', '1.3', '1.4', '1.5', '1.6');
 const showNameArb = fc.string({ minLength: 1, maxLength: 32 }).map((name) => name.trim()).filter((name) => name.length > 0);
 const isoDateArb = fc.integer({ min: 0, max: 4_000_000_000_000 }).map((ms) => new Date(ms).toISOString());
 const fixtureArb = fc.record({

@@ -19,13 +19,17 @@ import { useShowStore } from './show';
 import { useCueStore } from './cue';
 import { useOutputEngineStore } from './output-playback';
 import { useTimecodeStore } from './timecode';
+import { useScratchStore } from './scratch';
 import { useChannelControl } from 'src/composables/useChannelControl';
+
+const OSC_EMIT_SCRATCH_CHANGED_KEY = 'softdmx.osc_emit_scratch_changed';
 
 export const useOscStore = defineStore('osc', () => {
   const showStore = useShowStore();
   const cueStore = useCueStore();
   const engine = useOutputEngineStore();
   const timecodeStore = useTimecodeStore();
+  const scratch = useScratchStore();
   const channelControl = useChannelControl();
 
   const isLearning = ref(false);
@@ -86,6 +90,16 @@ export const useOscStore = defineStore('osc', () => {
     }
   }
 
+  function isScratchChangedEmitEnabled(): boolean {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem(OSC_EMIT_SCRATCH_CHANGED_KEY) === '1';
+  }
+
+  function emitScratchChanged(path: string, value: number) {
+    if (!isScratchChangedEmitEnabled()) return;
+    window.electronAPI?.sendOsc?.('/softdmx/scratch/changed', [path, value]);
+  }
+
   function applyTarget(target: BindingTarget, valueArg: unknown) {
     const value = parseOscValue(valueArg);
 
@@ -94,6 +108,8 @@ export const useOscStore = defineStore('osc', () => {
         const { fixtureName, channelIndex } = target;
         if (fixtureName && channelIndex !== undefined) {
           channelControl.setChannelByFixture(fixtureName, channelIndex, value);
+          const mappedPath = `show://${fixtureName}/${channelIndex + 1}`;
+          emitScratchChanged(mappedPath, value);
         }
         break;
       }

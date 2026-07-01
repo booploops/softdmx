@@ -6,6 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import type { ProgrammerPaneOptions } from "./programmer.ts";
+
 export type DeskWindowType =
   | "fixture-sheet"
   | "groups"
@@ -16,7 +18,8 @@ export type DeskWindowType =
   | "presets"
   | "attribute-control"
   | "playback-rail"
-  | "dmx-debug";
+  | "dmx-debug"
+  | "merge-stack";
 
 export interface DeskPaneRect {
   x: number;
@@ -29,7 +32,7 @@ export interface DeskPane {
   id: string;
   windowType: DeskWindowType;
   rect: DeskPaneRect;
-  options?: Record<string, unknown>;
+  options?: ProgrammerPaneOptions | Record<string, unknown>;
 }
 
 export interface DeskView {

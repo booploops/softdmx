@@ -103,7 +103,7 @@ function validateChannel(channel: unknown, index: number): FixtureChannelDefinit
   };
 }
 
-function validateWidget(widget: unknown, index: number): WidgetConfiguration {
+function validateWidget(widget: unknown, index: number, channelNames: Set<string>): WidgetConfiguration {
   const obj = ensureRecord(widget, `widget[${index}]`);
   const channelsRaw = ensureRecord(obj.channels, `widget[${index}].channels`);
   const channels: Record<string, string> = {};
@@ -112,8 +112,34 @@ function validateWidget(widget: unknown, index: number): WidgetConfiguration {
     channels[key] = ensureString(value, `widget[${index}].channels.${key}`);
   }
 
+  const type = ensureString(obj.type, `widget[${index}].type`);
+  const requiredKeys: Record<string, string[]> = {
+    lightMover: ["panChannel", "tiltChannel"],
+    colorPicker: ["redChannel", "greenChannel", "blueChannel"],
+    dimmerSlider: ["dimmerChannel"],
+    strobe: ["strobeChannel"],
+    indexedSelect: ["channel"],
+    channelAttribute: ["channel"],
+  };
+  const keys = requiredKeys[type];
+  if (keys) {
+    for (const key of keys) {
+      if (!channels[key]) {
+        throw new Error(`widget[${index}] type "${type}" requires channels.${key}`);
+      }
+    }
+  } else if (Object.keys(channels).length === 0) {
+    throw new Error(`widget[${index}] channels must include at least one mapping`);
+  }
+
+  for (const mapped of Object.values(channels)) {
+    if (!channelNames.has(mapped)) {
+      throw new Error(`widget[${index}] references unknown channel "${mapped}"`);
+    }
+  }
+
   return {
-    type: ensureString(obj.type, `widget[${index}].type`),
+    type,
     name: ensureString(obj.name, `widget[${index}].name`),
     channels,
   };
@@ -128,13 +154,14 @@ export function loadFixtureYaml(source: string): FixtureDefinition {
   }
 
   const channels = obj.channels.map((channel, index) => validateChannel(channel, index));
+  const channelNames = new Set(channels.map((channel) => channel.name));
 
   let widgets: WidgetConfiguration[] | undefined;
   if (obj.widgets !== undefined) {
     if (!Array.isArray(obj.widgets)) {
       throw new Error("fixture.widgets must be an array when provided");
     }
-    widgets = obj.widgets.map((widget, index) => validateWidget(widget, index));
+    widgets = obj.widgets.map((widget, index) => validateWidget(widget, index, channelNames));
   }
 
   let attributes;

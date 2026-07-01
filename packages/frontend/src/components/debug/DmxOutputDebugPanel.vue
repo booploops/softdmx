@@ -111,14 +111,7 @@ const selectedSummary = computed(() =>
   ?? destinationSummaries.value[0]
 );
 
-const selectedChannelPreview = computed(() => {
-  const destinationId = selectedSummary.value?.destination.id;
-  if (!destinationId) return [];
-
-  const values = destinationChannelMaps.value.get(destinationId) ?? [];
-  const filtered = showZeroValues.value ? values : values.filter((item) => item.value > 0);
-  return filtered.slice(0, previewLimit.value).sort((a, b) => a.address - b.address);
-});
+const selectedChannelPreview = computed(() => selectedSourcePreview.value);
 
 const selectedFrameDebug = computed(() => {
   const destinationId = selectedSummary.value?.destination.id;
@@ -153,6 +146,28 @@ const dmxUsbPacketHexPreview = computed(() => {
 
 const activeCueCount = computed(() => outputStore.playbackStates.size);
 const activeChannelsTotal = computed(() => dmxStore.channels.reduce((count, channel) => count + (channel.value > 0 ? 1 : 0), 0));
+const channelSourceByPath = computed(() => outputStore.getChannelSourceBreakdown());
+
+const selectedSourcePreview = computed(() => {
+  const destinationId = selectedSummary.value?.destination.id;
+  if (!destinationId) return [];
+
+  const values = destinationChannelMaps.value.get(destinationId) ?? [];
+  const filtered = showZeroValues.value ? values : values.filter((item) => item.value > 0);
+  return filtered.slice(0, previewLimit.value).sort((a, b) => a.address - b.address).map((entry) => {
+    const fixture = showStore.document.fixtures.find((item) => {
+      const definition = getFixtureDefinition(item.fixtureId);
+      if (!definition) return false;
+      const start = item.startingChannel ?? 1;
+      return entry.address >= start && entry.address < start + definition.channels.length;
+    });
+    const definition = fixture ? getFixtureDefinition(fixture.fixtureId) : undefined;
+    const channelIndex = fixture && definition ? entry.address - (fixture.startingChannel ?? 1) : -1;
+    const path = fixture ? `show://${fixture.name}/${channelIndex + 1}` : '';
+    const source = path ? channelSourceByPath.value.get(path) : undefined;
+    return { ...entry, path, source };
+  });
+});
 
 function formatLastSend(ageMs: number | null): string {
   if (ageMs === null) return 'never';
@@ -296,6 +311,7 @@ onBeforeUnmount(() => {
               <th class="text-left">Address</th>
               <th class="text-left">Value</th>
               <th class="text-left">%</th>
+              <th class="text-left">Source</th>
             </tr>
           </thead>
           <tbody>
@@ -303,9 +319,17 @@ onBeforeUnmount(() => {
               <td>{{ entry.address }}</td>
               <td>{{ entry.value }}</td>
               <td>{{ Math.round((entry.value / 255) * 100) }}</td>
+              <td>
+                <span
+                  v-if="entry.source?.color"
+                  class="dmx-debug-panel__source-chip"
+                  :style="{ backgroundColor: entry.source.color }"
+                />
+                {{ entry.source?.label ?? entry.source?.source ?? '—' }}
+              </td>
             </tr>
             <tr v-if="selectedChannelPreview.length === 0">
-              <td colspan="3" class="text-center text-grey-6">No channels match current filters.</td>
+              <td colspan="4" class="text-center text-grey-6">No channels match current filters.</td>
             </tr>
           </tbody>
         </q-markup-table>
@@ -403,6 +427,15 @@ onBeforeUnmount(() => {
   word-break: break-word;
   font-size: 12px;
   line-height: 1.3;
+}
+
+.dmx-debug-panel__source-chip {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
 }
 
 @media (max-width: 980px) {

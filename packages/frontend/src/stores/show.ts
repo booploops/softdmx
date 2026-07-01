@@ -9,6 +9,7 @@
 import { ref, computed } from 'vue';
 import { defineStore } from 'pinia';
 import type { ShowDocument } from '@softdmx/engine';
+import type { ProgrammerOperator, StoreProfile } from '@softdmx/engine';
 import { createEmptyShow } from '@softdmx/engine';
 import {
   parseShowDocument,
@@ -42,6 +43,13 @@ export const useShowStore = defineStore('show', () => {
   const name = computed(() => document.value.meta.name);
   const canUndo = computed(() => undoStack.value.length > 0);
   const canRedo = computed(() => redoStack.value.length > 0);
+
+  const storeProfiles = computed<StoreProfile[]>(
+    () => document.value.programmer?.storeProfiles ?? [],
+  );
+  const operators = computed<ProgrammerOperator[]>(
+    () => document.value.programmer?.operators ?? [],
+  );
 
   if (!showSyncConnectHookInstalled) {
     showSyncConnectHookInstalled = true;
@@ -208,6 +216,53 @@ export const useShowStore = defineStore('show', () => {
     applyDocument(document.value, { sync: true, resetPlayback: true });
   }
 
+  function ensureProgrammerConfig() {
+    if (!document.value.programmer) {
+      document.value.programmer = {};
+    }
+    return document.value.programmer;
+  }
+
+  function upsertStoreProfile(profile: StoreProfile) {
+    updateDocument((doc) => {
+      const programmer = doc.programmer ?? (doc.programmer = {});
+      const profiles = programmer.storeProfiles ?? (programmer.storeProfiles = []);
+      const index = profiles.findIndex((entry) => entry.id === profile.id);
+      if (index >= 0) {
+        profiles[index] = profile;
+      } else {
+        profiles.push(profile);
+      }
+    });
+  }
+
+  function removeStoreProfile(profileId: string) {
+    updateDocument((doc) => {
+      if (!doc.programmer?.storeProfiles) return;
+      doc.programmer.storeProfiles = doc.programmer.storeProfiles.filter((entry) => entry.id !== profileId);
+    });
+  }
+
+  function upsertOperator(operator: ProgrammerOperator) {
+    updateDocument((doc) => {
+      const programmer = doc.programmer ?? (doc.programmer = {});
+      const nextOperators = programmer.operators ?? (programmer.operators = []);
+      const index = nextOperators.findIndex((entry) => entry.id === operator.id);
+      if (index >= 0) {
+        nextOperators[index] = operator;
+      } else {
+        nextOperators.push(operator);
+      }
+    });
+  }
+
+  function removeOperator(operatorId: string) {
+    updateDocument((doc) => {
+      if (!doc.programmer?.operators) return;
+      doc.programmer.operators = doc.programmer.operators.filter((entry) => entry.id !== operatorId);
+    });
+  }
+
   return {
     document,
     isDirty,
@@ -217,6 +272,13 @@ export const useShowStore = defineStore('show', () => {
     redoStack,
     canUndo,
     canRedo,
+    storeProfiles,
+    operators,
+    ensureProgrammerConfig,
+    upsertStoreProfile,
+    removeStoreProfile,
+    upsertOperator,
+    removeOperator,
     loadShow,
     loadLastSession,
     loadShowFromYaml,

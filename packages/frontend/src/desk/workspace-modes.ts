@@ -49,4 +49,5 @@ export const DESK_WINDOW_META: Record<string, { label: string; icon: string }> =
   'attribute-control': { label: 'Attributes', icon: 'tune' },
   'playback-rail': { label: 'Playback', icon: 'view_stream' },
   'dmx-debug': { label: 'DMX Debug', icon: 'bug_report' },
+  'merge-stack': { label: 'Merge Stack', icon: 'layers' },
 };

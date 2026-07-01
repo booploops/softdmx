@@ -9,7 +9,7 @@ test('migrateShowDocument upgrades 1.2 to 1.5 with video defaults', () => {
     fixtures: [],
   });
 
-  assert.equal(migrated.version, '1.5');
+  assert.equal(migrated.version, '1.6');
   assert.equal(migrated.video?.enabled, false);
   assert.equal(migrated.video?.inputKind, 'none');
   assert.deepEqual(migrated.video?.pixelMapIds, []);
@@ -27,7 +27,7 @@ test('migrateShowDocument upgrades 1.3 pixelMapId to pixelMapIds', () => {
     },
   });
 
-  assert.equal(migrated.version, '1.5');
+  assert.equal(migrated.version, '1.6');
   assert.deepEqual(migrated.video?.pixelMapIds, ['map-a']);
 });
 
@@ -50,7 +50,7 @@ test('migrateShowDocument upgrades 1.4 to 1.5 with preset pools and backup', () 
     ],
   });
 
-  assert.equal(migrated.version, '1.5');
+  assert.equal(migrated.version, '1.6');
   assert.equal(migrated.meta?.sessionEpoch, 0);
   assert.equal(migrated.presetPools?.length, 1);
   assert.equal(migrated.presetPools?.[0]?.slots[0], 'p1');

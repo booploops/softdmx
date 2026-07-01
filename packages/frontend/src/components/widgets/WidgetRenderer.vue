@@ -9,13 +9,14 @@
   Purpose: Dynamic widget renderer that can display different widget types
 -->
 <script setup lang="ts">
-import { computed } from 'vue';
-import type { WidgetConfiguration, ShowfileFixtureMapped } from '@softdmx/engine';
+import { computed, type Component } from 'vue';
+import type { WidgetConfiguration, ShowfileFixtureMapped, FixtureChannelDefinition } from '@softdmx/engine';
 import ColorPicker from './ColorPicker.vue';
 import LightMover from './LightMover.vue';
 import DimmerSlider from './DimmerSlider.vue';
 import Strobe from './Strobe.vue';
 import IndexedSelect from './IndexedSelect.vue';
+import ChannelAttributeControl from '../ChannelAttributeControl.vue';
 import type { ColorPickerModel } from './color-picker.types';
 import type { LightMoverModel } from './light-mover.types';
 import type { DimmerSliderModel } from './dimmer-slider.types';
@@ -27,14 +28,18 @@ const props = defineProps<{
   fixture: ShowfileFixtureMapped;
 }>();
 
-// Create models for different widget types by mapping channels
+type WidgetRegistryEntry = {
+  component: Component;
+  resolveModel: () => unknown | null;
+};
+
+function findChannel(channelName?: string): FixtureChannelDefinition | undefined {
+  if (!channelName) return undefined;
+  return props.fixture.def.channels.find((ch) => ch.name === channelName);
+}
+
 const lightMoverModel = computed((): LightMoverModel | null => {
   if (props.widget.type !== 'lightMover') return null;
-
-  const findChannel = (channelName?: string) => {
-    if (!channelName) return undefined;
-    return props.fixture.def.channels.find(ch => ch.name === channelName);
-  };
 
   const panChannel = findChannel(props.widget.channels.panChannel);
   const panFineChannel = findChannel(props.widget.channels.panFineChannel);
@@ -46,21 +51,11 @@ const lightMoverModel = computed((): LightMoverModel | null => {
     return null;
   }
 
-  return {
-    panChannel,
-    panFineChannel,
-    tiltChannel,
-    tiltFineChannel,
-  };
+  return { panChannel, panFineChannel, tiltChannel, tiltFineChannel };
 });
 
 const colorPickerModel = computed((): ColorPickerModel | null => {
   if (props.widget.type !== 'colorPicker') return null;
-
-  const findChannel = (channelName?: string) => {
-    if (!channelName) return undefined;
-    return props.fixture.def.channels.find(ch => ch.name === channelName);
-  };
 
   const redChannel = findChannel(props.widget.channels.redChannel);
   const greenChannel = findChannel(props.widget.channels.greenChannel);
@@ -71,113 +66,85 @@ const colorPickerModel = computed((): ColorPickerModel | null => {
     return null;
   }
 
-  return {
-    redChannel,
-    greenChannel,
-    blueChannel
-  };
+  return { redChannel, greenChannel, blueChannel };
 });
 
 const dimmerSliderModel = computed((): DimmerSliderModel | null => {
   if (props.widget.type !== 'dimmerSlider') return null;
 
-  const findChannel = (channelName?: string) => {
-    if (!channelName) return undefined;
-    return props.fixture.def.channels.find(ch => ch.name === channelName);
-  };
-
   const dimmerChannel = findChannel(props.widget.channels.dimmerChannel);
-
   if (!dimmerChannel) {
     console.warn('Missing required channels for dimmerSlider widget:', props.widget);
     return null;
   }
 
-  return {
-    dimmerChannel
-  };
+  return { dimmerChannel };
 });
 
 const strobeModel = computed((): StrobeModel | null => {
   if (props.widget.type !== 'strobe') return null;
 
-  const findChannel = (channelName?: string) => {
-    if (!channelName) return undefined;
-    return props.fixture.def.channels.find(ch => ch.name === channelName);
-  };
-
   const strobeChannel = findChannel(props.widget.channels.strobeChannel);
-
   if (!strobeChannel) {
     console.warn('Missing required channels for strobe widget:', props.widget);
     return null;
   }
 
-  return {
-    strobeChannel
-  };
+  return { strobeChannel };
 });
 
 const indexedSelectModel = computed((): IndexedSelectModel | null => {
   if (props.widget.type !== 'indexedSelect') return null;
 
-  const findChannel = (channelName?: string) => {
-    if (!channelName) return undefined;
-    return props.fixture.def.channels.find(ch => ch.name === channelName);
-  };
-
   const channel = findChannel(props.widget.channels.channel);
-
   if (!channel) {
     console.warn('Missing required channel for indexedSelect widget:', props.widget);
     return null;
   }
 
-  return {
-    channel,
-  };
+  return { channel };
 });
+
+const fallbackChannel = computed(() => {
+  const channelName =
+    props.widget.channels.channel
+    ?? props.widget.channels.dimmerChannel
+    ?? Object.values(props.widget.channels)[0];
+  return findChannel(channelName);
+});
+
+const fallbackPath = computed(() => fallbackChannel.value?.reference?.path ?? '');
+
+const widgetRegistry = computed<Record<string, WidgetRegistryEntry>>(() => ({
+  lightMover: { component: LightMover, resolveModel: () => lightMoverModel.value },
+  colorPicker: { component: ColorPicker, resolveModel: () => colorPickerModel.value },
+  dimmerSlider: { component: DimmerSlider, resolveModel: () => dimmerSliderModel.value },
+  strobe: { component: Strobe, resolveModel: () => strobeModel.value },
+  indexedSelect: { component: IndexedSelect, resolveModel: () => indexedSelectModel.value },
+}));
+
+const registryEntry = computed(() => widgetRegistry.value[props.widget.type]);
+const resolvedModel = computed(() => registryEntry.value?.resolveModel() ?? null);
+const useFallback = computed(() => !registryEntry.value || resolvedModel.value === null);
 </script>
 
 <template>
   <div class="widget-renderer">
-    <!-- Light Mover Widget -->
-    <LightMover
-      v-if="widget.type === 'lightMover' && lightMoverModel"
-      v-model="lightMoverModel"
+    <component
+      :is="registryEntry!.component"
+      v-if="!useFallback && registryEntry"
+      v-model="resolvedModel"
       :key="`${fixture.fixtureName}-${widget.name}`"
     />
 
-    <!-- Color Picker Widget -->
-    <ColorPicker
-      v-if="widget.type === 'colorPicker' && colorPickerModel"
-      v-model="colorPickerModel"
-      :key="`${fixture.fixtureName}-${widget.name}`"
+    <ChannelAttributeControl
+      v-else-if="fallbackChannel && fallbackPath"
+      :channel="fallbackChannel"
+      :path="fallbackPath"
+      :key="`${fixture.fixtureName}-${widget.name}-fallback`"
     />
 
-    <!-- Dimmer Slider Widget -->
-    <DimmerSlider
-      v-if="widget.type === 'dimmerSlider' && dimmerSliderModel"
-      v-model="dimmerSliderModel"
-      :key="`${fixture.fixtureName}-${widget.name}`"
-    />
-
-    <!-- Strobe Widget -->
-    <Strobe
-      v-if="widget.type === 'strobe' && strobeModel"
-      v-model="strobeModel"
-      :key="`${fixture.fixtureName}-${widget.name}`"
-    />
-
-    <!-- Indexed Select Widget -->
-    <IndexedSelect
-      v-if="widget.type === 'indexedSelect' && indexedSelectModel"
-      v-model="indexedSelectModel"
-      :key="`${fixture.fixtureName}-${widget.name}`"
-    />
-
-    <!-- Fallback for unknown widget types -->
-    <div v-if="!lightMoverModel && !colorPickerModel && !dimmerSliderModel && !strobeModel && !indexedSelectModel" class="widget-error">
+    <div v-else class="widget-error">
       <q-card flat bordered class="error-card">
         <q-card-section>
           <div class="text-h6 text-negative">

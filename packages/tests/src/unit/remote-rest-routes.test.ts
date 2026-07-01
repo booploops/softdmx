@@ -12,6 +12,7 @@ import Fastify from 'fastify';
 import type { ShowDocument } from '../../../frontend/src/show/document.ts';
 import { createEmptyShow } from '../../../frontend/src/show/document.ts';
 import type { RemoteContext } from '../../../client/src-electron/server/context.ts';
+import { ScratchAuthority } from '../../../client/src-electron/server/scratch-authority.ts';
 import { registerRemoteRestRoutes } from '../../../client/src-electron/server/api/remote-rest.ts';
 
 const API_PREFIX = '/api/v1/remote';
@@ -35,6 +36,7 @@ function createMockContext() {
         showfile = nextShow;
       },
     } as RemoteContext['outputManager'],
+    scratchAuthority: new ScratchAuthority(),
     getShow: () => show,
     setShow: (nextShow: ShowDocument) => {
       show = nextShow;
@@ -129,7 +131,7 @@ test('routes return 401 when SOFTDMX_API_TOKEN is set without credentials', asyn
   await server.close();
 });
 
-test('POST /scratch/set emits remote scratch payload', async () => {
+test('POST /scratch/set emits scratch layers through authority', async () => {
   delete process.env.SOFTDMX_API_TOKEN;
   const { ctx, emitted } = createMockContext();
   const server = await createTestServer(ctx);
@@ -141,11 +143,11 @@ test('POST /scratch/set emits remote scratch payload', async () => {
   });
 
   assert.equal(response.statusCode, 200);
-  assert.deepEqual(response.json(), { ok: true });
-  assert.deepEqual(
-    emitted.find((entry) => entry.event === 'remote:scratch:set')?.payload,
-    { path: 'show://Light 1/1', value: 128 },
-  );
+  const body = response.json() as { ok: boolean; ack: { seq: number }; seq: number };
+  assert.equal(body.ok, true);
+  assert.ok(body.ack.seq >= 1);
+  assert.ok(emitted.some((entry) => entry.event === 'scratch:layers'));
+  assert.ok(emitted.some((entry) => entry.event === 'remote:scratch:set'));
 
   await server.close();
 });

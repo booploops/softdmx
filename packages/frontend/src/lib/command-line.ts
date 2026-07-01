@@ -22,6 +22,10 @@ export const COMMAND_DEFINITIONS: CommandDefinition[] = [
   { name: 'clear', usage: 'clear', description: 'Clear the programmer/scratch buffer' },
   { name: 'go', usage: 'go', description: 'Trigger active playback slot (Go+)' },
   { name: 'stop', usage: 'stop', description: 'Stop all playback' },
+  { name: 'session-arm', usage: 'session arm [--clock <mode>]', description: 'Arm programmer session recording', args: ['--clock'] },
+  { name: 'session-disarm', usage: 'session disarm [--no-persist]', description: 'Disarm session recording and persist to timeline', args: ['--no-persist'] },
+  { name: 'session-marker', usage: 'session marker <label>', description: 'Drop a marker into the armed session' },
+  { name: 'store', usage: 'store [name] [--active] [--mode store|update|merge|remove]', description: 'Store scratch to preset pool', args: ['--active', '--mode'] },
 ];
 
 export function autocompleteCommand(input: string): string[] {

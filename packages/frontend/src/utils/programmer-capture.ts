@@ -17,13 +17,42 @@ export interface ScratchPresetCapture {
   targets: PresetTarget[];
 }
 
+export interface ScratchCaptureOptions {
+  activeOnly?: boolean;
+  activePaths?: Iterable<string>;
+  clientId?: string;
+}
+
+function applyCaptureFilters(
+  entries: ScratchEntry[],
+  options?: ScratchCaptureOptions,
+): ScratchEntry[] {
+  let filtered = entries;
+
+  if (options?.clientId) {
+    filtered = filtered.filter((entry) => entry.clientId === options.clientId);
+  }
+
+  if (options?.activeOnly && options.activePaths) {
+    const activePaths = new Set(options.activePaths);
+    filtered = filtered.filter((entry) => activePaths.has(entry.path));
+  } else if (options?.activePaths) {
+    const activePaths = new Set(options.activePaths);
+    filtered = filtered.filter((entry) => activePaths.has(entry.path));
+  }
+
+  return filtered;
+}
+
 export function captureScratchPreset(
   entries: ScratchEntry[],
   mappedFixtures: ShowfileFixtureMapped[],
   mergedByPath: Map<string, number>,
-  attributeFilter?: AttributeFeature[]
+  attributeFilter?: AttributeFeature[],
+  options?: ScratchCaptureOptions,
 ): ScratchPresetCapture {
-  const filtered = filterScratchEntries(entries, attributeFilter);
+  const scoped = applyCaptureFilters(entries, options);
+  const filtered = filterScratchEntries(scoped, attributeFilter);
   const attrsByFixture = new Map<string, Record<string, number>>();
 
   for (const entry of filtered) {

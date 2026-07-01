@@ -61,6 +61,145 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /scratch:
+    get:
+      operationId: getScratch
+      summary: Get canonical scratch snapshot
+      responses:
+        '200':
+          description: Scratch layers, conflicts, and merged output
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScratchSnapshot'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /scratch/clients:
+    get:
+      operationId: getScratchClients
+      summary: List scratch clients and per-client layers
+      responses:
+        '200':
+          description: Client list and layers
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [clients, layers]
+                properties:
+                  clients:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClientIdentity'
+                  layers:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ScratchClientLayer'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /sessions:
+    get:
+      operationId: listSessions
+      summary: List programmer sessions from loaded show
+      responses:
+        '200':
+          description: Session list
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [sessions]
+                properties:
+                  sessions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProgrammerSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /sessions/arm:
+    post:
+      operationId: armSession
+      summary: Arm programmer session recording
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessionId:
+                  type: string
+                clock:
+                  type: string
+                  enum: [session, set-playhead, timecode, audio]
+      responses:
+        '200':
+          description: Session armed
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [ok, sessionId]
+                properties:
+                  ok:
+                    type: boolean
+                  sessionId:
+                    type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /sessions/disarm:
+    post:
+      operationId: disarmSession
+      summary: Disarm programmer session recording
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                sessionId:
+                  type: string
+                persist:
+                  type: boolean
+      responses:
+        '200':
+          description: Session disarmed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OkResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /sessions/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+    get:
+      operationId: getSession
+      summary: Get one programmer session
+      responses:
+        '200':
+          description: Programmer session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProgrammerSession'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
   /scratch/set:
     post:
       operationId: scratchSet
@@ -417,6 +556,91 @@ components:
         attributeType:
           type: string
           default: generic
+        clientId:
+          type: string
+
+    ScratchCommandAck:
+      type: object
+      required: [seq, clientId, appliedAt]
+      properties:
+        seq:
+          type: integer
+        clientId:
+          type: string
+        appliedAt:
+          type: integer
+
+    ClientIdentity:
+      type: object
+      required: [clientId]
+      properties:
+        clientId:
+          type: string
+        operatorLabel:
+          type: string
+        color:
+          type: string
+        priority:
+          type: number
+
+    ScratchClientLayer:
+      type: object
+      required: [clientId, entries]
+      properties:
+        clientId:
+          type: string
+        operatorLabel:
+          type: string
+        color:
+          type: string
+        priority:
+          type: number
+        entries:
+          type: array
+          items:
+            type: object
+        lastSeq:
+          type: integer
+
+    ScratchSnapshot:
+      type: object
+      required: [seq, layers, conflicts, merged]
+      properties:
+        seq:
+          type: integer
+        layers:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScratchClientLayer'
+        conflicts:
+          type: array
+          items:
+            type: object
+        merged:
+          type: array
+          items:
+            type: object
+
+    ProgrammerSession:
+      type: object
+      required: [id, name, anchorSec, startedAt, clock, events]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        anchorSec:
+          type: number
+        startedAt:
+          type: string
+        endedAt:
+          type: string
+        clock:
+          type: string
+        events:
+          type: array
+          items:
+            type: object
 
     PresetFireRequest:
       type: object

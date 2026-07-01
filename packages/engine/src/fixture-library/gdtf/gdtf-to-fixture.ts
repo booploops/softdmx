@@ -150,6 +150,8 @@ function buildWidgets(channels: FixtureChannelDefinition[]): WidgetConfiguration
 
   const pan = byName.get("Pan");
   const tilt = byName.get("Tilt");
+  const panFine = byName.get("Pan Fine") ?? byName.get("PanFine");
+  const tiltFine = byName.get("Tilt Fine") ?? byName.get("TiltFine");
   if (pan && tilt) {
     widgets.push({
       type: "lightMover",
@@ -157,7 +159,33 @@ function buildWidgets(channels: FixtureChannelDefinition[]): WidgetConfiguration
       channels: {
         panChannel: pan.name,
         tiltChannel: tilt.name,
+        ...(panFine ? { panFineChannel: panFine.name } : {}),
+        ...(tiltFine ? { tiltFineChannel: tiltFine.name } : {}),
       },
+    });
+  }
+
+  for (const channel of channels) {
+    if (channel.controlMode === "indexed" && channel.indexedSlots && channel.indexedSlots >= 2) {
+      widgets.push({
+        type: "indexedSelect",
+        name: channel.name,
+        channels: { channel: channel.name },
+      });
+    }
+  }
+
+  const strobe = [...byName.entries()].find(
+    ([name, ch]) =>
+      name.toLowerCase().includes("strobe") ||
+      name.toLowerCase().includes("shutter") ||
+      ch.type === "shutter",
+  );
+  if (strobe) {
+    widgets.push({
+      type: "strobe",
+      name: strobe[1].name,
+      channels: { strobeChannel: strobe[0] },
     });
   }
 

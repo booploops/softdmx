@@ -50,6 +50,33 @@ widgets:
   - each widget needs `type`, `name`, and a `channels` mapping
   - `indexedSelect` widget uses `channels.channel` for an indexed channel
 
+## Widget protocol
+
+Built-in widget types (registered in `WidgetRenderer.vue`):
+
+| Type | Required channel keys |
+|------|----------------------|
+| `dimmerSlider` | `dimmerChannel` |
+| `colorPicker` | `redChannel`, `greenChannel`, `blueChannel` |
+| `lightMover` | `panChannel`, `tiltChannel` (optional: `panFineChannel`, `tiltFineChannel`) |
+| `strobe` | `strobeChannel` |
+| `indexedSelect` | `channel` |
+| `channelAttribute` | `channel` |
+
+Unknown or incomplete widget types fall back to `ChannelAttributeControl` when a resolvable `channel` (or first mapped channel) exists.
+
+Custom widget types may use any `type` string; provide at least one channel mapping. The renderer uses the registry first, then the generic channel control fallback.
+
+Example custom fallback widget:
+
+```yaml
+widgets:
+  - type: channelAttribute
+    name: Gobo
+    channels:
+      channel: Gobo Wheel
+```
+
 Validation rules:
 - channels must be non-empty
 - `maxValue >= minValue`
