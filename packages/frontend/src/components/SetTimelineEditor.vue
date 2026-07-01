@@ -13,7 +13,7 @@ import { useTimelineAudioStore } from 'src/stores/timeline-audio';
 import { useTimelineEditorStore } from 'src/stores/timeline-editor';
 import { useUIStore } from 'src/stores/ui';
 import { useProgrammerSessionStore } from 'src/stores/programmer-session';
-import { useDialog } from 'quasar';
+import { Dialog } from 'quasar';
 import SessionBakeDialog from 'src/components/timeline/SessionBakeDialog.vue';
 import {
   getCueTimecodeInSeconds,
@@ -35,7 +35,6 @@ const timelineEditor = useTimelineEditorStore();
 const timelineAudio = useTimelineAudioStore();
 const ui = useUIStore();
 const sessionStore = useProgrammerSessionStore();
-const dialog = useDialog();
 
 const timelineViewport = ref<HTMLElement | null>(null);
 const audioCanvas = ref<HTMLCanvasElement | null>(null);
@@ -215,7 +214,7 @@ function openSessionBakeDialog() {
   const session = timelineEditor.programmerSessions.find((entry) => entry.id === sessionId);
   if (!session) return;
 
-  dialog({
+  Dialog.create({
     component: SessionBakeDialog,
     componentProps: { session },
   });
