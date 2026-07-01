@@ -31,18 +31,51 @@ const props = withDefaults(
   }
 );
 
-const emit = defineEmits<{ 'update:modelValue': [number] }>();
+const emit = defineEmits<{
+  'update:modelValue': [number];
+  change: [number];
+}>();
+
+const dragging = ref(false);
+const localValue = ref(props.modelValue);
+
+watch(
+  () => props.modelValue,
+  (value) => {
+    if (!dragging.value) {
+      localValue.value = value;
+    }
+  }
+);
+
+const sliderValue = computed(() => (dragging.value ? localValue.value : props.modelValue));
 
 const displayValue = computed(() => {
+  const value = sliderValue.value;
   if (props.max <= 1 && props.min >= 0) {
-    return `${Math.round(props.modelValue * 100)}%`;
+    return `${Math.round(value * 100)}%`;
   }
-  return String(Math.round(props.modelValue));
+  return String(Math.round(value));
 });
+
+function onDragStart() {
+  if (props.disabled) return;
+  dragging.value = true;
+  localValue.value = props.modelValue;
+}
 
 function update(value: number | null) {
   if (value === null || props.disabled) return;
+  localValue.value = value;
   emit('update:modelValue', value);
+}
+
+function onChange(value: number | null) {
+  if (value === null || props.disabled) return;
+  dragging.value = false;
+  localValue.value = value;
+  emit('update:modelValue', value);
+  emit('change', value);
 }
 </script>
 
@@ -51,10 +84,12 @@ function update(value: number | null) {
     class="sdmx-fader"
     :class="{ 'sdmx-fader--vertical': vertical, 'sdmx-fader--disabled': disabled }"
     :data-sdmx-info="info"
+    @mousedown="onDragStart"
+    @touchstart.passive="onDragStart"
   >
     <span v-if="label" class="sdmx-fader__label">{{ label }}</span>
     <q-slider
-      :model-value="modelValue"
+      :model-value="sliderValue"
       :min="min"
       :max="max"
       :step="step"
@@ -65,6 +100,7 @@ function update(value: number | null) {
       class="sdmx-fader__slider"
       :class="{ 'sdmx-fader__slider--vertical': vertical }"
       @update:model-value="update"
+      @change="onChange"
     />
     <SdmxValueField
       v-if="showValue"

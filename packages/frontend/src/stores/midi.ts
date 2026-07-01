@@ -76,7 +76,7 @@ export const useMidiStore = defineStore('midi', () => {
         engine.setBlackout(value > 0);
         break;
       case 'grandmaster':
-        engine.setGrandMaster(value / 255);
+        engine.setGrandMaster(value / 255, { flush: true });
         break;
     }
   }

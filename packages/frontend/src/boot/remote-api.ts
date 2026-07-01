@@ -172,11 +172,11 @@ export default boot(() => {
   });
 
   socket.on('remote:grandmaster', (payload: number) => {
-    engine.setGrandMaster(payload);
+    engine.setGrandMaster(payload, { flush: true });
   });
 
   socket.on('remote:playbackbus', (payload: number) => {
-    engine.setPlaybackBusMaster(payload);
+    engine.setPlaybackBusMaster(payload, { flush: true });
   });
 
   socket.on('remote:executor:trigger', (payload: { slotId: string }) => {

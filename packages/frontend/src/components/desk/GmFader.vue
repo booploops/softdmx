@@ -15,13 +15,17 @@ const props = defineProps<{
   info?: string;
 }>();
 
-const emit = defineEmits<{ 'update:modelValue': [number] }>();
+const emit = defineEmits<{ 'update:modelValue': [number]; change: [number] }>();
 
 const popoverOpen = ref(false);
 const percent = computed(() => Math.round(props.modelValue * 100));
 
 function update(value: number) {
   emit('update:modelValue', value);
+}
+
+function onChange(value: number) {
+  emit('change', value);
 }
 </script>
 
@@ -43,6 +47,7 @@ function update(value: number) {
             vertical
             :color="color ?? 'orange'"
             @update:model-value="update"
+            @change="onChange"
           />
         </q-card-section>
         <q-card-actions align="right">

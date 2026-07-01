@@ -137,7 +137,7 @@ export const useOscStore = defineStore('osc', () => {
         engine.setBlackout(value > 0);
         break;
       case 'grandmaster':
-        engine.setGrandMaster(value / 255);
+        engine.setGrandMaster(value / 255, { flush: true });
         break;
     }
   }

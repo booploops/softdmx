@@ -55,6 +55,14 @@ function toggleBlind() {
   scratch.toggleBlind();
   engine.requestMerge();
 }
+
+function onGrandMasterCommit(value: number) {
+  engine.setGrandMaster(value, { flush: true });
+}
+
+function onPlaybackBusCommit(value: number) {
+  engine.setPlaybackBusMaster(value, { flush: true });
+}
 </script>
 
 <template>
@@ -116,8 +124,20 @@ function toggleBlind() {
 
     <q-space />
 
-    <GmFader v-model="grandMaster" label="GM" color="orange" :info="info('desk.masterBar.grandMaster')" />
-    <GmFader v-model="playbackBus" label="PB" color="deep-purple" :info="info('desk.masterBar.playbackBus')" />
+    <GmFader
+      v-model="grandMaster"
+      label="GM"
+      color="orange"
+      :info="info('desk.masterBar.grandMaster')"
+      @change="onGrandMasterCommit"
+    />
+    <GmFader
+      v-model="playbackBus"
+      label="PB"
+      color="deep-purple"
+      :info="info('desk.masterBar.playbackBus')"
+      @change="onPlaybackBusCommit"
+    />
 
     <SdmxButton
       :label="engine.blackout ? 'BO' : 'Blackout'"

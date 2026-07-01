@@ -62,6 +62,12 @@ function onStop() {
 }
 
 const gmPercent = computed(() => `${Math.round(outputEngine.grandMaster * 100)}%`);
+
+function onFaderCommit(value: number) {
+  if (isGrandMaster.value) {
+    outputEngine.setGrandMaster(value, { flush: true });
+  }
+}
 </script>
 
 <template>
@@ -78,6 +84,7 @@ const gmPercent = computed(() => `${Math.round(outputEngine.grandMaster * 100)}%
         :show-value="false"
         :color="isGrandMaster ? 'orange' : 'primary'"
         :info="info('desk.playback.level')"
+        @change="onFaderCommit"
       />
     </div>
     <template v-if="isGrandMaster">

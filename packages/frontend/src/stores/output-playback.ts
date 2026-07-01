@@ -51,6 +51,11 @@ interface CuePlayOptions {
   fadeInMs?: number;
 }
 
+export interface MasterLevelOptions {
+  /** When true, merge immediately instead of coalescing to the next animation frame. */
+  flush?: boolean;
+}
+
 export const useOutputPlaybackStore = defineStore('output-playback', () => {
   const grandMaster = ref(1.0);
   const playbackBusMaster = ref(1.0);
@@ -70,6 +75,8 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
   let linkPhase = 0;
   let previousTimecodePositionSeconds = 0;
   let mergeRequestVersion = 0;
+  let mergeDirty = false;
+  let pendingMasterMergeRaf: number | null = null;
   const lastScratchConflicts = ref<ScratchConflict[]>([]);
   const lastMergeStack = ref<MergeStackSnapshot | null>(null);
 
@@ -618,7 +625,53 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     dmx.applyMergedOutput(applyGroupSubmasters(merged, mergeData.show));
   }
 
+  function cancelPendingMasterMerge() {
+    if (pendingMasterMergeRaf !== null) {
+      cancelAnimationFrame(pendingMasterMergeRaf);
+      pendingMasterMergeRaf = null;
+    }
+  }
+
+  function flushMasterMerge() {
+    cancelPendingMasterMerge();
+    mergeDirty = false;
+    mergeAndApply();
+  }
+
+  function scheduleMasterMerge(flush = false) {
+    if (flush) {
+      flushMasterMerge();
+      return;
+    }
+    mergeDirty = true;
+    if (pendingMasterMergeRaf !== null) {
+      return;
+    }
+    pendingMasterMergeRaf = requestAnimationFrame(() => {
+      pendingMasterMergeRaf = null;
+      if (!mergeDirty) {
+        return;
+      }
+      mergeDirty = false;
+      mergeAndApply();
+    });
+  }
+
+  function needsContinuousPlaybackTick(show?: ShowDocument): boolean {
+    const doc = show ?? showStore().document;
+    return (
+      playbackStates.value.size > 0 ||
+      presetFadeStates.value.size > 0 ||
+      doc.effects.some((effect) => effect.enabled) ||
+      doc.timecode?.enabled === true ||
+      timelinePreviewPositionSeconds.value !== null ||
+      shouldUseTimecodeSetPlayback(doc)
+    );
+  }
+
   function mergeAndApply() {
+    cancelPendingMasterMerge();
+    mergeDirty = false;
     const flags = getRuntimeOptimizationFlags();
     if (flags.mergeWorkerEnabled) {
       void mergeAndApplyWithWorker().catch((error) => {
@@ -704,34 +757,20 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
       }
     }
 
-    if (playbackStates.value.size === 0 && presetFadeStates.value.size === 0) {
-      const show = showStore().document;
-      const scratchStore = useScratchStore();
-      if (
-        show.effects.some((e) => e.enabled) ||
-        (scratchStore.isActive && !scratchStore.blindMode) ||
-        show.timecode?.enabled === true ||
-        timelinePreviewPositionSeconds.value !== null ||
-        shouldUseTimecodeSetPlayback(show)
-      ) {
-        mergeAndApply();
-        animationId = requestAnimationFrame(tick);
-      } else {
-        animationId = null;
-        isGlobalPlaying.value = false;
-        mergeAndApply();
-      }
+    const continuous = needsContinuousPlaybackTick();
+
+    if (continuous) {
+      mergeAndApply();
+      animationId = requestAnimationFrame(tick);
       return;
     }
 
-    mergeAndApply();
-
-    if (playbackStates.value.size > 0 || presetFadeStates.value.size > 0) {
-      animationId = requestAnimationFrame(tick);
-    } else {
-      animationId = null;
-      isGlobalPlaying.value = false;
+    if (mergeDirty) {
+      mergeAndApply();
     }
+
+    animationId = null;
+    isGlobalPlaying.value = false;
   }
 
   function showStore() {
@@ -889,15 +928,15 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     firePreset(presetId, fadeMs);
   }
 
-  function setGrandMaster(value: number) {
+  function setGrandMaster(value: number, options?: MasterLevelOptions) {
     grandMaster.value = clampUnit(value);
-    mergeAndApply();
+    scheduleMasterMerge(options?.flush === true);
   }
 
-  function setPlaybackBusMaster(value: number) {
+  function setPlaybackBusMaster(value: number, options?: MasterLevelOptions) {
     playbackBusMaster.value = clampUnit(value);
     persistPlaybackToShow();
-    mergeAndApply();
+    scheduleMasterMerge(options?.flush === true);
   }
 
   function setCueLevel(cueId: string, level: number) {
@@ -939,8 +978,7 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
 
   function requestMerge() {
     mergeAndApply();
-    const show = showStore().document;
-    if (show.effects.some((e) => e.enabled)) {
+    if (needsContinuousPlaybackTick()) {
       startEngine();
     }
   }
@@ -968,6 +1006,7 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     firePresetPoolSlot,
     setGrandMaster,
     setPlaybackBusMaster,
+    flushMasterMerge,
     setCueLevel,
     getCueLevel,
     syncPlaybackFromShow,
