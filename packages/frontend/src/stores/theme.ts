@@ -8,10 +8,13 @@
 
 import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
+import type { ConfigThemeSettings } from '@softdmx/shared';
+import { DEFAULT_THEME_SETTINGS } from '@softdmx/shared';
 import type { ThemeDefinition, ThemeOverrides, ThemePersistedState } from 'src/themes/types';
 import { applyThemeDefinition } from 'src/themes/apply-theme';
 import { deepMerge } from 'src/themes/merge';
 import { parseImportedTheme } from 'src/themes/parse';
+import { isElectronConfigEnv, persistConfigPatch } from 'src/lib/config-persistence';
 import {
   builtinThemes,
   defaultDarkTheme,
@@ -39,12 +42,24 @@ function readPersistedState(): ThemePersistedState {
 }
 
 function writePersistedState(state: ThemePersistedState): void {
-  if (typeof localStorage === 'undefined') return;
+  if (typeof localStorage === 'undefined' || isElectronConfigEnv) return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+function persistThemeConfig(activeThemeId: string, overrides: ThemeOverrides): void {
+  if (!isElectronConfigEnv) return;
+  persistConfigPatch({
+    theme: {
+      activeThemeId,
+      overrides: overrides as Record<string, unknown>,
+    },
+  });
+}
+
 export const useThemeStore = defineStore('theme', () => {
-  const persisted = readPersistedState();
+  const persisted = isElectronConfigEnv
+    ? { activeThemeId: DEFAULT_THEME_SETTINGS.activeThemeId, overrides: {} as ThemeOverrides }
+    : readPersistedState();
   const activeThemeId = ref(persisted.activeThemeId);
   const overrides = ref<ThemeOverrides>(persisted.overrides);
   const importedThemes = ref<ThemeDefinition[]>([]);
@@ -69,6 +84,13 @@ export const useThemeStore = defineStore('theme', () => {
       activeThemeId: activeThemeId.value,
       overrides: overrides.value,
     });
+    persistThemeConfig(activeThemeId.value, overrides.value);
+  }
+
+  function applyConfigTheme(settings: ConfigThemeSettings) {
+    activeThemeId.value = settings.activeThemeId;
+    overrides.value = (settings.overrides ?? {}) as ThemeOverrides;
+    applyActiveTheme();
   }
 
   function applyActiveTheme() {
@@ -142,5 +164,6 @@ export const useThemeStore = defineStore('theme', () => {
     exportActiveTheme,
     init,
     applyActiveTheme,
+    applyConfigTheme,
   };
 });

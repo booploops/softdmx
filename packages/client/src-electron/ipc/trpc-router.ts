@@ -11,6 +11,8 @@ import { z } from "zod";
 import { Menu, BrowserWindow, dialog, type IpcMainInvokeEvent } from "electron";
 import * as fs from "fs/promises";
 import { workspace } from "../state/workspace";
+import { config as appConfig } from "../state/config";
+import { configFileSchema, configPatchSchema } from "@softdmx/shared";
 
 export interface CreateContextOptions {
   event: IpcMainInvokeEvent;
@@ -108,6 +110,15 @@ function toPlainAsyncIterable<T>(iterable: AsyncIterable<T>): AsyncIterable<T> {
       };
     }
   };
+}
+
+function toCloneable<T>(val: T): T {
+  if (val == null || typeof val !== 'object') return val;
+  try {
+    return JSON.parse(JSON.stringify(val));
+  } catch {
+    return val;
+  }
 }
 
 export const appRouter = router({
@@ -279,6 +290,22 @@ export const appRouter = router({
         workspaceLayouts: input.workspaceLayouts,
         activeWorkspaceId: input.activeWorkspaceId,
       });
+      return { success: true };
+    }),
+
+  getConfig: publicProcedure.query(() => {
+    const cf = appConfig.configFile();
+    return configFileSchema.parse({
+      version: cf.version,
+      interface: toCloneable(cf.interface),
+      sidebar: toCloneable(cf.sidebar),
+      theme: toCloneable(cf.theme),
+      plot: toCloneable(cf.plot),
+    });
+  }),
+
+  saveConfig: publicProcedure.input(configPatchSchema).mutation(({ input }) => {
+      appConfig.update(input);
       return { success: true };
     }),
 });

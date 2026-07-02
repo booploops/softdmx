@@ -3103,6 +3103,7 @@ __metadata:
     "@quasar/extras": "npm:^2.0.1"
     "@quasar/vite-plugin": "npm:^1.12.0"
     "@softdmx/engine": "workspace:*"
+    "@softdmx/shared": "workspace:*"
     "@softdmx/wasm": "workspace:*"
     "@tabler/icons-vue": "npm:^3.44.0"
     "@trpc/client": "npm:^11.18.0"
@@ -3164,6 +3165,7 @@ __metadata:
     fast-xml-parser: "npm:^5.9.3"
     rolldown: "npm:^1.1.2"
     typescript: "npm:^6.0.3"
+    zod: "npm:^4.4.3"
   languageName: unknown
   linkType: soft
 

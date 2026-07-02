@@ -62,6 +62,7 @@ async function runBootFiles() {
     () => import("./boot/viewport-height"),
     () => import("./boot/i18n"),
     () => import("./boot/info-directive"),
+    () => import("./boot/config"),
     () => import("./boot/theme"),
     () => import("./boot/quasar-overrides"),
     () => import("./boot/show"),

@@ -45,7 +45,6 @@ export function createWorkspaceStore() {
         }
         const data = workspaceFile();
         fs.writeFileSync(workspacePath, data.toXML());
-        console.log("[workspace] wrote", workspacePath);
       } catch (e) {
         console.error("Failed to save workspace.xml:", e);
       }

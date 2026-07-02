@@ -8,39 +8,18 @@
 
 import { ref, watch } from 'vue';
 import { defineStore } from 'pinia';
+import type { ConfigPlotSettings, PlotAlignMode } from '@softdmx/shared';
+import { DEFAULT_PLOT_SETTINGS } from '@softdmx/shared';
+import { isElectronConfigEnv, persistConfigPatch } from 'src/lib/config-persistence';
 
-type PlotAlignMode = 'row' | 'column';
-
-type PlotSettingsState = {
-  showGrid2d: boolean;
-  showLabels2d: boolean;
-  showCenter2d: boolean;
-  showGrid3d: boolean;
-  showStagePlane3d: boolean;
-  enableOrbit3d: boolean;
-  enableDrag: boolean;
-  snapEnabled: boolean;
-  snapStep: number;
-  autoAlignMode: PlotAlignMode;
-};
+type PlotSettingsState = ConfigPlotSettings;
 
 const STORAGE_KEY = 'softdmx-plot-settings';
 
-const DEFAULT_SETTINGS: PlotSettingsState = {
-  showGrid2d: true,
-  showLabels2d: true,
-  showCenter2d: true,
-  showGrid3d: true,
-  showStagePlane3d: true,
-  enableOrbit3d: true,
-  enableDrag: true,
-  snapEnabled: true,
-  snapStep: 1,
-  autoAlignMode: 'row',
-};
+const DEFAULT_SETTINGS: PlotSettingsState = { ...DEFAULT_PLOT_SETTINGS };
 
 function readPersisted(): PlotSettingsState {
-  if (typeof localStorage === 'undefined') return { ...DEFAULT_SETTINGS };
+  if (isElectronConfigEnv || typeof localStorage === 'undefined') return { ...DEFAULT_SETTINGS };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return { ...DEFAULT_SETTINGS };
@@ -60,6 +39,10 @@ function readPersisted(): PlotSettingsState {
 }
 
 function persist(settings: PlotSettingsState): void {
+  if (isElectronConfigEnv) {
+    persistConfigPatch({ plot: settings });
+    return;
+  }
   if (typeof localStorage === 'undefined') return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
 }
@@ -107,6 +90,19 @@ export const usePlotSettingsStore = defineStore('plot-settings', () => {
     { deep: false }
   );
 
+  function applyConfigPlot(settings: ConfigPlotSettings) {
+    showGrid2d.value = settings.showGrid2d;
+    showLabels2d.value = settings.showLabels2d;
+    showCenter2d.value = settings.showCenter2d;
+    showGrid3d.value = settings.showGrid3d;
+    showStagePlane3d.value = settings.showStagePlane3d;
+    enableOrbit3d.value = settings.enableOrbit3d;
+    enableDrag.value = settings.enableDrag;
+    snapEnabled.value = settings.snapEnabled;
+    snapStep.value = settings.snapStep;
+    autoAlignMode.value = settings.autoAlignMode;
+  }
+
   return {
     showGrid2d,
     showLabels2d,
@@ -118,5 +114,6 @@ export const usePlotSettingsStore = defineStore('plot-settings', () => {
     snapEnabled,
     snapStep,
     autoAlignMode,
+    applyConfigPlot,
   };
 });

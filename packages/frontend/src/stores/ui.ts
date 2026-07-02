@@ -6,14 +6,22 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { defineStore } from 'pinia';
+import type { ConfigInterfaceSettings, ConfigSidebarSettings } from '@softdmx/shared';
+import {
+  DEFAULT_INTERFACE_SETTINGS,
+  DEFAULT_SIDEBAR_SETTINGS,
+  type SidebarShortcutNewWorkspacePolicy,
+  type SidebarShortcutOpenMode,
+} from '@softdmx/shared';
 import type { ProgramSection, SetupSection, WorkspaceMode } from 'src/desk/workspace-modes';
 import { SIDEBAR_SHORTCUTS, type SidebarShortcutId } from 'src/lib/sidebar-shortcuts';
+import { isElectronConfigEnv, persistConfigPatch } from 'src/lib/config-persistence';
+
+export type { SidebarShortcutOpenMode, SidebarShortcutNewWorkspacePolicy } from '@softdmx/shared';
 
 export type AppDialog = 'cueEditor';
-export type SidebarShortcutOpenMode = 'current-workspace' | 'new-workspace';
-export type SidebarShortcutNewWorkspacePolicy = 'always-new' | 'reuse-existing';
 
 const OPERATE_LOCKED_KEY = 'softdmx-operate-locked';
 const SHOW_OPERATE_LOCK_ICON_KEY = 'softdmx-show-operate-lock-icon';
@@ -74,15 +82,29 @@ export const useUIStore = defineStore('ui', () => {
   const widgetsViewMode = ref<'groups' | 'individual'>('groups');
   const leftDrawerOpen = ref(false);
   const operateLocked = ref(readOperateLocked());
-  const showOperateLockIcon = ref(readShowOperateLockIcon());
-  const programmerCollapsed = ref(false);
-  const cueBarCollapsed = ref(false);
+  const showOperateLockIcon = ref(
+    isElectronConfigEnv ? DEFAULT_SIDEBAR_SETTINGS.showOperateLockIcon : readShowOperateLockIcon()
+  );
+  const programmerCollapsed = ref(
+    isElectronConfigEnv ? DEFAULT_INTERFACE_SETTINGS.programmerCollapsed : false
+  );
+  const cueBarCollapsed = ref(
+    isElectronConfigEnv ? DEFAULT_INTERFACE_SETTINGS.cueBarCollapsed : false
+  );
   const infoMode = ref(false);
   const commandLineOpen = ref(false);
   const attributePanelOpen = ref(false);
-  const sidebarShortcutIds = ref<SidebarShortcutId[]>(readSidebarShortcutIds());
-  const sidebarShortcutOpenMode = ref<SidebarShortcutOpenMode>(readSidebarShortcutOpenMode());
-  const sidebarShortcutNewWorkspacePolicy = ref<SidebarShortcutNewWorkspacePolicy>(readSidebarShortcutNewWorkspacePolicy());
+  const sidebarShortcutIds = ref<SidebarShortcutId[]>(
+    isElectronConfigEnv ? [] : readSidebarShortcutIds()
+  );
+  const sidebarShortcutOpenMode = ref<SidebarShortcutOpenMode>(
+    isElectronConfigEnv ? DEFAULT_SIDEBAR_SETTINGS.shortcutOpenMode : readSidebarShortcutOpenMode()
+  );
+  const sidebarShortcutNewWorkspacePolicy = ref<SidebarShortcutNewWorkspacePolicy>(
+    isElectronConfigEnv
+      ? DEFAULT_SIDEBAR_SETTINGS.newWorkspacePolicy
+      : readSidebarShortcutNewWorkspacePolicy()
+  );
   const dialogs = ref<Record<AppDialog, boolean>>({
     cueEditor: false,
   });
@@ -91,6 +113,50 @@ export const useUIStore = defineStore('ui', () => {
   const isProgram = computed(() => mode.value === 'program');
   const isTimeline = computed(() => mode.value === 'timeline');
   const isSetup = computed(() => mode.value === 'setup');
+
+  function persistInterfaceConfig() {
+    if (isElectronConfigEnv) {
+      persistConfigPatch({
+        interface: {
+          programmerCollapsed: programmerCollapsed.value,
+          cueBarCollapsed: cueBarCollapsed.value,
+        },
+      });
+      return;
+    }
+  }
+
+  function persistSidebarConfig() {
+    if (isElectronConfigEnv) {
+      persistConfigPatch({
+        sidebar: {
+          showOperateLockIcon: showOperateLockIcon.value,
+          shortcutIds: [...sidebarShortcutIds.value],
+          shortcutOpenMode: sidebarShortcutOpenMode.value,
+          newWorkspacePolicy: sidebarShortcutNewWorkspacePolicy.value,
+        },
+      });
+      return;
+    }
+  }
+
+  function applyConfigInterface(settings: ConfigInterfaceSettings) {
+    programmerCollapsed.value = settings.programmerCollapsed;
+    cueBarCollapsed.value = settings.cueBarCollapsed;
+  }
+
+  function applyConfigSidebar(settings: ConfigSidebarSettings) {
+    showOperateLockIcon.value = settings.showOperateLockIcon;
+    sidebarShortcutOpenMode.value = settings.shortcutOpenMode;
+    sidebarShortcutNewWorkspacePolicy.value = settings.newWorkspacePolicy;
+
+    const validIds = new Set<string>(SIDEBAR_SHORTCUTS.map((shortcut) => shortcut.id));
+    sidebarShortcutIds.value = settings.shortcutIds.filter(
+      (id): id is SidebarShortcutId => typeof id === 'string' && validIds.has(id)
+    );
+  }
+
+  watch([programmerCollapsed, cueBarCollapsed], persistInterfaceConfig);
 
   function setMode(nextMode: WorkspaceMode) {
     mode.value = nextMode;
@@ -115,6 +181,10 @@ export const useUIStore = defineStore('ui', () => {
 
   function toggleShowOperateLockIcon(force?: boolean) {
     showOperateLockIcon.value = force ?? !showOperateLockIcon.value;
+    if (isElectronConfigEnv) {
+      persistSidebarConfig();
+      return;
+    }
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(SHOW_OPERATE_LOCK_ICON_KEY, showOperateLockIcon.value ? 'true' : 'false');
     }
@@ -154,6 +224,10 @@ export const useUIStore = defineStore('ui', () => {
     const deduped = Array.from(new Set(ids.filter((id): id is SidebarShortcutId => validIds.has(id))));
     sidebarShortcutIds.value = deduped;
 
+    if (isElectronConfigEnv) {
+      persistSidebarConfig();
+      return;
+    }
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(SIDEBAR_SHORTCUTS_KEY, JSON.stringify(deduped));
     }
@@ -173,6 +247,10 @@ export const useUIStore = defineStore('ui', () => {
 
   function setSidebarShortcutOpenMode(mode: SidebarShortcutOpenMode) {
     sidebarShortcutOpenMode.value = mode;
+    if (isElectronConfigEnv) {
+      persistSidebarConfig();
+      return;
+    }
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(SIDEBAR_SHORTCUT_OPEN_MODE_KEY, mode);
     }
@@ -180,6 +258,10 @@ export const useUIStore = defineStore('ui', () => {
 
   function setSidebarShortcutNewWorkspacePolicy(policy: SidebarShortcutNewWorkspacePolicy) {
     sidebarShortcutNewWorkspacePolicy.value = policy;
+    if (isElectronConfigEnv) {
+      persistSidebarConfig();
+      return;
+    }
     if (typeof localStorage !== 'undefined') {
       localStorage.setItem(SIDEBAR_SHORTCUT_NEW_WORKSPACE_POLICY_KEY, policy);
     }
@@ -222,5 +304,7 @@ export const useUIStore = defineStore('ui', () => {
     toggleSidebarShortcut,
     setSidebarShortcutOpenMode,
     setSidebarShortcutNewWorkspacePolicy,
+    applyConfigInterface,
+    applyConfigSidebar,
   };
 });
