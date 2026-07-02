@@ -10,6 +10,7 @@ import { initTRPC } from "@trpc/server";
 import { z } from "zod";
 import { Menu, BrowserWindow, dialog, type IpcMainInvokeEvent } from "electron";
 import * as fs from "fs/promises";
+import { workspace } from "../state/workspace";
 
 export interface CreateContextOptions {
   event: IpcMainInvokeEvent;
@@ -240,6 +241,45 @@ export const appRouter = router({
       } catch (err: any) {
         return { success: false, error: (err.message || String(err)) as string | undefined, data: undefined as any };
       }
+    }),
+
+  getWorkspace: publicProcedure.query(() => {
+    const wf = workspace.workspaceFile();
+
+    // Ensure values returned to renderer are plain + structured-clone safe.
+    // Dockview layout objects must survive the IPC boundary both directions.
+    function toCloneable<T>(val: T): T {
+      if (val == null || typeof val !== 'object') return val;
+      try {
+        return JSON.parse(JSON.stringify(val));
+      } catch {
+        return val;
+      }
+    }
+
+    return {
+      version: wf.version,
+      outerLayout: toCloneable(wf.outerLayout),
+      workspaceLayouts: toCloneable(wf.workspaceLayouts),
+      activeWorkspaceId: wf.activeWorkspaceId,
+    };
+  }),
+
+  saveWorkspace: publicProcedure
+    .input(
+      z.object({
+        outerLayout: z.any().optional(),
+        workspaceLayouts: z.record(z.string(), z.any()).optional(),
+        activeWorkspaceId: z.string().optional(),
+      })
+    )
+    .mutation(({ input }) => {
+      workspace.update({
+        outerLayout: input.outerLayout,
+        workspaceLayouts: input.workspaceLayouts,
+        activeWorkspaceId: input.activeWorkspaceId,
+      });
+      return { success: true };
     }),
 });
 

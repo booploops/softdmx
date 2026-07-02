@@ -3161,6 +3161,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@softdmx/shared@workspace:packages/shared"
   dependencies:
+    fast-xml-parser: "npm:^5.9.3"
     rolldown: "npm:^1.1.2"
     typescript: "npm:^6.0.3"
   languageName: unknown

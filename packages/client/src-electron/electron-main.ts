@@ -20,6 +20,7 @@ import { isOutputNodeMode } from "./modes/output-node";
 import { createMainWindow } from "./windows/main-window";
 import { createOutputNodeWindow } from "./windows/output-node-window";
 import { config } from "./state/config";
+import { workspace } from "./state/workspace";
 
 app.setPath("userData", Paths.appData);
 app.commandLine.appendSwitch("disable-smooth-scrolling");
@@ -61,6 +62,7 @@ async function shutdownAndQuit() {
 
 async function createWindow() {
   config.load();
+  workspace.load();
   startServer();
   setupGridNodeOverlayIpc();
 
