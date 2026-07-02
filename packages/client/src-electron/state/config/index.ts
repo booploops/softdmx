@@ -18,9 +18,14 @@ export function createConfigStore() {
         const content = fs.readFileSync(configPath, "utf-8");
         const parsed = load(content);
         configFile(ConfigFile.fromJSON(parsed));
+      } else {
+        if (!fs.existsSync(Paths.appData)) {
+          fs.mkdirSync(Paths.appData, { recursive: true });
+        }
+        fs.writeFileSync(configPath, dump(JSON.parse(JSON.stringify(configFile()))));
       }
     } catch (e) {
-      console.error("Failed to load config.toml:", e);
+      console.error("Failed to load or create config.toml:", e);
     }
     
     isLoaded = true;
@@ -31,7 +36,7 @@ export function createConfigStore() {
           fs.mkdirSync(Paths.appData, { recursive: true });
         }
         const data = configFile();
-        fs.writeFileSync(configPath, dump(data as unknown as Record<string, unknown>));
+        fs.writeFileSync(configPath, dump(JSON.parse(JSON.stringify(data))));
       } catch (e) {
         console.error("Failed to save config.toml:", e);
       }
