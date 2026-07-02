@@ -13,7 +13,7 @@ const encoderValue = ref(128);
         <SdmxButton label="Primary" variant="primary" />
         <SdmxButton label="Danger" variant="danger" />
         <SdmxButton label="Active" active />
-        <SdmxButton icon="play_arrow" variant="primary" round />
+        <SdmxButton icon="play" variant="primary" round />
       </div>
     </Variant>
     <Variant title="Status Chips">

@@ -139,7 +139,7 @@ onBeforeUnmount(onControlPointerUp);
             <span>{{ control.label ?? control.type }}</span>
             <SdmxButton
               v-if="touchLayout.editMode"
-              icon="close"
+              icon="x"
               round
               size="sm"
               variant="ghost"

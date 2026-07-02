@@ -47,8 +47,8 @@ function toggleSelection() {
   >
     <div class="fixture-sheet-tile__header">
       <span class="sdmx-text-label ellipsis">{{ fixture.fixtureName }}</span>
-      <q-icon
-        :name="isSelected ? 'check_circle' : 'radio_button_unchecked'"
+      <XIcon
+        :name="isSelected ? 'circle-check' : 'circle'"
         size="xs"
         :class="isSelected ? 'fixture-sheet-tile__state--selected' : 'fixture-sheet-tile__state'"
       />

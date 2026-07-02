@@ -6,6 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
+import { SdmxIconButton } from 'src/components/ui';
 import { useCueStore } from 'src/stores/cue';
 import { useUIStore } from 'src/stores/ui';
 import { useInfoText } from 'src/composables/useInfoText';
@@ -59,15 +60,9 @@ function handleProgressClick(event: MouseEvent) {
       style="min-width: 140px; max-width: 200px"
     />
     <q-btn-group unelevated dense>
-      <q-btn
-        v-info="'desk.cueBar.playPause'"
-        :icon="isPlaying ? 'pause' : 'play_arrow'"
-        :color="isPlaying ? 'warning' : 'positive'"
-        :disable="!cueStore.activeCue"
-        @click="togglePlayback"
-      />
-      <q-btn v-info="'desk.cueBar.stop'" icon="stop" color="negative" :disable="!cueStore.activeCue" @click="stopPlayback" />
-      <q-btn v-info="'desk.cueBar.record'" icon="fiber_manual_record" color="red" :disable="!cueStore.activeCue" @click="cueStore.recordFrame()" />
+      <SdmxIconButton  info-key='desk.cueBar.playPause' :icon="isPlaying ? 'player-pause-filled' : 'player-play-filled'" ::disable="!cueStore.activeCue" @click="togglePlayback" />
+      <SdmxIconButton color="negative" info-key='desk.cueBar.stop' icon="square" :disable="!cueStore.activeCue" @click="stopPlayback" />
+      <SdmxIconButton color="negative" info-key='desk.cueBar.record' icon="circle-filled" :disable="!cueStore.activeCue" @click="cueStore.recordFrame()" />
     </q-btn-group>
 
     <div v-if="cueStore.activeCue" class="col-grow" style="min-width: 120px">
@@ -88,13 +83,7 @@ function handleProgressClick(event: MouseEvent) {
 
     <q-space />
 
-    <q-btn
-      v-info="'desk.cueBar.collapse'"
-      dense
-      flat
-      :icon="ui.cueBarCollapsed ? 'expand_less' : 'expand_more'"
-      @click="ui.cueBarCollapsed = !ui.cueBarCollapsed"
-    />
+    <SdmxIconButton size="sm" info-key='desk.cueBar.collapse' :icon="ui.cueBarCollapsed ? 'chevron-up' : 'chevron-down'" @click="ui.cueBarCollapsed = !ui.cueBarCollapsed" />
   </div>
 </template>
 

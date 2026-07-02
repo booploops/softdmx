@@ -9,6 +9,7 @@
   Purpose: Timeline-based cue editor for lighting shows
 -->
 <script setup lang="ts">
+import { SdmxButton, SdmxIconButton } from 'src/components/ui';
 import { useCueStore } from 'src/stores/cue';
 import { useShowStore } from 'src/stores/show';
 import { createMenu } from 'src/lib/menus';
@@ -496,67 +497,26 @@ const normalizeStackStep = (step: StackStep) => {
     <div class="cue-header">
       <div class="cue-controls">
         <q-btn-group unelevated>
-          <q-btn @click="showAddCueDialog = true" icon="add" label="New Cue" />
-          <q-btn
-            v-if="cueStore.activeCue"
-            @click="cueStore.duplicateCue(cueStore.activeCue.id)"
-            icon="content_copy"
-            label="Duplicate"
-          />
-          <q-btn
-            v-if="cueStore.activeCue"
-            @click="cueStore.deleteCue(cueStore.activeCue.id)"
-            icon="delete"
-            label="Delete"
-            color="negative"
-          />
+          <SdmxButton  @click="showAddCueDialog = true" icon="plus" label="New Cue" />
+          <SdmxButton  v-if="cueStore.activeCue" @click="cueStore.duplicateCue(cueStore.activeCue.id)" icon="copy" label="Duplicate" />
+          <SdmxButton variant="danger" v-if="cueStore.activeCue" @click="cueStore.deleteCue(cueStore.activeCue.id)" icon="trash" label="Delete" />
         </q-btn-group>
 
         <q-separator vertical inset />
 
         <q-btn-group unelevated>
-          <q-btn @click="playPause" :icon="cueStore.isGlobalPlaying ? 'pause' : 'play_arrow'" />
-          <q-btn @click="stop" icon="stop" />
-          <q-btn @click="record" icon="fiber_manual_record" color="red" :disable="!isTimelineCue" />
+          <SdmxIconButton  @click="playPause" :icon="cueStore.isGlobalPlaying ? 'player-pause-filled' : 'player-play-filled'" />
+          <SdmxIconButton  @click="stop" icon="square" />
+          <SdmxIconButton color="negative" @click="record" icon="circle-filled" :disable="!isTimelineCue" />
         </q-btn-group>
 
         <q-separator vertical inset />
 
         <div class="timeline-controls">
-          <q-btn
-            v-if="isTimelineCue"
-            @click="openPresetFrameDialog"
-            icon="library_add"
-            label="Preset Frame"
-            size="sm"
-            flat
-          />
-          <q-btn
-            v-if="isTimelineCue"
-            @click="openDelayFrameDialog"
-            icon="hourglass_bottom"
-            label="Delay"
-            size="sm"
-            flat
-          />
-          <q-btn
-            v-if="isTimelineCue"
-            @click="copySelectedFrames"
-            icon="content_copy"
-            label="Copy"
-            size="sm"
-            flat
-            :disable="!selectedFrame"
-          />
-          <q-btn
-            v-if="isTimelineCue"
-            @click="pasteFramesAfterSelection"
-            icon="content_paste"
-            label="Paste"
-            size="sm"
-            flat
-            :disable="cueStore.clipboard.length === 0"
-          />
+          <SdmxButton variant="ghost" v-if="isTimelineCue" @click="openPresetFrameDialog" icon="folder-plus" label="Preset Frame" size="sm" />
+          <SdmxButton variant="ghost" v-if="isTimelineCue" @click="openDelayFrameDialog" icon="hourglass" label="Delay" size="sm" />
+          <SdmxButton variant="ghost" v-if="isTimelineCue" @click="copySelectedFrames" icon="copy" label="Copy" size="sm" :disable="!selectedFrame" />
+          <SdmxButton variant="ghost" v-if="isTimelineCue" @click="pasteFramesAfterSelection" icon="clipboard" label="Paste" size="sm" :disable="cueStore.clipboard.length === 0" />
           <q-btn-toggle
             v-model="cueStore.timelineSnapping"
             :options="[{label: 'Snap', value: true}]"
@@ -625,14 +585,7 @@ const normalizeStackStep = (step: StackStep) => {
         </div>
       </div>
 
-      <q-btn
-        flat
-        round
-        dense
-        icon="close"
-        aria-label="Close cue editor"
-        @click="emit('close')"
-      />
+      <SdmxButton variant="ghost" size="sm" round icon="x" aria-label="Close cue editor" @click="emit('close')" />
     </div>
 
     <!-- Timeline -->
@@ -640,13 +593,7 @@ const normalizeStackStep = (step: StackStep) => {
       <div class="layers-panel">
         <div class="layers-header">
           <span>Layers</span>
-          <q-btn
-            @click="showAddLayerDialog = true"
-            icon="add"
-            size="sm"
-            flat
-            round
-          />
+          <SdmxIconButton  @click="showAddLayerDialog = true" icon="plus" size="sm" round />
         </div>
 
         <div class="layer-list">
@@ -659,21 +606,8 @@ const normalizeStackStep = (step: StackStep) => {
           >
             <div class="layer-controls">
               <q-checkbox v-model="layer.enabled" size="sm" />
-              <q-btn
-                v-if="layer.solo"
-                @click="layer.solo = false"
-                icon="volume_up"
-                size="sm"
-                flat
-                color="orange"
-              />
-              <q-btn
-                v-else
-                @click="layer.solo = true"
-                icon="volume_off"
-                size="sm"
-                flat
-              />
+              <SdmxIconButton  v-if="layer.solo" @click="layer.solo = false" icon="volume" size="sm" />
+              <SdmxIconButton  v-else @click="layer.solo = true" icon="volume-off" size="sm" />
             </div>
 
             <div class="layer-info">
@@ -695,13 +629,7 @@ const normalizeStackStep = (step: StackStep) => {
               </div>
             </div>
 
-            <q-btn
-              @click="cueStore.deleteLayer(cueStore.activeCue!.id, layer.id)"
-              icon="delete"
-              size="sm"
-              flat
-              color="negative"
-            />
+            <SdmxIconButton color="negative" @click="cueStore.deleteLayer(cueStore.activeCue!.id, layer.id)" icon="trash" size="sm" />
           </div>
         </div>
       </div>
@@ -782,11 +710,11 @@ const normalizeStackStep = (step: StackStep) => {
               Build sequential steps for GO playback. Auto follows after fade-in, Time uses an explicit delay.
             </div>
           </div>
-          <q-btn color="primary" icon="add" label="Add Step" @click="addStackStep" />
+          <SdmxButton variant="primary" icon="plus" label="Add Step" @click="addStackStep" />
         </div>
 
         <div v-if="(cueStore.activeCue.stack?.length ?? 0) === 0" class="empty-stack">
-          <q-icon name="playlist_add" size="3rem" class="text-grey-6" />
+          <XIcon name="playlist" size="3rem" class="text-grey-6" />
           <div class="text-body2 text-grey-6">No steps yet. Add a step to start building the stack cue.</div>
         </div>
 
@@ -801,15 +729,9 @@ const normalizeStackStep = (step: StackStep) => {
             <div class="step-header">
               <q-badge color="primary" :label="`Step ${index + 1}`" />
               <div class="step-actions">
-                <q-btn flat dense icon="arrow_upward" :disable="index === 0" @click="moveStackStep(index, -1)" />
-                <q-btn
-                  flat
-                  dense
-                  icon="arrow_downward"
-                  :disable="index === (cueStore.activeCue.stack?.length ?? 1) - 1"
-                  @click="moveStackStep(index, 1)"
-                />
-                <q-btn flat dense color="negative" icon="delete" @click="removeStackStep(index)" />
+                <SdmxIconButton size="sm" icon="arrow-up" :disable="index === 0" @click="moveStackStep(index, -1)" />
+                <SdmxIconButton size="sm" icon="arrow-down" :disable="index === (cueStore.activeCue.stack?.length ?? 1) - 1" @click="moveStackStep(index, 1)" />
+                <SdmxIconButton color="negative" size="sm" icon="trash" @click="removeStackStep(index)" />
               </div>
             </div>
 
@@ -865,7 +787,7 @@ const normalizeStackStep = (step: StackStep) => {
     <!-- No Cue State -->
     <div v-else class="no-cue-state">
       <q-card flat class="text-center q-pa-xl">
-        <q-icon name="music_note" size="4rem" class="text-grey-6" />
+        <XIcon name="music" size="4rem" class="text-grey-6" />
         <div class="text-h6 q-mt-md">No Cue Selected</div>
         <div class="text-body2 text-grey-6 q-mb-md">
           Create a new cue to start building your lighting show

@@ -217,14 +217,14 @@ function saveSettings() {
   <XDialog :dialog-ref="dialogRef" card-class="settings-card" @hide="onDialogHide">
       <XDialogHeader title="Output &amp; Sync">
         <q-space />
-        <XButton icon="close" flat size="sm" @click="onDialogCancel" />
+        <XButton icon="x" flat size="sm" @click="onDialogCancel" />
       </XDialogHeader>
 
       <XDialogBody class="row q-col-gutter-md settings-body">
         <div class="col-4 sdmx-border-right destinations-column">
           <div class="row justify-between items-center q-mb-sm">
             <span class="text-subtitle2 text-grey-4">Destinations</span>
-            <SdmxIconButton icon="add" color="primary" info-key="setup.settings.addDestination" @click="addDestination" />
+            <SdmxIconButton icon="plus" color="primary" info-key="setup.settings.addDestination" @click="addDestination" />
           </div>
 
           <q-scroll-area class="destinations-scroll">
@@ -243,7 +243,7 @@ function saveSettings() {
                 </div>
                 <template #append>
                   <XButton
-                    icon="delete"
+                    icon="trash"
                     color="danger"
                     flat
                     size="sm"
@@ -317,7 +317,7 @@ function saveSettings() {
 
             <div v-if="selectedDest.type === 'gridnode'" class="q-gutter-y-sm">
               <q-banner dense class="bg-indigo-10 text-white rounded-borders">
-                <q-icon name="info" class="q-mr-xs" />
+                <XIcon name="info-circle" class="q-mr-xs" />
                 GridNode output stays active for OBS/browser capture at
                 <code>/source</code>. The local transparent overlay window is optional.
               </q-banner>

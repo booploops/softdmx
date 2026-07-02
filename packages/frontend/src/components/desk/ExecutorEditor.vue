@@ -6,6 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
+import { SdmxIconButton } from 'src/components/ui';
 import { computed } from 'vue';
 import type { ExecutorSlot } from '@softdmx/engine';
 import { useCueStore } from 'src/stores/cue';
@@ -46,8 +47,8 @@ function onSlotGoClick(slot: ExecutorSlot) {
           style="width: 170px"
           @update:model-value="(value) => executorStore.updateExecutor({ defaultReleaseMs: Number(value ?? 0) })"
         />
-        <q-btn v-info="'desk.playback.pagePrev'" icon="navigate_before" dense flat @click="executorStore.previousPage" />
-        <q-btn v-info="'desk.playback.pageNext'" icon="navigate_next" dense flat @click="executorStore.nextPage" />
+        <SdmxIconButton size="sm" info-key='desk.playback.pagePrev' icon="chevron-left" @click="executorStore.previousPage" />
+        <SdmxIconButton size="sm" info-key='desk.playback.pageNext' icon="chevron-right" @click="executorStore.nextPage" />
         <q-btn v-info="'desk.playback.stopAll'" color="negative" dense unelevated label="Stop All" @click="executorStore.stopAll" />
       </div>
     </div>

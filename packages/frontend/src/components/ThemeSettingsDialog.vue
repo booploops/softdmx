@@ -125,7 +125,7 @@ function resetTheme() {
           <div class="text-caption sdmx-text-muted">Presets, token overrides, and custom CSS</div>
         </div>
         <q-space />
-        <XButton icon="close" flat size="sm" @click="onDialogCancel" />
+        <XButton icon="x" flat size="sm" @click="onDialogCancel" />
       </q-card-section>
 
     <q-card-section class="q-gutter-y-md dialog-body">

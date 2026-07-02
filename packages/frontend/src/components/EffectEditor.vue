@@ -157,7 +157,7 @@ function stringifySteps(steps: number[]): string {
   <div class="effect-editor q-pa-md">
     <div class="row items-center justify-between q-mb-md">
       <div class="text-h6 font-weight-bold">Effect Editor</div>
-      <XButton color="primary" icon="add" label="Add Effect" @click="addEffect" />
+      <XButton color="primary" icon="plus" label="Add Effect" @click="addEffect" />
     </div>
 
     <div class="row q-col-gutter-md">
@@ -175,7 +175,7 @@ function stringifySteps(steps: number[]): string {
               <div class="effect-item-caption text-grey-5">{{ effect.type }} · {{ effect.target.attr }}</div>
             </div>
             <template #append>
-              <XButton flat size="sm" icon="delete" color="danger" @click.stop="deleteEffect(effect.id)" />
+              <XButton flat size="sm" icon="trash" color="danger" @click.stop="deleteEffect(effect.id)" />
             </template>
           </XListItem>
           <XListItem v-if="effects.length === 0" :clickable="false">

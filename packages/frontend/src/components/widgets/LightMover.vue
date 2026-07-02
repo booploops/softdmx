@@ -140,7 +140,7 @@ function resetPosition() {
     <div class="mover-header">
       <span class="mover-title">Light Mover</span>
       <SdmxIconButton
-        icon="center_focus_strong"
+        icon="focus-2"
         info-key="widgets.lightMover.reset"
         class="reset-btn"
         @click="resetPosition"

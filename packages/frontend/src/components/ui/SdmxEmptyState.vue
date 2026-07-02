@@ -16,7 +16,7 @@ defineProps<{
 
 <template>
   <div class="sdmx-empty-state" :data-sdmx-info="info">
-    <q-icon v-if="icon" :name="icon" class="sdmx-empty-state__icon" />
+    <XIcon v-if="icon" :name="icon" class="sdmx-empty-state__icon" />
     <span class="sdmx-empty-state__title">{{ title }}</span>
     <span v-if="hint" class="sdmx-empty-state__hint">{{ hint }}</span>
     <slot />

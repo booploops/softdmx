@@ -90,14 +90,14 @@ function onPlaybackBusCommit(value: number) {
 
     <SdmxButton
       v-if="ui.isLive"
-      :icon="ui.operateLocked ? 'lock' : 'lock_open'"
+      :icon="ui.operateLocked ? 'lock' : 'lock-open'"
       :variant="ui.operateLocked ? 'ghost' : 'warning'"
       :info="info(ui.operateLocked ? 'desk.masterBar.operateLocked' : 'desk.masterBar.operateUnlocked')"
       @click="ui.toggleOperateLock()"
     />
 
     <SdmxButton
-      icon="help_outline"
+      icon="help"
       round
       :variant="ui.infoMode ? 'primary' : 'ghost'"
       :active="ui.infoMode"
@@ -114,7 +114,7 @@ function onPlaybackBusCommit(value: number) {
     />
     <SdmxButton
       v-if="ui.isLive"
-      :icon="ui.cueBarCollapsed ? 'keyboard_arrow_up' : 'keyboard_arrow_down'"
+      :icon="ui.cueBarCollapsed ? 'chevron-up' : 'chevron-down'"
       round
       :variant="ui.cueBarCollapsed ? 'warning' : 'ghost'"
       :active="!ui.cueBarCollapsed"
@@ -176,7 +176,7 @@ function onPlaybackBusCommit(value: number) {
     <SdmxStatusChip
       v-if="audioStore.enabled"
       label="Audio"
-      icon="graphic_eq"
+      icon="waveform"
       variant="info"
       :info="info('desk.masterBar.audioReactive')"
     />

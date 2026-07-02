@@ -142,13 +142,13 @@ function handleShowBindingsDialog() {
         :active="ui.mode === mode"
         @click="selectMode(mode)"
       >
-        <template #prepend><q-icon :name="WORKSPACE_MODE_META[mode].icon" /></template>
+        <template #prepend><XIcon :name="WORKSPACE_MODE_META[mode].icon" /></template>
         {{ WORKSPACE_MODE_META[mode].label }}
         <template
           #append
           v-if="ui.mode === mode"
         >
-          <q-icon
+          <XIcon
             name="check"
             color="primary"
           />
@@ -166,7 +166,7 @@ function handleShowBindingsDialog() {
           :active="ui.programSection === section"
           @click="selectProgram(section as ProgramSection)"
         >
-          <template #prepend><q-icon :name="meta.icon" /></template>
+          <template #prepend><XIcon :name="meta.icon" /></template>
           {{ meta.label }}
         </XListItem>
       </template>
@@ -182,7 +182,7 @@ function handleShowBindingsDialog() {
           :active="ui.setupSection === section"
           @click="selectSetup(section as SetupSection)"
         >
-          <template #prepend><q-icon :name="meta.icon" /></template>
+          <template #prepend><XIcon :name="meta.icon" /></template>
           {{ meta.label }}
         </XListItem>
       </template>
@@ -194,7 +194,7 @@ function handleShowBindingsDialog() {
         clickable
         @click="reloadExampleShow"
       >
-        <template #prepend><q-icon name="refresh" /></template>
+        <template #prepend><XIcon name="refresh" /></template>
         Reload example show
       </XListItem>
       <XListItem
@@ -202,7 +202,7 @@ function handleShowBindingsDialog() {
         clickable
         @click="loadSimpleWash"
       >
-        <template #prepend><q-icon name="light_mode" /></template>
+        <template #prepend><XIcon name="sun" /></template>
         Load simple wash
       </XListItem>
       <XListItem
@@ -210,7 +210,7 @@ function handleShowBindingsDialog() {
         clickable
         @click="loadLaserDemo"
       >
-        <template #prepend><q-icon name="flash_on" /></template>
+        <template #prepend><XIcon name="bolt" /></template>
         Load laser demo
       </XListItem>
       <XListItem
@@ -218,7 +218,7 @@ function handleShowBindingsDialog() {
         clickable
         @click="exportShow"
       >
-        <template #prepend><q-icon name="download" /></template>
+        <template #prepend><XIcon name="download" /></template>
         Export YAML
       </XListItem>
       <XListItem
@@ -226,7 +226,7 @@ function handleShowBindingsDialog() {
         clickable
         @click="importShow"
       >
-        <template #prepend><q-icon name="upload" /></template>
+        <template #prepend><XIcon name="upload" /></template>
         Import YAML
       </XListItem>
 
@@ -237,7 +237,7 @@ function handleShowBindingsDialog() {
         clickable
         @click="openCueEditor"
       >
-        <template #prepend><q-icon name="movie_edit" /></template>
+        <template #prepend><XIcon name="movie" /></template>
         Cue editor
       </XListItem>
       <XListItem
@@ -245,7 +245,7 @@ function handleShowBindingsDialog() {
         clickable
         @click="handleShowBindingsDialog"
       >
-        <template #prepend><q-icon name="tune" /></template>
+        <template #prepend><XIcon name="adjustments" /></template>
         Bindings
       </XListItem>
       <XListItem
@@ -253,7 +253,7 @@ function handleShowBindingsDialog() {
         clickable
         @click="handleShowAudioSettingsDialog"
       >
-        <template #prepend><q-icon name="graphic_eq" /></template>
+        <template #prepend><XIcon name="waveform" /></template>
         Audio analysis
       </XListItem>
 
@@ -264,7 +264,7 @@ function handleShowBindingsDialog() {
         clickable
         @click="handleShowSettingsDialog"
       >
-        <template #prepend><q-icon name="settings_input_component" /></template>
+        <template #prepend><XIcon name="plug" /></template>
         Output &amp; sync
       </XListItem>
       <XListItem
@@ -273,7 +273,7 @@ function handleShowBindingsDialog() {
         clickable
         @click="gridNodeOverlay.toggle()"
       >
-        <template #prepend><q-icon name="grid_view" /></template>
+        <template #prepend><XIcon name="layout-grid" /></template>
         GridNode overlay
         <template #append>
           <XSwitch
@@ -291,7 +291,7 @@ function handleShowBindingsDialog() {
         clickable
         @click="handleShowInterfaceSettingsDialog"
       >
-        <template #prepend><q-icon name="dashboard_customize" /></template>
+        <template #prepend><XIcon name="dashboard" /></template>
         Interface
       </XListItem>
       <XListItem
@@ -299,7 +299,7 @@ function handleShowBindingsDialog() {
         clickable
         @click="handleShowThemeSettingsDialog"
       >
-        <template #prepend><q-icon name="palette" /></template>
+        <template #prepend><XIcon name="palette" /></template>
         Theme
       </XListItem>
     </XListView>

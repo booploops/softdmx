@@ -154,13 +154,13 @@ function parseWholeNumber(value: string | number | null | undefined, fallback: n
         />
       </div>
       <div class="col-auto">
-        <XButton color="primary" icon="add" label="Add Pixel Map" @click="addPixelMap" />
+        <XButton color="primary" icon="plus" label="Add Pixel Map" @click="addPixelMap" />
       </div>
       <div class="col-auto">
         <XButton
           color="danger"
           flat
-          icon="delete"
+          icon="trash"
           label="Remove"
           :disable="!currentPixelMap"
           @click="removePixelMap"
@@ -290,7 +290,7 @@ function parseWholeNumber(value: string | number | null | undefined, fallback: n
               />
             </div>
             <div class="col-2 text-right">
-              <XButton flat icon="delete" color="danger" @click="removeFixtureChannel(index)" />
+              <XButton flat icon="trash" color="danger" @click="removeFixtureChannel(index)" />
             </div>
           </div>
         </XListItem>
@@ -299,7 +299,7 @@ function parseWholeNumber(value: string | number | null | undefined, fallback: n
       <div class="q-mt-md">
         <XButton
           color="primary"
-          icon="add"
+          icon="plus"
           label="Add Cell Mapping"
           :disable="fixtureOptions.length === 0"
           @click="addFixtureChannelRow"

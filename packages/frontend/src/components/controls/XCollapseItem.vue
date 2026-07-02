@@ -74,7 +74,7 @@ function toggle() {
           />
         </svg>
       </span>
-      <q-icon
+      <XIcon
         v-if="icon"
         :name="icon"
         class="x-collapse-item__icon"

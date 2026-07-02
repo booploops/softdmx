@@ -6,6 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
+import { SdmxButton } from 'src/components/ui';
 import { ref, computed, watch } from 'vue';
 import { Notify } from 'quasar';
 import { useShowStore } from 'src/stores/show';
@@ -466,8 +467,8 @@ function addFixtureFromLibrary() {
         </div>
       </div>
       <div v-if="selectedPatchTab === 'fixtures'" class="row q-gutter-sm">
-        <q-btn v-info="'setup.patch.addFixture'" color="primary" icon="add" label="Add Fixture from Library" @click="openAddFixtureDialog" />
-        <q-btn v-info="'setup.patch.importFixtures'" color="accent" icon="upload" label="Import GDTF/YAML" @click="triggerImportFixture" />
+        <SdmxButton variant="primary" :info="info('setup.patch.addFixture')" icon="plus" label="Add Fixture from Library" @click="openAddFixtureDialog" />
+        <SdmxButton variant="secondary" :info="info('setup.patch.importFixtures')" icon="upload" label="Import GDTF/YAML" @click="triggerImportFixture" />
         <input
           ref="importInputRef"
           type="file"
@@ -479,7 +480,7 @@ function addFixtureFromLibrary() {
           v-if="showStore.document.fixtures.length > 0"
           v-info="'setup.patch.autoPatch'"
           color="secondary"
-          icon="auto_fix_high"
+          icon="wand"
           label="Auto Patch Sequentially"
           @click="autoPatchAll"
         />
@@ -487,20 +488,20 @@ function addFixtureFromLibrary() {
     </div>
 
     <XTabs v-model="selectedPatchTab" class="q-mb-md">
-      <XTab name="fixtures" icon="hub" label="Fixtures" />
-      <XTab name="pixel-maps" icon="grid_on" label="Pixel Maps" />
+      <XTab name="fixtures" icon="git-branch" label="Fixtures" />
+      <XTab name="pixel-maps" icon="grid-3x3" label="Pixel Maps" />
     </XTabs>
 
     <div v-show="selectedPatchTab === 'fixtures'" class="row q-col-gutter-sm q-mb-md">
       <div class="col">
         <q-banner dense rounded class="bg-blue-grey-10 text-grey-2">
-          <q-icon name="dataset" class="q-mr-sm" />
+          <XIcon name="database" class="q-mr-sm" />
           {{ patchedFixtures.length }} patched fixture{{ patchedFixtures.length === 1 ? '' : 's' }}
         </q-banner>
       </div>
       <div class="col">
         <q-banner dense rounded :class="overlapCount ? 'bg-negative text-white' : 'bg-green-10 text-green-2'">
-          <q-icon :name="overlapCount ? 'warning' : 'check_circle'" class="q-mr-sm" />
+          <XIcon :name="overlapCount ? 'alert-triangle' : 'circle-check'" class="q-mr-sm" />
           {{ overlapCount }} overlap warning{{ overlapCount === 1 ? '' : 's' }}
         </q-banner>
       </div>
@@ -510,7 +511,7 @@ function addFixtureFromLibrary() {
           rounded
           :class="outOfRangeCount ? 'bg-orange-10 text-orange-3' : 'bg-green-10 text-green-2'"
         >
-          <q-icon :name="outOfRangeCount ? 'report_problem' : 'check_circle'" class="q-mr-sm" />
+          <XIcon :name="outOfRangeCount ? 'alert-triangle' : 'circle-check'" class="q-mr-sm" />
           {{ outOfRangeCount }} range issue{{ outOfRangeCount === 1 ? '' : 's' }}
         </q-banner>
       </div>
@@ -564,7 +565,7 @@ function addFixtureFromLibrary() {
                   color="negative"
                   text-color="white"
                   dense
-                  icon="warning"
+                  icon="alert-triangle"
                   label="Overlap"
                   size="sm"
                 />
@@ -619,15 +620,7 @@ function addFixtureFromLibrary() {
                   />
                 </div>
               </div>
-              <q-btn
-                flat
-                dense
-                size="sm"
-                icon="my_location"
-                label="Aim at center"
-                class="q-mt-sm"
-                @click="aimFixtureAtCenter(item.index)"
-              />
+              <SdmxButton variant="ghost" size="sm" icon="current-location" label="Aim at center" class="q-mt-sm" @click="aimFixtureAtCenter(item.index)" />
             </q-item-section>
 
             <q-item-section class="col-4 q-px-sm">
@@ -694,10 +687,10 @@ function addFixtureFromLibrary() {
 
       <div v-else class="fit flex flex-center text-center text-grey-5">
         <div>
-          <q-icon name="settings_ethernet" size="4rem" class="q-mb-md" />
+          <XIcon name="network" size="4rem" class="q-mb-md" />
           <div class="text-h6">No fixtures patched yet</div>
           <div class="text-subtitle2 q-mb-md">Add a fixture from the library to start patching.</div>
-          <q-btn color="primary" icon="add" label="Add Fixture from Library" @click="openAddFixtureDialog" />
+          <SdmxButton variant="primary" icon="plus" label="Add Fixture from Library" @click="openAddFixtureDialog" />
         </div>
       </div>
     </div>
@@ -742,8 +735,8 @@ function addFixtureFromLibrary() {
             filled
           />
           <div v-if="selectedFixtureType" class="row q-gutter-sm">
-            <q-btn dense flat icon="download" label="Export YAML" @click="exportFixture(selectedFixtureType, 'yaml')" />
-            <q-btn dense flat icon="download" label="Export GDTF" @click="exportFixture(selectedFixtureType, 'gdtf')" />
+            <SdmxButton variant="ghost" size="sm" icon="download" label="Export YAML" @click="exportFixture(selectedFixtureType, 'yaml')" />
+            <SdmxButton variant="ghost" size="sm" icon="download" label="Export GDTF" @click="exportFixture(selectedFixtureType, 'gdtf')" />
           </div>
           <q-select
             v-model="newFixtureDestinationId"

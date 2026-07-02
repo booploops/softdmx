@@ -6,6 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
+import { SdmxButton, SdmxIconButton } from 'src/components/ui';
 import { useCueStore } from 'src/stores/cue';
 import { useUIStore } from 'src/stores/ui';
 
@@ -22,8 +23,8 @@ function openCueEditor() {
     <div class="row items-center q-mb-md">
       <div class="text-h6">Cues</div>
       <q-space />
-      <q-btn v-info="'desk.cueList.add'" color="primary" icon="add" label="New cue" @click="cueStore.addCue(`Cue ${cueStore.cues.length + 1}`)" />
-      <q-btn v-info="'desk.cueList.openEditor'" flat icon="movie_edit" label="Cue editor" class="q-ml-sm" @click="openCueEditor" />
+      <SdmxButton variant="primary" :info="info('desk.cueList.add')" icon="plus" label="New cue" @click="cueStore.addCue(`Cue ${cueStore.cues.length + 1}`)" />
+      <SdmxButton variant="ghost" :info="info('desk.cueList.openEditor')" icon="movie" label="Cue editor" class="q-ml-sm" @click="openCueEditor" />
     </div>
     <q-list bordered separator>
       <q-item v-for="cue in cueStore.cues" :key="cue.id" clickable @click="cueStore.activeCueId = cue.id">
@@ -32,8 +33,8 @@ function openCueEditor() {
           <q-item-label caption>{{ cue.view === 'stack' ? 'Stack' : 'Timeline' }}</q-item-label>
         </q-item-section>
         <q-item-section side>
-          <q-btn v-info="'desk.cueList.play'" dense flat icon="play_arrow" @click.stop="cueStore.playCue(cue.id)" />
-          <q-btn v-info="'desk.cueList.stop'" dense flat icon="stop" color="negative" @click.stop="cueStore.stopCue(cue.id)" />
+          <SdmxIconButton size="sm" info-key='desk.cueList.play' icon="player-play-filled" @click.stop="cueStore.playCue(cue.id)" />
+          <SdmxIconButton color="negative" size="sm" info-key='desk.cueList.stop' icon="square" @click.stop="cueStore.stopCue(cue.id)" />
         </q-item-section>
       </q-item>
       <q-item v-if="!cueStore.cues.length">

@@ -24,7 +24,7 @@ const fixtures = computed(() => dmx.showfileFixturesMapped);
       />
     </div>
     <div v-else class="tab-empty-state q-pa-lg text-center text-grey-5">
-      <q-icon name="lightbulb_outline" size="3rem" />
+      <XIcon name="lightbulb" size="3rem" />
       <div class="q-mt-sm">No fixtures patched</div>
       <div class="text-caption">Open Setup → Patch to add fixtures to select here.</div>
     </div>

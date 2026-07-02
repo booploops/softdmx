@@ -78,7 +78,7 @@ const selectedListItem = ref('item-1');
 const listItems = [
   { id: 'item-1', label: 'User Settings', icon: 'settings' },
   { id: 'item-2', label: 'File Manager', icon: 'folder' },
-  { id: 'item-3', label: 'Web Browser', icon: 'explore' },
+  { id: 'item-3', label: 'Web Browser', icon: 'compass' },
   { id: 'item-4', label: 'Command Terminal', icon: 'code' },
   { id: 'item-5', label: 'Software Updates (Disabled)', icon: 'shop', disable: true },
 ];
@@ -192,15 +192,15 @@ const demoTabJustify = ref('tab-a');
               size="sm"
             >
               <XButton
-                icon="align_horizontal_left"
+                icon="align-box-left"
                 @click="buttonClickedCount++"
               />
               <XButton
-                icon="align_horizontal_center"
+                icon="align-box-center"
                 @click="buttonClickedCount++"
               />
               <XButton
-                icon="align_horizontal_right"
+                icon="align-box-right"
                 @click="buttonClickedCount++"
               />
             </XButtonGroup>
@@ -225,11 +225,11 @@ const demoTabJustify = ref('tab-a');
               size="sm"
             >
               <XButton
-                icon="expand_less"
+                icon="chevron-up"
                 @click="buttonClickedCount++"
               />
               <XButton
-                icon="expand_more"
+                icon="chevron-down"
                 @click="buttonClickedCount++"
               />
             </XButtonGroup>
@@ -459,15 +459,15 @@ const demoTabJustify = ref('tab-a');
               dense
             >
               <XListItem @click="buttonClickedCount++">
-                <template #prepend><q-icon name="add" /></template>
+                <template #prepend><XIcon name="plus" /></template>
                 Add Component
               </XListItem>
               <XListItem @click="buttonClickedCount++">
-                <template #prepend><q-icon name="edit" /></template>
+                <template #prepend><XIcon name="pencil" /></template>
                 Edit Layout
               </XListItem>
               <XListItem disable>
-                <template #prepend><q-icon name="delete" /></template>
+                <template #prepend><XIcon name="trash" /></template>
                 Delete Selected (Disabled)
               </XListItem>
             </XListView>
@@ -496,7 +496,7 @@ const demoTabJustify = ref('tab-a');
                 @click="selectedListItem = item.id"
               >
                 <template #prepend>
-                  <q-icon :name="item.icon" />
+                  <XIcon :name="item.icon" />
                 </template>
                 {{ item.label }}
                 <template #append>
@@ -520,7 +520,7 @@ const demoTabJustify = ref('tab-a');
               <XCollapseItem
                 v-model="collapseOpen1"
                 label="Sound Preferences"
-                icon="volume_up"
+                icon="volume"
               >
                 <div class="accordion-content">
                   <div class="zoo-row gap-lg">
@@ -539,7 +539,7 @@ const demoTabJustify = ref('tab-a');
               <XCollapseItem
                 v-model="collapseOpen2"
                 label="Display & Brightness Settings"
-                icon="brightness_6"
+                icon="contrast"
               >
                 <div class="accordion-content">
                   <div class="zoo-row gap-lg">
@@ -560,7 +560,7 @@ const demoTabJustify = ref('tab-a');
 
               <XCollapseItem
                 label="Network Diagnostics (Disabled)"
-                icon="wifi_off"
+                icon="wifi-off"
                 disable
               >
                 <div class="accordion-content">
@@ -591,12 +591,12 @@ const demoTabJustify = ref('tab-a');
                 >
                   <XTab
                     name="fixtures"
-                    icon="hub"
+                    icon="git-branch"
                     label="Fixtures"
                   />
                   <XTab
                     name="pixel-maps"
-                    icon="grid_on"
+                    icon="grid-3x3"
                     label="Pixel Maps"
                   />
                   <XTab
@@ -617,12 +617,12 @@ const demoTabJustify = ref('tab-a');
                 >
                   <XTab
                     name="fixtures"
-                    icon="hub"
+                    icon="git-branch"
                     label="Fixtures"
                   />
                   <XTab
                     name="pixel-maps"
-                    icon="grid_on"
+                    icon="grid-3x3"
                     label="Pixel Maps"
                   />
                 </XTabs>
@@ -637,12 +637,12 @@ const demoTabJustify = ref('tab-a');
                 >
                   <XTab
                     name="fixtures"
-                    icon="hub"
+                    icon="git-branch"
                     label="Fixtures"
                   />
                   <XTab
                     name="pixel-maps"
-                    icon="grid_on"
+                    icon="grid-3x3"
                     label="Pixel Maps"
                   />
                 </XTabs>

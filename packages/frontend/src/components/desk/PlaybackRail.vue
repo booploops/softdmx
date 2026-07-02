@@ -8,9 +8,11 @@
 <script setup lang="ts">
 import PlaybackSlot from './PlaybackSlot.vue';
 import { useExecutorStore } from 'src/stores/executor';
+import { SdmxButton, SdmxIconButton } from 'src/components/ui';
+import { useInfoText } from 'src/composables/useInfoText';
 
 const executorStore = useExecutorStore();
-
+const { info } = useInfoText();
 const railRef = ref<HTMLElement | null>(null);
 const layoutVersion = ref(0);
 
@@ -40,11 +42,11 @@ onBeforeUnmount(() => {
         <div v-info="'desk.playback.pageLabel'" class="playback-rail-page-label text-caption text-weight-bold">
           Page {{ executorStore.activePage }}/{{ executorStore.pageCount }}
         </div>
-        <q-btn v-info="'desk.playback.pagePrev'" dense flat icon="navigate_before" @click="executorStore.previousPage" />
-        <q-btn v-info="'desk.playback.pageNext'" dense flat icon="navigate_next" @click="executorStore.nextPage" />
-        <q-btn v-info="'desk.playback.goPreviousActive'" dense flat color="secondary" label="Go-" @click="executorStore.goPreviousActive()" />
-        <q-btn v-info="'desk.playback.goActive'" dense flat color="primary" label="Go+" @click="executorStore.goActive()" />
-        <q-btn v-info="'desk.playback.stopAll'" dense flat color="negative" label="Stop" @click="executorStore.stopAll" />
+        <SdmxIconButton info-key="desk.playback.pagePrev" icon="chevron-left" @click="executorStore.previousPage" />
+        <SdmxIconButton info-key="desk.playback.pageNext" icon="chevron-right" @click="executorStore.nextPage" />
+        <SdmxButton :info="info('desk.playback.goPreviousActive')" variant="secondary" label="Go-" @click="executorStore.goPreviousActive()" />
+        <SdmxButton :info="info('desk.playback.goActive')" variant="primary" label="Go+" @click="executorStore.goActive()" />
+        <SdmxButton :info="info('desk.playback.stopAll')" variant="danger" label="Stop" @click="executorStore.stopAll" />
       </div>
 
       <div class="playback-slots">

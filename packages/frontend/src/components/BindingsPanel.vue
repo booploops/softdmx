@@ -6,6 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
+import { SdmxButton, SdmxIconButton } from 'src/components/ui';
 import { computed, ref } from 'vue';
 import { useShowStore } from 'src/stores/show';
 import { useMidiStore } from 'src/stores/midi';
@@ -207,7 +208,7 @@ reloadBindings();
         <q-tab-panel name="midi" class="q-pa-none">
           <div class="row justify-between items-center q-mb-sm">
             <div class="text-subtitle2 text-grey-4">Map MIDI CC/Notes to show actions.</div>
-            <q-btn dense color="primary" icon="add" label="Add MIDI Binding" @click="addMidiMapping" />
+            <SdmxButton variant="primary" size="sm" icon="plus" label="Add MIDI Binding" @click="addMidiMapping" />
           </div>
           <div v-if="midiMappings.length === 0" class="text-grey-5 q-pa-md">
             No MIDI bindings yet.
@@ -265,11 +266,11 @@ reloadBindings();
                     dense
                     color="negative"
                     text-color="white"
-                    icon="warning"
+                    icon="alert-triangle"
                     label="Device Offline"
                   />
-                  <q-btn dense color="secondary" icon="sensors" label="Learn" @click="startMidiLearn(mapping)" />
-                  <q-btn dense flat color="negative" icon="delete" @click="removeMidi(mapping.id)" />
+                  <SdmxButton variant="secondary" size="sm" icon="radar" label="Learn" @click="startMidiLearn(mapping)" />
+                  <SdmxIconButton color="negative" size="sm" icon="trash" @click="removeMidi(mapping.id)" />
                 </div>
               </div>
 
@@ -327,7 +328,7 @@ reloadBindings();
         <q-tab-panel name="osc" class="q-pa-none">
           <div class="row justify-between items-center q-mb-sm">
             <div class="text-subtitle2 text-grey-4">Map OSC address patterns to show actions.</div>
-            <q-btn dense color="primary" icon="add" label="Add OSC Binding" @click="addOscMapping" />
+            <SdmxButton variant="primary" size="sm" icon="plus" label="Add OSC Binding" @click="addOscMapping" />
           </div>
           <div v-if="oscMappings.length === 0" class="text-grey-5 q-pa-md">
             No OSC bindings yet.
@@ -352,8 +353,8 @@ reloadBindings();
                   />
                 </div>
                 <div class="col-5 row q-gutter-xs justify-end">
-                  <q-btn dense color="secondary" icon="sensors" label="Learn" @click="startOscLearn(mapping)" />
-                  <q-btn dense flat color="negative" icon="delete" @click="removeOsc(mapping.id)" />
+                  <SdmxButton variant="secondary" size="sm" icon="radar" label="Learn" @click="startOscLearn(mapping)" />
+                  <SdmxIconButton color="negative" size="sm" icon="trash" @click="removeOsc(mapping.id)" />
                 </div>
               </div>
 

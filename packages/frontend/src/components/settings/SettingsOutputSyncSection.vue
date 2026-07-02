@@ -218,7 +218,7 @@ onBeforeUnmount(() => {
       <div class="col-12 col-lg-4">
         <div class="row justify-between items-center q-mb-sm">
           <div class="settings-subtitle">Destinations</div>
-          <SdmxIconButton icon="add" color="primary" info-key="setup.settings.addDestination" @click="addDestination" />
+          <SdmxIconButton icon="plus" color="primary" info-key="setup.settings.addDestination" @click="addDestination" />
         </div>
 
         <XListView :bordered="false" class="dest-list">
@@ -236,7 +236,7 @@ onBeforeUnmount(() => {
             </div>
             <template #append>
               <XButton
-                icon="delete"
+                icon="trash"
                 color="danger"
                 flat
                 size="sm"
@@ -295,7 +295,7 @@ onBeforeUnmount(() => {
 
             <div v-if="selectedDestActive.type === 'gridnode'" class="q-gutter-y-sm">
               <q-banner dense class="bg-indigo-10 text-white rounded-borders">
-                <q-icon name="info" class="q-mr-xs" />
+                <XIcon name="info-circle" class="q-mr-xs" />
                 GridNode output stays active for OBS/browser capture at <code>/source</code>.
               </q-banner>
               <XSwitch

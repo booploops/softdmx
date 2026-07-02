@@ -37,7 +37,7 @@ function firePreset(presetId: string) {
         label="Fade (ms)"
         style="max-width: 130px"
       />
-      <XButton v-info="'program.presets.editPreset'" flat icon="edit" label="Edit Presets" class="q-ml-sm" @click="showPresetEditor = true" />
+      <XButton v-info="'program.presets.editPreset'" flat icon="pencil" label="Edit Presets" class="q-ml-sm" @click="showPresetEditor = true" />
     </div>
     <div class="row q-gutter-sm q-mb-lg">
       <XButton

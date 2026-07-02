@@ -71,7 +71,7 @@ function saveSettings() {
       <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
         <div class="text-h6 font-weight-bold">Audio Analysis</div>
         <q-space />
-        <XButton icon="close" flat size="sm" @click="onDialogCancel" />
+        <XButton icon="x" flat size="sm" @click="onDialogCancel" />
       </q-card-section>
 
     <q-card-section class="q-gutter-y-md dialog-body">
@@ -80,7 +80,7 @@ function saveSettings() {
         dense
         class="bg-negative text-white rounded-borders"
       >
-        <q-icon name="warning" class="q-mr-xs" />
+        <XIcon name="alert-triangle" class="q-mr-xs" />
         Audio capture is not supported in this runtime.
       </q-banner>
 
@@ -160,7 +160,7 @@ function saveSettings() {
         :color="audioStore.beatPulse ? 'positive' : 'grey-8'"
         :text-color="audioStore.beatPulse ? 'black' : 'grey-4'"
       >
-        <q-icon name="graphic_eq" size="16px" class="q-mr-xs" />
+        <XIcon name="waveform" size="16px" class="q-mr-xs" />
         Beat pulse {{ audioStore.beatPulse ? 'detected' : 'idle' }}
       </q-chip>
 

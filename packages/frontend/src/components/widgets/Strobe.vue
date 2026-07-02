@@ -113,7 +113,7 @@ const toggleStrobe = () => {
       <q-btn
         @click="toggleStrobe"
         :color="strobe > 0 ? 'negative' : 'positive'"
-        :icon="strobe > 0 ? 'flash_off' : 'flash_on'"
+        :icon="strobe > 0 ? 'bolt-off' : 'bolt'"
         :label="strobe > 0 ? 'Stop' : 'Strobe'"
         class="toggle-btn"
         size="md"
@@ -165,7 +165,7 @@ const toggleStrobe = () => {
 
     <!-- Visual Flash Indicator -->
     <div class="flash-indicator" :class="{ 'active': isFlashing }">
-      <q-icon name="flash_on" size="lg" />
+      <XIcon name="bolt" size="lg" />
     </div>
   </div>
 </template>

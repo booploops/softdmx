@@ -19,6 +19,7 @@
     "@quasar/extras": "^2.0.1",
     "@softdmx/engine": "workspace:*",
     "@softdmx/wasm": "workspace:*",
+    "@tabler/icons-vue": "^3.44.0",
     "@trpc/client": "^11.18.0",
     "@trpc/server": "^11.18.0",
     "@vueuse/core": "^14.3.0",

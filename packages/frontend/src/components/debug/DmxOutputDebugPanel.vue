@@ -284,7 +284,7 @@ onBeforeUnmount(() => {
             </q-item-label>
           </q-item-section>
           <q-item-section side>
-            <q-icon :name="summary.overflow ? 'warning' : 'check_circle'" :color="summary.overflow ? 'warning' : 'positive'" />
+            <XIcon :name="summary.overflow ? 'alert-triangle' : 'circle-check'" :color="summary.overflow ? 'warning' : 'positive'" />
           </q-item-section>
         </q-item>
       </q-list>

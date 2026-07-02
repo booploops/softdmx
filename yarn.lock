@@ -3052,6 +3052,7 @@ __metadata:
     "@quasar/vite-plugin": "npm:^1.12.0"
     "@softdmx/engine": "workspace:*"
     "@softdmx/wasm": "workspace:*"
+    "@tabler/icons-vue": "npm:^3.44.0"
     "@trpc/client": "npm:^11.18.0"
     "@trpc/server": "npm:^11.18.0"
     "@types/lodash-es": "npm:^4.17.12"
@@ -3145,6 +3146,24 @@ __metadata:
   dependencies:
     defer-to-connect: "npm:^2.0.0"
   checksum: 10c0/73946918c025339db68b09abd91fa3001e87fc749c619d2e9c2003a663039d4c3cb89836c98a96598b3d47dec2481284ba85355392644911f5ecd2336536697f
+  languageName: node
+  linkType: hard
+
+"@tabler/icons-vue@npm:^3.44.0":
+  version: 3.44.0
+  resolution: "@tabler/icons-vue@npm:3.44.0"
+  dependencies:
+    "@tabler/icons": "npm:3.44.0"
+  peerDependencies:
+    vue: ">=3.0.1"
+  checksum: 10c0/7730f3cd00056584ad322ab9d7b740d0f62632e5480a89dfd458f916af278010a940bfb62bcd1067b32177bf8ff5c101534aa898666501e47dc0ddaf3f0f9c9f
+  languageName: node
+  linkType: hard
+
+"@tabler/icons@npm:3.44.0":
+  version: 3.44.0
+  resolution: "@tabler/icons@npm:3.44.0"
+  checksum: 10c0/0d5c1f9d6e68aa04c4a661e96035190e0884e0bc0022d31922efad3cfba210a25b2f013c0b6c0ab6aeb3d5a402a9b85a168966bd11a30ba6087f614f8521ccf3
   languageName: node
   linkType: hard
 

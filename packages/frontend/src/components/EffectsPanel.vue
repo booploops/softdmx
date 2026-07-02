@@ -68,7 +68,7 @@ function targetSummary(effect: EffectDefinition): string[] {
           v-info="'program.effects.addEffect'"
           dense
           flat
-          icon="open_in_new"
+          icon="external-link"
           label="Open Editor"
           @click="showEffectEditor = true"
         />
@@ -126,7 +126,7 @@ function targetSummary(effect: EffectDefinition): string[] {
               :model-value="effect.enabled"
               @update:model-value="(value) => toggleEffect(effect.id, Boolean(value))"
             />
-            <SdmxIconButton icon="content_copy" info-key="program.effects.duplicateEffect" @click="duplicateEffect(effect)" />
+            <SdmxIconButton icon="copy" info-key="program.effects.duplicateEffect" @click="duplicateEffect(effect)" />
           </div>
         </template>
       </XListItem>
@@ -134,7 +134,7 @@ function targetSummary(effect: EffectDefinition): string[] {
 
     <SdmxEmptyState
       v-else
-      icon="auto_awesome"
+      icon="sparkles"
       title="No effects configured"
       description="Open the editor to add your first effect."
       class="q-mb-md"

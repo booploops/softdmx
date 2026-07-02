@@ -72,7 +72,7 @@ function resolveControlChannel(channelName: string) {
       :class="{ 'selection-control-panel__header--idle': !hasSelection }"
       @click="expanded = !expanded"
     >
-      <q-icon name="highlight_alt" size="xs" />
+      <XIcon name="select" size="xs" />
       <span class="sdmx-text-label">Controls</span>
       <SdmxStatusChip
         v-if="hasSelection"
@@ -83,7 +83,7 @@ function resolveControlChannel(channelName: string) {
         Select fixtures to adjust
       </span>
       <q-space />
-      <q-icon :name="expanded ? 'expand_less' : 'expand_more'" size="xs" />
+      <XIcon :name="expanded ? 'chevron-up' : 'chevron-down'" size="xs" />
     </button>
 
     <q-slide-transition>

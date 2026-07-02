@@ -29,7 +29,7 @@ const props = withDefaults(
     :class="[`sdmx-status-chip--${variant}`, { 'sdmx-status-chip--dense': dense }]"
     :data-sdmx-info="info"
   >
-    <q-icon v-if="icon" :name="icon" size="14px" class="sdmx-status-chip__icon" />
+    <XIcon v-if="icon" :name="icon" size="14px" class="sdmx-status-chip__icon" />
     <span class="sdmx-status-chip__label">{{ label }}</span>
   </span>
 </template>

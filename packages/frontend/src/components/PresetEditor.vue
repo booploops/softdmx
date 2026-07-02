@@ -158,7 +158,7 @@ function removeTarget(index: number) {
   <div class="preset-editor q-pa-md">
     <div class="row items-center justify-between q-mb-md">
       <div class="text-h6">Preset Editor</div>
-      <XButton color="primary" icon="add" label="Add Preset" @click="addPreset" />
+      <XButton color="primary" icon="plus" label="Add Preset" @click="addPreset" />
     </div>
 
     <div class="row q-col-gutter-md">
@@ -175,7 +175,7 @@ function removeTarget(index: number) {
               <div class="text-caption text-grey-5">{{ preset.targets.length }} target(s)</div>
             </div>
             <template #append>
-              <XButton flat icon="delete" color="danger" @click.stop="deletePreset(preset.id)" />
+              <XButton flat icon="trash" color="danger" @click.stop="deletePreset(preset.id)" />
             </template>
           </XListItem>
           <XListItem v-slot v-if="presets.length === 0" :clickable="false">
@@ -204,8 +204,8 @@ function removeTarget(index: number) {
             <div class="row items-center justify-between q-mb-sm">
               <div class="text-subtitle1">Targets</div>
               <div class="row q-gutter-xs">
-                <XButton flat icon="person_add" label="Fixture Target" @click="addFixtureTarget" />
-                <XButton flat icon="group_add" label="Group Target" @click="addGroupTarget" />
+                <XButton flat icon="user-plus" label="Fixture Target" @click="addFixtureTarget" />
+                <XButton flat icon="user-plus" label="Group Target" @click="addGroupTarget" />
               </div>
             </div>
 
@@ -257,7 +257,7 @@ function removeTarget(index: number) {
                   </div>
                 </div>
                 <template #append>
-                  <XButton flat icon="delete" color="danger" @click="removeTarget(index)" />
+                  <XButton flat icon="trash" color="danger" @click="removeTarget(index)" />
                 </template>
               </XListItem>
               <XListItem v-if="selectedPreset.targets.length === 0" :clickable="false">

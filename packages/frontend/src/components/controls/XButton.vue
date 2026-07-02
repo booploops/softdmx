@@ -78,7 +78,7 @@ function handleClick(event: MouseEvent) {
       ></span>
       <template v-else>
         <slot>
-          <q-icon
+          <XIcon
             v-if="icon"
             :name="icon"
             class="x-btn__icon"

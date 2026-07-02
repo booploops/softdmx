@@ -83,14 +83,14 @@ const onFixtureYamlPicked = async (event: Event) => {
           <h6 class="q-ma-none font-weight-bold">Available Fixtures</h6>
           <XButton
             color="primary"
-            icon="upload_file"
+            icon="file-upload"
             label="Import YAML"
             size="sm"
             @click="openFixtureImportPicker"
           />
         </div>
         <XInput v-model="searchText" placeholder="Search fixtures..." class="search-input">
-          <template #prepend><q-icon name="search" /></template>
+          <template #prepend><XIcon name="search" /></template>
         </XInput>
       </div>
 
@@ -123,7 +123,7 @@ const onFixtureYamlPicked = async (event: Event) => {
       </div>
 
       <div v-if="filteredFixtures.length === 0" class="empty-state">
-        <q-icon name="search_off" size="3rem" class="text-grey-5" />
+        <XIcon name="search-off" size="3rem" class="text-grey-5" />
         <div class="empty-message">No fixtures found</div>
         <div class="empty-hint">Try adjusting your search terms</div>
       </div>
@@ -133,7 +133,7 @@ const onFixtureYamlPicked = async (event: Event) => {
       <div class="details-header">
         <XButton
           @click="clearSelection"
-          icon="arrow_back"
+          icon="arrow-left"
           flat
           size="sm"
         />

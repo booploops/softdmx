@@ -46,7 +46,6 @@ function onClick(event: MouseEvent) {
 
 <template>
   <q-btn
-    :icon="icon"
     :label="label"
     :color="color"
     :dense="dense"
@@ -60,6 +59,7 @@ function onClick(event: MouseEvent) {
     :data-sdmx-info="infoText"
     @click="onClick"
   >
+    <XIcon v-if="icon && !loading" :name="icon" size="sm" />
     <q-tooltip v-if="alwaysShow">{{ infoText }}</q-tooltip>
   </q-btn>
 </template>

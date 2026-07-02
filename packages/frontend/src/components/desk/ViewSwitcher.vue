@@ -24,7 +24,7 @@ const { info } = useInfoText();
       flat
       no-caps
       :label="deskView.activeView.name"
-      icon="view_quilt"
+      icon="layout-quilt"
     >
       <q-list dense style="min-width: 160px">
         <q-item
@@ -42,7 +42,7 @@ const { info } = useInfoText();
     </q-btn-dropdown>
     <SdmxButton
       v-if="ui.isLive && !ui.operateLocked"
-      icon="save"
+      icon="device-floppy"
       size="sm"
       variant="ghost"
       :info="info('desk.views.saveDefault')"

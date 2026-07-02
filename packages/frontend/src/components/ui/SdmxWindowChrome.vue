@@ -18,7 +18,7 @@ const emit = defineEmits<{ close: [] }>();
 <template>
   <div class="sdmx-window-chrome">
     <header class="sdmx-window-chrome__header">
-      <q-icon v-if="icon" :name="icon" size="16px" class="sdmx-window-chrome__icon" />
+      <XIcon v-if="icon" :name="icon" size="16px" class="sdmx-window-chrome__icon" />
       <span class="sdmx-window-chrome__title" :data-sdmx-info="info">{{ title }}</span>
       <div class="sdmx-window-chrome__actions">
         <slot name="actions" />
@@ -29,7 +29,7 @@ const emit = defineEmits<{ close: [] }>();
           aria-label="Close"
           @click="emit('close')"
         >
-          <q-icon name="close" size="16px" />
+          <XIcon name="x" size="16px" />
         </button>
       </div>
     </header>

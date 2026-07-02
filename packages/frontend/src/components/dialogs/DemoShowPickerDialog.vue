@@ -45,7 +45,7 @@ function confirmSelection() {
             @click="selected = option.value"
           >
             <q-item-section avatar>
-              <q-icon :name="option.icon || 'auto_awesome'" />
+              <XIcon :name="option.icon || 'auto_awesome'" />
             </q-item-section>
             <q-item-section>{{ option.label }}</q-item-section>
             <q-item-section side>

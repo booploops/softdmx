@@ -273,7 +273,7 @@ function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']
 <template>
   <div class="programmer-window">
     <div v-if="ui.programmerCollapsed" class="programmer-collapsed row items-center q-px-sm q-py-xs">
-      <q-icon v-if="scratch.isActive" name="mdi-circle" color="white" size="xs" class="pulse" />
+      <XIcon v-if="scratch.isActive" name="circle-filled" color="white" size="xs" class="pulse" />
       <span class="sdmx-text-caption">{{ scratch.activeCount }} in scratch</span>
       <SdmxStatusChip
         :label="scratch.blindMode ? 'Blind' : 'Live'"
@@ -300,7 +300,7 @@ function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']
             v-if="programmerSession.armed"
             :label="programmerSession.clockLabel"
             variant="armed"
-            icon="fiber_manual_record"
+            icon="circle-filled"
             :info="info('desk.programmer.sessionClock')"
           />
           <SdmxStatusChip
@@ -318,12 +318,12 @@ function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']
             <SdmxStatusChip
               :label="activeAttributeName"
               :variant="isPinned ? 'armed' : 'active'"
-              icon="push_pin"
+              icon="pin"
             />
           </button>
 
           <SdmxIconButton
-            :icon="programmerSession.armed ? 'stop' : 'fiber_manual_record'"
+            :icon="programmerSession.armed ? 'player-stop-filled' : 'player-record-filled'"
             :color="programmerSession.armed ? 'warning' : undefined"
             info-key="desk.programmer.armRecord"
             @click="programmerSession.armed ? programmerSession.disarm() : programmerSession.arm()"
@@ -335,25 +335,25 @@ function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']
             @click="programmerSession.dropMarker()"
           />
           <SdmxIconButton
-            icon="visibility_off"
+            icon="eye-off"
             info-key="desk.programmer.blind"
             :color="scratch.blindMode ? 'warning' : undefined"
             @click="toggleBlind"
           />
           <SdmxIconButton
-            icon="undo"
+            icon="arrow-back-up"
             info-key="desk.programmer.undo"
             :disable="!scratch.canUndo"
             @click="scratch.undo()"
           />
           <SdmxIconButton
-            icon="redo"
+            icon="arrow-forward-up"
             info-key="desk.programmer.redo"
             :disable="!scratch.canRedo"
             @click="scratch.redo()"
           />
           <SdmxIconButton
-            icon="radio_button_checked"
+            icon="circle-dot"
             info-key="desk.programmer.record"
             @click="cueStore.recordFrame()"
           />
@@ -371,12 +371,12 @@ function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']
             @touchcancel.prevent="onStorePressEnd"
           />
           <SdmxIconButton
-            icon="delete_sweep"
+            icon="trash-x"
             info-key="desk.programmer.clear"
             @click="clearScratch"
           />
           <SdmxIconButton
-            icon="expand_more"
+            icon="chevron-down"
             info-key="desk.programmer.collapse"
             @click="ui.programmerCollapsed = true"
           />
@@ -533,7 +533,7 @@ function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']
               v-if="conflicts.length"
               :label="`${conflicts.length}`"
               variant="warning"
-              icon="warning"
+              icon="alert-triangle"
             />
             <q-space />
             <SdmxButton
@@ -553,7 +553,7 @@ function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']
 
           <SdmxEmptyState
             v-if="!displayRows.length"
-            icon="tune"
+            icon="adjustments"
             title="Nothing to show"
             hint="Select fixtures, then adjust controls below — touched values appear here."
           />

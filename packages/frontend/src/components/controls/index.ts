@@ -7,6 +7,7 @@
  */
 
 export { default as XButton } from './XButton.vue';
+export { default as XIcon } from './XIcon.vue';
 export { default as XButtonGroup } from './XButtonGroup.vue';
 export { default as XSelect } from './XSelect.vue';
 export { default as XCheckbox } from './XCheckbox.vue';

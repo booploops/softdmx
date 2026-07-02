@@ -28,7 +28,7 @@ const sections = Object.entries(SETUP_SECTION_META) as [SetupSection, { label: s
       active-class="sidebar-active"
       @click="ui.setSetupSection(section)"
     >
-      <q-item-section avatar><q-icon :name="meta.icon" /></q-item-section>
+      <q-item-section avatar><XIcon :name="meta.icon" /></q-item-section>
       <q-item-section>{{ meta.label }}</q-item-section>
     </q-item>
   </q-list>

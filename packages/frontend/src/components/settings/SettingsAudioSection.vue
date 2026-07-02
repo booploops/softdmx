@@ -103,7 +103,7 @@ onMounted(() => {
       </div>
 
       <q-chip dense class="text-weight-medium" :color="audioStore.beatPulse ? 'positive' : 'grey-8'" :text-color="audioStore.beatPulse ? 'black' : 'grey-4'">
-        <q-icon name="graphic_eq" size="16px" class="q-mr-xs" />
+        <XIcon name="waveform" size="16px" class="q-mr-xs" />
         Beat pulse {{ audioStore.beatPulse ? 'detected' : 'idle' }}
       </q-chip>
 

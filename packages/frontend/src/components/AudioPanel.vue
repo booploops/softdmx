@@ -479,7 +479,7 @@ onMounted(() => {
             dense
             class="bg-negative text-white rounded-borders q-mb-sm"
           >
-            <q-icon name="warning" class="q-mr-xs" />
+            <XIcon name="alert-triangle" class="q-mr-xs" />
             Audio capture is not supported in this runtime.
           </q-banner>
 
@@ -555,7 +555,7 @@ onMounted(() => {
 
           <div class="q-mt-md">
             <span class="sdmx-badge" :class="audioStore.beatPulse ? 'sdmx-badge--positive' : 'sdmx-badge--grey'">
-              <q-icon name="graphic_eq" size="14px" class="q-mr-xs" />
+              <XIcon name="waveform" size="14px" class="q-mr-xs" />
               Beat pulse {{ audioStore.beatPulse ? 'detected' : 'idle' }}
             </span>
           </div>
@@ -568,7 +568,7 @@ onMounted(() => {
       <q-space />
       <XButton
         flat
-        icon="add"
+        icon="plus"
         label="Add Mapping"
         @click="openCreateMappingDialog"
       />
@@ -607,15 +607,15 @@ onMounted(() => {
               :model-value="mapping.enabled ?? true"
               @update:model-value="(value) => toggleMapping(mapping.id, Boolean(value))"
             />
-            <XButton icon="edit" flat size="sm" @click="openEditMappingDialog(mapping)" />
-            <XButton icon="delete" flat size="sm" color="danger" @click="removeMapping(mapping.id)" />
+            <XButton icon="pencil" flat size="sm" @click="openEditMappingDialog(mapping)" />
+            <XButton icon="trash" flat size="sm" color="danger" @click="removeMapping(mapping.id)" />
           </div>
         </template>
       </XListItem>
     </XListView>
     <SdmxEmptyState
       v-else
-      icon="graphic_eq"
+      icon="waveform"
       title="No audio mappings configured"
       description="Add a mapping or apply a template to begin reactive control."
     />
@@ -625,7 +625,7 @@ onMounted(() => {
         <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
           <div class="text-h6 font-weight-bold">{{ editingMappingId ? 'Edit' : 'Add' }} Audio Mapping</div>
           <q-space />
-          <XButton icon="close" flat size="sm" @click="showMappingDialog = false" />
+          <XButton icon="x" flat size="sm" @click="showMappingDialog = false" />
         </q-card-section>
 
         <q-card-section class="q-gutter-y-md q-pt-md">

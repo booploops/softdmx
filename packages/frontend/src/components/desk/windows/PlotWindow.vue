@@ -226,7 +226,7 @@ function showSettingsMenu(event: MouseEvent) {
         label="Settings"
         size="sm"
         variant="ghost"
-        icon="tune"
+        icon="adjustments"
         :info="info('desk.plot.settings')"
         @click="showSettingsMenu"
       />

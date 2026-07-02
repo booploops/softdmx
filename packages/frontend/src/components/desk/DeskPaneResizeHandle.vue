@@ -34,7 +34,7 @@ function resizeHeight(delta: number) {
       aria-label="Narrow pane"
       @click="resizeWidth(-RESIZE_STEP)"
     >
-      <q-icon name="chevron_left" size="14px" />
+      <XIcon name="chevron-left" size="14px" />
     </button>
     <button
       type="button"
@@ -43,7 +43,7 @@ function resizeHeight(delta: number) {
       aria-label="Widen pane"
       @click="resizeWidth(RESIZE_STEP)"
     >
-      <q-icon name="chevron_right" size="14px" />
+      <XIcon name="chevron-right" size="14px" />
     </button>
     <button
       type="button"
@@ -52,7 +52,7 @@ function resizeHeight(delta: number) {
       aria-label="Shorten pane"
       @click="resizeHeight(-RESIZE_STEP)"
     >
-      <q-icon name="expand_less" size="14px" />
+      <XIcon name="chevron-up" size="14px" />
     </button>
     <button
       type="button"
@@ -61,7 +61,7 @@ function resizeHeight(delta: number) {
       aria-label="Tall pane"
       @click="resizeHeight(RESIZE_STEP)"
     >
-      <q-icon name="expand_more" size="14px" />
+      <XIcon name="chevron-down" size="14px" />
     </button>
   </div>
 </template>

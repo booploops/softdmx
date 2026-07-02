@@ -233,7 +233,7 @@ function selectTarget(id: QuickTarget) {
       >
         <span class="sdmx-text-caption">Target</span>
         <span class="sdmx-text-label">{{ activeTargetLabel }}</span>
-        <q-icon :name="showTargetPicker ? 'expand_less' : 'expand_more'" size="xs" />
+        <XIcon :name="showTargetPicker ? 'chevron-up' : 'chevron-down'" size="xs" />
       </button>
       <q-slide-transition>
         <div v-show="showTargetPicker || !followsActiveAttribute" class="quick-programmer-targets">

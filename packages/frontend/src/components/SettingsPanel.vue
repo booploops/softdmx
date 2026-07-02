@@ -20,11 +20,11 @@ const settingsPanelStore = useSettingsPanelStore();
         </div>
 
         <XTabs v-model="settingsPanelStore.activeTab" class="settings-tabs" align="left">
-            <XTab name="interface" icon="dashboard_customize" label="Interface" />
-            <XTab name="output" icon="settings_input_component" label="Output" />
-            <XTab name="sync" icon="sync" label="Sync" />
-            <XTab name="audio" icon="graphic_eq" label="Audio" />
-            <XTab name="plot" icon="view_in_ar" label="Plot" />
+            <XTab name="interface" icon="dashboard" label="Interface" />
+            <XTab name="output" icon="plug" label="Output" />
+            <XTab name="refresh" icon="refresh" label="Sync" />
+            <XTab name="audio" icon="waveform" label="Audio" />
+            <XTab name="plot" icon="3d-cube-sphere" label="Plot" />
             <XTab name="theme" icon="palette" label="Theme" />
         </XTabs>
 
@@ -35,7 +35,7 @@ const settingsPanelStore = useSettingsPanelStore();
             <q-tab-panel name="output" class="settings-tab-panel">
                 <SettingsOutputSection />
             </q-tab-panel>
-            <q-tab-panel name="sync" class="settings-tab-panel">
+            <q-tab-panel name="refresh" class="settings-tab-panel">
                 <SettingsSyncSection />
             </q-tab-panel>
             <q-tab-panel name="audio" class="settings-tab-panel">

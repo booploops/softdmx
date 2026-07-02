@@ -41,13 +41,13 @@ export function getMainMenu(options?: {
     {
       label: "Simple Wash",
       value: "simple-wash",
-      icon: "light_mode",
+      icon: "sun",
       show: simpleWashShow,
     },
     {
       label: "Laser Demo",
       value: "laser-demo",
-      icon: "flash_on",
+      icon: "bolt",
       show: laserDemoShow,
     },
     {
@@ -94,7 +94,7 @@ export function getMainMenu(options?: {
       children: [
         {
           label: "New Show",
-          icon: "note_add",
+          icon: "file-plus",
           click: async () => {
             if (showStore.isDirty) {
               const confirmed = await confirmDiscard(
@@ -107,7 +107,7 @@ export function getMainMenu(options?: {
         },
         {
           label: "Load Demo Show",
-          icon: "auto_awesome",
+          icon: 'sparkles',
           click: async () => {
             const selectedDemoId = await createDialog<string>({
               component: DemoShowPickerDialog,
@@ -134,7 +134,7 @@ export function getMainMenu(options?: {
         },
         {
           label: "Export Show",
-          icon: "download",
+          icon: 'download',
           click: async () => {
             const ok = showStore.downloadShow();
             if (!ok) {
@@ -144,7 +144,7 @@ export function getMainMenu(options?: {
         },
         {
           label: "Open Show",
-          icon: "upload",
+          icon: 'upload',
           click: async () => {
             const input = document.createElement("input");
             input.type = "file";
@@ -180,7 +180,7 @@ export function getMainMenu(options?: {
           ? [
               {
                 label: "Import Workspace JSON",
-                icon: "upload",
+                icon: 'upload',
                 click: options.onImportWorkspace,
               },
             ]
@@ -192,21 +192,21 @@ export function getMainMenu(options?: {
       children: [
         {
           label: "Cue editor",
-          icon: "movie_edit",
+          icon: 'movie',
           click: () => {
             ui.openDialog("cueEditor");
           },
         },
         {
           label: "Bindings",
-          icon: "tune",
+          icon: 'adjustments',
           click: () => {
             showBindingsDialog();
           },
         },
         {
           label: "Audio analysis",
-          icon: "graphic_eq",
+          icon: 'waveform',
           click: () => {
             showAudioSettingsDialog();
           },
@@ -225,7 +225,7 @@ export function getMainMenu(options?: {
         },
         {
           label: "Sync",
-          icon: "sync",
+          icon: 'refresh',
           click: () => {
             showSettingsUI("sync");
           },
@@ -236,7 +236,7 @@ export function getMainMenu(options?: {
                 label: gridNodeOverlay.overlayVisible
                   ? "Hide GridNode overlay"
                   : "Show GridNode overlay",
-                icon: "grid_view",
+                icon: "layout-grid",
                 click: () => {
                   gridNodeOverlay.toggle();
                 },
@@ -252,7 +252,7 @@ export function getMainMenu(options?: {
             children: [
               {
                 label: "Open DMX Debug Panel",
-                icon: "bug_report",
+                icon: "bug",
                 click: () => {
                   const hasDebugPane = deskView.activePanes.some((pane) => pane.windowType === "dmx-debug");
                   if (!hasDebugPane) {
@@ -269,14 +269,14 @@ export function getMainMenu(options?: {
       children: [
         {
           label: "Interface",
-          icon: "dashboard_customize",
+          icon: 'dashboard',
           click: () => {
             showInterfaceSettingsDialog();
           },
         },
         {
           label: "Theme",
-          icon: "palette",
+          icon: 'palette',
           click: () => {
             showThemeSettingsDialog();
           },

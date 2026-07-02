@@ -148,7 +148,7 @@ const useFallback = computed(() => !registryEntry.value || resolvedModel.value =
       <q-card flat bordered class="error-card">
         <q-card-section>
           <div class="text-h6 text-negative">
-            <q-icon name="error" class="q-mr-sm" />
+            <XIcon name="alert-circle" class="q-mr-sm" />
             Widget Error
           </div>
           <div class="text-body2">

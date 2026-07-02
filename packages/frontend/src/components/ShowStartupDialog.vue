@@ -34,21 +34,21 @@ const demoOptions = [
     id: 'simple-wash' as const,
     label: 'Simple Wash',
     caption: 'Small wash rig with color presets.',
-    icon: 'light_mode',
+    icon: 'sun',
     show: simpleWashShow,
   },
   {
     id: 'laser-demo' as const,
     label: 'Laser Demo',
     caption: 'Laser-focused layout with quick beam looks.',
-    icon: 'flash_on',
+    icon: 'bolt',
     show: laserDemoShow,
   },
   {
     id: 'vr-club' as const,
     label: 'VR Club',
     caption: 'Full-scene demo with groups, effects, and cues.',
-    icon: 'nightlife',
+    icon: 'music',
     show: exampleVrClubShow,
   },
 ];
@@ -123,14 +123,14 @@ function loadDemo(show: ShowDocument) {
             Choose how to start this session.
           </div>
         </div>
-        <q-icon name="theater_comedy" size="32px" color="primary" />
+        <XIcon name="mask" size="32px" color="primary" />
       </q-card-section>
 
       <hr class="sdmx-separator">
 
       <q-card-section v-if="step === 'choose'" class="startup-options">
         <button v-info="'desk.startup.blank'" type="button" class="startup-option" @click="loadBlankShow">
-          <q-icon name="note_add" size="28px" color="primary" />
+          <XIcon name="file-plus" size="28px" color="primary" />
           <div class="startup-option-body">
             <div class="startup-option-title">Blank showfile</div>
             <div class="startup-option-caption">Start from an empty show and build your rig.</div>
@@ -145,7 +145,7 @@ function loadDemo(show: ShowDocument) {
           :disabled="!hasLastShow"
           @click="loadLastShow"
         >
-          <q-icon name="history" size="28px" color="secondary" />
+          <XIcon name="history" size="28px" color="secondary" />
           <div class="startup-option-body">
             <div class="startup-option-title">Last opened</div>
             <div v-if="hasLastShow" class="startup-option-caption">
@@ -157,7 +157,7 @@ function loadDemo(show: ShowDocument) {
         </button>
 
         <button v-info="'desk.startup.openFile'" type="button" class="startup-option" @click="openFilePicker">
-          <q-icon name="upload_file" size="28px" color="accent" />
+          <XIcon name="file-upload" size="28px" color="accent" />
           <div class="startup-option-body">
             <div class="startup-option-title">Open showfile</div>
             <div class="startup-option-caption">Load a YAML show from disk.</div>
@@ -165,7 +165,7 @@ function loadDemo(show: ShowDocument) {
         </button>
 
         <button v-info="'desk.startup.loadDemo'" type="button" class="startup-option" @click="showDemoPicker">
-          <q-icon name="auto_awesome" size="28px" color="warning" />
+          <XIcon name="sparkles" size="28px" color="warning" />
           <div class="startup-option-body">
             <div class="startup-option-title">Load a demo</div>
             <div class="startup-option-caption">Try one of the bundled example shows.</div>
@@ -183,7 +183,7 @@ function loadDemo(show: ShowDocument) {
           class="startup-option"
           @click="loadDemo(demo.show)"
         >
-          <q-icon :name="demo.icon" size="28px" color="primary" />
+          <XIcon :name="demo.icon" size="28px" color="primary" />
           <div class="startup-option-body">
             <div class="startup-option-title">{{ demo.label }}</div>
             <div class="startup-option-caption">{{ demo.caption }}</div>
@@ -198,7 +198,7 @@ function loadDemo(show: ShowDocument) {
           v-if="step === 'demo'"
           flat
           label="Back"
-          icon="arrow_back"
+          icon="arrow-left"
           @click="backToChoose"
         />
       </q-card-actions>

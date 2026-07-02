@@ -30,7 +30,7 @@ const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginC
       <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
         <div class="text-h6 font-weight-bold">Interface</div>
         <q-space />
-        <XButton icon="close" flat size="sm" @click="onDialogCancel" />
+        <XButton icon="x" flat size="sm" @click="onDialogCancel" />
       </q-card-section>
 
       <q-card-section class="q-gutter-y-md">

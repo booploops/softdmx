@@ -43,8 +43,8 @@ function toggleGroup(name: string) {
       >
         <div class="group-sheet-tile__header">
           <span class="sdmx-text-label ellipsis">{{ group.name }}</span>
-          <q-icon
-            :name="selection.isGroupSelected(group.name) ? 'check_circle' : 'radio_button_unchecked'"
+          <XIcon
+            :name="selection.isGroupSelected(group.name) ? 'circle-check' : 'circle'"
             size="xs"
             :class="selection.isGroupSelected(group.name) ? 'group-sheet-tile__state--selected' : 'group-sheet-tile__state'"
           />
@@ -55,7 +55,7 @@ function toggleGroup(name: string) {
       </div>
     </div>
     <div v-else class="tab-empty-state q-pa-lg text-center text-grey-5">
-      <q-icon name="group_off" size="3rem" />
+      <XIcon name="user-minus" size="3rem" />
       <div class="q-mt-sm">No groups defined</div>
       <div class="text-caption">Create groups in Setup to select them here.</div>
     </div>

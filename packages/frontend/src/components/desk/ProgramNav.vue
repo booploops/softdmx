@@ -29,7 +29,7 @@ const sections = Object.entries(PROGRAM_SECTION_META) as [ProgramSection, { labe
       active-class="sidebar-active"
       @click="ui.setProgramSection(section)"
     >
-      <q-item-section avatar><q-icon :name="meta.icon" /></q-item-section>
+      <q-item-section avatar><XIcon :name="meta.icon" /></q-item-section>
       <q-item-section>{{ meta.label }}</q-item-section>
     </q-item>
   </q-list>

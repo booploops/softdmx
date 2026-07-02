@@ -71,7 +71,7 @@ onBeforeUnmount(() => {
     >
       <template #default>
         <span class="x-dropdown__content">
-          <q-icon v-if="icon" :name="icon" class="x-dropdown__icon" />
+          <XIcon v-if="icon" :name="icon" class="x-dropdown__icon" />
           <span v-if="label" class="x-dropdown__label">{{ label }}</span>
           <svg viewBox="0 0 10 6" class="x-dropdown__arrow">
             <path d="M5 6L0 0H10L5 6Z" fill="currentColor" />

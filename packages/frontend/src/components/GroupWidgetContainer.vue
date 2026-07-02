@@ -87,7 +87,7 @@ function toggleGroupSelection() {
     <div v-if="widgets.length === 0" class="no-widgets">
       <q-card flat bordered class="info-card">
         <q-card-section class="text-center">
-          <q-icon name="widgets" size="2rem" class="text-grey-6 q-mb-sm" />
+          <XIcon name="layout-grid" size="2rem" class="text-grey-6 q-mb-sm" />
           <div class="text-body2 text-grey-6">
             No widgets configured for this fixture type
           </div>

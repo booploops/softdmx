@@ -22,7 +22,7 @@ import {
 import { getCueTotalDuration } from '@softdmx/engine';
 import { formatSmpte, formatTimelineSeconds, msToSeconds, parseSmpteInput, secondsToMs } from '@softdmx/engine';
 import { computed, onMounted, onUnmounted, ref, watch } from 'vue';
-import { SdmxIconButton } from 'src/components/ui';
+import { SdmxIconButton, SdmxButton } from 'src/components/ui';
 import TimelineSessionLane from 'src/components/timeline/TimelineSessionLane.vue';
 
 const props = withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false });
@@ -492,7 +492,7 @@ onUnmounted(() => {
 
         <div class="timeline-options timeline-toolbar__group">
           <div class="zoom-controls">
-            <q-btn dense flat icon="zoom_out" @click="timelineEditor.pixelsPerSecond = Math.max(24, timelineEditor.pixelsPerSecond - 12)" />
+            <SdmxIconButton size="sm" icon="zoom-out" @click="timelineEditor.pixelsPerSecond = Math.max(24, timelineEditor.pixelsPerSecond - 12)" />
             <q-slider
               :model-value="timelineEditor.pixelsPerSecond"
               :min="24"
@@ -501,7 +501,7 @@ onUnmounted(() => {
               style="width: 120px"
               @update:model-value="(value) => (timelineEditor.pixelsPerSecond = Number(value))"
             />
-            <q-btn dense flat icon="zoom_in" @click="timelineEditor.pixelsPerSecond = Math.min(480, timelineEditor.pixelsPerSecond + 12)" />
+            <SdmxIconButton size="sm" icon="zoom-in" @click="timelineEditor.pixelsPerSecond = Math.min(480, timelineEditor.pixelsPerSecond + 12)" />
           </div>
           <q-btn-toggle
             v-model="timelineEditor.syncMode"
@@ -513,8 +513,8 @@ onUnmounted(() => {
               { label: 'Timecode', value: 'timecode' },
             ]"
           />
-          <q-btn dense flat icon="upload_file" label="Import audio" @click="triggerAudioImport" />
-          <q-btn dense flat icon="bookmark_add" label="Add marker" @click="addMarkerAtPlayhead" />
+          <SdmxButton variant="ghost" size="sm" icon="file-upload" label="Import audio" @click="triggerAudioImport" />
+          <SdmxButton variant="ghost" size="sm" icon="bookmark-plus" label="Add marker" @click="addMarkerAtPlayhead" />
           <q-select
             v-model="timelineEditor.operatorFilterClientId"
             dense
@@ -526,14 +526,7 @@ onUnmounted(() => {
             :options="operatorFilterOptions"
             style="min-width: 140px"
           />
-          <q-btn
-            dense
-            flat
-            :icon="sessionStore.armed ? 'stop_circle' : 'fiber_manual_record'"
-            :label="sessionStore.armed ? 'Stop session' : 'Record session'"
-            :color="sessionStore.armed ? 'negative' : undefined"
-            @click="toggleSessionRecording"
-          />
+          <SdmxButton size="sm" :icon="sessionStore.armed ? 'player-stop-filled' : 'player-record-filled'" :label="sessionStore.armed ? 'Stop session' : 'Record session'" :@click="toggleSessionRecording" />
           <q-select
             v-if="sessionOptions.length > 0"
             v-model="selectedSessionId"
@@ -548,22 +541,16 @@ onUnmounted(() => {
             v-if="sessionOptions.length > 0"
             dense
             flat
-            icon="bakery_dining"
+            icon="cookie"
             label="Bake session"
             @click="openSessionBakeDialog"
           />
-          <q-btn dense flat icon="crop_16_9" label="Add section" @click="addSectionFromSelection" />
-          <q-btn dense flat icon="movie_edit" label="Edit cue" @click="openCueContentEditor" />
-          <q-btn
-            dense
-            flat
-            :icon="showAdvancedControls ? 'expand_less' : 'expand_more'"
-            label="Advanced"
-            @click="showAdvancedControls = !showAdvancedControls"
-          />
+          <SdmxButton variant="ghost" size="sm" icon="rectangle" label="Add section" @click="addSectionFromSelection" />
+          <SdmxButton variant="ghost" size="sm" icon="movie" label="Edit cue" @click="openCueContentEditor" />
+          <SdmxButton variant="ghost" size="sm" :icon="showAdvancedControls ? 'chevron-up' : 'chevron-down'" label="Advanced" @click="showAdvancedControls = !showAdvancedControls" />
           <SdmxIconButton
             v-if="!embedded"
-            icon="close"
+            icon="x"
             info-key="program.timeline.close"
             @click="closeEditor"
           />
@@ -648,14 +635,7 @@ onUnmounted(() => {
               <span class="audio-duration">
                 {{ formatTimelineSeconds(timelineAudio.primaryAsset.durationMs / 1000) }}
               </span>
-              <q-btn
-                flat
-                dense
-                color="negative"
-                icon="delete"
-                label="Remove"
-                @click="timelineAudio.removePrimaryAsset()"
-              />
+              <SdmxButton variant="danger" size="sm" icon="trash" label="Remove" @click="timelineAudio.removePrimaryAsset()" />
             </div>
           </div>
         </div>
@@ -763,7 +743,7 @@ onUnmounted(() => {
         <div class="inspector-group">
           <div class="inspector-label">Markers</div>
           <q-input v-model="markerName" dense label="Marker name" />
-          <q-btn dense flat icon="bookmark_add" label="Add at playhead" @click="addMarkerAtPlayhead" />
+          <SdmxButton variant="ghost" size="sm" icon="bookmark-plus" label="Add at playhead" @click="addMarkerAtPlayhead" />
           <div class="inspector-list">
             <div v-for="marker in markerList" :key="marker.id" class="inspector-list-row">
               <span>{{ marker.name }}</span>
@@ -775,7 +755,7 @@ onUnmounted(() => {
         <div class="inspector-group">
           <div class="inspector-label">Sections</div>
           <q-input v-model="sectionName" dense label="Section name" />
-          <q-btn dense flat icon="crop_16_9" label="Add from selection" @click="addSectionFromSelection" />
+          <SdmxButton variant="ghost" size="sm" icon="rectangle" label="Add from selection" @click="addSectionFromSelection" />
           <div class="inspector-list">
             <div v-for="section in sectionList" :key="section.id" class="inspector-list-row">
               <span>{{ section.name }}</span>
@@ -818,29 +798,14 @@ onUnmounted(() => {
             class="cue-select"
             @update:model-value="timelineEditor.setSelectedCue"
           />
-          <SdmxIconButton icon="add" color="primary" info-key="program.timeline.addCue" @click="addTimelineCue" />
+          <SdmxIconButton icon="plus" color="primary" info-key="program.timeline.addCue" @click="addTimelineCue" />
         </div>
 
         <div class="playback-controls timeline-toolbar__group">
           <q-btn-group unelevated class="transport-btn-group">
-            <q-btn
-              icon="skip_previous"
-              color="info"
-              text-color="white"
-              @click="timelineEditor.stop()"
-            />
-            <q-btn
-              :icon="timelineEditor.isPlaying ? 'pause' : 'play_arrow'"
-              :color="timelineEditor.isPlaying ? 'warning' : 'positive'"
-              text-color="white"
-              @click="timelineEditor.isPlaying ? timelineEditor.pause() : timelineEditor.play()"
-            />
-            <q-btn
-              icon="stop"
-              color="negative"
-              text-color="white"
-              @click="timelineEditor.stop(); timelineAudio.stopAudio()"
-            />
+            <SdmxIconButton  icon="player-skip-back" text-@click="timelineEditor.stop()" />
+            <SdmxIconButton  :icon="timelineEditor.isPlaying ? 'player-pause-filled' : 'player-play-filled'" :text-@click="timelineEditor.isPlaying ? timelineEditor.pause() : timelineEditor.play()" />
+            <SdmxIconButton color="negative" icon="square" text-@click="timelineEditor.stop(); timelineAudio.stopAudio()" />
           </q-btn-group>
         </div>
 

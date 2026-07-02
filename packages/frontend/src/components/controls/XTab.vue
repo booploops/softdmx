@@ -63,7 +63,7 @@ function onClick(event: MouseEvent) {
     @click="onClick"
   >
     <div class="x-tab__content">
-      <q-icon
+      <XIcon
         v-if="icon"
         :name="icon"
         class="x-tab__icon"

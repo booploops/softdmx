@@ -69,7 +69,7 @@ onBeforeUnmount(() => {
       </div>
       <div class="remote-header-actions">
         <SdmxButton
-          icon="help_outline"
+          icon="help"
           round
           :variant="ui.infoMode ? 'primary' : 'ghost'"
           :active="ui.infoMode"
@@ -86,7 +86,7 @@ onBeforeUnmount(() => {
       <TouchSurface v-if="touchPage" :page="touchPage" />
       <SdmxEmptyState
         v-else
-        icon="touch_app"
+        icon="click"
         title="No touch layout"
         hint="Configure a touch page in Program → Touch to use this remote."
       />

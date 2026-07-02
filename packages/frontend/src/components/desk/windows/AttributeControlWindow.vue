@@ -103,16 +103,16 @@ function nextGroup() {
 <template>
   <div class="attribute-control-surface">
     <div class="attribute-control-surface__tabs">
-      <SdmxButton icon="chevron_left" variant="ghost" size="sm" :info="info('desk.attributes.prevGroup')" @click="prevGroup" />
+      <SdmxButton icon="chevron-left" variant="ghost" size="sm" :info="info('desk.attributes.prevGroup')" @click="prevGroup" />
       <span class="sdmx-text-label attribute-control-surface__group-label">
         {{ featureGroups[activeGroupIndex]?.label }}
       </span>
-      <SdmxButton icon="chevron_right" variant="ghost" size="sm" :info="info('desk.attributes.nextGroup')" @click="nextGroup" />
+      <SdmxButton icon="chevron-right" variant="ghost" size="sm" :info="info('desk.attributes.nextGroup')" @click="nextGroup" />
     </div>
 
     <SdmxEmptyState
       v-if="!channelRows.length"
-      icon="tune"
+      icon="adjustments"
       title="No attributes"
       hint="Select fixtures to edit their parameters with on-screen encoders."
     />

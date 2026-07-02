@@ -16,7 +16,7 @@ const { conflicts, resolveAcceptMine, resolveAcceptTheirs, resolveUseMerged } = 
   <div class="scratch-conflict-panel">
     <SdmxEmptyState
       v-if="conflicts.length === 0"
-      icon="check_circle"
+      icon="circle-check"
       title="No scratch conflicts"
       hint="All operators agree on scratched channels."
     />

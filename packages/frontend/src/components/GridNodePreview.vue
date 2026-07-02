@@ -19,13 +19,13 @@ const gridNode = useGridNodeOverlayStore();
       <SdmxStatusChip
         :label="gridNode.overlayVisible ? 'Live' : 'Off'"
         :variant="gridNode.overlayVisible ? 'active' : 'default'"
-        icon="hub"
+        icon="git-branch"
       />
     </div>
     <div class="gridnode-preview__body">
       <SdmxEmptyState
         v-if="!gridNode.overlayVisible"
-        icon="hub"
+        icon="git-branch"
         title="GridNode overlay disabled"
         hint="Enable GridNode in the sidebar to preview VRChat/VRSL fixture state."
       />

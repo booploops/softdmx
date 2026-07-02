@@ -38,7 +38,7 @@ function toggle() {
       <span class="sdmx-toggle__thumb" />
     </span>
     <span v-if="label || icon" class="sdmx-toggle__label">
-      <q-icon v-if="icon" :name="icon" size="16px" />
+      <XIcon v-if="icon" :name="icon" size="16px" />
       {{ label }}
     </span>
   </button>

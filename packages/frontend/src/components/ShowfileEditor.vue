@@ -554,14 +554,14 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
           <XButton
             @click="saveShowfile"
             color="primary"
-            icon="save"
+            icon="device-floppy"
             label="Save & Load"
             :disable="!isValidShowfile"
           />
           <XButton
             @click="loadFromFileInEditor"
             color="default"
-            icon="file_upload"
+            icon="file-upload"
             label="Load from File"
           />
           <XButton
@@ -574,7 +574,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
           <XButton
             @click="discardChanges"
             color="danger"
-            icon="close"
+            icon="x"
             label="Cancel"
           />
         </div>
@@ -584,7 +584,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
       <div v-if="validationErrors.length > 0" class="validation-errors">
         <q-banner class="text-negative">
           <template v-slot:avatar>
-            <q-icon name="warning" />
+            <XIcon name="alert-triangle" />
           </template>
           <div class="error-list">
             <div v-for="error in validationErrors" :key="error">{{ error }}</div>
@@ -594,10 +594,10 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 
       <!-- Tabs -->
       <XTabs v-model="selectedTab" class="editor-tabs">
-        <XTab name="basic" icon="info" label="Basic Info" />
+        <XTab name="basic" icon="info-circle" label="Basic Info" />
         <XTab name="fixtures" icon="lightbulb" label="Fixtures" />
-        <XTab name="groups" icon="group_work" label="Groups" />
-        <XTab name="browser" icon="explore" label="Browse Fixtures" />
+        <XTab name="users" icon="hierarchy" label="Groups" />
+        <XTab name="browser" icon="compass" label="Browse Fixtures" />
         <XTab name="preview" icon="preview" label="Preview" />
       </XTabs>
 
@@ -648,14 +648,14 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
               class="search-input"
             >
               <template #prepend>
-                <q-icon name="search" class="q-mr-xs" />
+                <XIcon name="search" class="q-mr-xs" />
               </template>
             </XInput>
 
             <XButton
               @click="showAddFixtureDialog = true"
               color="primary"
-              icon="add"
+              icon="plus"
               label="Add Fixture"
             />
           </div>
@@ -683,16 +683,16 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
                   </div>
 
                   <div class="fixture-actions">
-                    <SdmxIconButton icon="edit" info-key="program.showfile.editSection" @click="editFixture(index)" />
-                    <SdmxIconButton icon="content_copy" info-key="program.showfile.duplicateSection" @click="duplicateFixture(index)" />
-                    <SdmxIconButton icon="delete" color="negative" info-key="program.showfile.removeSection" @click="removeFixture(index)" />
+                    <SdmxIconButton icon="pencil" info-key="program.showfile.editSection" @click="editFixture(index)" />
+                    <SdmxIconButton icon="copy" info-key="program.showfile.duplicateSection" @click="duplicateFixture(index)" />
+                    <SdmxIconButton icon="trash" color="negative" info-key="program.showfile.removeSection" @click="removeFixture(index)" />
                   </div>
                 </div>
               </div>
             </XCard>
 
             <div v-if="filteredFixtures.length === 0" class="empty-state">
-              <q-icon name="lightbulb_outline" size="4rem" class="text-grey-5" />
+              <XIcon name="lightbulb" size="4rem" class="text-grey-5" />
               <div class="empty-message">No fixtures found</div>
               <div class="empty-hint">Add fixtures to get started</div>
             </div>
@@ -700,7 +700,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
         </q-tab-panel>
 
         <!-- Groups Tab -->
-        <q-tab-panel name="groups" class="groups-panel">
+        <q-tab-panel name="users" class="groups-panel">
           <div class="panel-header">
             <XInput
               v-model="groupSearchText"
@@ -708,14 +708,14 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
               class="search-input"
             >
               <template #prepend>
-                <q-icon name="search" class="q-mr-xs" />
+                <XIcon name="search" class="q-mr-xs" />
               </template>
             </XInput>
 
             <XButton
               @click="openAddGroupDialog"
               color="primary"
-              icon="add"
+              icon="plus"
               label="Add Group"
               :disable="editingShowfile.fixtures.length === 0"
             />
@@ -744,8 +744,8 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
                   </div>
 
                   <div class="group-actions">
-                    <SdmxIconButton icon="edit" info-key="program.showfile.editSection" @click="editGroup(index)" />
-                    <SdmxIconButton icon="delete" color="negative" info-key="program.showfile.removeSection" @click="removeGroup(index)" />
+                    <SdmxIconButton icon="pencil" info-key="program.showfile.editSection" @click="editGroup(index)" />
+                    <SdmxIconButton icon="trash" color="negative" info-key="program.showfile.removeSection" @click="removeGroup(index)" />
                   </div>
                 </div>
 
@@ -763,7 +763,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
             </XCard>
 
             <div v-if="filteredGroups.length === 0" class="empty-state">
-              <q-icon name="group_work" size="4rem" class="text-grey-5" />
+              <XIcon name="hierarchy" size="4rem" class="text-grey-5" />
               <div class="empty-message">No groups found</div>
               <div class="empty-hint">Create groups to organize your fixtures</div>
             </div>
@@ -793,7 +793,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
     <div v-else class="start-screen">
       <XCard class="start-card text-center">
         <div class="q-pa-xl column items-center">
-          <q-icon name="edit" size="4rem" class="text-primary q-mb-md" />
+          <XIcon name="pencil" size="4rem" class="text-primary q-mb-md" />
           <h5>Showfile Editor</h5>
           <p class="text-grey-6 q-mb-lg">Create and modify lighting showfiles</p>
 
@@ -801,7 +801,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
             <XButton
               @click="createNewShowfile"
               color="primary"
-              icon="add"
+              icon="plus"
               label="Create New Showfile"
               size="lg"
               class="start-btn"
@@ -810,7 +810,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
             <XButton
               @click="editCurrentShowfile"
               color="default"
-              icon="edit"
+              icon="pencil"
               label="Edit Current Showfile"
               size="lg"
               class="start-btn"
@@ -820,7 +820,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
             <XButton
               @click="triggerFilePicker"
               color="default"
-              icon="file_upload"
+              icon="file-upload"
               label="Load Showfile"
               size="lg"
               class="start-btn"
@@ -839,7 +839,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
             <XButton
               @click="leaveEditor"
               color="default"
-              icon="arrow_back"
+              icon="arrow-left"
               label="Back to Workspace"
               size="lg"
               class="start-btn"
