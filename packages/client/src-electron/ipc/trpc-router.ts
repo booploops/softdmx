@@ -15,10 +15,10 @@ export interface CreateContextOptions {
   event: IpcMainInvokeEvent;
 }
 
-export function createContext({ event }: CreateContextOptions) {
+export async function createContext({ event }: CreateContextOptions) {
   return {
     event,
-    window: BrowserWindow.fromWebContents(event.sender),
+    window: BrowserWindow.fromWebContents(event.sender) ?? undefined,
   };
 }
 
@@ -46,7 +46,7 @@ class MenuEventEmitter {
   finish() {
     this.done = true;
     if (this.resolveNext) {
-      this.resolveNext({ done: true });
+      this.resolveNext({ done: true, value: undefined });
       this.resolveNext = null;
     }
   }
@@ -58,7 +58,7 @@ class MenuEventEmitter {
           return Promise.resolve({ value: this.queue.shift(), done: false });
         }
         if (this.done) {
-          return Promise.resolve({ done: true });
+          return Promise.resolve({ done: true, value: undefined });
         }
         return new Promise<any>((resolve) => {
           this.resolveNext = resolve;
@@ -66,7 +66,7 @@ class MenuEventEmitter {
       },
       return: () => {
         this.done = true;
-        return Promise.resolve({ done: true });
+        return Promise.resolve({ done: true, value: undefined });
       },
     };
   }

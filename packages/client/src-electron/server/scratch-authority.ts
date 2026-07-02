@@ -68,15 +68,19 @@ export class ScratchAuthority {
   }
 
   apply(command: ScratchCommand): ScratchCommandAck {
-    const clientId = command.clientId;
-    this.ensureClient(clientId);
+    const clientId = command.clientId ?? "server";
+    
+    if (command.kind !== "clear" || command.clientId) {
+      this.ensureClient(clientId);
+    }
+    
     this.seq += 1;
     const seq = this.seq;
-    const layer = this.clientLayers.get(clientId)!;
+    const layer = this.clientLayers.get(clientId);
 
     switch (command.kind) {
       case "set": {
-        layer.set(command.path, this.buildEntry(command.path, command.value, command.attributeType ?? "generic", {
+        layer?.set(command.path, this.buildEntry(command.path, command.value, command.attributeType ?? "generic", {
           clientId,
           seq,
           meta: command.meta,
@@ -85,7 +89,7 @@ export class ScratchAuthority {
       }
       case "set-channels": {
         for (const channel of command.channels) {
-          layer.set(
+          layer?.set(
             channel.path,
             this.buildEntry(channel.path, channel.value, channel.attributeType ?? "generic", {
               clientId,
@@ -100,7 +104,7 @@ export class ScratchAuthority {
       }
       case "clear": {
         if (command.clientId) {
-          layer.clear();
+          layer?.clear();
         } else {
           for (const entries of this.clientLayers.values()) {
             entries.clear();
@@ -109,14 +113,14 @@ export class ScratchAuthority {
         break;
       }
       case "clear-client": {
-        layer.clear();
+        layer?.clear();
         break;
       }
       default:
         break;
     }
 
-    return { seq, clientId, appliedAt: Date.now() };
+    return { seq, clientId: command.clientId ?? clientId, appliedAt: Date.now() };
   }
 
   applySetPayload(clientId: string, payload: ScratchSetPayload): ScratchCommandAck {

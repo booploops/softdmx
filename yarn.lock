@@ -388,6 +388,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@babel/runtime-corejs3@npm:^7.26.9":
+  version: 7.29.7
+  resolution: "@babel/runtime-corejs3@npm:7.29.7"
+  dependencies:
+    core-js-pure: "npm:^3.48.0"
+  checksum: 10c0/3ea24ca1b0d92a3421afab2078e1ff21ea8a8d872f9bcd56b21145eec44f123b4e629e89e47bae2301fa12e22411150dc42a71fd29ec687b97001069867cfd6d
+  languageName: node
+  linkType: hard
+
 "@babel/template@npm:^7.27.2, @babel/template@npm:^7.29.7":
   version: 7.29.7
   resolution: "@babel/template@npm:7.29.7"
@@ -449,6 +458,46 @@ __metadata:
   peerDependencies:
     vue: ^3.0.0
   checksum: 10c0/41d5752be0c6907f041ce7cede4a425fa2f1d7c4c695e59aaef5738d0787daa304ba2bbb2aa5f0b2973945ce39f771e49fa0b31dc3b527aaf6fcfd35274820dc
+  languageName: node
+  linkType: hard
+
+"@chevrotain/cst-dts-gen@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/cst-dts-gen@npm:12.0.0"
+  dependencies:
+    "@chevrotain/gast": "npm:12.0.0"
+    "@chevrotain/types": "npm:12.0.0"
+  checksum: 10c0/bc79319baafbbf77b5d58539d1456e57ede160266a47d4a7bb75716d288dfef7fe2646224f4e2fb296afc0ca1cd57d28e469f82738e9f08e022c292aff2047db
+  languageName: node
+  linkType: hard
+
+"@chevrotain/gast@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/gast@npm:12.0.0"
+  dependencies:
+    "@chevrotain/types": "npm:12.0.0"
+  checksum: 10c0/699f8757b910ee577b9cd955f2bde794ffae1c1faad57ac8040a06c5d1c42b56109f43d32f0b69eb1b56b9c189a32fa3b2b1da5d86ed4fa7c76dc9717a7f3a6b
+  languageName: node
+  linkType: hard
+
+"@chevrotain/regexp-to-ast@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/regexp-to-ast@npm:12.0.0"
+  checksum: 10c0/5cfc68b0cb63cb88281b40660f618555d70feb52b61af1e492862468fa1a0e80c61e84e3ba459431126c889e53f99a8aba4044297e7490a579a67bbe66d5d45e
+  languageName: node
+  linkType: hard
+
+"@chevrotain/types@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/types@npm:12.0.0"
+  checksum: 10c0/8f62dbc49117f6347f35f6fb5dcd5a94ce974b3c8503d4e90c1af7b24523992da1e82afb3a4ab0f450b22adfebbd39c7621c26a3734a639daaf15f0e661f43dc
+  languageName: node
+  linkType: hard
+
+"@chevrotain/utils@npm:12.0.0":
+  version: 12.0.0
+  resolution: "@chevrotain/utils@npm:12.0.0"
+  checksum: 10c0/7bbbbe5256411bbea374a9b2aabe4fb1a69303bcdcfa613aba205d309c24967eb1f567a41a7a6a772ea23e9f1f10dbb533aad6de6218b7f7c14d8395a8ec1473
   languageName: node
   linkType: hard
 
@@ -2980,15 +3029,18 @@ __metadata:
     "@napolab/texture-bridge-win32-x64-msvc": "npm:0.13.1"
     "@softdmx/engine": "workspace:*"
     "@softdmx/frontend": "workspace:*"
+    "@softdmx/shared": "workspace:*"
     "@trpc/server": "npm:^11.18.0"
     "@types/node": "npm:^22.15.0"
     "@typescript/native-preview": "npm:^7.0.0-dev.20260622.1"
     abletonlink: "npm:^0.2.0-beta.0"
+    alien-signals: "npm:^3.2.1"
     electron: "npm:40.10.4"
     electron-builder: "npm:^26.15.5"
     electron-trpc-experimental: "npm:^1.0.0-alpha.1"
     fast-xml-parser: "npm:^5.9.3"
     fastify: "npm:^5.8.5"
+    js-toml: "npm:^1.1.2"
     linear-timecode: "npm:^0.1.0"
     node-osc: "npm:^11.5.0"
     oxfmt: "npm:^0.56.0"
@@ -3101,6 +3153,15 @@ __metadata:
     oxfmt: "npm:^0.56.0"
     oxlint: "npm:^1.71.0"
     tsx: "npm:^4.22.4"
+    typescript: "npm:^6.0.3"
+  languageName: unknown
+  linkType: soft
+
+"@softdmx/shared@workspace:*, @softdmx/shared@workspace:packages/shared":
+  version: 0.0.0-use.local
+  resolution: "@softdmx/shared@workspace:packages/shared"
+  dependencies:
+    rolldown: "npm:^1.1.2"
     typescript: "npm:^6.0.3"
   languageName: unknown
   linkType: soft
@@ -4876,6 +4937,19 @@ __metadata:
   languageName: node
   linkType: hard
 
+"chevrotain@npm:^12.0.0":
+  version: 12.0.0
+  resolution: "chevrotain@npm:12.0.0"
+  dependencies:
+    "@chevrotain/cst-dts-gen": "npm:12.0.0"
+    "@chevrotain/gast": "npm:12.0.0"
+    "@chevrotain/regexp-to-ast": "npm:12.0.0"
+    "@chevrotain/types": "npm:12.0.0"
+    "@chevrotain/utils": "npm:12.0.0"
+  checksum: 10c0/c7bf530f59baae21cc7535406addfbb9ea373d89bb4ea1b874d89e7debd232c9bdf60aa5af236fcc0e12a68ea8f88a6638ffbccaadb829a7b300f98d1429c38d
+  languageName: node
+  linkType: hard
+
 "chokidar@npm:^4.0.1":
   version: 4.0.3
   resolution: "chokidar@npm:4.0.3"
@@ -5116,6 +5190,13 @@ __metadata:
   dependencies:
     is-what: "npm:^4.1.8"
   checksum: 10c0/01eadd500c7e1db71d32d95a3bfaaedcb839ef891c741f6305ab0461398056133de08f2d1bf4c392b364e7bdb7ce498513896e137a7a183ac2516b065c28a4fe
+  languageName: node
+  linkType: hard
+
+"core-js-pure@npm:^3.48.0":
+  version: 3.49.0
+  resolution: "core-js-pure@npm:3.49.0"
+  checksum: 10c0/b4580a57b917d0bf1029356b1a60abf0f9b99562b67bf39c01485d58891f23603459ed71bde1d7f75c0a9a346829d8c281b255c525fb119726341364c513e82e
   languageName: node
   linkType: hard
 
@@ -7170,6 +7251,16 @@ __metadata:
   version: 9.0.1
   resolution: "js-tokens@npm:9.0.1"
   checksum: 10c0/68dcab8f233dde211a6b5fd98079783cbcd04b53617c1250e3553ee16ab3e6134f5e65478e41d82f6d351a052a63d71024553933808570f04dbf828d7921e80e
+  languageName: node
+  linkType: hard
+
+"js-toml@npm:^1.1.2":
+  version: 1.1.2
+  resolution: "js-toml@npm:1.1.2"
+  dependencies:
+    chevrotain: "npm:^12.0.0"
+    xregexp: "npm:^5.1.2"
+  checksum: 10c0/d7e6e12b4aea0080ad4ab330390b2878170fb86d3eeac6ac2d5dfcd2349aa2be2189e3ae3d930684aa4c94be181715a1b284961030b09cf45a11b1e9382d950b
   languageName: node
   linkType: hard
 
@@ -11127,6 +11218,15 @@ __metadata:
   version: 2.1.2
   resolution: "xmlhttprequest-ssl@npm:2.1.2"
   checksum: 10c0/70d60869323e823f473a238f78fd108437edbc3690ecd5859c39c83217080090a18899b272e515769c0d1f518cc64cbed6b6995b23fdd7ba13b297d530b6e631
+  languageName: node
+  linkType: hard
+
+"xregexp@npm:^5.1.2":
+  version: 5.1.2
+  resolution: "xregexp@npm:5.1.2"
+  dependencies:
+    "@babel/runtime-corejs3": "npm:^7.26.9"
+  checksum: 10c0/0b1d4fd6d3811066adf07f9ad27d9cf3f21c1542e8c4142355e67fdc2ba52ce23a6752020430ea24299007582b968cacc674be3bb76a937f0ef28ba9f7b41377
   languageName: node
   linkType: hard
 

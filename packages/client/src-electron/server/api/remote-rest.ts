@@ -55,7 +55,7 @@ export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteCon
             ip: request.ip,
             headers: request.headers,
           }),
-        errorResponseBuilder: (_request: unknown, context: { max: number; after: number }) => ({
+        errorResponseBuilder: (_request: unknown, context: { max: number; after: string | number }) => ({
           error: "Too many requests",
           max: context.max,
           timeWindow: context.after,

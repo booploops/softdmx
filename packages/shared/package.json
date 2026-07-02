@@ -1,0 +1,15 @@
+{
+  "name": "@softdmx/shared",
+  "description": "Shared types and constants for @softdmx/conduit, @softdmx/server, and @softdmx/client",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "files": [
+    "src/**/*"
+  ],
+  "main": "src/index.ts",
+  "devDependencies": {
+    "rolldown": "^1.1.2",
+    "typescript": "^6.0.3"
+  }
+}

@@ -153,7 +153,7 @@ function normalizeChannelsForOutput(
         attributeType: channel.attributeType,
       } satisfies ActiveChannel;
     })
-    .filter((channel): channel is ActiveChannel => Boolean(channel.path));
+    .filter((channel) => Boolean(channel.path)) as ActiveChannel[];
 }
 
 export function attachChannelPipeline(io: Server, outputManager: OutputManager): void {

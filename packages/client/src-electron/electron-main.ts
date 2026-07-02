@@ -19,6 +19,7 @@ import { appRouter, createContext } from "./ipc/trpc-router";
 import { isOutputNodeMode } from "./modes/output-node";
 import { createMainWindow } from "./windows/main-window";
 import { createOutputNodeWindow } from "./windows/output-node-window";
+import { config } from "./state/config";
 
 app.setPath("userData", Paths.appData);
 app.commandLine.appendSwitch("disable-smooth-scrolling");
@@ -59,6 +60,7 @@ async function shutdownAndQuit() {
 }
 
 async function createWindow() {
+  config.load();
   startServer();
   setupGridNodeOverlayIpc();
 
