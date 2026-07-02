@@ -252,31 +252,6 @@ function mapPanelMenuItem(item: PanelMenuItem): FrontendMenuItem {
 function onReady(event: DockviewReadyEvent) {
     outerApi = event.api;
 
-    // Restore outer layout if persistent state exists
-    const savedOuterLayout = workspaceStore.outerLayout;
-    if (savedOuterLayout) {
-        try {
-            outerApi.fromJSON(savedOuterLayout);
-        } catch (err) {
-            console.error('Failed to restore outer workspace layout:', err);
-        }
-    }
-
-    // If no workspaces exist after layout restoration, create an initial one
-    if (outerApi.panels.length === 0) {
-        createNewWorkspace(true);
-    }
-
-    // Subscribe to outer layout changes to save to store
-    outerApi.onDidLayoutChange(() => {
-        if (!outerApi) return;
-        try {
-            workspaceStore.saveOuterLayout(outerApi.toJSON());
-        } catch (err) {
-            console.error('Failed to serialize outer workspace layout:', err);
-        }
-    });
-
     // Track focused workspace
     outerApi.onDidActivePanelChange((panelEvent) => {
         if (panelEvent && panelEvent.panel) {
@@ -290,6 +265,47 @@ function onReady(event: DockviewReadyEvent) {
         // Automatically spawn a new default workspace if all workspaces are closed
         if (outerApi && outerApi.panels.length === 0) {
             createNewWorkspace(true);
+        }
+    });
+
+    // IMPORTANT: Only restore from client or create initial workspaces *after*
+    // we have the authoritative data from the client. Doing this synchronously
+    // in onReady (using whatever value was in the ref at mount time) used to
+    // race with the async tRPC hydrate, causing the frontend store and live
+    // dockview to be permanently out of sync with persisted client state.
+    workspaceStore.ensureHydrated().then(() => {
+        const savedOuterLayout = workspaceStore.outerLayout;
+        if (savedOuterLayout) {
+            try {
+                workspaceStore.withRestore(() => {
+                    outerApi!.fromJSON(savedOuterLayout);
+                });
+            } catch (err) {
+                console.error('Failed to restore outer workspace layout:', err);
+            }
+        }
+
+        // If no workspaces exist after (hydrated) layout restoration, create an initial one
+        if (outerApi.panels.length === 0) {
+            createNewWorkspace(true);
+        }
+
+        // Persist only after restore/initial setup — avoids empty dockview state
+        // overwriting workspace.xml during the hydration window.
+        outerApi.onDidLayoutChange(() => {
+            if (!outerApi) return;
+            try {
+                workspaceStore.saveOuterLayout(outerApi.toJSON());
+            } catch (err) {
+                console.error('Failed to serialize outer workspace layout:', err);
+            }
+        });
+
+        // Persist the post-restore layout (covers default workspace creation).
+        try {
+            workspaceStore.saveOuterLayout(outerApi.toJSON());
+        } catch (err) {
+            console.error('Failed to serialize initial outer workspace layout:', err);
         }
     });
 }

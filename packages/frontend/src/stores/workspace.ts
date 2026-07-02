@@ -70,62 +70,115 @@ function toCloneable<T>(value: T): T {
   }
 }
 
-function persistState(
-  outerLayout: unknown,
-  workspaceLayouts: Record<string, unknown>,
-  activeWorkspaceId: string
-) {
-  const data: WorkspaceState = {
-    outerLayout: outerLayout != null ? toCloneable(outerLayout) : null,
-    workspaceLayouts: workspaceLayouts
-      ? toCloneable(workspaceLayouts)
-      : {},
-    activeWorkspaceId,
-  };
-
-  const isElectron = typeof window !== 'undefined' && !!(window as any).electronTRPC;
-  if (isElectron) {
-    // Persist via tRPC -> client state -> workspace.xml (efficient XML schema)
-    console.log('[workspace] persist -> tRPC.saveWorkspace', {
-      active: data.activeWorkspaceId,
-      hasOuter: data.outerLayout != null,
-      layoutCount: Object.keys(data.workspaceLayouts || {}).length,
-    });
-    trpc.saveWorkspace
-      .mutate({
-        outerLayout: data.outerLayout,
-        workspaceLayouts: data.workspaceLayouts,
-        activeWorkspaceId: data.activeWorkspaceId,
-      })
-      .then(() => console.log('[workspace] saveWorkspace ack'))
-      .catch((e: unknown) => console.error('Failed to save workspace via tRPC:', e));
-  } else if (typeof localStorage !== 'undefined') {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  }
-}
-
 export const useWorkspaceStore = defineStore('workspace', () => {
-  const state = loadStateSync();
+  const isElectronEnv = typeof window !== 'undefined' && !!(window as any).electronTRPC;
 
-  const outerLayout = ref<unknown>(state.outerLayout);
-  const workspaceLayouts = ref<Record<string, unknown>>(state.workspaceLayouts);
-  const activeWorkspaceId = ref<string>(state.activeWorkspaceId);
+  // Start with empty state for Electron (client is source of truth).
+  // localStorage is only used as fallback for non-Electron dev.
+  const initialState = isElectronEnv
+    ? { outerLayout: null, workspaceLayouts: {}, activeWorkspaceId: '' }
+    : loadStateSync();
+
+  const outerLayout = ref<unknown>(initialState.outerLayout);
+  const workspaceLayouts = ref<Record<string, unknown>>(initialState.workspaceLayouts);
+  const activeWorkspaceId = ref<string>(initialState.activeWorkspaceId);
   const spawnRequest = ref<SpawnRequest | null>(null);
 
-  // Hydrate from Electron client (workspace.xml via tRPC) if available.
-  // This makes frontend workspaces use the XML persisted state passed over IPC.
-  const isElectronEnv = typeof window !== 'undefined' && !!(window as any).electronTRPC;
-  if (isElectronEnv) {
-    trpc.getWorkspace
+  const isHydrated = ref(!isElectronEnv); // true immediately for non-electron
+  const hasLocalModifications = ref(false);
+  let restoreDepth = 0;
+  let hydratePromise: Promise<void> | null = null;
+
+  function persistState(
+    layoutOuter: unknown,
+    layouts: Record<string, unknown>,
+    activeId: string
+  ) {
+    // Skip until client state is loaded and we are not in a programmatic restore.
+    if (!isHydrated.value || restoreDepth > 0) return;
+
+    hasLocalModifications.value = true;
+
+    const data: WorkspaceState = {
+      outerLayout: layoutOuter != null ? toCloneable(layoutOuter) : null,
+      workspaceLayouts: layouts ? toCloneable(layouts) : {},
+      activeWorkspaceId: activeId,
+    };
+
+    if (isElectronEnv) {
+      // Persist via tRPC -> client state -> workspace.xml (efficient XML schema)
+      console.log('[workspace] persist -> tRPC.saveWorkspace', {
+        active: data.activeWorkspaceId,
+        hasOuter: data.outerLayout != null,
+        layoutCount: Object.keys(data.workspaceLayouts || {}).length,
+      });
+      trpc.saveWorkspace
+        .mutate({
+          outerLayout: data.outerLayout,
+          workspaceLayouts: data.workspaceLayouts,
+          activeWorkspaceId: data.activeWorkspaceId,
+        })
+        .then(() => console.log('[workspace] saveWorkspace ack'))
+        .catch((e: unknown) => console.error('Failed to save workspace via tRPC:', e));
+    } else if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+  }
+
+  /**
+   * Suppresses layout-change persistence while dockview is being restored from
+   * saved JSON (fromJSON). Without this, restore-triggered layout events can
+   * overwrite good client state with partial/empty layouts.
+   */
+  function withRestore<T>(fn: () => T): T {
+    restoreDepth++;
+    try {
+      return fn();
+    } finally {
+      restoreDepth--;
+    }
+  }
+
+  /**
+   * Ensures we have loaded the authoritative workspace state from the client (via tRPC).
+   * Returns a promise that resolves once hydration is complete.
+   * This is critical to avoid race conditions where Dockview onReady runs
+   * before the persisted layouts arrive, leading to default workspaces overwriting
+   * good data and causing permanent desync.
+   */
+  function ensureHydrated(): Promise<void> {
+    if (!isElectronEnv) {
+      isHydrated.value = true;
+      return Promise.resolve();
+    }
+    if (hydratePromise) return hydratePromise;
+
+    hydratePromise = trpc.getWorkspace
       .query()
       .then((remote: any) => {
         if (remote) {
-          if (remote.outerLayout !== undefined) outerLayout.value = remote.outerLayout;
-          if (remote.workspaceLayouts !== undefined) workspaceLayouts.value = remote.workspaceLayouts;
-          if (remote.activeWorkspaceId !== undefined) activeWorkspaceId.value = remote.activeWorkspaceId;
+          // Only apply remote data if the user hasn't made local modifications yet.
+          // This prevents a late-arriving hydrate from clobbering work the user
+          // did while waiting for the (usually very fast) tRPC call.
+          if (!hasLocalModifications.value) {
+            if (remote.outerLayout !== undefined) outerLayout.value = remote.outerLayout;
+            if (remote.workspaceLayouts !== undefined) workspaceLayouts.value = remote.workspaceLayouts;
+            if (remote.activeWorkspaceId !== undefined) activeWorkspaceId.value = remote.activeWorkspaceId;
+          }
         }
+        isHydrated.value = true;
       })
-      .catch((e: unknown) => console.error('Failed to load workspace via tRPC:', e));
+      .catch((e: unknown) => {
+        console.error('Failed to load workspace via tRPC:', e);
+        isHydrated.value = true;
+      });
+
+    return hydratePromise;
+  }
+
+  // Kick off hydration eagerly for Electron
+  if (isElectronEnv) {
+    ensureHydrated();
   }
 
   function saveOuterLayout(layout: unknown) {
@@ -192,6 +245,9 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     activeWorkspaceId,
     spawnRequest,
     createWorkspaceRequest,
+    hydrated: isHydrated, // ref<boolean> - use .value in JS code, auto-unwraps in templates
+    ensureHydrated,
+    withRestore,
     saveOuterLayout,
     saveWorkspaceLayout,
     deleteWorkspaceLayout,

@@ -59,33 +59,52 @@ const disposables: (() => void)[] = [];
 function onReady(event: DockviewReadyEvent) {
   innerApi = event.api;
 
-  // Restore inner layout if persistent state exists
-  const savedLayout = workspaceStore.getWorkspaceLayout(workspaceId);
-  if (savedLayout) {
-    try {
-      innerApi.fromJSON(savedLayout);
-    } catch (err) {
-      console.error(`Failed to restore workspace layout for ${workspaceId}:`, err);
-    }
-  }
-
-  // Subscribe to inner layout changes to serialize and persist
-  const layoutDisposable = innerApi.onDidLayoutChange(() => {
-    if (!innerApi) return;
-    try {
-      const json = innerApi.toJSON();
-      workspaceStore.saveWorkspaceLayout(workspaceId, json);
-    } catch (err) {
-      console.error(`Failed to serialize workspace layout for ${workspaceId}:`, err);
-    }
-  });
-  disposables.push(() => layoutDisposable.dispose());
-
-  // Mark this workspace as active when an inner panel is focused/activated
   const activeDisposable = innerApi.onDidActivePanelChange(() => {
     workspaceStore.setActiveWorkspace(workspaceId);
   });
   disposables.push(() => activeDisposable.dispose());
+
+  // Restore using hydrated data. We wait for ensureHydrated() so that
+  // dynamically created workspace instances (from outer layout restore or
+  // user actions) see the correct persisted inner layout from the client.
+  const attachLayoutListener = () => {
+    const layoutDisposable = innerApi!.onDidLayoutChange(() => {
+      if (!innerApi) return;
+      try {
+        const json = innerApi.toJSON();
+        workspaceStore.saveWorkspaceLayout(workspaceId, json);
+      } catch (err) {
+        console.error(`Failed to serialize workspace layout for ${workspaceId}:`, err);
+      }
+    });
+    disposables.push(() => layoutDisposable.dispose());
+  };
+
+  const restore = () => {
+    const savedLayout = workspaceStore.getWorkspaceLayout(workspaceId);
+    if (savedLayout) {
+      try {
+        workspaceStore.withRestore(() => {
+          innerApi!.fromJSON(savedLayout);
+        });
+      } catch (err) {
+        console.error(`Failed to restore workspace layout for ${workspaceId}:`, err);
+      }
+    }
+    attachLayoutListener();
+
+    try {
+      workspaceStore.saveWorkspaceLayout(workspaceId, innerApi!.toJSON());
+    } catch (err) {
+      console.error(`Failed to serialize initial workspace layout for ${workspaceId}:`, err);
+    }
+  };
+
+  if (workspaceStore.hydrated) {
+    restore();
+  } else {
+    workspaceStore.ensureHydrated().then(restore);
+  }
 }
 
 // Watch for spawn requests targetting this specific workspace
