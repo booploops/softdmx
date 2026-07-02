@@ -36,7 +36,11 @@ export const WorkspaceLayouts = [
                 {
                   type: "leaf",
                   data: {
-                    views: ["panel-programmer-window-1782634632437"],
+                    views: [
+                      "panel-programmer-window-1782634632437",
+                      "panel-scratch-window-1",
+                      "panel-controls-window-1",
+                    ],
                     activeView: "panel-programmer-window-1782634632437",
                     id: "4",
                   },
@@ -94,6 +98,22 @@ export const WorkspaceLayouts = [
             path: "/programmer-window",
           },
           title: "Programmer",
+        },
+        "panel-scratch-window-1": {
+          id: "panel-scratch-window-1",
+          contentComponent: "WSPanelContent",
+          params: {
+            path: "/scratch-window",
+          },
+          title: "Scratch",
+        },
+        "panel-controls-window-1": {
+          id: "panel-controls-window-1",
+          contentComponent: "WSPanelContent",
+          params: {
+            path: "/controls-window",
+          },
+          title: "Controls",
         },
         "panel-groups-1782634626224": {
           id: "panel-groups-1782634626224",

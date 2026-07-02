@@ -13,6 +13,7 @@ import { useProgrammerStore } from 'src/stores/programmer';
 import { resolveProgrammerControls } from '@softdmx/engine';
 import { useDMXStore } from 'src/stores/dmx';
 import { SdmxStatusChip } from 'src/components/ui';
+import { ref, computed } from 'vue';
 
 const dmx = useDMXStore();
 const {
@@ -22,8 +23,6 @@ const {
   selectedFixtureNames,
 } = useSelectionControl();
 const programmer = useProgrammerStore();
-
-const expanded = ref(true);
 
 const selectedFixtureDefs = computed(() =>
   selectedFixtureNames.value
@@ -65,37 +64,32 @@ function resolveControlChannel(channelName: string) {
 </script>
 
 <template>
-  <div class="selection-control-panel">
-    <button
-      type="button"
-      class="selection-control-panel__header"
-      :class="{ 'selection-control-panel__header--idle': !hasSelection }"
-      @click="expanded = !expanded"
-    >
-      <XIcon name="select" size="xs" />
-      <span class="sdmx-text-label">Controls</span>
-      <SdmxStatusChip
-        v-if="hasSelection"
-        :label="selectionLabel"
-        variant="active"
-      />
-      <span v-else class="sdmx-text-caption selection-control-panel__hint">
-        Select fixtures to adjust
-      </span>
-      <q-space />
-      <XIcon :name="expanded ? 'chevron-up' : 'chevron-down'" size="xs" />
-    </button>
+  <div class="controls-window">
+    <header class="controls-header">
+      <div class="controls-header__toolbar row items-center q-px-sm q-py-xs">
+        <span class="sdmx-text-label">Controls</span>
+        <q-space />
+        <SdmxStatusChip
+          v-if="hasSelection"
+          :label="selectionLabel"
+          variant="active"
+        />
+        <span v-else class="sdmx-text-caption text-grey-5">
+          Select fixtures to adjust
+        </span>
+      </div>
+    </header>
 
-    <q-slide-transition>
-      <div v-show="expanded && hasSelection" class="selection-control-panel__body">
+    <div class="controls-scroll">
+      <div v-if="hasSelection" class="controls-body">
         <div
           v-if="!hasControls"
-          class="selection-control-panel__empty sdmx-text-caption"
+          class="controls-empty sdmx-text-caption"
         >
           No {{ programmer.activeFeatureGroup }} controls for this fixture. Try another feature tab.
         </div>
 
-        <div v-else-if="controlFixture" class="selection-control-panel__widgets">
+        <div v-else-if="controlFixture" class="controls-widgets">
           <WidgetRenderer
             v-for="control in widgetControls"
             :key="`${controlFixture.fixtureName}-${control.id}`"
@@ -130,52 +124,51 @@ function resolveControlChannel(channelName: string) {
           </div>
         </div>
       </div>
-    </q-slide-transition>
+      <div v-else class="tab-empty-state q-pa-lg text-center text-grey-5">
+        <XIcon name="select" size="3rem" />
+        <div class="q-mt-sm">No fixtures selected</div>
+        <div class="text-caption">Select fixtures in the sheet to adjust their controls.</div>
+      </div>
+    </div>
   </div>
 </template>
 
 <style scoped>
-.selection-control-panel {
-  flex-shrink: 0;
+.controls-window {
+  height: 100%;
   display: flex;
   flex-direction: column;
   min-height: 0;
-}
-
-.selection-control-panel__header {
-  display: flex;
-  align-items: center;
-  gap: var(--sdmx-space-xs);
-  width: 100%;
-  min-height: var(--sdmx-space-touch);
-  padding: var(--sdmx-space-xs) var(--sdmx-space-sm);
-  border: none;
-  border-top: 1px solid var(--sdmx-color-border-subtle);
+  overflow: hidden;
   background: var(--sdmx-color-bg-surface);
-  color: var(--sdmx-color-text);
-  cursor: pointer;
-  text-align: left;
 }
 
-.selection-control-panel__header--idle {
-  opacity: 0.75;
+.controls-header {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--sdmx-color-border-subtle);
 }
 
-.selection-control-panel__hint {
-  color: var(--sdmx-color-text-muted);
+.controls-header__toolbar {
+  min-height: var(--sdmx-space-touch);
 }
 
-.selection-control-panel__body {
-  padding-bottom: var(--sdmx-space-sm);
+.controls-scroll {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
 }
 
-.selection-control-panel__empty {
+.controls-body {
+  padding: var(--sdmx-space-sm) 0;
+}
+
+.controls-empty {
   padding: var(--sdmx-space-sm);
   text-align: center;
   color: var(--sdmx-color-text-muted);
 }
 
-.selection-control-panel__widgets {
+.controls-widgets {
   display: flex;
   flex-wrap: wrap;
   gap: var(--sdmx-space-sm);
@@ -183,13 +176,13 @@ function resolveControlChannel(channelName: string) {
   align-content: flex-start;
 }
 
-.selection-control-panel__widgets :deep(.widget-renderer) {
+.controls-widgets :deep(.widget-renderer) {
   margin-bottom: 0;
 }
 
-.selection-control-panel__widgets :deep(.color-picker-widget),
-.selection-control-panel__widgets :deep(.dimmer-slider-widget),
-.selection-control-panel__widgets :deep(.light-mover-widget) {
+.controls-widgets :deep(.color-picker-widget),
+.controls-widgets :deep(.dimmer-slider-widget),
+.controls-widgets :deep(.light-mover-widget) {
   min-width: 180px;
 }
 
@@ -218,5 +211,14 @@ function resolveControlChannel(channelName: string) {
 
 .channel-fallback__badge {
   flex-shrink: 0;
+}
+
+.tab-empty-state {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 160px;
 }
 </style>

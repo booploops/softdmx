@@ -6,7 +6,6 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import SelectionControlPanel from './SelectionControlPanel.vue';
 import ChannelAttributeControl from 'src/components/ChannelAttributeControl.vue';
 import { useScratchStore } from 'src/stores/scratch';
 import { useCueStore } from 'src/stores/cue';
@@ -21,21 +20,16 @@ import { useShowStore } from 'src/stores/show';
 import { useDMXStore } from 'src/stores/dmx';
 import { useChannelControl } from 'src/composables/useChannelControl';
 import { useActiveAttribute } from 'src/composables/useActiveAttribute';
-import { filterScratchEntries } from 'src/utils/programmer-filter';
 import { resolveDefaultStoreProfile } from 'src/utils/programmer-store-profile';
-import { resolveChannelForPath, resolveOperatorColor } from 'src/utils/resolve-channel-path';
 import { applyWingOffset, inferAttributeFeature, wingScaleForIndex } from '@softdmx/engine';
 import type { AlignMode, ScratchEntry, WingDirection } from '@softdmx/engine';
 import {
   SdmxButton,
-  SdmxEmptyState,
   SdmxIconButton,
   SdmxStatusChip,
   SdmxToggle,
 } from 'src/components/ui';
 import { useInfoText } from 'src/composables/useInfoText';
-import ScratchConflictPanel from 'src/components/programmer/ScratchConflictPanel.vue';
-import { useScratchConflicts } from 'src/composables/useScratchConflicts';
 
 const scratch = useScratchStore();
 const cueStore = useCueStore();
@@ -52,10 +46,8 @@ const { clearScratch, setChannel } = useChannelControl();
 const { activeAttributeName, isPinned, setActive, togglePin, isActive, isPathPinned } =
   useActiveAttribute();
 const { info } = useInfoText();
-const { conflicts, isConflictPath } = useScratchConflicts();
 
 const filterSelection = ref(false);
-const showConflicts = ref(false);
 const showSavePreset = ref(false);
 const showStoreOptions = ref(false);
 const showDistribution = ref(false);
@@ -92,92 +84,11 @@ const defaultStoreProfile = computed(() => resolveDefaultStoreProfile(showStore.
 
 const showDistributionSection = computed(() => showDistribution.value);
 
-function entryMatchesSelection(entry: ScratchEntry): boolean {
-  if (!selection.hasSelection) return true;
-  const fixtureMatch = Array.from(selection.selectedFixtures).some((name) =>
-    entry.path.includes(name)
-  );
-  const groupMatch = Array.from(selection.selectedGroups).some((name) =>
-    entry.path.includes(name)
-  );
-  return fixtureMatch || groupMatch;
-}
 
-function entryMatchesOperator(entry: ScratchEntry): boolean {
-  if (programmer.operatorScope === 'all') return true;
-  const owner = entry.meta?.clientId ?? entry.clientId;
-  return owner === clientIdentity.clientId;
-}
 
-function entryMatchesActive(entry: ScratchEntry): boolean {
-  if (!programmer.activeOnly) return true;
-  if (programmer.pinnedAttributePath) {
-    return entry.path === programmer.pinnedAttributePath;
-  }
-  if (!programmer.activeAttributePath) return true;
-  const activeName = scratch.entries.get(programmer.activeAttributePath)?.attributeName;
-  if (activeName && entry.attributeName) {
-    return entry.attributeName === activeName;
-  }
-  return entry.path === programmer.activeAttributePath;
-}
 
-const scratchRows = computed(() => {
-  let list = Array.from(scratch.entries.values());
-  list = filterScratchEntries(list, programmer.attributeFilter());
 
-  if (filterSelection.value) {
-    list = list.filter(entryMatchesSelection);
-  }
-  if (programmer.scratchedOnly) {
-    list = list.filter((entry) => scratch.entries.has(entry.path));
-  }
-  if (programmer.activeOnly) {
-    list = list.filter(entryMatchesActive);
-  }
-  list = list.filter(entryMatchesOperator);
 
-  return list.sort((a, b) => (b.touchedAt ?? 0) - (a.touchedAt ?? 0));
-});
-
-const selectionChannelRows = computed(() => {
-  if (programmer.scratchedOnly || !selection.hasSelection) return [];
-
-  const names = new Set<string>();
-  for (const fixtureName of selection.selectedFixtures) names.add(fixtureName);
-  for (const groupName of selection.selectedGroups) {
-    const group = showStore.document.groups.find((entry) => entry.name === groupName);
-    for (const fixtureName of group?.fixtures ?? []) names.add(fixtureName);
-  }
-
-  const rows: ScratchEntry[] = [];
-  for (const fixtureName of names) {
-    const mapped = dmx.showfileFixturesMapped.find((fixture) => fixture.fixtureName === fixtureName);
-    if (!mapped) continue;
-    for (const channel of mapped.def.channels) {
-      const path = channel.reference?.path;
-      if (!path || scratch.entries.has(path)) continue;
-      const feature = inferAttributeFeature(channel.type, channel.name);
-      const filter = programmer.attributeFilter();
-      if (filter && feature && !filter.includes(feature)) continue;
-      if (!entryMatchesActive({ path, attributeName: channel.name } as ScratchEntry)) continue;
-      rows.push({
-        path,
-        value: dmx.getChannelByPath(path)?.value ?? channel.defaultValue ?? 0,
-        attributeType: channel.type,
-        attributeName: channel.name,
-        attributeId: channel.attributeId ?? channel.name,
-        feature,
-        touchedAt: 0,
-      });
-    }
-  }
-  return rows;
-});
-
-const displayRows = computed(() =>
-  programmer.scratchedOnly ? scratchRows.value : [...scratchRows.value, ...selectionChannelRows.value]
-);
 
 function toggleBlind() {
   scratch.toggleBlind();
@@ -248,22 +159,13 @@ function onStorePressEnd() {
   }
 }
 
-function onScratchRowTap(entry: ScratchEntry) {
-  setActive(entry.path);
-}
 
 function onActiveChipTap() {
   if (!programmer.activeAttributePath) return;
   togglePin();
 }
 
-function rowLabel(entry: ScratchEntry): string {
-  return entry.attributeName ?? entry.path.split('/').pop() ?? entry.path;
-}
 
-function resolveRowChannel(entry: ScratchEntry) {
-  return resolveChannelForPath(entry.path, dmx.showfileFixturesMapped);
-}
 
 function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']) {
   programmer.setFeatureGroup(id);
@@ -524,75 +426,6 @@ function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']
           />
         </div>
       </q-slide-transition>
-
-      <div class="programmer-scroll">
-        <div class="programmer-scratch-section">
-          <div class="programmer-scratch-header">
-            <span class="sdmx-text-label">Scratch</span>
-            <SdmxStatusChip
-              v-if="conflicts.length"
-              :label="`${conflicts.length}`"
-              variant="warning"
-              icon="alert-triangle"
-            />
-            <q-space />
-            <SdmxButton
-              v-if="conflicts.length"
-              size="sm"
-              variant="ghost"
-              :label="showConflicts ? 'Hide' : 'Conflicts'"
-              @click="showConflicts = !showConflicts"
-            />
-          </div>
-
-          <q-slide-transition>
-            <div v-show="showConflicts && conflicts.length" class="programmer-conflicts">
-              <ScratchConflictPanel />
-            </div>
-          </q-slide-transition>
-
-          <SdmxEmptyState
-            v-if="!displayRows.length"
-            icon="adjustments"
-            title="Nothing to show"
-            hint="Select fixtures, then adjust controls below — touched values appear here."
-          />
-
-          <div v-else class="programmer-scratch-list">
-            <div
-              v-for="entry in displayRows"
-              :key="entry.path"
-              class="programmer-scratch-row"
-              :class="{
-                'programmer-scratch-row--active': isActive(entry.path),
-                'programmer-scratch-row--pinned': isPathPinned(entry.path),
-                'programmer-scratch-row--conflict': isConflictPath(entry.path),
-                'programmer-scratch-row--untouched': entry.touchedAt === 0,
-              }"
-              @click="onScratchRowTap(entry)"
-            >
-              <span
-                v-if="resolveOperatorColor(entry)"
-                class="programmer-operator-chip"
-                :style="{ backgroundColor: resolveOperatorColor(entry) }"
-                :title="entry.meta?.operatorLabel ?? entry.meta?.clientId ?? 'operator'"
-              />
-              <div class="programmer-scratch-row__meta">
-                <div class="programmer-scratch-row__name">{{ rowLabel(entry) }}</div>
-              </div>
-              <div v-if="resolveRowChannel(entry)" class="programmer-scratch-row__control">
-                <ChannelAttributeControl
-                  :channel="resolveRowChannel(entry)!"
-                  :path="entry.path"
-                  :show-dmx-hint="false"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <SelectionControlPanel />
-      </div>
     </template>
   </div>
 

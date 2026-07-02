@@ -174,6 +174,20 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     showInSpawnMenu: true,
   },
   {
+    label: "Controls",
+    path: "controls-window",
+    parent: "desk-shell",
+    component: () => import("components/desk/windows/ControlsWindow.vue"),
+    showInSpawnMenu: true,
+  },
+  {
+    label: "Scratch",
+    path: "scratch-window",
+    parent: "desk-shell",
+    component: () => import("components/desk/windows/ScratchWindow.vue"),
+    showInSpawnMenu: true,
+  },
+  {
     label: "Quick Programmer",
     path: "quick-programmer",
     parent: "desk-shell",
