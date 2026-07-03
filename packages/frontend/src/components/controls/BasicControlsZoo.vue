@@ -171,6 +171,11 @@ const chipRemoveCount = ref(0);
               color="primary"
               @click="triggerLoading"
             />
+            <XButton
+              label="Dropdown Option"
+              dropdown
+              color="primary"
+            />
           </div>
         </div>
 

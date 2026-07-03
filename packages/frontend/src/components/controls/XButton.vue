@@ -22,6 +22,7 @@ const props = defineProps<{
   outline?: boolean;
   size?: ButtonSize;
   type?: 'button' | 'submit' | 'reset';
+  dropdown?: boolean;
 }>();
 
 const emit = defineEmits<{ click: [MouseEvent] }>();
@@ -161,6 +162,13 @@ function handleClick(event: MouseEvent) {
             class="x-btn__label"
           >{{ label }}</span>
         </slot>
+        <svg
+          v-if="dropdown"
+          viewBox="0 0 10 6"
+          class="x-btn__arrow"
+        >
+          <path d="M5 6L0 0H10L5 6Z" fill="currentColor" />
+        </svg>
       </template>
     </div>
   </button>
@@ -425,6 +433,14 @@ function handleClick(event: MouseEvent) {
     border-top-color: transparent;
     border-radius: 50%;
     animation: rotate 1s linear infinite;
+  }
+
+  &__arrow {
+    width: 8px;
+    height: 5px;
+    margin-left: 2px;
+    opacity: 0.7;
+    flex-shrink: 0;
   }
 }
 

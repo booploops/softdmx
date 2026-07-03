@@ -67,18 +67,11 @@ onBeforeUnmount(() => {
       :outline="outline"
       :color="color"
       :size="size"
+      :label="label"
+      :icon="icon"
+      dropdown
       @click="toggleMenu"
-    >
-      <template #default>
-        <span class="x-dropdown__content">
-          <XIcon v-if="icon" :name="icon" class="x-dropdown__icon" />
-          <span v-if="label" class="x-dropdown__label">{{ label }}</span>
-          <svg viewBox="0 0 10 6" class="x-dropdown__arrow">
-            <path d="M5 6L0 0H10L5 6Z" fill="currentColor" />
-          </svg>
-        </span>
-      </template>
-    </XButton>
+    />
 
     <!-- Custom dropdown popover panel -->
     <div
@@ -95,20 +88,6 @@ onBeforeUnmount(() => {
 .x-dropdown {
   display: inline-block;
   position: relative;
-
-  &__content {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    height: 100%;
-  }
-
-  &__arrow {
-    width: 8px;
-    height: 5px;
-    margin-left: 2px;
-    opacity: 0.7;
-  }
 }
 
 .x-dropdown-menu {

@@ -39,13 +39,11 @@ function showViewMenu() {
       v-info="'desk.views.switch'"
       flat
       size="sm"
+      dropdown
       @click="showViewMenu"
     >
       <XIcon name="layout-quilt" size="sm" />
       <span>{{ deskView.activeView?.name ?? '' }}</span>
-      <svg viewBox="0 0 10 6" class="x-dropdown__arrow">
-        <path d="M5 6L0 0H10L5 6Z" fill="currentColor" />
-      </svg>
     </XButton>
     <SdmxButton
       v-if="ui.isLive && !ui.operateLocked"
@@ -58,12 +56,5 @@ function showViewMenu() {
   </div>
 </template>
 
-<style scoped lang="scss">
-.x-dropdown__arrow {
-  width: 8px;
-  height: 5px;
-  margin-left: 2px;
-  opacity: 0.7;
-}
-</style>
+
 

@@ -7,7 +7,7 @@
 -->
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, onBeforeUnmount } from 'vue';
 
 const props = withDefaults(
   defineProps<{
@@ -43,13 +43,99 @@ function updateValue(val: number) {
   emit('change', fixed);
 }
 
+let repeatTimeout: ReturnType<typeof setTimeout> | null = null;
+let repeatInterval: ReturnType<typeof setInterval> | null = null;
+let ignoreClick = false;
+
 function decrement() {
+  if (props.disable || props.modelValue <= props.min) {
+    stopRepeat();
+    return;
+  }
   updateValue(props.modelValue - props.step);
 }
 
 function increment() {
+  if (props.disable || props.modelValue >= props.max) {
+    stopRepeat();
+    return;
+  }
   updateValue(props.modelValue + props.step);
 }
+
+function startRepeat(e: PointerEvent, action: () => void) {
+  if (e.button !== 0) return; // Only primary button
+  
+  stopRepeat();
+  ignoreClick = true;
+  action();
+  
+  repeatTimeout = setTimeout(() => {
+    repeatInterval = setInterval(() => {
+      action();
+    }, 80);
+  }, 400);
+}
+
+function stopRepeat() {
+  if (repeatTimeout) {
+    clearTimeout(repeatTimeout);
+    repeatTimeout = null;
+  }
+  if (repeatInterval) {
+    clearInterval(repeatInterval);
+    repeatInterval = null;
+  }
+}
+
+function stopRepeatWithDelay() {
+  stopRepeat();
+  setTimeout(() => {
+    ignoreClick = false;
+  }, 0);
+}
+
+function handlePointerLeave() {
+  stopRepeat();
+  ignoreClick = false;
+}
+
+function handlePointerCancel() {
+  stopRepeat();
+  ignoreClick = false;
+}
+
+function handlePointerMove(e: PointerEvent) {
+  if (!repeatTimeout && !repeatInterval) return;
+  const currentTarget = e.currentTarget as HTMLElement;
+  if (!currentTarget) return;
+  
+  const element = document.elementFromPoint(e.clientX, e.clientY);
+  if (!element || !currentTarget.contains(element)) {
+    stopRepeat();
+    ignoreClick = false;
+  }
+}
+
+function handleDecrementClick() {
+  if (ignoreClick) {
+    ignoreClick = false;
+    return;
+  }
+  decrement();
+}
+
+function handleIncrementClick() {
+  if (ignoreClick) {
+    ignoreClick = false;
+    return;
+  }
+  increment();
+}
+
+onBeforeUnmount(() => {
+  stopRepeat();
+});
 </script>
 
 <template>
@@ -65,7 +151,12 @@ function increment() {
       class="x-stepper__btn x-stepper__btn--decrement"
       :disabled="disable || modelValue <= min"
       :tabindex="disable ? -1 : 0"
-      @click="decrement"
+      @pointerdown="e => startRepeat(e, decrement)"
+      @pointerup="stopRepeatWithDelay"
+      @pointerleave="handlePointerLeave"
+      @pointercancel="handlePointerCancel"
+      @pointermove="handlePointerMove"
+      @click="handleDecrementClick"
     >
       <svg viewBox="0 0 10 10" class="x-stepper__icon">
         <path d="M2 5H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
@@ -77,7 +168,12 @@ function increment() {
       class="x-stepper__btn x-stepper__btn--increment"
       :disabled="disable || modelValue >= max"
       :tabindex="disable ? -1 : 0"
-      @click="increment"
+      @pointerdown="e => startRepeat(e, increment)"
+      @pointerup="stopRepeatWithDelay"
+      @pointerleave="handlePointerLeave"
+      @pointercancel="handlePointerCancel"
+      @pointermove="handlePointerMove"
+      @click="handleIncrementClick"
     >
       <svg viewBox="0 0 10 10" class="x-stepper__icon">
         <path d="M5 2V8M2 5H8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
