@@ -3467,6 +3467,8 @@ __metadata:
     rolldown: "npm:^1.1.3"
     tsx: "npm:^4.22.4"
     typescript: "npm:^6.0.3"
+  bin:
+    server: build/index.js
   languageName: unknown
   linkType: soft
 
