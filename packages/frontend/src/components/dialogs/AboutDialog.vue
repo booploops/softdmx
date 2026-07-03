@@ -8,15 +8,25 @@
 
 <script setup lang="ts">
 import { VueFinalModal } from 'vue-final-modal'
+
+const fm = useTemplateRef('fm');
+
+const emit = defineEmits<{
+  (e: 'confirm'): void
+}>()
 </script>
 
 <template>
   <VueFinalModal
     class="flex justify-center items-center"
     content-class="sdmx-dialog-card sdmx-dialog-card--narrow"
+    ref="fm"
   >
     <XDialogWindow>
-      <XDialogTitlebar title="About SoftDMX" />
+      <XDialogTitlebar
+        title="About SoftDMX"
+        @close="$emit('confirm')"
+      />
       <XDialogContent>
         <div class="q-pa-md">
           <p class="text-body1">

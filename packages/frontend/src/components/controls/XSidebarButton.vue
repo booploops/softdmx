@@ -38,7 +38,7 @@ function onClick(event: MouseEvent) {
         :tabindex="disable ? -1 : 0"
         :title="tooltip"
         type="button"
-        @click="onClick"
+        @pointerdown.left="onClick"
     >
         <!-- Active indicator bar on the left edge -->
         <span

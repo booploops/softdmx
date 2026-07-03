@@ -39,7 +39,14 @@ export function showBindingsDialog() {
 }
 
 export function showAboutDialog() {
-  return useModal({
+  const { close, open } = useModal({
     component: AboutDialog,
-  }).open();
+    attrs: {
+      onConfirm() {
+        close();
+      },
+    },
+  });
+
+  open();
 }
