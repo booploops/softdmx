@@ -146,3 +146,133 @@ body.body--dark {
 ::-webkit-scrollbar-corner {
   background-color: #141419;
 }
+
+/* Floating Window Title Bar - Windows 11 style */
+.dv-resize-container-with-titlebar {
+  border: 1px solid var(--sdmx-color-border-strong, #3c3c3c) !important;
+  border-radius: 6px !important;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+  
+  > .dv-grid-view {
+    border-bottom-left-radius: 5px !important;
+    border-bottom-right-radius: 5px !important;
+    overflow: hidden !important;
+  }
+}
+
+.dv-floating-titlebar {
+  background: var(--sdmx-color-bg-drawer, #181818) !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  display: flex !important;
+  align-items: center !important;
+  padding: 0 !important;
+  border-bottom: 1px solid var(--sdmx-color-border-subtle, #2b2b2b) !important;
+  user-select: none !important;
+  border-top-left-radius: 5px !important;
+  border-top-right-radius: 5px !important;
+}
+
+.sdmx-windows-titlebar-content {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 100%;
+  font-family: system-ui, -apple-system, sans-serif;
+  color: var(--sdmx-color-text, #ffffff);
+}
+
+.sdmx-windows-titlebar-title {
+  font-size: 11px;
+  font-weight: 600;
+  padding-left: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  user-select: none;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.sdmx-windows-titlebar-controls {
+  display: flex;
+  height: 100%;
+  align-items: center;
+}
+
+.sdmx-titlebar-btn {
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--sdmx-color-text-muted, #aaaaaa);
+  width: 46px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  transition: background 0.1s ease, color 0.1s ease;
+  padding: 0;
+  margin: 0;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--sdmx-color-text, #ffffff);
+  }
+  
+  &:active {
+    background: rgba(255, 255, 255, 0.15);
+  }
+}
+
+.sdmx-titlebar-btn.sdmx-titlebar-close {
+  font-size: 18px;
+  &:hover {
+    background: #e81123 !important;
+    color: #ffffff !important;
+  }
+  &:active {
+    background: #f1707a !important;
+  }
+}
+
+.sdmx-max-icon {
+  width: 10px;
+  height: 10px;
+  border: 1.5px solid currentColor;
+  display: inline-block;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.sdmx-titlebar-btn.sdmx-titlebar-max.is-maximized {
+  .sdmx-max-icon {
+    border: none;
+    
+    &:before, &:after {
+      content: '';
+      position: absolute;
+      border: 1.5px solid currentColor;
+      box-sizing: border-box;
+    }
+    
+    &:after {
+      width: 8px;
+      height: 8px;
+      left: 0;
+      bottom: 0;
+      background: var(--sdmx-color-bg-drawer, #181818);
+      z-index: 2;
+    }
+    
+    &:before {
+      width: 8px;
+      height: 8px;
+      right: 0;
+      top: 0;
+      z-index: 1;
+    }
+  }
+}

@@ -162,9 +162,18 @@ export class WorkspaceFile {
       const ag = obj.activeGroup;
       layout.activeGroup = typeof ag === 'object' ? (ag['#text'] ?? ag) : ag;
     }
-    // carry over other fields
-    for (const k of ['floatingGroups', 'popoutGroups', 'edgeGroups']) {
-      if (k in obj && obj[k] != null) layout[k] = obj[k];
+    // carry over other fields with proper type conversion
+    if (obj.floatingGroups != null) {
+      const arr = Array.isArray(obj.floatingGroups) ? obj.floatingGroups : [obj.floatingGroups];
+      layout.floatingGroups = arr.map((item: any) => this.xmlFloatingGroupToJs(item));
+    }
+    if (obj.popoutGroups != null) {
+      const arr = Array.isArray(obj.popoutGroups) ? obj.popoutGroups : [obj.popoutGroups];
+      layout.popoutGroups = arr.map((item: any) => this.xmlPopoutGroupToJs(item));
+    }
+    if (obj.edgeGroups != null) {
+      const arr = Array.isArray(obj.edgeGroups) ? obj.edgeGroups : [obj.edgeGroups];
+      layout.edgeGroups = arr.map((item: any) => this.xmlEdgeGroupToJs(item));
     }
     return layout;
   }
@@ -229,6 +238,70 @@ export class WorkspaceFile {
       if (val != null) state[k] = Number(val);
     }
     return state;
+  }
+
+  private static xmlFloatingGroupToJs(fg: any): any {
+    if (!fg || typeof fg !== 'object') return fg;
+    const res: any = {};
+    if (fg.data) {
+      res.data = this.xmlGroupViewToJs(fg.data);
+    }
+    if (fg.position) {
+      res.position = {
+        x: fg.position.x != null ? Number(fg.position.x) : 0,
+        y: fg.position.y != null ? Number(fg.position.y) : 0,
+      };
+    }
+    if (fg.size) {
+      res.size = {
+        width: fg.size.width != null ? Number(fg.size.width) : 0,
+        height: fg.size.height != null ? Number(fg.size.height) : 0,
+      };
+    }
+    return res;
+  }
+
+  private static xmlPopoutGroupToJs(pg: any): any {
+    if (!pg || typeof pg !== 'object') return pg;
+    const res: any = {};
+    if (pg.data) {
+      res.data = this.xmlGroupViewToJs(pg.data);
+    }
+    if (pg.position) {
+      res.position = {
+        x: pg.position.x != null ? Number(pg.position.x) : 0,
+        y: pg.position.y != null ? Number(pg.position.y) : 0,
+      };
+    }
+    if (pg.size) {
+      res.size = {
+        width: pg.size.width != null ? Number(pg.size.width) : 0,
+        height: pg.size.height != null ? Number(pg.size.height) : 0,
+      };
+    }
+    for (const key of Object.keys(pg)) {
+      if (key !== 'data' && key !== 'position' && key !== 'size') {
+        res[key] = pg[key];
+      }
+    }
+    return res;
+  }
+
+  private static xmlEdgeGroupToJs(eg: any): any {
+    if (!eg || typeof eg !== 'object') return eg;
+    const res: any = {};
+    if (eg.data) {
+      res.data = this.xmlGroupViewToJs(eg.data);
+    }
+    if (eg.size != null) {
+      res.size = Number(eg.size);
+    }
+    for (const key of Object.keys(eg)) {
+      if (key !== 'data' && key !== 'size') {
+        res[key] = eg[key];
+      }
+    }
+    return res;
   }
 
   private static xmlPanelsToJs(panelsContainer: any): Record<string, any> {

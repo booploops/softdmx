@@ -26,6 +26,8 @@ import { SIDEBAR_SHORTCUTS } from 'src/lib/sidebar-shortcuts';
 const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
 const ui = useUIStore();
+const containerRef = ref<HTMLElement | null>(null);
+const disposables: (() => void)[] = [];
 const components: Record<string, any> = {
     WorkspaceInstance: WSWorkspaceInstance,
 };
@@ -119,6 +121,23 @@ function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMe
                         dark: true,
                     });
                 }
+            },
+        },
+        'separator',
+        {
+            label: params.panel.api.isMaximized() ? 'Exit Maximize' : 'Maximize',
+            action: () => {
+                if (params.panel.api.isMaximized()) {
+                    params.panel.api.exitMaximized();
+                } else {
+                    params.panel.api.maximize();
+                }
+            },
+        },
+        {
+            label: 'Float',
+            action: () => {
+                params.api.addFloatingGroup(params.panel);
             },
         },
         'separator',
@@ -249,6 +268,97 @@ function mapPanelMenuItem(item: PanelMenuItem): FrontendMenuItem {
     return mapped;
 }
 
+function updateFloatingWindowTitlebars() {
+    if (!outerApi || !containerRef.value) return;
+    const titlebars = containerRef.value.querySelectorAll('.dv-floating-titlebar');
+    titlebars.forEach((titlebarEl) => {
+        const titlebar = titlebarEl as HTMLElement;
+        const floatingEl = titlebar.parentElement;
+        if (!floatingEl) return;
+
+        let customTitlebar = titlebar.querySelector('.sdmx-windows-titlebar-content');
+        if (!customTitlebar) {
+            titlebar.innerHTML = '';
+            
+            customTitlebar = document.createElement('div');
+            customTitlebar.className = 'sdmx-windows-titlebar-content';
+            
+            const titleText = document.createElement('div');
+            titleText.className = 'sdmx-windows-titlebar-title';
+            customTitlebar.appendChild(titleText);
+            
+            const controls = document.createElement('div');
+            controls.className = 'sdmx-windows-titlebar-controls';
+            
+            const maxBtn = document.createElement('button');
+            maxBtn.className = 'sdmx-titlebar-btn sdmx-titlebar-max';
+            maxBtn.innerHTML = '<span class="sdmx-max-icon"></span>';
+            
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'sdmx-titlebar-btn sdmx-titlebar-close';
+            closeBtn.innerHTML = '<span class="sdmx-close-icon">&times;</span>';
+            
+            controls.appendChild(maxBtn);
+            controls.appendChild(closeBtn);
+            customTitlebar.appendChild(controls);
+            titlebar.appendChild(customTitlebar);
+        }
+
+        const group = outerApi.groups.find((g) => floatingEl.contains(g.element));
+        if (group && group.activePanel) {
+            const activePanel = group.activePanel;
+            
+            const titleTextEl = customTitlebar.querySelector('.sdmx-windows-titlebar-title');
+            if (titleTextEl) {
+                const newTitle = activePanel.title || '';
+                if (titleTextEl.textContent !== newTitle) {
+                    titleTextEl.textContent = newTitle;
+                }
+            }
+            
+            const stopAll = (e: Event) => {
+                e.stopPropagation();
+            };
+
+            const maxBtn = customTitlebar.querySelector('.sdmx-titlebar-max') as HTMLButtonElement;
+            if (maxBtn) {
+                const isMax = activePanel.api.isMaximized();
+                maxBtn.setAttribute('title', isMax ? 'Restore Down' : 'Maximize');
+                if (isMax) {
+                    maxBtn.classList.add('is-maximized');
+                } else {
+                    maxBtn.classList.remove('is-maximized');
+                }
+                
+                maxBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    if (activePanel.api.isMaximized()) {
+                        activePanel.api.exitMaximized();
+                    } else {
+                        activePanel.api.maximize();
+                    }
+                };
+                maxBtn.onmousedown = stopAll;
+                maxBtn.onpointerdown = stopAll;
+                maxBtn.ontouchstart = stopAll;
+            }
+            
+            const closeBtn = customTitlebar.querySelector('.sdmx-titlebar-close') as HTMLButtonElement;
+            if (closeBtn) {
+                closeBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    e.preventDefault();
+                    activePanel.api.close();
+                };
+                closeBtn.onmousedown = stopAll;
+                closeBtn.onpointerdown = stopAll;
+                closeBtn.ontouchstart = stopAll;
+            }
+        }
+    });
+}
+
 function onReady(event: DockviewReadyEvent) {
     outerApi = event.api;
 
@@ -311,6 +421,15 @@ function onReady(event: DockviewReadyEvent) {
             console.error('Failed to serialize initial outer workspace layout:', err);
         }
     });
+
+    const observer = new MutationObserver(() => {
+        updateFloatingWindowTitlebars();
+    });
+    if (containerRef.value) {
+        observer.observe(containerRef.value, { childList: true, subtree: true });
+    }
+    disposables.push(() => observer.disconnect());
+    updateFloatingWindowTitlebars();
 }
 
 watch(
@@ -505,6 +624,7 @@ onMounted(() => {
 
 onUnmounted(() => {
     window.removeEventListener('keydown', onKeydown);
+    disposables.forEach((dispose) => dispose());
 });
 </script>
 
@@ -550,11 +670,12 @@ onUnmounted(() => {
                 </XSidebarButton>
             </div>
         </div>
-        <div class="workspace-viewport">
+        <div ref="containerRef" class="workspace-viewport">
             <DockviewVue
                 class="dockview-theme-dark sdmx-dockview"
                 :components="components"
                 :getTabContextMenuItems="getTabContextMenuItems"
+                :floatingGroupDragHandle="'titlebar'"
                 @ready="onReady"
             />
         </div>
