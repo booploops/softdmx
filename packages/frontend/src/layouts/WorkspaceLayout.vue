@@ -97,12 +97,6 @@ function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMe
               const clonedPanel = JSON.parse(JSON.stringify(panel));
               clonedPanel.id = newId;
               newPanels[newId] = clonedPanel;
-
-              // Duplicate any textContent linked to this panel ID
-              const oldText = workspaceStore.textContents[oldId];
-              if (oldText !== undefined) {
-                workspaceStore.saveTextContent(newId, oldText);
-              }
             }
           }
 

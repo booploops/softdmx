@@ -17,7 +17,6 @@ export class WorkspaceFile {
   outerLayout: unknown = null;
   workspaceLayouts: Record<string, unknown> = {};
   activeWorkspaceId: string = '';
-  textContents: Record<string, string> = {};
 
   /**
    * Takes a JSON object and merges it with the current workspace file.
@@ -27,9 +26,6 @@ export class WorkspaceFile {
   static fromJSON(jsonObject: Record<string, unknown>): WorkspaceFile {
     const workspaceFile = new WorkspaceFile();
     Object.assign(workspaceFile, jsonObject);
-    if (!workspaceFile.textContents) {
-      workspaceFile.textContents = {};
-    }
     return workspaceFile;
   }
 
@@ -58,9 +54,6 @@ export class WorkspaceFile {
       ...(this.outerLayout != null ? { outerLayout: this.outerLayout } : {}),
       ...(Object.keys(this.workspaceLayouts || {}).length > 0
         ? { workspaceLayouts: this.workspaceLayouts }
-        : {}),
-      ...(Object.keys(this.textContents || {}).length > 0
-        ? { textContents: this.textContents }
         : {}),
     });
   }

@@ -19,6 +19,7 @@ const workspaceStore = useWorkspaceStore();
 
 // Retrieve the unique Dockview panel ID provided by WSWorkspacePanel.vue
 const panelId = inject<string>('dockview-panel-id', 'default-text');
+const dockviewPanelProps = inject<any>('dockview-panel-props', null);
 
 // Component reactive states
 const text = ref('');
@@ -28,21 +29,26 @@ const isSaving = ref(false);
 const isSaved = ref(true);
 const copied = ref(false);
 
-// Watch the store's textContents to populate initial value upon hydration
-watch(
-  () => workspaceStore.textContents[panelId],
-  (newVal) => {
-    // Only apply the value if the user hasn't typed anything locally yet
-    if (newVal !== undefined && text.value === '') {
-      text.value = newVal || '';
+// Watch the panel props textContent to populate initial value upon hydration / restore
+if (dockviewPanelProps && dockviewPanelProps.params) {
+  text.value = dockviewPanelProps.params.textContent || '';
+  
+  watch(
+    () => dockviewPanelProps.params.textContent,
+    (newVal) => {
+      // Only apply the value if it's different and the user is not actively typing
+      if (newVal !== undefined && text.value !== newVal) {
+        text.value = newVal || '';
+      }
     }
-  },
-  { immediate: true }
-);
+  );
+}
 
 // Debounced save operation to optimize disk I/O and avoid thrashing workspace.yml
 const debouncedSave = debounce((val: string) => {
-  workspaceStore.saveTextContent(panelId, val);
+  if (dockviewPanelProps && dockviewPanelProps.api) {
+    dockviewPanelProps.api.updateParameters({ textContent: val });
+  }
   isSaving.value = false;
   isSaved.value = true;
 }, 500);

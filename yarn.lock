@@ -3504,6 +3504,7 @@ __metadata:
   dependencies:
     "@hono/node-server": "npm:^2.0.6"
     "@yao-pkg/pkg": "npm:^6.20.0"
+    alien-signals: "npm:^3.2.1"
     hono: "npm:^4.12.27"
     oxfmt: "npm:^0.56.0"
     oxlint: "npm:^1.71.0"

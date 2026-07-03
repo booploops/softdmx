@@ -13,10 +13,11 @@ import WSPanelContent from './WSPanelContent.vue';
 import { WorkspacePanels } from 'src/lib/workspace/panels.ts';
 
 const props = defineProps<{
-  params: IDockviewPanelProps<{ path: string }>;
+  params: IDockviewPanelProps<{ path: string; textContent?: string }>;
 }>();
 
 provide('dockview-panel-id', props.params.api.id);
+provide('dockview-panel-props', props.params);
 
 // Initialize the path from params, ensuring leading slash
 const initialPath = props.params.params?.path || 'test';

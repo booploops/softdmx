@@ -268,12 +268,15 @@ export const appRouter = router({
       }
     }
 
+    // Safely cast to access any legacy textContents on disk for migration.
+    const legacyTextContents = (wf as any).textContents || {};
+
     return {
       version: wf.version,
       outerLayout: toCloneable(wf.outerLayout),
       workspaceLayouts: toCloneable(wf.workspaceLayouts),
       activeWorkspaceId: wf.activeWorkspaceId,
-      textContents: toCloneable(wf.textContents || {}),
+      textContents: toCloneable(legacyTextContents),
     };
   }),
 
@@ -291,7 +294,6 @@ export const appRouter = router({
         outerLayout: input.outerLayout,
         workspaceLayouts: input.workspaceLayouts,
         activeWorkspaceId: input.activeWorkspaceId,
-        textContents: input.textContents,
       });
       return { success: true };
     }),
