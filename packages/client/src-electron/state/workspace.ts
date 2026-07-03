@@ -64,6 +64,7 @@ export function createWorkspaceStore() {
     outerLayout?: unknown;
     workspaceLayouts?: Record<string, unknown>;
     activeWorkspaceId?: string;
+    textContents?: Record<string, string>;
   }) {
     const curr = workspaceFile();
     const nextData = {
@@ -80,6 +81,10 @@ export function createWorkspaceStore() {
         partial.activeWorkspaceId !== undefined
           ? partial.activeWorkspaceId
           : curr.activeWorkspaceId,
+      textContents:
+        partial.textContents !== undefined
+          ? toCloneable(partial.textContents)
+          : curr.textContents,
     };
     const next = WorkspaceFile.fromJSON(nextData as any);
     workspaceFile(next);

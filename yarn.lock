@@ -1572,6 +1572,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/noto-color-emoji@npm:^5.2.12":
+  version: 5.2.12
+  resolution: "@fontsource/noto-color-emoji@npm:5.2.12"
+  checksum: 10c0/12b63dff0d353a1a255c4b4c5b4fb8159929642cc1a3b182429f3d7c00ce7d1f609b4192ca666bb9479a6305b9650801a8f5ca89804af7f507354f0c15fad158
+  languageName: node
+  linkType: hard
+
 "@histoire/app@npm:^1.0.0-beta.1":
   version: 1.0.0-beta.1
   resolution: "@histoire/app@npm:1.0.0-beta.1"
@@ -3440,6 +3447,7 @@ __metadata:
     "@booploops/pod-router": "npm:^0.1.4"
     "@fontsource-variable/noto-sans": "npm:^5.2.10"
     "@fontsource-variable/roboto-flex": "npm:^5.2.8"
+    "@fontsource/noto-color-emoji": "npm:^5.2.12"
     "@histoire/plugin-vue": "npm:1.0.0-beta.1"
     "@intlify/unplugin-vue-i18n": "npm:^11.2.4"
     "@msgpack/msgpack": "npm:^3.1.3"

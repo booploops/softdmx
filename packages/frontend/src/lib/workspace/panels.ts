@@ -21,6 +21,12 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     showInSpawnMenu: true,
   },
   {
+    label: "Text",
+    path: "text-panel",
+    component: () => import("components/TextPanel.vue"),
+    showInSpawnMenu: true,
+  },
+  {
     label: "Desk Shell",
     path: "desk-shell",
     component: () => import("components/desk/DeskShell.vue"),

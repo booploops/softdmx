@@ -16,6 +16,7 @@ interface WorkspaceState {
   outerLayout: unknown;
   workspaceLayouts: Record<string, unknown>;
   activeWorkspaceId: string;
+  textContents: Record<string, string>;
 }
 
 interface SpawnRequest {
@@ -37,6 +38,7 @@ function loadStateSync(): WorkspaceState {
     outerLayout: null,
     workspaceLayouts: {},
     activeWorkspaceId: "",
+    textContents: {},
   };
 
   if (typeof localStorage === "undefined") return defaultState;
@@ -80,7 +82,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
   // Start with empty state for Electron (client is source of truth).
   // localStorage is only used as fallback for non-Electron dev.
   const initialState = isElectronEnv
-    ? { outerLayout: null, workspaceLayouts: {}, activeWorkspaceId: "" }
+    ? { outerLayout: null, workspaceLayouts: {}, activeWorkspaceId: "", textContents: {} }
     : loadStateSync();
 
   const outerLayout = ref<unknown>(initialState.outerLayout);
@@ -88,6 +90,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     initialState.workspaceLayouts,
   );
   const activeWorkspaceId = ref<string>(initialState.activeWorkspaceId);
+  const textContents = ref<Record<string, string>>(initialState.textContents || {});
   const spawnRequest = ref<SpawnRequest | null>(null);
 
   const isHydrated = ref(!isElectronEnv); // true immediately for non-electron
@@ -99,6 +102,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     layoutOuter: unknown,
     layouts: Record<string, unknown>,
     activeId: string,
+    texts: Record<string, string>,
   ) {
     // Skip until client state is loaded and we are not in a programmatic restore.
     if (!isHydrated.value || restoreDepth > 0) return;
@@ -109,6 +113,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
       outerLayout: layoutOuter != null ? toCloneable(layoutOuter) : null,
       workspaceLayouts: layouts ? toCloneable(layouts) : {},
       activeWorkspaceId: activeId,
+      textContents: texts ? toCloneable(texts) : {},
     };
 
     if (isElectronEnv) {
@@ -118,6 +123,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
           outerLayout: data.outerLayout,
           workspaceLayouts: data.workspaceLayouts,
           activeWorkspaceId: data.activeWorkspaceId,
+          textContents: data.textContents,
         })
         .catch((e: unknown) =>
           console.error("Failed to save workspace via tRPC:", e),
@@ -169,6 +175,8 @@ export const useWorkspaceStore = defineStore("workspace", () => {
               workspaceLayouts.value = remote.workspaceLayouts;
             if (remote.activeWorkspaceId !== undefined)
               activeWorkspaceId.value = remote.activeWorkspaceId;
+            if (remote.textContents !== undefined)
+              textContents.value = remote.textContents || {};
           }
         }
         isHydrated.value = true;
@@ -192,6 +200,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
       outerLayout.value,
       workspaceLayouts.value,
       activeWorkspaceId.value,
+      textContents.value,
     );
   }
 
@@ -204,6 +213,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
       outerLayout.value,
       workspaceLayouts.value,
       activeWorkspaceId.value,
+      textContents.value,
     );
   }
 
@@ -218,6 +228,32 @@ export const useWorkspaceStore = defineStore("workspace", () => {
       outerLayout.value,
       workspaceLayouts.value,
       activeWorkspaceId.value,
+      textContents.value,
+    );
+  }
+
+  function saveTextContent(id: string, text: string) {
+    textContents.value = {
+      ...textContents.value,
+      [id]: text,
+    };
+    persistState(
+      outerLayout.value,
+      workspaceLayouts.value,
+      activeWorkspaceId.value,
+      textContents.value,
+    );
+  }
+
+  function deleteTextContent(id: string) {
+    const updated = { ...textContents.value };
+    delete updated[id];
+    textContents.value = updated;
+    persistState(
+      outerLayout.value,
+      workspaceLayouts.value,
+      activeWorkspaceId.value,
+      textContents.value,
     );
   }
 
@@ -272,5 +308,8 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     getWorkspaceLayout,
     requestSpawnPanel,
     requestCreateWorkspace,
+    textContents,
+    saveTextContent,
+    deleteTextContent,
   };
 });

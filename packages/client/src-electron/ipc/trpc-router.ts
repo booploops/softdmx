@@ -273,6 +273,7 @@ export const appRouter = router({
       outerLayout: toCloneable(wf.outerLayout),
       workspaceLayouts: toCloneable(wf.workspaceLayouts),
       activeWorkspaceId: wf.activeWorkspaceId,
+      textContents: toCloneable(wf.textContents || {}),
     };
   }),
 
@@ -282,6 +283,7 @@ export const appRouter = router({
         outerLayout: z.any().optional(),
         workspaceLayouts: z.record(z.string(), z.any()).optional(),
         activeWorkspaceId: z.string().optional(),
+        textContents: z.record(z.string(), z.string()).optional(),
       })
     )
     .mutation(({ input }) => {
@@ -289,6 +291,7 @@ export const appRouter = router({
         outerLayout: input.outerLayout,
         workspaceLayouts: input.workspaceLayouts,
         activeWorkspaceId: input.activeWorkspaceId,
+        textContents: input.textContents,
       });
       return { success: true };
     }),

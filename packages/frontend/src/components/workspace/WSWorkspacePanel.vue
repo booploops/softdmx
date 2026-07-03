@@ -7,7 +7,7 @@
 -->
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, provide } from 'vue';
 import type { IDockviewPanelProps } from 'dockview-vue';
 import WSPanelContent from './WSPanelContent.vue';
 import { WorkspacePanels } from 'src/lib/workspace/panels.ts';
@@ -15,6 +15,8 @@ import { WorkspacePanels } from 'src/lib/workspace/panels.ts';
 const props = defineProps<{
   params: IDockviewPanelProps<{ path: string }>;
 }>();
+
+provide('dockview-panel-id', props.params.api.id);
 
 // Initialize the path from params, ensuring leading slash
 const initialPath = props.params.params?.path || 'test';
