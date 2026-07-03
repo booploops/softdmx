@@ -8,6 +8,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 
 const repoRoot = path.resolve(__dirname, '..');
 
@@ -80,6 +81,16 @@ function getHeaderForExtension(ext) {
 
 const missingFiles = [];
 
+function isIgnored(filePath, isDir) {
+  try {
+    const checkPath = isDir ? `${filePath}/` : filePath;
+    execSync(`git check-ignore -q "${checkPath}"`, { stdio: 'ignore', cwd: repoRoot });
+    return true; // 0 exit code = ignored
+  } catch (e) {
+    return false; // non-zero exit code = not ignored
+  }
+}
+
 function scanDir(dir) {
   const entries = fs.readdirSync(dir, { withFileTypes: true });
   for (const entry of entries) {
@@ -87,14 +98,14 @@ function scanDir(dir) {
     const relPath = path.relative(repoRoot, fullPath);
 
     if (entry.isDirectory()) {
-      if (EXCLUDED_DIRS.has(entry.name)) {
+      if (EXCLUDED_DIRS.has(entry.name) || isIgnored(fullPath, true)) {
         continue;
       }
       scanDir(fullPath);
     } else if (entry.isFile()) {
       const ext = path.extname(entry.name).toLowerCase();
       if (ALLOWED_EXTENSIONS.has(ext)) {
-        if (EXCLUDED_FILES.has(relPath)) {
+        if (EXCLUDED_FILES.has(relPath) || isIgnored(fullPath, false)) {
           continue;
         }
 
