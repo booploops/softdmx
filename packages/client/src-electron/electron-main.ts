@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { app, BrowserWindow } from "electron";
+import { app, BrowserWindow, Menu, dialog } from "electron";
 import { fileURLToPath } from "url";
 import { startServer, stopServer } from "./server";
 import { AppState } from "./state/main";
@@ -21,6 +21,7 @@ import { createMainWindow } from "./windows/main-window";
 import { createOutputNodeWindow } from "./windows/output-node-window";
 import { config } from "./state/config";
 import { workspace } from "./state/workspace";
+import { createApplicationMenu } from "./windows/application-menu";
 
 app.setPath("userData", Paths.appData);
 app.commandLine.appendSwitch("disable-smooth-scrolling");
@@ -66,6 +67,9 @@ async function createWindow() {
   startServer();
   setupGridNodeOverlayIpc();
 
+  // Install custom global Application Menu
+  Menu.setApplicationMenu(createApplicationMenu());
+
   const trpcHandler = createIPCHandler({
     router: appRouter,
     createContext,
@@ -94,6 +98,21 @@ app.on("window-all-closed", () => {
 app.on("before-quit", (event) => {
   if (shutdownComplete) return;
   if (!shutdownStarted) {
+    const choice = dialog.showMessageBoxSync({
+      type: "question",
+      buttons: ["Yes, Quit", "Cancel"],
+      defaultId: 0,
+      cancelId: 1,
+      title: "Confirm Quit",
+      message: "Are you sure you want to quit SoftDMX?",
+      detail: "Unsaved changes may be lost.",
+    });
+
+    if (choice === 1) {
+      event.preventDefault();
+      return;
+    }
+
     event.preventDefault();
     void shutdownAndQuit();
   }

@@ -6,7 +6,10 @@ Early-stage software lighting controller built with Vue, Quasar, and Electron. A
 
 ## Quick start
 
-**Requirements:** Node 22.23.0, Yarn 4 (Corepack), Electron 42+ for desktop/Syphon/Spout.
+**Build Requirements:** 
+- Node.js (Currently Node 22 LTS)
+- Zig
+- Visual Studio Build Tools (Windows only)
 
 ```bash
 corepack enable
