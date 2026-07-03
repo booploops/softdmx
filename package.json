@@ -57,7 +57,8 @@
     "tar": "7.5.16",
     "tmp": "0.2.7",
     "ws": "8.21.0",
-    "yaml@npm:^2.0.0": "2.8.3"
+    "yaml@npm:^2.0.0": "2.8.3",
+    "node-gyp@npm:latest": "patch:node-gyp@npm%3A11.2.0#~/.yarn/patches/node-gyp-npm-11.2.0-36aeb0fa50.patch"
   },
   "engines": {
     "node": "22.23.0",

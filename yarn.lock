@@ -8907,6 +8907,26 @@ __metadata:
   languageName: node
   linkType: hard
 
+"node-gyp@npm:11.2.0":
+  version: 11.2.0
+  resolution: "node-gyp@npm:11.2.0"
+  dependencies:
+    env-paths: "npm:^2.2.0"
+    exponential-backoff: "npm:^3.1.1"
+    graceful-fs: "npm:^4.2.6"
+    make-fetch-happen: "npm:^14.0.3"
+    nopt: "npm:^8.0.0"
+    proc-log: "npm:^5.0.0"
+    semver: "npm:^7.3.5"
+    tar: "npm:^7.4.3"
+    tinyglobby: "npm:^0.2.12"
+    which: "npm:^5.0.0"
+  bin:
+    node-gyp: bin/node-gyp.js
+  checksum: 10c0/bd8d8c76b06be761239b0c8680f655f6a6e90b48e44d43415b11c16f7e8c15be346fba0cbf71588c7cdfb52c419d928a7d3db353afc1d952d19756237d8f10b9
+  languageName: node
+  linkType: hard
+
 "node-gyp@npm:^12.2.0":
   version: 12.4.0
   resolution: "node-gyp@npm:12.4.0"
@@ -8927,9 +8947,9 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-gyp@npm:latest":
+"node-gyp@patch:node-gyp@npm%3A11.2.0#~/.yarn/patches/node-gyp-npm-11.2.0-36aeb0fa50.patch":
   version: 11.2.0
-  resolution: "node-gyp@npm:11.2.0"
+  resolution: "node-gyp@patch:node-gyp@npm%3A11.2.0#~/.yarn/patches/node-gyp-npm-11.2.0-36aeb0fa50.patch::version=11.2.0&hash=5402ee"
   dependencies:
     env-paths: "npm:^2.2.0"
     exponential-backoff: "npm:^3.1.1"
@@ -8943,7 +8963,7 @@ __metadata:
     which: "npm:^5.0.0"
   bin:
     node-gyp: bin/node-gyp.js
-  checksum: 10c0/bd8d8c76b06be761239b0c8680f655f6a6e90b48e44d43415b11c16f7e8c15be346fba0cbf71588c7cdfb52c419d928a7d3db353afc1d952d19756237d8f10b9
+  checksum: 10c0/66ff6dc9e999b8106221c390c8d124db2425051ab736f142b60d324081552ba72ef2e75ea58853c7e9b9cc3467e267f25fdf394a3c3998a94ce030452c537ddb
   languageName: node
   linkType: hard
 

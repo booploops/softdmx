@@ -21,6 +21,7 @@ function runRebuild() {
   const rebuild = spawnSync(yarnCmd, ["exec", "electron-rebuild", "-f", "-w", modules.join(",")], {
     cwd: root,
     stdio: "inherit",
+    shell: true,
   });
 
   if (rebuild.status !== 0) {
