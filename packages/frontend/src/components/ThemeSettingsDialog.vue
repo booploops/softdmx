@@ -6,21 +6,18 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { Dialog, useDialogPluginComponent } from 'quasar';
+import { VueFinalModal } from 'vue-final-modal'
+import { Dialog } from 'quasar';
 import { useThemeStore } from 'src/stores/theme';
 import { THEME_CSS_VAR_KEYS } from 'src/themes/css-vars';
 import ThemeGallery from 'src/components/ThemeGallery.vue';
-import XButton from 'src/components/controls/XButton.vue';
-import XSelect from 'src/components/controls/XSelect.vue';
-import XInput from 'src/components/controls/XInput.vue';
 
 const themeStore = useThemeStore();
 
-defineEmits([
-  ...useDialogPluginComponent.emits
-]);
-
-const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+const emit = defineEmits<{
+  (e: 'confirm'): void;
+  (e: 'cancel'): void;
+}>();
 
 const themeOptions = computed(() =>
   themeStore.availableThemes.map((theme) => ({
@@ -117,115 +114,116 @@ function resetTheme() {
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide">
-    <q-card class="sdmx-dialog-card theme-dialog q-dialog-plugin">
-      <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
-        <div>
-          <div class="text-h6 font-weight-bold">Theme</div>
-          <div class="text-caption sdmx-text-muted">Presets, token overrides, and custom CSS</div>
-        </div>
-        <q-space />
-        <XButton icon="x" flat size="sm" @click="onDialogCancel" />
-      </q-card-section>
-
-    <q-card-section class="q-gutter-y-md dialog-body">
-      <div class="text-subtitle2">Theme gallery</div>
-      <ThemeGallery />
-
-      <hr class="sdmx-separator">
-
-      <div class="q-mb-xs text-subtitle2 text-grey-4">Theme preset</div>
-      <XSelect
-        :model-value="themeStore.activeThemeId"
-        :options="themeOptions"
-        @update:model-value="themeStore.setActiveThemeId"
+  <VueFinalModal
+    class="flex justify-center items-center"
+    content-class="sdmx-dialog-card theme-dialog"
+    @closed="emit('confirm')"
+  >
+    <XDialogWindow>
+      <XDialogTitlebar
+        title="Theme"
+        @close="emit('confirm')"
       />
+      <XDialogContent>
+        <XDialogBody class="q-gutter-y-md dialog-body">
+          <div class="text-caption sdmx-text-muted q-mb-sm">Presets, token overrides, and custom CSS</div>
+          <div class="text-subtitle2">Theme gallery</div>
+          <ThemeGallery />
 
-      <div class="text-subtitle2">Quick token overrides</div>
-      <div class="row q-col-gutter-sm">
-        <div class="col-6 col-sm-4">
-          <div class="q-mb-xs text-caption text-grey-4">Primary</div>
-          <XInput v-model="tokenDraft.primary" />
-        </div>
-        <div class="col-6 col-sm-4">
-          <div class="q-mb-xs text-caption text-grey-4">Page background</div>
-          <XInput v-model="tokenDraft.bgPage" />
-        </div>
-        <div class="col-6 col-sm-4">
-          <div class="q-mb-xs text-caption text-grey-4">Surface background</div>
-          <XInput v-model="tokenDraft.bgSurface" />
-        </div>
-        <div class="col-6 col-sm-4">
-          <div class="q-mb-xs text-caption text-grey-4">Text</div>
-          <XInput v-model="tokenDraft.text" />
-        </div>
-        <div class="col-6 col-sm-4">
-          <div class="q-mb-xs text-caption text-grey-4">Scratch bar</div>
-          <XInput v-model="tokenDraft.scratch" />
-        </div>
-        <div class="col-6 col-sm-4">
-          <div class="q-mb-xs text-caption text-grey-4">Plot background</div>
-          <XInput v-model="tokenDraft.plotBackground" />
-        </div>
-        <div class="col-6 col-sm-4">
-          <div class="q-mb-xs text-caption text-grey-4">Plot fixture</div>
-          <XInput v-model="tokenDraft.plotFixture" />
-        </div>
-        <div class="col-6 col-sm-4">
-          <div class="q-mb-xs text-caption text-grey-4">Plot selected</div>
-          <XInput v-model="tokenDraft.plotSelected" />
-        </div>
-        <div class="col-6 col-sm-4">
-          <div class="q-mb-xs text-caption text-grey-4">Plot grid</div>
-          <XInput v-model="tokenDraft.plotGrid" />
-        </div>
-        <div class="col-6 col-sm-4">
-          <div class="q-mb-xs text-caption text-grey-4">Plot center marker</div>
-          <XInput v-model="tokenDraft.plotCenter" />
-        </div>
-        <div class="col-6 col-sm-4">
-          <div class="q-mb-xs text-caption text-grey-4">Plot labels</div>
-          <XInput v-model="tokenDraft.plotLabel" />
-        </div>
-      </div>
-      <div class="row q-gutter-sm">
-        <XButton color="primary" label="Apply token overrides" @click="applyTokenDraft" />
-        <XButton flat label="Reset overrides" @click="resetTheme" />
-      </div>
+          <hr class="sdmx-separator">
 
-      <hr class="sdmx-separator">
+          <div class="q-mb-xs text-subtitle2 text-grey-4">Theme preset</div>
+          <XSelect
+            :model-value="themeStore.activeThemeId"
+            :options="themeOptions"
+            @update:model-value="themeStore.setActiveThemeId"
+          />
 
-      <div class="text-subtitle2">Custom CSS</div>
-      <div class="text-caption sdmx-text-muted q-mb-sm">
-        Injected after theme tokens. Override any token or target app classes directly.
-      </div>
-      <textarea
-        v-model="customCss"
-        class="sdmx-textarea"
-        placeholder=":root { --sdmx-color-primary: #ff00aa; }"
-      />
-      <div class="q-mt-sm">
-        <XButton color="primary" label="Apply custom CSS" @click="applyCustomCss" />
-      </div>
+          <div class="text-subtitle2">Quick token overrides</div>
+          <div class="row q-col-gutter-sm">
+            <div class="col-6 col-sm-4">
+              <div class="q-mb-xs text-caption text-grey-4">Primary</div>
+              <XInput v-model="tokenDraft.primary" />
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="q-mb-xs text-caption text-grey-4">Page background</div>
+              <XInput v-model="tokenDraft.bgPage" />
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="q-mb-xs text-caption text-grey-4">Surface background</div>
+              <XInput v-model="tokenDraft.bgSurface" />
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="q-mb-xs text-caption text-grey-4">Text</div>
+              <XInput v-model="tokenDraft.text" />
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="q-mb-xs text-caption text-grey-4">Scratch bar</div>
+              <XInput v-model="tokenDraft.scratch" />
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="q-mb-xs text-caption text-grey-4">Plot background</div>
+              <XInput v-model="tokenDraft.plotBackground" />
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="q-mb-xs text-caption text-grey-4">Plot fixture</div>
+              <XInput v-model="tokenDraft.plotFixture" />
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="q-mb-xs text-caption text-grey-4">Plot selected</div>
+              <XInput v-model="tokenDraft.plotSelected" />
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="q-mb-xs text-caption text-grey-4">Plot grid</div>
+              <XInput v-model="tokenDraft.plotGrid" />
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="q-mb-xs text-caption text-grey-4">Plot center marker</div>
+              <XInput v-model="tokenDraft.plotCenter" />
+            </div>
+            <div class="col-6 col-sm-4">
+              <div class="q-mb-xs text-caption text-grey-4">Plot labels</div>
+              <XInput v-model="tokenDraft.plotLabel" />
+            </div>
+          </div>
+          <div class="row q-gutter-sm">
+            <XButton color="primary" label="Apply token overrides" @click="applyTokenDraft" />
+            <XButton flat label="Reset overrides" @click="resetTheme" />
+          </div>
 
-      <hr class="sdmx-separator">
+          <hr class="sdmx-separator">
 
-      <div class="text-subtitle2">CSS variables</div>
-      <div class="token-reference">
-        <code v-for="token in THEME_CSS_VAR_KEYS" :key="token" class="token-chip">{{ token }}</code>
-      </div>
+          <div class="text-subtitle2">Custom CSS</div>
+          <div class="text-caption sdmx-text-muted q-mb-sm">
+            Injected after theme tokens. Override any token or target app classes directly.
+          </div>
+          <textarea
+            v-model="customCss"
+            class="sdmx-textarea"
+            placeholder=":root { --sdmx-color-primary: #ff00aa; }"
+          />
+          <div class="q-mt-sm">
+            <XButton color="primary" label="Apply custom CSS" @click="applyCustomCss" />
+          </div>
 
-      <div class="row q-gutter-sm">
-        <XButton flat icon="download" label="Export theme JSON" @click="exportTheme" />
-        <XButton flat icon="upload" label="Import theme JSON" @click="importTheme" />
-      </div>
-    </q-card-section>
+          <hr class="sdmx-separator">
 
-      <q-card-actions align="right" class="q-pa-md sdmx-border-top">
-        <XButton label="Close" flat color="default" @click="onDialogOK" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+          <div class="text-subtitle2">CSS variables</div>
+          <div class="token-reference">
+            <code v-for="token in THEME_CSS_VAR_KEYS" :key="token" class="token-chip">{{ token }}</code>
+          </div>
+
+          <div class="row q-gutter-sm">
+            <XButton flat icon="download" label="Export theme JSON" @click="exportTheme" />
+            <XButton flat icon="upload" label="Import theme JSON" @click="importTheme" />
+          </div>
+        </XDialogBody>
+        <XDialogFooter>
+          <XButton label="Close" flat color="default" @click="emit('confirm')" />
+        </XDialogFooter>
+      </XDialogContent>
+    </XDialogWindow>
+  </VueFinalModal>
 </template>
 
 <style scoped>

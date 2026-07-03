@@ -6,25 +6,18 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
-import { useDialogPluginComponent } from 'quasar';
+import { VueFinalModal } from 'vue-final-modal'
 import { useAudioStore } from 'src/stores/audio';
 import { useShowStore } from 'src/stores/show';
 import { SdmxIconButton } from 'src/components/ui';
-import XButton from 'src/components/controls/XButton.vue';
-import XSelect from 'src/components/controls/XSelect.vue';
-import XInput from 'src/components/controls/XInput.vue';
-import XSwitch from 'src/components/controls/XSwitch.vue';
-import XSlider from 'src/components/controls/XSlider.vue';
 
 const audioStore = useAudioStore();
 const showStore = useShowStore();
 
-defineEmits([
-  ...useDialogPluginComponent.emits
-]);
-
-const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+const emit = defineEmits<{
+  (e: 'confirm'): void;
+  (e: 'cancel'): void;
+}>();
 
 const audioLatencyMs = ref(0);
 
@@ -61,120 +54,123 @@ function saveSettings() {
       latencyMs: Math.max(0, audioLatencyMs.value),
     };
   });
-  onDialogOK();
+  emit('confirm');
 }
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide">
-    <q-card class="sdmx-dialog-card sdmx-dialog-card--narrow q-dialog-plugin">
-      <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
-        <div class="text-h6 font-weight-bold">Audio Analysis</div>
-        <q-space />
-        <XButton icon="x" flat size="sm" @click="onDialogCancel" />
-      </q-card-section>
-
-    <q-card-section class="q-gutter-y-md dialog-body">
-      <q-banner
-        v-if="!audioStore.isSupported"
-        dense
-        class="bg-negative text-white rounded-borders"
-      >
-        <XIcon name="alert-triangle" class="q-mr-xs" />
-        Audio capture is not supported in this runtime.
-      </q-banner>
-
-      <XSwitch
-        v-model="audioStore.enabled"
-        label="Enable audio analysis"
-        :disable="!audioStore.isSupported"
+  <VueFinalModal
+    class="flex justify-center items-center"
+    content-class="sdmx-dialog-card sdmx-dialog-card--narrow"
+    @closed="emit('cancel')"
+  >
+    <XDialogWindow>
+      <XDialogTitlebar
+        title="Audio Analysis"
+        @close="emit('cancel')"
       />
+      <XDialogContent>
+        <XDialogBody class="q-gutter-y-md dialog-body">
+          <q-banner
+            v-if="!audioStore.isSupported"
+            dense
+            class="bg-negative text-white rounded-borders"
+          >
+            <XIcon name="alert-triangle" class="q-mr-xs" />
+            Audio capture is not supported in this runtime.
+          </q-banner>
 
-      <div class="row items-center q-col-gutter-sm">
-        <div class="col">
-          <div class="q-mb-xs text-subtitle2 text-grey-4">Audio input device</div>
-          <XSelect
-            v-model="audioStore.selectedDeviceId"
-            :options="audioDeviceOptions"
-            :disable="!audioStore.isSupported || audioDeviceOptions.length === 0"
-          />
-        </div>
-        <div class="col-auto">
-          <SdmxIconButton
-            icon="refresh"
-            color="primary"
-            info-key="setup.audio.refreshDevices"
+          <XSwitch
+            v-model="audioStore.enabled"
+            label="Enable audio analysis"
             :disable="!audioStore.isSupported"
-            @click="audioStore.refreshDevices"
           />
-        </div>
-      </div>
 
-      <div>
-        <div class="row items-center justify-between q-mb-xs">
-          <span class="text-subtitle2 text-grey-4">Input gain</span>
-          <span class="text-caption text-grey-5">{{ audioStore.gain.toFixed(2) }}x</span>
-        </div>
-        <XSlider
-          v-model="audioStore.gain"
-          :min="0"
-          :max="4"
-          :step="0.05"
-          :disable="!audioStore.isSupported"
-        />
-      </div>
+          <div class="row items-center q-col-gutter-sm">
+            <div class="col">
+              <div class="q-mb-xs text-subtitle2 text-grey-4">Audio input device</div>
+              <XSelect
+                v-model="audioStore.selectedDeviceId"
+                :options="audioDeviceOptions"
+                :disable="!audioStore.isSupported || audioDeviceOptions.length === 0"
+              />
+            </div>
+            <div class="col-auto">
+              <SdmxIconButton
+                icon="refresh"
+                color="primary"
+                info-key="setup.audio.refreshDevices"
+                :disable="!audioStore.isSupported"
+                @click="audioStore.refreshDevices"
+              />
+            </div>
+          </div>
 
-      <div class="q-mb-xs">
-        <div class="q-mb-xs text-subtitle2 text-grey-4">Output latency (ms)</div>
-        <XInput
-          v-model.number="audioLatencyMs"
-          type="number"
-          :disable="!audioStore.isSupported"
-          placeholder="0"
-        />
-        <div class="text-caption text-grey-5 q-mt-xs">
-          Advance reactive mapping response for fixture/output lag
-        </div>
-      </div>
+          <div>
+            <div class="row items-center justify-between q-mb-xs">
+              <span class="text-subtitle2 text-grey-4">Input gain</span>
+              <span class="text-caption text-grey-5">{{ audioStore.gain.toFixed(2) }}x</span>
+            </div>
+            <XSlider
+              v-model="audioStore.gain"
+              :min="0"
+              :max="4"
+              :step="0.05"
+              :disable="!audioStore.isSupported"
+            />
+          </div>
 
-      <div class="audio-meter-grid q-gutter-y-xs">
-        <div
-          v-for="meter in audioMeterRows"
-          :key="meter.label"
-          class="audio-meter-row"
-        >
-          <span class="audio-meter-label">{{ meter.label }}</span>
-          <q-linear-progress
-            rounded
-            size="9px"
-            color="primary"
-            track-color="grey-8"
-            :value="meter.value"
-          />
-        </div>
-      </div>
+          <div class="q-mb-xs">
+            <div class="q-mb-xs text-subtitle2 text-grey-4">Output latency (ms)</div>
+            <XInput
+              v-model.number="audioLatencyMs"
+              type="number"
+              :disable="!audioStore.isSupported"
+              placeholder="0"
+            />
+            <div class="text-caption text-grey-5 q-mt-xs">
+              Advance reactive mapping response for fixture/output lag
+            </div>
+          </div>
 
-      <q-chip
-        dense
-        class="text-weight-medium"
-        :color="audioStore.beatPulse ? 'positive' : 'grey-8'"
-        :text-color="audioStore.beatPulse ? 'black' : 'grey-4'"
-      >
-        <XIcon name="waveform" size="16px" class="q-mr-xs" />
-        Beat pulse {{ audioStore.beatPulse ? 'detected' : 'idle' }}
-      </q-chip>
+          <div class="audio-meter-grid q-gutter-y-xs">
+            <div
+              v-for="meter in audioMeterRows"
+              :key="meter.label"
+              class="audio-meter-row"
+            >
+              <span class="audio-meter-label">{{ meter.label }}</span>
+              <q-linear-progress
+                rounded
+                size="9px"
+                color="primary"
+                track-color="grey-8"
+                :value="meter.value"
+              />
+            </div>
+          </div>
 
-      <div class="text-caption text-grey-5">
-        Used for audio-reactive mappings and live meters. LTC timecode uses a separate input configured under Output &amp; Sync.
-      </div>
-    </q-card-section>
+          <q-chip
+            dense
+            class="text-weight-medium"
+            :color="audioStore.beatPulse ? 'positive' : 'grey-8'"
+            :text-color="audioStore.beatPulse ? 'black' : 'grey-4'"
+          >
+            <XIcon name="waveform" size="16px" class="q-mr-xs" />
+            Beat pulse {{ audioStore.beatPulse ? 'detected' : 'idle' }}
+          </q-chip>
 
-      <q-card-actions align="right" class="q-pa-md sdmx-border-top">
-        <XButton label="Cancel" flat color="default" @click="onDialogCancel" />
-        <XButton label="Save" color="primary" @click="saveSettings" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+          <div class="text-caption text-grey-5">
+            Used for audio-reactive mappings and live meters. LTC timecode uses a separate input configured under Output &amp; Sync.
+          </div>
+        </XDialogBody>
+        <XDialogFooter>
+          <XButton label="Cancel" flat color="default" @click="emit('cancel')" />
+          <XButton label="Save" color="primary" @click="saveSettings" />
+        </XDialogFooter>
+      </XDialogContent>
+    </XDialogWindow>
+  </VueFinalModal>
 </template>
 
 <style scoped>

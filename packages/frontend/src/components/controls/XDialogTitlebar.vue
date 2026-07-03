@@ -52,6 +52,8 @@ function onClose() {
   border-top-left-radius: inherit;
   border-top-right-radius: inherit;
   overflow: hidden;
+  flex: 0 auto;
+  z-index: 1;
 }
 
 .titlebar-text {

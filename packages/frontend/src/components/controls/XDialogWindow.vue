@@ -21,5 +21,8 @@
   box-shadow: 0 0 0 1px var(--sdmx-color-primary);
   border-radius: 3px;
   background: var(--sdmx-color-bg-elevated);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 </style>

@@ -7,8 +7,7 @@
 -->
 
 <script setup lang="ts">
-import { useDialogPluginComponent } from 'quasar';
-import XButton from 'src/components/controls/XButton.vue';
+import { VueFinalModal } from 'vue-final-modal'
 
 const props = withDefaults(defineProps<{
   title: string;
@@ -22,26 +21,44 @@ const props = withDefaults(defineProps<{
   showCancel: false,
 });
 
-defineEmits([...useDialogPluginComponent.emits]);
-
-const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+const emit = defineEmits<{
+  (e: 'confirm', value: boolean): void;
+  (e: 'cancel'): void;
+}>();
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide">
-    <q-card class="sdmx-dialog-card sdmx-dialog-card--narrow q-dialog-plugin">
-      <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
-        <div class="text-h6 font-weight-bold">{{ props.title }}</div>
-      </q-card-section>
-
-      <q-card-section>
-        <div class="text-body2">{{ props.message }}</div>
-      </q-card-section>
-
-      <q-card-actions align="right" class="q-pa-md sdmx-border-top">
-        <XButton v-if="props.showCancel" :label="props.cancelLabel" flat color="default" @click="onDialogCancel" />
-        <XButton :label="props.confirmLabel" color="primary" @click="onDialogOK(true)" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+  <VueFinalModal
+    class="flex justify-center items-center"
+    content-class="sdmx-dialog-card sdmx-dialog-card--narrow"
+    @closed="emit('cancel')"
+  >
+    <XDialogWindow>
+      <XDialogTitlebar
+        :title="props.title"
+        @close="emit('cancel')"
+      />
+      <XDialogContent>
+        <XDialogBody>
+          <div class="text-body2">{{ props.message }}</div>
+        </XDialogBody>
+        <XDialogFooter>
+          <XButton
+            v-if="props.showCancel"
+            :label="props.cancelLabel"
+            flat
+            color="default"
+            @click="emit('cancel')"
+          />
+          <XButton
+            :label="props.confirmLabel"
+            color="primary"
+            @click="emit('confirm', true)"
+          />
+        </XDialogFooter>
+      </XDialogContent>
+    </XDialogWindow>
+  </VueFinalModal>
 </template>
+
+<style scoped lang="scss"></style>
