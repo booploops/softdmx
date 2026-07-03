@@ -112,7 +112,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     };
 
     if (isElectronEnv) {
-      // Persist via tRPC -> client state -> workspace.xml (efficient XML schema)
+      // Persist via tRPC -> client state -> workspace.yml
       trpc.saveWorkspace
         .mutate({
           outerLayout: data.outerLayout,

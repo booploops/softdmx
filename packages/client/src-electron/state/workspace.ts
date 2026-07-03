@@ -14,7 +14,7 @@ import path from "path";
 
 export function createWorkspaceStore() {
   const workspaceFile = signal<WorkspaceFile>(new WorkspaceFile());
-  const workspacePath = path.join(Paths.appData, "workspace.xml");
+  const workspacePath = path.join(Paths.appData, "workspace.yml");
   let isLoaded = false;
 
   function loadWorkspace() {
@@ -23,17 +23,17 @@ export function createWorkspaceStore() {
     try {
       if (fs.existsSync(workspacePath)) {
         const content = fs.readFileSync(workspacePath, "utf-8");
-        workspaceFile(WorkspaceFile.fromXML(content));
+        workspaceFile(WorkspaceFile.fromYAML(content));
       } else {
         if (!fs.existsSync(Paths.appData)) {
           fs.mkdirSync(Paths.appData, { recursive: true });
         }
         const initial = new WorkspaceFile();
-        fs.writeFileSync(workspacePath, initial.toXML());
+        fs.writeFileSync(workspacePath, initial.toYAML());
         workspaceFile(initial);
       }
     } catch (e) {
-      console.error("Failed to load or create workspace.xml:", e);
+      console.error("Failed to load or create workspace.yml:", e);
     }
 
     isLoaded = true;
@@ -44,9 +44,9 @@ export function createWorkspaceStore() {
           fs.mkdirSync(Paths.appData, { recursive: true });
         }
         const data = workspaceFile();
-        fs.writeFileSync(workspacePath, data.toXML());
+        fs.writeFileSync(workspacePath, data.toYAML());
       } catch (e) {
-        console.error("Failed to save workspace.xml:", e);
+        console.error("Failed to save workspace.yml:", e);
       }
     });
   }

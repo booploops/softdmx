@@ -3348,7 +3348,6 @@ __metadata:
     electron: "npm:40.10.4"
     electron-builder: "npm:^26.15.5"
     electron-trpc-experimental: "npm:^1.0.0-alpha.1"
-    fast-xml-parser: "npm:^5.9.3"
     fastify: "npm:^5.8.5"
     js-toml: "npm:^1.1.2"
     linear-timecode: "npm:^0.1.0"
@@ -3476,9 +3475,9 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@softdmx/shared@workspace:packages/shared"
   dependencies:
-    fast-xml-parser: "npm:^5.9.3"
     rolldown: "npm:^1.1.2"
     typescript: "npm:^6.0.3"
+    yaml: "npm:^2.9.0"
     zod: "npm:^4.4.3"
   languageName: unknown
   linkType: soft

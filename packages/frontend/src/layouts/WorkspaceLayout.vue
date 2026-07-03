@@ -406,7 +406,7 @@ function onReady(event: DockviewReadyEvent) {
         }
 
         // Persist only after restore/initial setup — avoids empty dockview state
-        // overwriting workspace.xml during the hydration window.
+        // overwriting workspace.yml during the hydration window.
         api.onDidLayoutChange(() => {
             if (!outerApi) return;
             try {
