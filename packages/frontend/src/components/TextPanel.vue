@@ -13,6 +13,7 @@ import { debounce } from 'lodash-es';
 import { useWorkspaceStore } from 'src/stores/workspace';
 import XButton from 'src/components/controls/XButton.vue';
 import XButtonGroup from 'src/components/controls/XButtonGroup.vue';
+import XDropdown from 'src/components/controls/XDropdown.vue';
 
 const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
@@ -75,8 +76,8 @@ const copyToClipboard = async () => {
 const confirmClear = () => {
   if (!text.value) return;
   $q.dialog({
-    title: 'Clear Notes',
-    message: 'Are you sure you want to erase all notes in this panel? This action cannot be undone.',
+    title: 'Clear Text',
+    message: 'Are you sure you want to erase all text in this panel? This action cannot be undone.',
     cancel: true,
     persistent: true,
     dark: true,
@@ -96,7 +97,6 @@ const confirmClear = () => {
           size="20px"
           class="sdmx-text-panel__title-icon text-primary"
         />
-        <span class="sdmx-text-panel__title-text text-weight-bold">Notes</span>
       </div>
 
       <div class="sdmx-text-panel__controls">
@@ -110,31 +110,35 @@ const confirmClear = () => {
           <span class="sdmx-text-panel__status-text">{{ isSaving ? 'Saving...' : 'Saved' }}</span>
         </div>
 
-        <div class="sdmx-text-panel__divider"></div>
+        <div class="sdmx-text-panel__divider sdmx-status-divider"></div>
 
         <!-- Typography styling selectors -->
         <XButtonGroup
           size="sm"
-          class="q-mr-sm"
+          class="q-mr-sm sdmx-typography-group"
         >
           <XButton
             :flat="fontFamily !== 'sans'"
-            label="Sans"
             @click="fontFamily = 'sans'"
             title="Clean Proportional Font"
-          />
+          >
+            <span class="sdmx-btn-lbl-full">Sans</span>
+            <span class="sdmx-btn-lbl-short">S</span>
+          </XButton>
           <XButton
             :flat="fontFamily !== 'mono'"
-            label="Mono"
             @click="fontFamily = 'mono'"
             title="Code/Programming Monospace Font"
-          />
+          >
+            <span class="sdmx-btn-lbl-full">Mono</span>
+            <span class="sdmx-btn-lbl-short">M</span>
+          </XButton>
         </XButtonGroup>
 
         <!-- Text sizing selectors -->
         <XButtonGroup
           size="sm"
-          class="q-mr-md"
+          class="q-mr-md sdmx-sizing-group"
         >
           <XButton
             :flat="fontSize !== 'sm'"
@@ -156,13 +160,11 @@ const confirmClear = () => {
           />
         </XButtonGroup>
 
-        <div class="sdmx-text-panel__divider"></div>
+        <div class="sdmx-text-panel__divider sdmx-utility-divider"></div>
 
         <!-- Copy to clipboard utility -->
         <XButton
-          size="sm"
-          flat
-          :icon="copied ? 'check' : 'content_copy'"
+          :icon="copied ? 'check' : 'copy'"
           :color="copied ? 'success' : 'default'"
           class="q-mr-xs sdmx-action-btn"
           @click="copyToClipboard"
@@ -171,11 +173,9 @@ const confirmClear = () => {
 
         <!-- Destroy / erase notes with confirmation -->
         <XButton
-          size="sm"
-          flat
-          icon="delete_outline"
+          icon="trash"
           color="danger"
-          class="sdmx-action-btn"
+          class="sdmx-action-btn q-mr-xs"
           @click="confirmClear"
           title="Clear Notes"
           :disable="!text"
@@ -208,6 +208,10 @@ const confirmClear = () => {
   background: var(--sdmx-color-bg-inset);
   color: var(--sdmx-color-text);
   overflow: hidden;
+
+  /* Setup container query context to enable modern inline-size queries */
+  container-type: inline-size;
+  container-name: textpanel;
 
   &__toolbar {
     display: flex;
@@ -257,7 +261,6 @@ const confirmClear = () => {
     padding: 2px 6px;
     border-radius: 4px;
     color: var(--sdmx-color-text-faint);
-    transition: all 0.25s ease;
 
     .sdmx-text-panel__status-dot {
       display: inline-block;
@@ -265,7 +268,6 @@ const confirmClear = () => {
       height: 6px;
       border-radius: 50%;
       background: var(--sdmx-color-text-faint);
-      transition: background 0.25s ease;
     }
 
     &.is-saving {
@@ -304,7 +306,6 @@ const confirmClear = () => {
     outline: none;
     color: var(--sdmx-color-text);
     box-sizing: border-box;
-    transition: color 0.15s ease;
 
     // Use customized modern scrollbars as defined by web best practices
     scrollbar-color: var(--sdmx-color-border-strong) transparent;
@@ -331,6 +332,11 @@ const confirmClear = () => {
       opacity: 0.6;
     }
 
+    // Font-family configurations
+    &.font-family--sans {
+      font-family: inherit;
+    }
+
     &.font-family--mono {
       font-family: var(--sdmx-font-mono, 'Fira Code', 'Fira Mono', Consolas, Monaco, 'Andale Mono', monospace);
     }
@@ -353,15 +359,136 @@ const confirmClear = () => {
   }
 }
 
-.sdmx-action-btn {
-  transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+.sdmx-action-btn {}
 
-  &:hover {
-    transform: scale(1.08);
+/* Default label layouts for buttons */
+.sdmx-btn-lbl-full {
+  display: inline;
+}
+
+.sdmx-btn-lbl-short {
+  display: none;
+}
+
+/* --- Collapsible Dropdown Styling --- */
+
+.sdmx-more-dropdown {
+  display: none;
+}
+
+.sdmx-dropdown-menu-content {
+  display: flex;
+  flex-direction: column;
+  width: 170px;
+  user-select: none;
+  background: transparent;
+}
+
+.sdmx-dropdown-menu-section {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sdmx-dropdown-menu-header {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--sdmx-color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 2px;
+  padding-left: 2px;
+}
+
+.sdmx-dropdown-menu-divider {
+  height: 1px;
+  background: var(--sdmx-color-border-faint);
+  margin: 6px -8px; // Extend slightly outside padding
+}
+
+// Ensure button groups in the dropdown list stretch full-width
+.sdmx-dropdown-menu-content {
+  .x-btn-group {
+    display: flex !important;
+    width: 100% !important;
+
+    :deep(.x-btn) {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+}
+
+/* --- Container Queries for Elegant Responsiveness --- */
+
+@container textpanel (max-width: 540px) {
+
+  // Hide panel title text, keep only icon
+  .sdmx-text-panel__title-text {
+    display: none !important;
   }
 
-  &:active {
-    transform: scale(0.95);
+  .sdmx-text-panel__title-group {
+    padding-right: 4px;
+  }
+}
+
+// Collapsing typography styling elements into dropdown settings
+@container textpanel (max-width: 460px) {
+
+  .sdmx-typography-group,
+  .sdmx-sizing-group,
+  .sdmx-status-divider {
+    display: none !important;
+  }
+
+  .sdmx-more-dropdown {
+    display: inline-block !important;
+  }
+
+  // Inside dropdown settings, only keep styling rules (Sans/Mono, Sizing)
+  // Actions are still directly visible on the main toolbar
+  .sdmx-dropdown-actions,
+  .sdmx-dropdown-actions-divider {
+    display: none !important;
+  }
+}
+
+// Keep save status text clean
+@container textpanel (max-width: 320px) {
+  .sdmx-text-panel__status-text {
+    display: none !important;
+  }
+
+  .sdmx-text-panel__status {
+    padding: 2px !important;
+  }
+}
+
+// Move utility actions (Copy, Clear) entirely into the dropdown menu to prevent toolbar overflow
+@container textpanel (max-width: 280px) {
+
+  .sdmx-action-btn,
+  .sdmx-utility-divider {
+    display: none !important;
+  }
+
+  // Show copy and delete actions inside the collapsed settings dropdown instead
+  .sdmx-dropdown-actions,
+  .sdmx-dropdown-actions-divider {
+    display: flex !important;
+  }
+}
+
+// Minimal toolbar: only icon and dropdown, hide status dot
+@container textpanel (max-width: 180px) {
+  .sdmx-text-panel__status {
+    display: none !important;
+  }
+
+  .sdmx-text-panel__toolbar {
+    padding-left: 6px !important;
+    padding-right: 6px !important;
   }
 }
 

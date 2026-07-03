@@ -167,7 +167,10 @@ function handleClick(event: MouseEvent) {
           viewBox="0 0 10 6"
           class="x-btn__arrow"
         >
-          <path d="M5 6L0 0H10L5 6Z" fill="currentColor" />
+          <path
+            d="M5 6L0 0H10L5 6Z"
+            fill="currentColor"
+          />
         </svg>
       </template>
     </div>
@@ -211,7 +214,6 @@ function handleClick(event: MouseEvent) {
     height: 20px;
     font-size: 11px;
     padding: 0 8px;
-    min-width: 44px;
     border-radius: 4px;
   }
 
@@ -219,14 +221,12 @@ function handleClick(event: MouseEvent) {
     height: 24px;
     font-size: 13px;
     padding: 0 12px;
-    min-width: 60px;
   }
 
   &--lg {
     height: 32px;
     font-size: 14px;
     padding: 0 16px;
-    min-width: 80px;
   }
 
   // Color specific styles (Flat colors)
