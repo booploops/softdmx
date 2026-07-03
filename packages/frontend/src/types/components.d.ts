@@ -18,6 +18,7 @@ declare module 'vue' {
     XButtonGroup: typeof import('./../components/controls/XButtonGroup.vue')['default']
     XCard: typeof import('./../components/controls/XCard.vue')['default']
     XCheckbox: typeof import('./../components/controls/XCheckbox.vue')['default']
+    XChip: typeof import('./../components/controls/XChip.vue')['default']
     XCollapseItem: typeof import('./../components/controls/XCollapseItem.vue')['default']
     XDialog: typeof import('./../components/controls/XDialog.vue')['default']
     XDialogBody: typeof import('./../components/controls/XDialogBody.vue')['default']

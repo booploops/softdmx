@@ -26,7 +26,8 @@ import {
   XInput,
   XStepper,
   XTabs,
-  XTab
+  XTab,
+  XChip
 } from './index';
 
 const $q = useQuasar();
@@ -90,6 +91,11 @@ const collapseOpen2 = ref(false);
 const demoTab1 = ref('fixtures');
 const demoTabDense = ref('active-tab');
 const demoTabJustify = ref('tab-a');
+
+// Interactive chip states
+const showChip1 = ref(true);
+const showChip2 = ref(true);
+const chipRemoveCount = ref(0);
 </script>
 
 <template>
@@ -239,6 +245,61 @@ const demoTabJustify = ref('tab-a');
         <div class="zoo-section q-mt-md">
           <div class="zoo-text-info">
             Buttons clicked: <strong>{{ buttonClickedCount }}</strong> times
+          </div>
+        </div>
+      </XCard>
+
+      <XCard title="Chips (<XChip>)">
+        <div class="zoo-section">
+          <div class="zoo-label">Sizes</div>
+          <div class="zoo-row align-center">
+            <XChip label="Extra Small (xs)" size="xs" color="default" />
+            <XChip label="Small (sm)" size="sm" color="default" />
+            <XChip label="Medium (md)" size="md" color="default" />
+            <XChip label="Large (lg)" size="lg" color="default" />
+          </div>
+        </div>
+
+        <div class="zoo-section q-mt-md">
+          <div class="zoo-label">Colors & Status Variants</div>
+          <div class="zoo-row">
+            <XChip label="Default" color="default" />
+            <XChip label="Primary" color="primary" icon="sparkles" />
+            <XChip label="Positive" color="positive" icon="check" />
+            <XChip label="Negative" color="negative" icon="alert-triangle" />
+            <XChip label="Warning" color="warning" icon="alert-circle" />
+            <XChip label="Info" color="info" icon="info-circle" />
+            <XChip label="Active" color="active" />
+            <XChip label="Armed" color="armed" />
+          </div>
+        </div>
+
+        <div class="zoo-section q-mt-md">
+          <div class="zoo-label">Outline Style</div>
+          <div class="zoo-row">
+            <XChip label="Default" color="default" outline />
+            <XChip label="Primary" color="primary" icon="sparkles" outline />
+            <XChip label="Positive" color="positive" icon="check" outline />
+            <XChip label="Negative" color="negative" icon="alert-triangle" outline />
+            <XChip label="Warning" color="warning" icon="alert-circle" outline />
+            <XChip label="Info" color="info" icon="info-circle" outline />
+          </div>
+        </div>
+
+        <div class="zoo-section q-mt-md">
+          <div class="zoo-label">Dense, Clickable & Removable</div>
+          <div class="zoo-row align-center">
+            <XChip label="Dense Chip" dense color="primary" />
+            <XChip label="Clickable Chip" clickable color="warning" @click="buttonClickedCount++" />
+            <XChip v-if="showChip1" label="Removable 1" removable color="negative" @remove="showChip1 = false; chipRemoveCount++" />
+            <XChip v-if="showChip2" label="Removable 2" removable color="info" icon="info-circle" @remove="showChip2 = false; chipRemoveCount++" />
+            <XButton v-if="!showChip1 || !showChip2" label="Reset Chips" size="xs" flat color="primary" @click="showChip1 = true; showChip2 = true" />
+          </div>
+        </div>
+
+        <div class="zoo-section q-mt-md" v-if="chipRemoveCount > 0">
+          <div class="zoo-text-info">
+            Chips removed: <strong>{{ chipRemoveCount }}</strong> times
           </div>
         </div>
       </XCard>

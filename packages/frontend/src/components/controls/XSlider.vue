@@ -27,7 +27,10 @@ const props = withDefaults(
   }
 );
 
-const emit = defineEmits<{ 'update:modelValue': [number] }>();
+const emit = defineEmits<{
+  'update:modelValue': [number];
+  'change': [number];
+}>();
 
 const trackRef = ref<HTMLElement | null>(null);
 const isDragging = ref(false);
@@ -118,6 +121,7 @@ function onMouseUp() {
   isDragging.value = false;
   window.removeEventListener('mousemove', onMouseMove);
   window.removeEventListener('mouseup', onMouseUp);
+  emit('change', props.modelValue);
 }
 
 function onTouchStart(event: TouchEvent) {
@@ -138,6 +142,7 @@ function onTouchEnd() {
   isDragging.value = false;
   window.removeEventListener('touchmove', onTouchMove);
   window.removeEventListener('touchend', onTouchEnd);
+  emit('change', props.modelValue);
 }
 
 function onKeyDown(event: KeyboardEvent) {
@@ -148,17 +153,23 @@ function onKeyDown(event: KeyboardEvent) {
   } else if (event.key === 'ArrowLeft' || event.key === 'ArrowDown') {
     offset = -props.step;
   } else if (event.key === 'Home') {
-    emit('update:modelValue', props.min);
+    const val = props.min;
+    emit('update:modelValue', val);
+    emit('change', val);
     return;
   } else if (event.key === 'End') {
-    emit('update:modelValue', props.max);
+    const val = props.max;
+    emit('update:modelValue', val);
+    emit('change', val);
     return;
   } else {
     return;
   }
   
   event.preventDefault();
-  emit('update:modelValue', clampValue(props.modelValue + offset));
+  const nextVal = clampValue(props.modelValue + offset);
+  emit('update:modelValue', nextVal);
+  emit('change', nextVal);
 }
 
 onBeforeUnmount(() => {
@@ -237,7 +248,7 @@ onBeforeUnmount(() => {
       position: absolute;
       height: 4px;
       border-radius: 2px;
-      background-color: #007aff;
+      background-color: var(--x-slider-active-color, #007aff);
     }
 
     .x-slider__thumb-wrap {
@@ -282,7 +293,7 @@ onBeforeUnmount(() => {
       position: absolute;
       width: 4px;
       border-radius: 2px;
-      background-color: #007aff;
+      background-color: var(--x-slider-active-color, #007aff);
     }
 
     .x-slider__thumb-wrap {
@@ -333,7 +344,7 @@ onBeforeUnmount(() => {
     }
 
     .x-slider__active-track {
-      background-color: #0a84ff !important;
+      background-color: var(--x-slider-active-color, #0a84ff) !important;
     }
 
     .x-slider__thumb {

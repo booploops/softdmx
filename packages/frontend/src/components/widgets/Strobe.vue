@@ -12,7 +12,7 @@
 import { StrobeModel } from './strobe.types';
 import { useChannelBinding } from 'src/composables/useChannelBinding';
 
-const val = defineModel<StrobeModel>({required: true});
+const val = defineModel<StrobeModel>({ required: true });
 const strobe = useChannelBinding(val.value.strobeChannel, 'effect');
 
 // Strobe speed presets - common DMX strobe values
@@ -97,20 +97,26 @@ const toggleStrobe = () => {
 </script>
 
 <template>
-  <div class="strobe-widget" :class="{ 'flashing': isFlashing }">
+  <div
+    class="strobe-widget"
+    :class="{ 'flashing': isFlashing }"
+  >
     <div class="strobe-header">
       <div class="title-section">
         <span class="strobe-title">{{ val.strobeChannel.name }}</span>
         <span class="strobe-mode">{{ currentMode }}</span>
       </div>
-      <div class="frequency-display" v-if="strobeFrequency > 0">
+      <div
+        class="frequency-display"
+        v-if="strobeFrequency > 0"
+      >
         {{ strobeFrequency }} Hz
       </div>
     </div>
 
     <!-- Quick Toggle Button -->
     <div class="toggle-section">
-      <q-btn
+      <x-button
         @click="toggleStrobe"
         :color="strobe > 0 ? 'negative' : 'positive'"
         :icon="strobe > 0 ? 'bolt-off' : 'bolt'"
@@ -124,7 +130,7 @@ const toggleStrobe = () => {
     <div class="presets-section">
       <div class="presets-label">Presets:</div>
       <div class="preset-buttons">
-        <q-btn
+        <x-button
           v-for="preset in strobePresets"
           :key="preset.value"
           v-info="{ key: 'widgets.strobe.preset', vars: { description: preset.description } }"
@@ -164,8 +170,14 @@ const toggleStrobe = () => {
     </div>
 
     <!-- Visual Flash Indicator -->
-    <div class="flash-indicator" :class="{ 'active': isFlashing }">
-      <XIcon name="bolt" size="lg" />
+    <div
+      class="flash-indicator"
+      :class="{ 'active': isFlashing }"
+    >
+      <XIcon
+        name="bolt"
+        size="lg"
+      />
     </div>
   </div>
 </template>
@@ -187,8 +199,13 @@ const toggleStrobe = () => {
 }
 
 @keyframes strobe-glow {
-  0% { box-shadow: 0 0 10px var(--sdmx-color-negative-soft); }
-  100% { box-shadow: 0 0 30px var(--sdmx-color-negative-border); }
+  0% {
+    box-shadow: 0 0 10px var(--sdmx-color-negative-soft);
+  }
+
+  100% {
+    box-shadow: 0 0 30px var(--sdmx-color-negative-border);
+  }
 }
 
 .strobe-header {
@@ -312,7 +329,14 @@ const toggleStrobe = () => {
 }
 
 @keyframes flash-pulse {
-  0% { transform: scale(1); opacity: 0.8; }
-  100% { transform: scale(1.2); opacity: 1; }
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
 }
 </style>

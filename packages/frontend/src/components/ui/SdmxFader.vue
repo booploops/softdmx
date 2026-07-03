@@ -58,6 +58,13 @@ const displayValue = computed(() => {
   return String(Math.round(value));
 });
 
+const sliderStyle = computed(() => {
+  if (!props.color) return undefined;
+  return {
+    '--x-slider-active-color': `var(--sdmx-color-${props.color}, ${props.color})`,
+  };
+});
+
 function onDragStart() {
   if (props.disabled) return;
   dragging.value = true;
@@ -88,15 +95,14 @@ function onChange(value: number | null) {
     @touchstart.passive="onDragStart"
   >
     <span v-if="label" class="sdmx-fader__label">{{ label }}</span>
-    <q-slider
+    <XSlider
       :model-value="sliderValue"
       :min="min"
       :max="max"
       :step="step"
       :vertical="vertical"
-      :reverse="vertical"
-      :color="color ?? 'primary'"
       :disable="disabled"
+      :style="sliderStyle"
       class="sdmx-fader__slider"
       :class="{ 'sdmx-fader__slider--vertical': vertical }"
       @update:model-value="update"
@@ -141,7 +147,7 @@ function onChange(value: number | null) {
 
 .sdmx-fader__slider--vertical {
   flex: 1 1 auto;
-  min-height: 88px;
-  width: 28px;
+  min-height: 88px !important;
+  width: 28px !important;
 }
 </style>

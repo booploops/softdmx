@@ -154,7 +154,7 @@ function handleChange(event: Event) {
 .x-select {
   display: inline-block;
   width: 100%;
-  min-width: 120px;
+  min-width: 0;
   position: relative;
   font-size: 13px;
   box-sizing: border-box;

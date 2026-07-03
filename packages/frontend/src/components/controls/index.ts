@@ -29,6 +29,7 @@ export { default as XDialog } from './XDialog.vue';
 export { default as XDialogHeader } from './XDialogHeader.vue';
 export { default as XDialogBody } from './XDialogBody.vue';
 export { default as XDialogFooter } from './XDialogFooter.vue';
+export { default as XChip } from './XChip.vue';
 
 
 

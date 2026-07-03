@@ -33,14 +33,11 @@ const props = withDefaults(
 
 const emit = defineEmits<{ click: [MouseEvent] }>();
 
-const colorMap: Record<Variant, string | undefined> = {
-  default: undefined,
-  primary: 'primary',
-  secondary: 'secondary',
-  danger: 'negative',
-  warning: 'warning',
-  ghost: undefined,
-};
+const computedColor = computed(() => {
+  if (props.variant === 'primary') return 'primary';
+  if (props.variant === 'danger') return 'danger';
+  return 'default';
+});
 
 function onClick(event: MouseEvent) {
   if (props.disabled || props.loading) return;
@@ -49,16 +46,14 @@ function onClick(event: MouseEvent) {
 </script>
 
 <template>
-  <q-btn
+  <XButton
     :label="label"
     :icon="icon"
-    :color="colorMap[variant]"
     :disable="disabled"
     :loading="loading"
-    :round="round && !label"
-    flat
-    no-caps
-    unelevated
+    :color="computedColor"
+    :flat="variant === 'ghost'"
+    :size="size"
     class="sdmx-btn sdmx-focus-ring"
     :class="[
       `sdmx-btn--${variant}`,
@@ -69,16 +64,13 @@ function onClick(event: MouseEvent) {
     @click="onClick"
   >
     <slot />
-  </q-btn>
+  </XButton>
 </template>
 
 <style scoped>
 .sdmx-btn {
   font-weight: var(--sdmx-font-weight);
   border-radius: var(--sdmx-radius-button);
-  transition:
-    background-color var(--sdmx-motion-duration-fast) var(--sdmx-motion-easing),
-    border-color var(--sdmx-motion-duration-fast) var(--sdmx-motion-easing);
 }
 
 .sdmx-btn--sm {
@@ -123,5 +115,48 @@ function onClick(event: MouseEvent) {
   border-color: var(--sdmx-color-primary) !important;
   background: var(--sdmx-color-primary-soft) !important;
   color: var(--sdmx-color-primary) !important;
+}
+
+/* Custom styles for secondary and warning variants */
+.sdmx-btn--secondary:not(.x-btn--disabled) {
+  background: var(--sdmx-color-secondary) !important;
+  border-color: var(--sdmx-color-secondary) !important;
+  color: #000000 !important;
+}
+.sdmx-btn--secondary:hover:not(.x-btn--disabled) {
+  filter: brightness(0.9) !important;
+}
+.sdmx-btn--secondary:active:not(.x-btn--disabled) {
+  filter: brightness(0.8) !important;
+}
+
+.sdmx-btn--warning:not(.x-btn--disabled) {
+  background: var(--sdmx-color-warning) !important;
+  border-color: var(--sdmx-color-warning) !important;
+  color: #000000 !important;
+}
+.sdmx-btn--warning:hover:not(.x-btn--disabled) {
+  filter: brightness(0.9) !important;
+}
+.sdmx-btn--warning:active:not(.x-btn--disabled) {
+  filter: brightness(0.8) !important;
+}
+
+/* Custom styles for rounded buttons */
+.sdmx-btn--round {
+  border-radius: var(--sdmx-radius-full, 9999px) !important;
+  padding: 0 !important;
+}
+.sdmx-btn--round.sdmx-btn--sm {
+  width: 20px !important;
+  min-width: 0 !important;
+}
+.sdmx-btn--round.sdmx-btn--md {
+  width: 24px !important;
+  min-width: 0 !important;
+}
+.sdmx-btn--round.sdmx-btn--lg {
+  width: 32px !important;
+  min-width: 0 !important;
 }
 </style>

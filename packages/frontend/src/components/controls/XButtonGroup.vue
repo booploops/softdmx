@@ -9,13 +9,13 @@
 <script setup lang="ts">
 import { computed, provide, reactive } from 'vue';
 
-type ColorVariant = 'default' | 'primary' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 const props = withDefaults(
   defineProps<{
     disable?: boolean;
-    color?: ColorVariant;
+    color?: string;
+    textColor?: string;
     flat?: boolean;
     outline?: boolean;
     size?: ButtonSize;
@@ -35,6 +35,7 @@ const computedSize = computed(() => props.size ?? 'md');
 const groupContext = reactive({
   size: computed(() => props.size),
   color: computed(() => props.color),
+  textColor: computed(() => props.textColor),
   flat: computed(() => props.flat),
   outline: computed(() => props.outline),
   disable: computed(() => props.disable),

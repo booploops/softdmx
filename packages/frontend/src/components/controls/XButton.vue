@@ -9,7 +9,6 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue';
 
-type ColorVariant = 'default' | 'primary' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 const props = defineProps<{
@@ -17,7 +16,8 @@ const props = defineProps<{
   icon?: string;
   disable?: boolean;
   loading?: boolean;
-  color?: ColorVariant;
+  color?: string;
+  textColor?: string;
   flat?: boolean;
   outline?: boolean;
   size?: ButtonSize;
@@ -28,7 +28,8 @@ const emit = defineEmits<{ click: [MouseEvent] }>();
 
 const groupContext = inject<{
   size?: ButtonSize;
-  color?: ColorVariant;
+  color?: string;
+  textColor?: string;
   flat?: boolean;
   outline?: boolean;
   disable?: boolean;
@@ -36,22 +37,93 @@ const groupContext = inject<{
 
 const computedSize = computed(() => props.size ?? groupContext?.size ?? 'md');
 const computedColor = computed(() => props.color ?? groupContext?.color ?? 'default');
+const computedTextColor = computed(() => props.textColor ?? groupContext?.textColor);
 const computedFlat = computed(() => props.flat ?? groupContext?.flat ?? false);
 const computedOutline = computed(() => props.outline ?? groupContext?.outline ?? false);
 const computedDisable = computed(() => props.disable ?? groupContext?.disable ?? false);
 const computedLoading = computed(() => props.loading ?? false);
 const computedType = computed(() => props.type ?? 'button');
 
+const isCustomColor = computed(() => {
+  return !['default', 'primary', 'danger'].includes(computedColor.value);
+});
+
+const isCssColor = (val?: string) => {
+  if (!val) return false;
+  return (
+    val.startsWith('#') ||
+    val.startsWith('rgb') ||
+    val.startsWith('hsl') ||
+    val.startsWith('var(') ||
+    ['transparent', 'currentColor', 'inherit'].includes(val)
+  );
+};
+
+const isColorCss = computed(() => isCssColor(computedColor.value));
+const isTextColorCss = computed(() => isCssColor(computedTextColor.value));
+
+const colorClasses = computed(() => {
+  const list: string[] = [];
+
+  // Handle custom text color from prop/context (non-CSS colors)
+  if (computedTextColor.value && !isTextColorCss.value) {
+    list.push(`text-${computedTextColor.value}`);
+  }
+
+  // Handle custom background/color (non-CSS colors)
+  if (isCustomColor.value && !isColorCss.value) {
+    if (computedFlat.value || computedOutline.value) {
+      list.push(`text-${computedColor.value}`);
+    } else {
+      list.push(`bg-${computedColor.value}`);
+      // Default text color if not specified
+      if (!computedTextColor.value) {
+        const lightColors = ['warning', 'secondary', 'yellow', 'amber', 'lime', 'positive-soft', 'warning-soft'];
+        const isLight = lightColors.some(c => computedColor.value.includes(c));
+        list.push(isLight ? 'text-black' : 'text-white');
+      }
+    }
+  }
+
+  return list;
+});
+
+const customStyles = computed(() => {
+  const styles: Record<string, string> = {};
+
+  if (isTextColorCss.value) {
+    styles.color = computedTextColor.value!;
+  }
+
+  if (isCustomColor.value && isColorCss.value) {
+    if (computedFlat.value || computedOutline.value) {
+      styles.color = computedColor.value;
+      if (computedOutline.value) {
+        styles.borderColor = computedColor.value;
+      }
+    } else {
+      styles.backgroundColor = computedColor.value;
+      styles.borderColor = computedColor.value;
+      if (!computedTextColor.value) {
+        styles.color = '#ffffff';
+      }
+    }
+  }
+
+  return styles;
+});
+
 const classes = computed(() => [
   'x-btn',
   `x-btn--${computedSize.value}`,
-  `x-btn--${computedColor.value}`,
+  `x-btn--${isCustomColor.value ? 'custom' : computedColor.value}`,
   {
     'x-btn--flat': computedFlat.value,
     'x-btn--outline': computedOutline.value,
     'x-btn--disabled': computedDisable.value || computedLoading.value,
     'x-btn--loading': computedLoading.value,
   },
+  ...colorClasses.value,
 ]);
 
 function handleClick(event: MouseEvent) {
@@ -68,6 +140,7 @@ function handleClick(event: MouseEvent) {
   <button
     :type="computedType"
     :class="classes"
+    :style="customStyles"
     :disabled="computedDisable || computedLoading"
     @click="handleClick"
   >
@@ -196,6 +269,51 @@ function handleClick(event: MouseEvent) {
     }
   }
 
+  &--custom {
+    box-shadow: var(--shadow);
+    border-color: transparent;
+
+    &:hover:not(.x-btn--disabled) {
+      filter: brightness(0.92);
+    }
+
+    &:active:not(.x-btn--disabled) {
+      filter: brightness(0.85);
+    }
+
+    &.x-btn--flat {
+      background: transparent !important;
+      border-color: transparent !important;
+      box-shadow: none !important;
+
+      &:hover:not(.x-btn--disabled) {
+        background: rgba(0, 0, 0, 0.05) !important;
+        filter: none;
+      }
+
+      &:active:not(.x-btn--disabled) {
+        background: rgba(0, 0, 0, 0.1) !important;
+        filter: none;
+      }
+    }
+
+    &.x-btn--outline {
+      background: transparent !important;
+      border-color: currentColor;
+      box-shadow: none !important;
+
+      &:hover:not(.x-btn--disabled) {
+        background: rgba(0, 0, 0, 0.03) !important;
+        filter: none;
+      }
+
+      &:active:not(.x-btn--disabled) {
+        background: rgba(0, 0, 0, 0.08) !important;
+        filter: none;
+      }
+    }
+  }
+
   // Flat (Ghost) styling
   &--flat {
     background: transparent !important;
@@ -223,6 +341,18 @@ function handleClick(event: MouseEvent) {
 
       &:active:not(.x-btn--disabled) {
         background: rgba(0, 122, 255, 0.15) !important;
+      }
+    }
+
+    &.x-btn--danger {
+      color: #ff3b30;
+
+      &:hover:not(.x-btn--disabled) {
+        background: rgba(255, 59, 48, 0.08) !important;
+      }
+
+      &:active:not(.x-btn--disabled) {
+        background: rgba(255, 59, 48, 0.15) !important;
       }
     }
   }
@@ -325,32 +455,74 @@ function handleClick(event: MouseEvent) {
 
     &.x-btn--default {
       &:hover:not(.x-btn--disabled) {
-        background: rgba(255, 255, 255, 0.15) !important;
+        background: rgba(255, 255, 255, 0.15);
       }
 
       &:active:not(.x-btn--disabled) {
-        background: rgba(255, 255, 255, 0.25) !important;
-        border-color: rgba(255, 255, 255, 0.25) !important;
+        background: rgba(255, 255, 255, 0.25);
+        border-color: rgba(255, 255, 255, 0.25);
       }
     }
 
     &.x-btn--primary {
       &:hover:not(.x-btn--disabled) {
-        background: #0076eb !important;
+        background: #0076eb;
       }
 
       &:active:not(.x-btn--disabled) {
-        background: #0068d6 !important;
+        background: #0068d6;
       }
     }
 
     &.x-btn--danger {
       &:hover:not(.x-btn--disabled) {
-        background: #e03b30 !important;
+        background: #e03b30;
       }
 
       &:active:not(.x-btn--disabled) {
-        background: #c92d22 !important;
+        background: #c92d22;
+      }
+    }
+
+    &.x-btn--custom {
+      border-color: transparent !important;
+
+      &:hover:not(.x-btn--disabled) {
+        filter: brightness(1.1) !important;
+      }
+
+      &:active:not(.x-btn--disabled) {
+        filter: brightness(0.9) !important;
+      }
+
+      &.x-btn--flat {
+        background: transparent !important;
+        border-color: transparent !important;
+
+        &:hover:not(.x-btn--disabled) {
+          background: rgba(255, 255, 255, 0.08) !important;
+          filter: none !important;
+        }
+
+        &:active:not(.x-btn--disabled) {
+          background: rgba(255, 255, 255, 0.15) !important;
+          filter: none !important;
+        }
+      }
+
+      &.x-btn--outline {
+        background: transparent !important;
+        border-color: currentColor !important;
+
+        &:hover:not(.x-btn--disabled) {
+          background: rgba(255, 255, 255, 0.04) !important;
+          filter: none !important;
+        }
+
+        &:active:not(.x-btn--disabled) {
+          background: rgba(255, 255, 255, 0.08) !important;
+          filter: none !important;
+        }
       }
     }
 
@@ -376,6 +548,18 @@ function handleClick(event: MouseEvent) {
 
         &:active:not(.x-btn--disabled) {
           background: rgba(10, 132, 255, 0.15) !important;
+        }
+      }
+
+      &.x-btn--danger {
+        color: #ff453a !important;
+
+        &:hover:not(.x-btn--disabled) {
+          background: rgba(255, 69, 58, 0.08) !important;
+        }
+
+        &:active:not(.x-btn--disabled) {
+          background: rgba(255, 69, 58, 0.15) !important;
         }
       }
     }

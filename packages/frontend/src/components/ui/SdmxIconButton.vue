@@ -38,6 +38,14 @@ const emit = defineEmits<{ click: [MouseEvent] }>();
 const { info } = useInfoText();
 const infoText = computed(() => info(props.infoKey, props.infoVars));
 
+const computedSize = computed(() => (props.dense ? 'sm' : 'md'));
+
+const computedColor = computed(() => {
+  if (props.color === 'negative') return 'danger';
+  if (props.color === 'primary') return 'primary';
+  return 'default';
+});
+
 function onClick(event: MouseEvent) {
   if (props.disable || props.loading) return;
   emit('click', event);
@@ -45,27 +53,39 @@ function onClick(event: MouseEvent) {
 </script>
 
 <template>
-  <q-btn
+  <XButton
     :label="label"
-    :color="color"
-    :dense="dense"
+    :color="computedColor"
     :flat="flat"
-    :round="round && !label"
     :disable="disable"
     :loading="loading"
-    unelevated
-    no-caps
+    :size="computedSize"
     class="sdmx-icon-btn sdmx-focus-ring"
+    :class="{ 'sdmx-icon-btn--round': round }"
     :data-sdmx-info="infoText"
     @click="onClick"
   >
     <XIcon v-if="icon && !loading" :name="icon" size="sm" />
     <q-tooltip v-if="alwaysShow">{{ infoText }}</q-tooltip>
-  </q-btn>
+  </XButton>
 </template>
 
 <style scoped>
 .sdmx-icon-btn {
   border-radius: var(--sdmx-radius-button);
+}
+
+/* Custom styles for rounded icon buttons */
+.sdmx-icon-btn--round {
+  border-radius: var(--sdmx-radius-full, 9999px) !important;
+  padding: 0 !important;
+}
+.sdmx-icon-btn--round.x-btn--sm {
+  width: 20px !important;
+  min-width: 0 !important;
+}
+.sdmx-icon-btn--round.x-btn--md {
+  width: 24px !important;
+  min-width: 0 !important;
 }
 </style>
