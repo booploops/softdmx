@@ -26,7 +26,7 @@ import { SIDEBAR_SHORTCUTS } from 'src/lib/sidebar-shortcuts';
 const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
 const ui = useUIStore();
-const components: Record<string, Component> = {
+const components: Record<string, any> = {
     WorkspaceInstance: WSWorkspaceInstance,
 };
 
@@ -274,11 +274,14 @@ function onReady(event: DockviewReadyEvent) {
     // race with the async tRPC hydrate, causing the frontend store and live
     // dockview to be permanently out of sync with persisted client state.
     workspaceStore.ensureHydrated().then(() => {
+        const api = outerApi;
+        if (!api) return;
+
         const savedOuterLayout = workspaceStore.outerLayout;
         if (savedOuterLayout) {
             try {
                 workspaceStore.withRestore(() => {
-                    outerApi!.fromJSON(savedOuterLayout);
+                    api.fromJSON(savedOuterLayout as any);
                 });
             } catch (err) {
                 console.error('Failed to restore outer workspace layout:', err);
@@ -286,16 +289,16 @@ function onReady(event: DockviewReadyEvent) {
         }
 
         // If no workspaces exist after (hydrated) layout restoration, create an initial one
-        if (outerApi.panels.length === 0) {
+        if (api.panels.length === 0) {
             createNewWorkspace(true);
         }
 
         // Persist only after restore/initial setup — avoids empty dockview state
         // overwriting workspace.xml during the hydration window.
-        outerApi.onDidLayoutChange(() => {
+        api.onDidLayoutChange(() => {
             if (!outerApi) return;
             try {
-                workspaceStore.saveOuterLayout(outerApi.toJSON());
+                workspaceStore.saveOuterLayout(api.toJSON());
             } catch (err) {
                 console.error('Failed to serialize outer workspace layout:', err);
             }
@@ -303,7 +306,7 @@ function onReady(event: DockviewReadyEvent) {
 
         // Persist the post-restore layout (covers default workspace creation).
         try {
-            workspaceStore.saveOuterLayout(outerApi.toJSON());
+            workspaceStore.saveOuterLayout(api.toJSON());
         } catch (err) {
             console.error('Failed to serialize initial outer workspace layout:', err);
         }
@@ -542,7 +545,7 @@ onUnmounted(() => {
             </div>
 
             <div class="workspace-sidebar__bottom">
-                <XSidebarButton @click="showSettingsUI">
+                <XSidebarButton @click="() => showSettingsUI()">
                     <i class="codicon codicon-gear" />
                 </XSidebarButton>
             </div>

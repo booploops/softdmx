@@ -23,7 +23,7 @@ import { laserDemoShow } from "src/shows/laser-demo";
 import StockMessageDialog from "src/components/dialogs/StockMessageDialog.vue";
 import DemoShowPickerDialog from "src/components/dialogs/DemoShowPickerDialog.vue";
 
-type MainMenuItem = {
+export type MainMenuItem = {
   label: string;
   icon?: string;
   click?: () => void;
@@ -83,7 +83,9 @@ export function getMainMenu(options?: {
   }
 
   function loadDemoShowById(demoId: string) {
-    const selectedDemo = demoShowOptions.find((option) => option.value === demoId);
+    const selectedDemo = demoShowOptions.find(
+      (option) => option.value === demoId,
+    );
     if (!selectedDemo) return;
     showStore.loadShow(selectedDemo.show);
   }
@@ -98,7 +100,7 @@ export function getMainMenu(options?: {
           click: async () => {
             if (showStore.isDirty) {
               const confirmed = await confirmDiscard(
-                "Create a new show and discard current unsaved changes?"
+                "Create a new show and discard current unsaved changes?",
               );
               if (!confirmed) return;
             }
@@ -107,7 +109,7 @@ export function getMainMenu(options?: {
         },
         {
           label: "Load Demo Show",
-          icon: 'sparkles',
+          icon: "sparkles",
           click: async () => {
             const selectedDemoId = await createDialog<string>({
               component: DemoShowPickerDialog,
@@ -124,7 +126,7 @@ export function getMainMenu(options?: {
 
             if (showStore.isDirty) {
               const confirmed = await confirmDiscard(
-                "Load a demo show and discard current unsaved changes?"
+                "Load a demo show and discard current unsaved changes?",
               );
               if (!confirmed) return;
             }
@@ -134,17 +136,20 @@ export function getMainMenu(options?: {
         },
         {
           label: "Export Show",
-          icon: 'download',
+          icon: "download",
           click: async () => {
             const ok = showStore.downloadShow();
             if (!ok) {
-              await showMessageDialog("Export Failed", "Could not export show file.");
+              await showMessageDialog(
+                "Export Failed",
+                "Could not export show file.",
+              );
             }
           },
         },
         {
           label: "Open Show",
-          icon: 'upload',
+          icon: "upload",
           click: async () => {
             const input = document.createElement("input");
             input.type = "file";
@@ -159,14 +164,14 @@ export function getMainMenu(options?: {
                 } catch (error) {
                   await showMessageDialog(
                     "Import Failed",
-                    error instanceof Error ? error.message : "Unknown error"
+                    error instanceof Error ? error.message : "Unknown error",
                   );
                 }
               };
 
               if (showStore.isDirty) {
                 const confirmed = await confirmDiscard(
-                  "Open a show file and discard current unsaved changes?"
+                  "Open a show file and discard current unsaved changes?",
                 );
                 if (!confirmed) return;
               }
@@ -180,7 +185,7 @@ export function getMainMenu(options?: {
           ? [
               {
                 label: "Import Workspace JSON",
-                icon: 'upload',
+                icon: "upload",
                 click: options.onImportWorkspace,
               },
             ]
@@ -192,21 +197,21 @@ export function getMainMenu(options?: {
       children: [
         {
           label: "Cue editor",
-          icon: 'movie',
+          icon: "movie",
           click: () => {
             ui.openDialog("cueEditor");
           },
         },
         {
           label: "Bindings",
-          icon: 'adjustments',
+          icon: "adjustments",
           click: () => {
             showBindingsDialog();
           },
         },
         {
           label: "Audio analysis",
-          icon: 'waveform',
+          icon: "waveform",
           click: () => {
             showAudioSettingsDialog();
           },
@@ -225,7 +230,7 @@ export function getMainMenu(options?: {
         },
         {
           label: "Sync",
-          icon: 'refresh',
+          icon: "refresh",
           click: () => {
             showSettingsUI("sync");
           },
@@ -245,7 +250,7 @@ export function getMainMenu(options?: {
           : []),
       ],
     },
-    ...(showStore.document.general?.debugToolsEnabled ?? true
+    ...((showStore.document.general?.debugToolsEnabled ?? true)
       ? [
           {
             label: "Debug Tools",
@@ -254,7 +259,9 @@ export function getMainMenu(options?: {
                 label: "Open DMX Debug Panel",
                 icon: "bug",
                 click: () => {
-                  const hasDebugPane = deskView.activePanes.some((pane) => pane.windowType === "dmx-debug");
+                  const hasDebugPane = deskView.activePanes.some(
+                    (pane) => pane.windowType === "dmx-debug",
+                  );
                   if (!hasDebugPane) {
                     deskView.addPane("dmx-debug");
                   }
@@ -269,25 +276,19 @@ export function getMainMenu(options?: {
       children: [
         {
           label: "Interface",
-          icon: 'dashboard',
+          icon: "dashboard",
           click: () => {
             showInterfaceSettingsDialog();
           },
         },
         {
           label: "Theme",
-          icon: 'palette',
+          icon: "palette",
           click: () => {
             showThemeSettingsDialog();
           },
         },
       ],
-    },
-    {
-      label: "Legacy View",
-      click() {
-        window.location.href = "/legacy";
-      },
     },
   ];
 }
