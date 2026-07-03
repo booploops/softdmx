@@ -63,5 +63,6 @@ export default defineConfig({
     outDir: "../client/dist/spa",
     emptyOutDir: true,
     target: "es2022",
+    sourcemap: true,
   },
 });
