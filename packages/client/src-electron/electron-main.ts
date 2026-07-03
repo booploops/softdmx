@@ -22,6 +22,8 @@ import { createOutputNodeWindow } from "./windows/output-node-window";
 import { config } from "./state/config";
 import { workspace } from "./state/workspace";
 import { createApplicationMenu } from "./windows/application-menu";
+import { registerGlobalContextMenuHandler } from "./windows/context-menu";
+
 
 app.setPath("userData", Paths.appData);
 app.commandLine.appendSwitch("disable-smooth-scrolling");
@@ -69,6 +71,10 @@ async function createWindow() {
 
   // Install custom global Application Menu
   Menu.setApplicationMenu(createApplicationMenu());
+
+  // Setup standard global right-click context menu (Undo, Redo, Cut, Copy, Paste, Select All)
+  registerGlobalContextMenuHandler();
+
 
   const trpcHandler = createIPCHandler({
     router: appRouter,

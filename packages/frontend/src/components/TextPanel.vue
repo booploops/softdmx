@@ -8,14 +8,13 @@
 
 <script setup lang="ts">
 import { ref, watch, inject, onUnmounted } from 'vue';
-import { useQuasar } from 'quasar';
 import { debounce } from 'lodash-es';
 import { useWorkspaceStore } from 'src/stores/workspace';
 import XButton from 'src/components/controls/XButton.vue';
 import XButtonGroup from 'src/components/controls/XButtonGroup.vue';
 import XDropdown from 'src/components/controls/XDropdown.vue';
+import { createConfirm } from 'src/lib/CommonDialogs';
 
-const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
 
 // Retrieve the unique Dockview panel ID provided by WSWorkspacePanel.vue
@@ -73,17 +72,15 @@ const copyToClipboard = async () => {
 };
 
 // Confirm dialog to protect against accidental clear
-const confirmClear = () => {
+const confirmClear = async () => {
   if (!text.value) return;
-  $q.dialog({
+  const confirmed = await createConfirm({
     title: 'Clear Text',
     message: 'Are you sure you want to erase all text in this panel? This action cannot be undone.',
-    cancel: true,
-    persistent: true,
-    dark: true,
-  }).onOk(() => {
-    text.value = '';
   });
+  if (confirmed) {
+    text.value = '';
+  }
 };
 </script>
 

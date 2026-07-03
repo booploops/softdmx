@@ -21,6 +21,7 @@ import { createEmptyShow } from '@softdmx/engine';
 import { ref, computed, watch, onMounted } from 'vue';
 import type { ShowfileFixture, FixtureDefinition } from '@softdmx/engine';
 import { Dialog } from 'quasar';
+import { createConfirm } from 'src/lib/CommonDialogs';
 import * as YAML from 'yaml';
 import FixtureBrowser from './FixtureBrowser.vue';
 import {
@@ -110,16 +111,15 @@ const onFilePicked = async (event: Event) => {
   }
 };
 
-const loadFromFileInEditor = () => {
+const loadFromFileInEditor = async () => {
   if (hasUnsavedChanges.value) {
-    Dialog.create({
+    const confirmed = await createConfirm({
       title: 'Discard Changes?',
       message: 'You have unsaved changes in the editor. Loading a file will overwrite your changes. Do you want to proceed?',
-      cancel: true,
-      persistent: true
-    }).onOk(() => {
-      triggerFilePicker();
     });
+    if (confirmed) {
+      triggerFilePicker();
+    }
   } else {
     triggerFilePicker();
   }
@@ -216,16 +216,15 @@ const addFixture = () => {
   showAddFixtureDialog.value = false;
 };
 
-const removeFixture = (index: number) => {
+const removeFixture = async (index: number) => {
   const fixture = editingShowfile.value.fixtures[index];
   if (!fixture) return;
 
-  Dialog.create({
+  const confirmed = await createConfirm({
     title: 'Remove Fixture',
     message: `Are you sure you want to remove "${fixture.name}"? This will also remove it from any linked groups.`,
-    cancel: true,
-    persistent: true
-  }).onOk(() => {
+  });
+  if (confirmed) {
     // Remove fixture
     editingShowfile.value.fixtures.splice(index, 1);
 
@@ -240,7 +239,7 @@ const removeFixture = (index: number) => {
         group => group.names.length > 0
       );
     }
-  });
+  }
 };
 
 const duplicateFixture = (index: number) => {
@@ -336,18 +335,17 @@ const editGroup = (index: number) => {
   showAddGroupDialog.value = true;
 };
 
-const removeGroup = (index: number) => {
+const removeGroup = async (index: number) => {
   const group = editingShowfile.value.linkedGroups?.[index];
   if (!group) return;
 
-  Dialog.create({
+  const confirmed = await createConfirm({
     title: 'Remove Group',
     message: `Are you sure you want to remove the group "${group.name}"?`,
-    cancel: true,
-    persistent: true
-  }).onOk(() => {
-    editingShowfile.value.linkedGroups?.splice(index, 1);
   });
+  if (confirmed) {
+    editingShowfile.value.linkedGroups?.splice(index, 1);
+  }
 };
 
 // Validation
@@ -434,18 +432,17 @@ const saveAndExport = () => {
   }
 };
 
-const discardChanges = () => {
+const discardChanges = async () => {
   if (hasUnsavedChanges.value) {
-    Dialog.create({
+    const confirmed = await createConfirm({
       title: 'Discard Changes',
       message: 'Are you sure you want to discard all unsaved changes?',
-      cancel: true,
-      persistent: true
-    }).onOk(() => {
+    });
+    if (confirmed) {
       isEditing.value = false;
       hasUnsavedChanges.value = false;
       leaveEditor();
-    });
+    }
   } else {
     isEditing.value = false;
     leaveEditor();

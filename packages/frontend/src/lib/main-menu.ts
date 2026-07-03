@@ -16,6 +16,7 @@ import {
   showAudioSettingsDialog,
   showBindingsDialog,
   showAboutDialog,
+  createConfirm,
 } from "src/lib/CommonDialogs";
 import { showSettingsUI } from "./settings-ui";
 import { exampleVrClubShow } from "src/shows/example-vr-club";
@@ -70,17 +71,12 @@ export function getMainMenu(options?: {
   }
 
   async function confirmDiscard(message: string): Promise<boolean> {
-    const confirmed = await createDialog<boolean>({
-      component: StockMessageDialog,
-      componentProps: {
-        title: "Discard Unsaved Changes?",
-        message,
-        confirmLabel: "Discard",
-        cancelLabel: "Cancel",
-        showCancel: true,
-      },
+    return createConfirm({
+      title: "Discard Unsaved Changes?",
+      message,
+      confirmLabel: "Discard",
+      cancelLabel: "Cancel",
     });
-    return confirmed === true;
   }
 
   function loadDemoShowById(demoId: string) {
