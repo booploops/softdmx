@@ -21,6 +21,7 @@ import "quasar/src/css/index.sass";
 import "@vscode/codicons/dist/codicon.css";
 import "vue-final-modal/style.css";
 import "ninja-keys";
+import "@fontsource-variable/noto-sans";
 
 // Custom Styles
 import "./css/app.scss";

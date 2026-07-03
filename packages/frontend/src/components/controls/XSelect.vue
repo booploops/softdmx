@@ -210,7 +210,6 @@ function handleChange(event: Event) {
   &__text {
     white-space: nowrap;
     text-overflow: ellipsis;
-    overflow: hidden;
     margin-right: 16px;
     line-height: 1;
   }

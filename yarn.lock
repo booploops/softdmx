@@ -1558,6 +1558,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource-variable/noto-sans@npm:^5.2.10":
+  version: 5.2.10
+  resolution: "@fontsource-variable/noto-sans@npm:5.2.10"
+  checksum: 10c0/8133d620b60a4feea6edd74441fdd5411f712bcc5f56dca755774a970dcd14965f0f215370b65c06c9142031426f7d25e3ad81a2f017f413cd25455a57de3302
+  languageName: node
+  linkType: hard
+
 "@fontsource-variable/roboto-flex@npm:^5.2.8":
   version: 5.2.8
   resolution: "@fontsource-variable/roboto-flex@npm:5.2.8"
@@ -3431,6 +3438,7 @@ __metadata:
   resolution: "@softdmx/frontend@workspace:packages/frontend"
   dependencies:
     "@booploops/pod-router": "npm:^0.1.4"
+    "@fontsource-variable/noto-sans": "npm:^5.2.10"
     "@fontsource-variable/roboto-flex": "npm:^5.2.8"
     "@histoire/plugin-vue": "npm:1.0.0-beta.1"
     "@intlify/unplugin-vue-i18n": "npm:^11.2.4"
