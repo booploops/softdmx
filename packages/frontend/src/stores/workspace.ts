@@ -6,11 +6,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { ref, toRaw } from 'vue';
-import { defineStore } from 'pinia';
-import { trpc } from 'src/lib/trpc';
+import { ref, toRaw } from "vue";
+import { defineStore } from "pinia";
+import { trpc } from "src/lib/trpc";
 
-const STORAGE_KEY = 'softdmx-workspace-state';
+const STORAGE_KEY = "softdmx-workspace-state";
 
 interface WorkspaceState {
   outerLayout: unknown;
@@ -36,17 +36,17 @@ function loadStateSync(): WorkspaceState {
   const defaultState: WorkspaceState = {
     outerLayout: null,
     workspaceLayouts: {},
-    activeWorkspaceId: '',
+    activeWorkspaceId: "",
   };
 
-  if (typeof localStorage === 'undefined') return defaultState;
+  if (typeof localStorage === "undefined") return defaultState;
   const stored = localStorage.getItem(STORAGE_KEY);
   if (!stored) return defaultState;
 
   try {
     return JSON.parse(stored);
   } catch (e) {
-    console.error('Failed to parse workspace state:', e);
+    console.error("Failed to parse workspace state:", e);
     return defaultState;
   }
 }
@@ -65,22 +65,28 @@ function toCloneable<T>(value: T): T {
     // non-enumerable props, or non-cloneable values.
     return JSON.parse(JSON.stringify(raw));
   } catch (e) {
-    console.warn('[workspace] Failed to sanitize value for IPC, passing as-is', e);
+    console.warn(
+      "[workspace] Failed to sanitize value for IPC, passing as-is",
+      e,
+    );
     return value;
   }
 }
 
-export const useWorkspaceStore = defineStore('workspace', () => {
-  const isElectronEnv = typeof window !== 'undefined' && !!(window as any).electronTRPC;
+export const useWorkspaceStore = defineStore("workspace", () => {
+  const isElectronEnv =
+    typeof window !== "undefined" && !!(window as any).electronTRPC;
 
   // Start with empty state for Electron (client is source of truth).
   // localStorage is only used as fallback for non-Electron dev.
   const initialState = isElectronEnv
-    ? { outerLayout: null, workspaceLayouts: {}, activeWorkspaceId: '' }
+    ? { outerLayout: null, workspaceLayouts: {}, activeWorkspaceId: "" }
     : loadStateSync();
 
   const outerLayout = ref<unknown>(initialState.outerLayout);
-  const workspaceLayouts = ref<Record<string, unknown>>(initialState.workspaceLayouts);
+  const workspaceLayouts = ref<Record<string, unknown>>(
+    initialState.workspaceLayouts,
+  );
   const activeWorkspaceId = ref<string>(initialState.activeWorkspaceId);
   const spawnRequest = ref<SpawnRequest | null>(null);
 
@@ -92,7 +98,7 @@ export const useWorkspaceStore = defineStore('workspace', () => {
   function persistState(
     layoutOuter: unknown,
     layouts: Record<string, unknown>,
-    activeId: string
+    activeId: string,
   ) {
     // Skip until client state is loaded and we are not in a programmatic restore.
     if (!isHydrated.value || restoreDepth > 0) return;
@@ -107,20 +113,16 @@ export const useWorkspaceStore = defineStore('workspace', () => {
 
     if (isElectronEnv) {
       // Persist via tRPC -> client state -> workspace.xml (efficient XML schema)
-      console.log('[workspace] persist -> tRPC.saveWorkspace', {
-        active: data.activeWorkspaceId,
-        hasOuter: data.outerLayout != null,
-        layoutCount: Object.keys(data.workspaceLayouts || {}).length,
-      });
       trpc.saveWorkspace
         .mutate({
           outerLayout: data.outerLayout,
           workspaceLayouts: data.workspaceLayouts,
           activeWorkspaceId: data.activeWorkspaceId,
         })
-        .then(() => console.log('[workspace] saveWorkspace ack'))
-        .catch((e: unknown) => console.error('Failed to save workspace via tRPC:', e));
-    } else if (typeof localStorage !== 'undefined') {
+        .catch((e: unknown) =>
+          console.error("Failed to save workspace via tRPC:", e),
+        );
+    } else if (typeof localStorage !== "undefined") {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
     }
   }
@@ -161,15 +163,18 @@ export const useWorkspaceStore = defineStore('workspace', () => {
           // This prevents a late-arriving hydrate from clobbering work the user
           // did while waiting for the (usually very fast) tRPC call.
           if (!hasLocalModifications.value) {
-            if (remote.outerLayout !== undefined) outerLayout.value = remote.outerLayout;
-            if (remote.workspaceLayouts !== undefined) workspaceLayouts.value = remote.workspaceLayouts;
-            if (remote.activeWorkspaceId !== undefined) activeWorkspaceId.value = remote.activeWorkspaceId;
+            if (remote.outerLayout !== undefined)
+              outerLayout.value = remote.outerLayout;
+            if (remote.workspaceLayouts !== undefined)
+              workspaceLayouts.value = remote.workspaceLayouts;
+            if (remote.activeWorkspaceId !== undefined)
+              activeWorkspaceId.value = remote.activeWorkspaceId;
           }
         }
         isHydrated.value = true;
       })
       .catch((e: unknown) => {
-        console.error('Failed to load workspace via tRPC:', e);
+        console.error("Failed to load workspace via tRPC:", e);
         isHydrated.value = true;
       });
 
@@ -183,7 +188,11 @@ export const useWorkspaceStore = defineStore('workspace', () => {
 
   function saveOuterLayout(layout: unknown) {
     outerLayout.value = layout;
-    persistState(outerLayout.value, workspaceLayouts.value, activeWorkspaceId.value);
+    persistState(
+      outerLayout.value,
+      workspaceLayouts.value,
+      activeWorkspaceId.value,
+    );
   }
 
   function saveWorkspaceLayout(id: string, layout: unknown) {
@@ -191,7 +200,11 @@ export const useWorkspaceStore = defineStore('workspace', () => {
       ...workspaceLayouts.value,
       [id]: layout,
     };
-    persistState(outerLayout.value, workspaceLayouts.value, activeWorkspaceId.value);
+    persistState(
+      outerLayout.value,
+      workspaceLayouts.value,
+      activeWorkspaceId.value,
+    );
   }
 
   function deleteWorkspaceLayout(id: string) {
@@ -199,9 +212,13 @@ export const useWorkspaceStore = defineStore('workspace', () => {
     delete updated[id];
     workspaceLayouts.value = updated;
     if (activeWorkspaceId.value === id) {
-      activeWorkspaceId.value = '';
+      activeWorkspaceId.value = "";
     }
-    persistState(outerLayout.value, workspaceLayouts.value, activeWorkspaceId.value);
+    persistState(
+      outerLayout.value,
+      workspaceLayouts.value,
+      activeWorkspaceId.value,
+    );
   }
 
   function setActiveWorkspace(id: string) {

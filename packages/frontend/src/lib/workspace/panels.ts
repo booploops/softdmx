@@ -203,6 +203,12 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     showInSpawnMenu: true,
   },
   {
+    label: "Command Bar",
+    path: "command-bar",
+    component: () => import("components/desk/CommandLineBar.vue"),
+    showInSpawnMenu: true,
+  },
+  {
     label: "Settings",
     path: "settings",
     component: () => import("components/SettingsPanel.vue"),

@@ -309,7 +309,11 @@ function recoverLook() {
 </script>
 
 <template>
-  <div v-if="ui.commandLineOpen" class="command-line-bar" role="region" aria-label="Command line">
+  <div
+    class="command-line-bar"
+    role="region"
+    aria-label="Command line"
+  >
     <div class="command-line-bar__input-row">
       <span class="command-line-bar__prompt sdmx-text-mono">{{ contextStore.prompt }}</span>
       <input
@@ -323,11 +327,32 @@ function recoverLook() {
         aria-label="Command input"
         @keydown="onKeydown"
       />
-      <SdmxButton icon="history" variant="ghost" size="sm" :info="info('desk.commandLine.history')" @click="showHistoryBrowser = !showHistoryBrowser" />
-      <SdmxButton icon="adjustments" variant="ghost" size="sm" :info="info('desk.commandLine.advanced')" @click="showAdvancedControls = !showAdvancedControls" />
-      <SdmxButton icon="x" variant="ghost" size="sm" :info="info('desk.commandLine.close')" @click="ui.toggleCommandLine(false)" />
+      <SdmxButton
+        icon="history"
+        variant="ghost"
+        size="sm"
+        :info="info('desk.commandLine.history')"
+        @click="showHistoryBrowser = !showHistoryBrowser"
+      />
+      <SdmxButton
+        icon="adjustments"
+        variant="ghost"
+        size="sm"
+        :info="info('desk.commandLine.advanced')"
+        @click="showAdvancedControls = !showAdvancedControls"
+      />
+      <SdmxButton
+        icon="x"
+        variant="ghost"
+        size="sm"
+        :info="info('desk.commandLine.close')"
+        @click="ui.toggleCommandLine(false)"
+      />
     </div>
-    <div v-if="diagnostics.length" class="command-line-bar__diagnostics">
+    <div
+      v-if="diagnostics.length"
+      class="command-line-bar__diagnostics"
+    >
       <div
         v-for="diag in diagnostics"
         :key="`${diag.code}-${diag.start}`"
@@ -336,7 +361,10 @@ function recoverLook() {
         {{ diag.message }}
       </div>
     </div>
-    <div v-if="suggestions.length && input" class="command-line-bar__suggestions">
+    <div
+      v-if="suggestions.length && input"
+      class="command-line-bar__suggestions"
+    >
       <button
         v-for="suggestion in suggestions"
         :key="suggestion"
@@ -348,51 +376,107 @@ function recoverLook() {
         {{ suggestion }}
       </button>
     </div>
-    <div v-if="pendingPlan" class="command-line-bar__preview">
+    <div
+      v-if="pendingPlan"
+      class="command-line-bar__preview"
+    >
       <div class="command-line-bar__preview-title sdmx-text-mono">Sandbox Preview</div>
       <div class="command-line-bar__preview-body">{{ selectedPlanSummary }}</div>
-      <SdmxButton icon="circle-check" size="sm" variant="warning" label="Confirm Apply" :info="info('desk.commandLine.confirmApply')" @click="confirmPendingPlan" />
+      <SdmxButton
+        icon="circle-check"
+        size="sm"
+        variant="warning"
+        label="Confirm Apply"
+        :info="info('desk.commandLine.confirmApply')"
+        @click="confirmPendingPlan"
+      />
     </div>
-    <div v-if="showAdvancedControls" class="command-line-bar__advanced">
-      <label v-info="'desk.commandLine.flagV2'" class="command-line-bar__toggle">
+    <div
+      v-if="showAdvancedControls"
+      class="command-line-bar__advanced"
+    >
+      <label
+        v-info="'desk.commandLine.flagV2'"
+        class="command-line-bar__toggle"
+      >
         <input
           type="checkbox"
           :checked="flags.commandLineV2Enabled"
           @change="persistFlags({ commandLineV2Enabled: ($event.target as HTMLInputElement).checked })"
         >
-        Command Line v2
+          Command Line v2
       </label>
-      <label v-info="'desk.commandLine.flagIntent'" class="command-line-bar__toggle">
+      <label
+        v-info="'desk.commandLine.flagIntent'"
+        class="command-line-bar__toggle"
+      >
         <input
           type="checkbox"
           :checked="flags.commandIntentEnabled"
           @change="persistFlags({ commandIntentEnabled: ($event.target as HTMLInputElement).checked })"
         >
-        Intent Commands
+          Intent Commands
       </label>
-      <label v-info="'desk.commandLine.flagSandbox'" class="command-line-bar__toggle">
+      <label
+        v-info="'desk.commandLine.flagSandbox'"
+        class="command-line-bar__toggle"
+      >
         <input
           type="checkbox"
           :checked="flags.commandSandboxRequiredForRisky"
           @change="persistFlags({ commandSandboxRequiredForRisky: ($event.target as HTMLInputElement).checked })"
         >
-        Require Sandbox For Risky Plans
+          Require Sandbox For Risky Plans
       </label>
-      <label v-info="'desk.commandLine.flagSuggestions'" class="command-line-bar__toggle">
+      <label
+        v-info="'desk.commandLine.flagSuggestions'"
+        class="command-line-bar__toggle"
+      >
         <input
           type="checkbox"
           :checked="flags.commandSuggestionsEnabled"
           @change="persistFlags({ commandSuggestionsEnabled: ($event.target as HTMLInputElement).checked })"
         >
-        Show-Aware Suggestions
+          Show-Aware Suggestions
       </label>
-      <SdmxButton icon="device-floppy" size="sm" variant="ghost" label="Save Macro From Input" :info="info('desk.commandLine.saveMacro')" @click="saveInlineMacro" />
-      <SdmxButton icon="archive" size="sm" variant="ghost" label="Save Pack From Recent" :info="info('desk.commandLine.savePack')" @click="savePackFromHistory" />
-      <SdmxButton icon="description" size="sm" variant="ghost" label="Generate Change Log" :info="info('desk.commandLine.changeLog')" @click="exportChangeLog" />
-      <SdmxButton icon="history-off" size="sm" variant="ghost" label="Recover Last Look" :info="info('desk.commandLine.recoverLook')" @click="recoverLook" />
+      <SdmxButton
+        icon="device-floppy"
+        size="sm"
+        variant="ghost"
+        label="Save Macro From Input"
+        :info="info('desk.commandLine.saveMacro')"
+        @click="saveInlineMacro"
+      />
+      <SdmxButton
+        icon="archive"
+        size="sm"
+        variant="ghost"
+        label="Save Pack From Recent"
+        :info="info('desk.commandLine.savePack')"
+        @click="savePackFromHistory"
+      />
+      <SdmxButton
+        icon="description"
+        size="sm"
+        variant="ghost"
+        label="Generate Change Log"
+        :info="info('desk.commandLine.changeLog')"
+        @click="exportChangeLog"
+      />
+      <SdmxButton
+        icon="history-off"
+        size="sm"
+        variant="ghost"
+        label="Recover Last Look"
+        :info="info('desk.commandLine.recoverLook')"
+        @click="recoverLook"
+      />
       <div class="command-line-bar__meta">Saved packs: {{ packs.length }}</div>
     </div>
-    <div v-if="showHistoryBrowser" class="command-line-bar__history">
+    <div
+      v-if="showHistoryBrowser"
+      class="command-line-bar__history"
+    >
       <div class="command-line-bar__history-head">
         <input
           v-model="historyStore.query"
@@ -400,7 +484,13 @@ function recoverLook() {
           class="command-line-bar__history-query sdmx-text-mono"
           placeholder="Search history"
         >
-        <SdmxButton icon="trash-x" size="sm" variant="ghost" :info="info('desk.commandLine.clearHistory')" @click="historyStore.clearHistory()" />
+          <SdmxButton
+            icon="trash-x"
+            size="sm"
+            variant="ghost"
+            :info="info('desk.commandLine.clearHistory')"
+            @click="historyStore.clearHistory()"
+          />
       </div>
       <div class="command-line-bar__history-list">
         <div
@@ -415,7 +505,13 @@ function recoverLook() {
           >
             {{ entry.input }}
           </button>
-          <SdmxButton icon="plus" size="sm" variant="ghost" :info="info('desk.commandLine.appendHistory')" @click="appendHistory(entry.input)" />
+          <SdmxButton
+            icon="plus"
+            size="sm"
+            variant="ghost"
+            :info="info('desk.commandLine.appendHistory')"
+            @click="appendHistory(entry.input)"
+          />
         </div>
       </div>
     </div>
@@ -429,18 +525,20 @@ function recoverLook() {
 
 <style scoped>
 .command-line-bar {
-  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   border-top: 1px solid var(--sdmx-color-border-subtle);
   background: var(--sdmx-color-bg-drawer);
   padding: var(--sdmx-space-sm);
-  max-height: 40vh;
-  overflow: auto;
+  overflow: hidden;
 }
 
 .command-line-bar__input-row {
   display: flex;
   align-items: center;
   gap: var(--sdmx-space-sm);
+  flex-shrink: 0;
 }
 
 .command-line-bar__prompt {
@@ -465,6 +563,7 @@ function recoverLook() {
   flex-wrap: wrap;
   gap: var(--sdmx-space-xs);
   margin-top: var(--sdmx-space-xs);
+  flex-shrink: 0;
 }
 
 .command-line-bar__suggestion {
@@ -487,6 +586,7 @@ function recoverLook() {
   display: flex;
   flex-direction: column;
   gap: 4px;
+  flex-shrink: 0;
 }
 
 .command-line-bar__diagnostic {
@@ -503,6 +603,7 @@ function recoverLook() {
   display: flex;
   gap: var(--sdmx-space-sm);
   align-items: center;
+  flex-shrink: 0;
 }
 
 .command-line-bar__preview-title {
@@ -522,6 +623,7 @@ function recoverLook() {
   flex-wrap: wrap;
   align-items: center;
   gap: var(--sdmx-space-sm);
+  flex-shrink: 0;
 }
 
 .command-line-bar__toggle {
@@ -543,8 +645,8 @@ function recoverLook() {
   border-radius: var(--sdmx-radius-sm);
   background: var(--sdmx-color-bg-surface);
   padding: var(--sdmx-space-xs);
-  max-height: 32vh;
   overflow: hidden;
+  flex-shrink: 0;
 }
 
 .command-line-bar__history-head {
@@ -595,8 +697,9 @@ function recoverLook() {
   font-size: var(--sdmx-font-size-caption);
   white-space: pre-wrap;
   border-radius: var(--sdmx-radius-sm);
-  max-height: 24vh;
-  overflow: auto;
+  overflow-y: auto;
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .command-line-bar__message--error {
