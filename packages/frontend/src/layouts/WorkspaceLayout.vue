@@ -29,6 +29,7 @@ import { showSettingsUI } from "src/lib/settings-ui";
 import { useUIStore } from "src/stores/ui";
 import { SIDEBAR_SHORTCUTS } from "src/lib/sidebar-shortcuts";
 import { useThemeStore } from "src/stores/theme";
+import NinjaKeysHelper from "src/components/NinjaKeysHelper.vue";
 
 const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
@@ -314,7 +315,7 @@ function updateFloatingWindowTitlebars() {
       titlebar.appendChild(customTitlebar);
     }
 
-    const group = outerApi.groups.find((g) => floatingEl.contains(g.element));
+    const group = outerApi!.groups.find((g) => floatingEl.contains(g.element));
     if (group && group.activePanel) {
       const activePanel = group.activePanel;
 
@@ -647,7 +648,10 @@ onUnmounted(() => {
   <div class="workspace-shell">
     <div class="workspace-sidebar">
       <div class="workspace-sidebar__top">
-        <XSidebarButton tooltip="Main Menu" @click="isElectron ? showNativeMainMenu() : undefined">
+        <XSidebarButton
+          tooltip="Main Menu"
+          @click="isElectron ? showNativeMainMenu() : undefined"
+        >
           <i class="codicon codicon-menu" />
         </XSidebarButton>
         <XSidebarButton
@@ -664,7 +668,10 @@ onUnmounted(() => {
         >
           <i :class="ui.operateLocked ? 'codicon codicon-lock' : 'codicon codicon-unlock'" />
         </XSidebarButton>
-        <div class="workspace-sidebar__shortcuts" :class="sidebarShortcutGroupClass">
+        <div
+          class="workspace-sidebar__shortcuts"
+          :class="sidebarShortcutGroupClass"
+        >
           <XSidebarButton
             v-for="shortcut in sidebarShortcuts"
             :key="shortcut.id"
@@ -675,7 +682,7 @@ onUnmounted(() => {
                 path: shortcut.path,
                 label: shortcut.label,
               })
-            "
+              "
           >
             <i :class="`codicon codicon-${shortcut.icon}`" />
           </XSidebarButton>
@@ -688,7 +695,10 @@ onUnmounted(() => {
         </XSidebarButton>
       </div>
     </div>
-    <div ref="containerRef" class="workspace-viewport">
+    <div
+      ref="containerRef"
+      class="workspace-viewport"
+    >
       <DockviewVue
         :class="`dockview-theme-${themeStore.dockviewTheme} sdmx-dockview`"
         :components="components"
@@ -697,6 +707,7 @@ onUnmounted(() => {
         @ready="onReady"
       />
     </div>
+    <NinjaKeysHelper />
   </div>
 </template>
 
