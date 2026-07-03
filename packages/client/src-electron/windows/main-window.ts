@@ -29,6 +29,7 @@ export async function createMainWindow(
     backgroundColor: "#1D1D1D",
     resizable: true,
     maximizable: true,
+    autoHideMenuBar: true,
     webPreferences: {
       contextIsolation: true,
       preload: path.resolve(currentDir, "preload.js"),

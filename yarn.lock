@@ -1999,6 +1999,22 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@lit-labs/ssr-dom-shim@npm:^1.0.0, @lit-labs/ssr-dom-shim@npm:^1.1.0":
+  version: 1.6.0
+  resolution: "@lit-labs/ssr-dom-shim@npm:1.6.0"
+  checksum: 10c0/deffcfd765d268820beef600a1c1cf9d3cf1a5cb4bbe7e80843796ff33d1a122f4e5651ef4a44b33d36e5fa6538e6ee87a95b9d40b4a26cabf3c35b45194c87a
+  languageName: node
+  linkType: hard
+
+"@lit/reactive-element@npm:^1.3.0, @lit/reactive-element@npm:^1.6.0":
+  version: 1.6.3
+  resolution: "@lit/reactive-element@npm:1.6.3"
+  dependencies:
+    "@lit-labs/ssr-dom-shim": "npm:^1.0.0"
+  checksum: 10c0/10f1d25e24e32feb21c4c6f9e11d062901241602e12c4ecf746b3138f87fed4d8394194645514d5c1bfd5f33f3fd56ee8ef41344e2cb4413c40fe4961ec9d419
+  languageName: node
+  linkType: hard
+
 "@lukeed/ms@npm:^2.0.2":
   version: 2.0.2
   resolution: "@lukeed/ms@npm:2.0.2"
@@ -2031,6 +2047,16 @@ __metadata:
   version: 1.0.2
   resolution: "@marijn/find-cluster-break@npm:1.0.2"
   checksum: 10c0/1a17a60b16083cc5f7ce89d7b7d8aa87ce4099723e3e9e34e229ef2cd8a980e69d481ca8ee90ffedfec5119af1aed581642fb60ed0365e7e90634c81ea6b630f
+  languageName: node
+  linkType: hard
+
+"@material/mwc-icon@npm:0.25.3":
+  version: 0.25.3
+  resolution: "@material/mwc-icon@npm:0.25.3"
+  dependencies:
+    lit: "npm:^2.0.0"
+    tslib: "npm:^2.0.1"
+  checksum: 10c0/9c5ec8887ba74fb2d7ae4afe6f27d02d2317ed3ae5c7e17a74b2f53264d8763ec6fbe1cf6dac34f8f79f75e0c1639aba1d73641875a2688f6f21873cfbc9b573
   languageName: node
   linkType: hard
 
@@ -3435,6 +3461,7 @@ __metadata:
     idb-keyval: "npm:^6.2.5"
     linear-timecode: "npm:^0.1.0"
     lodash-es: "npm:^4.18.1"
+    ninja-keys: "npm:^1.2.2"
     pinia: "npm:^3.0.4"
     postcss: "npm:^8.4.49"
     quasar: "npm:^2.20.1"
@@ -3823,6 +3850,13 @@ __metadata:
     fflate: "npm:~0.8.2"
     meshoptimizer: "npm:~0.18.1"
   checksum: 10c0/9e4b4a0aeba942b4dc5fc3648eb7932f8b7b6c03f2f9d69549f967bb5e581bb48022d15494b4e95eac21982d107bc4db2eecfb539a34451d2876ca3bd22a001c
+  languageName: node
+  linkType: hard
+
+"@types/trusted-types@npm:^2.0.2":
+  version: 2.0.7
+  resolution: "@types/trusted-types@npm:2.0.7"
+  checksum: 10c0/4c4855f10de7c6c135e0d32ce462419d8abbbc33713b31d294596c0cc34ae1fa6112a2f9da729c8f7a20707782b0d69da3b1f8df6645b0366d08825ca1522e0c
   languageName: node
   linkType: hard
 
@@ -7508,6 +7542,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"hotkeys-js@npm:3.8.7":
+  version: 3.8.7
+  resolution: "hotkeys-js@npm:3.8.7"
+  checksum: 10c0/0722f5dd562998c6a82e2a8a75df4b40add6a1d30cab48f848f2b081efd8f7d3c6abb27290811cf39d31f403fcb14d4fe4db63e4ae3c6a337bd584b3127359d2
+  languageName: node
+  linkType: hard
+
 "html-encoding-sniffer@npm:^6.0.0":
   version: 6.0.0
   resolution: "html-encoding-sniffer@npm:6.0.0"
@@ -8256,6 +8297,48 @@ __metadata:
   languageName: node
   linkType: hard
 
+"lit-element@npm:^3.2.0, lit-element@npm:^3.3.0":
+  version: 3.3.3
+  resolution: "lit-element@npm:3.3.3"
+  dependencies:
+    "@lit-labs/ssr-dom-shim": "npm:^1.1.0"
+    "@lit/reactive-element": "npm:^1.3.0"
+    lit-html: "npm:^2.8.0"
+  checksum: 10c0/f44c12fa3423a4e9ca5b84651410687e14646bb270ac258325e6905affac64a575f041f8440377e7ebaefa3910b6f0d6b8b1e902cb1aa5d0849b3fdfbf4fb3b6
+  languageName: node
+  linkType: hard
+
+"lit-html@npm:^2.2.0, lit-html@npm:^2.8.0":
+  version: 2.8.0
+  resolution: "lit-html@npm:2.8.0"
+  dependencies:
+    "@types/trusted-types": "npm:^2.0.2"
+  checksum: 10c0/90057dee050803823ac884c1355b0213ab8c05fbe2ec63943c694b61aade5d36272068f3925f45a312835e504f9c9784738ef797009f0a756a750351eafb52d5
+  languageName: node
+  linkType: hard
+
+"lit@npm:2.2.6":
+  version: 2.2.6
+  resolution: "lit@npm:2.2.6"
+  dependencies:
+    "@lit/reactive-element": "npm:^1.3.0"
+    lit-element: "npm:^3.2.0"
+    lit-html: "npm:^2.2.0"
+  checksum: 10c0/2e3fe566d67d1bbd5e8eee5a50a233482bbb3741da9dd436bc3aae76f594230847745b8f9a117e844096419b3bd94e63b6ff8cfd84ad6daa5c7f65446b8ffd34
+  languageName: node
+  linkType: hard
+
+"lit@npm:^2.0.0":
+  version: 2.8.0
+  resolution: "lit@npm:2.8.0"
+  dependencies:
+    "@lit/reactive-element": "npm:^1.6.0"
+    lit-element: "npm:^3.3.0"
+    lit-html: "npm:^2.8.0"
+  checksum: 10c0/bf33c26b1937ee204aed1adbfa4b3d43a284e85aad8ea9763c7865365917426eded4e5888158b4136095ea42054812561fe272862b61775f1198fad3588b071f
+  languageName: node
+  linkType: hard
+
 "local-pkg@npm:^1.1.2, local-pkg@npm:^1.2.0":
   version: 1.2.1
   resolution: "local-pkg@npm:1.2.1"
@@ -8818,6 +8901,17 @@ __metadata:
   version: 1.0.0
   resolution: "negotiator@npm:1.0.0"
   checksum: 10c0/4c559dd52669ea48e1914f9d634227c561221dd54734070791f999c52ed0ff36e437b2e07d5c1f6e32909fc625fe46491c16e4a8f0572567d4dd15c3a4fda04b
+  languageName: node
+  linkType: hard
+
+"ninja-keys@npm:^1.2.2":
+  version: 1.2.2
+  resolution: "ninja-keys@npm:1.2.2"
+  dependencies:
+    "@material/mwc-icon": "npm:0.25.3"
+    hotkeys-js: "npm:3.8.7"
+    lit: "npm:2.2.6"
+  checksum: 10c0/67bc9ee472c68d9cac6bc599cbc863f8afce16a88c7cb4f387c86f80e52f97eb9cf4b9d7dcbdf229e2d1b918fae3fe649d7ac19f0fb1cc94e84f48f62628c92c
   languageName: node
   linkType: hard
 
@@ -11206,7 +11300,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"tslib@npm:^2.0.0, tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:^2.8.1":
+"tslib@npm:^2.0.0, tslib@npm:^2.0.1, tslib@npm:^2.1.0, tslib@npm:^2.4.0, tslib@npm:^2.8.1":
   version: 2.8.1
   resolution: "tslib@npm:2.8.1"
   checksum: 10c0/9c4759110a19c53f992d9aae23aac5ced636e99887b51b9e61def52611732872ff7668757d4e4c61f19691e36f4da981cd9485e869b4a7408d689f6bf1f14e62
