@@ -9,6 +9,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
 
+type InputSize = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
+
 const props = withDefaults(
   defineProps<{
     modelValue?: string | number;
@@ -19,6 +21,7 @@ const props = withDefaults(
     dense?: boolean;
     clearable?: boolean;
     label?: string;
+    size?: InputSize;
   }>(),
   {
     modelValue: '',
@@ -31,6 +34,10 @@ const props = withDefaults(
     label: '',
   }
 );
+
+const computedSize = computed(() => {
+  return props.size || (props.dense ? 'sm' : 'md');
+});
 
 const emit = defineEmits<{
   'update:modelValue': [string];
@@ -81,12 +88,14 @@ const clear = () => {
 <template>
   <div
     class="x-input"
-    :class="{
-      'x-input--dense': dense,
-      'x-input--disabled': disable,
-      'x-input--readonly': readonly,
-      'x-input--has-label': label,
-    }"
+    :class="[
+      `x-input--size-${computedSize}`,
+      {
+        'x-input--disabled': disable,
+        'x-input--readonly': readonly,
+        'x-input--has-label': label,
+      }
+    ]"
   >
     <!-- Prepend Slot -->
     <div
@@ -232,7 +241,49 @@ const clear = () => {
     flex-shrink: 0;
   }
 
-  &--dense {
+  &--size-xs {
+    font-size: 10px;
+
+    .x-input__inner-wrapper {
+      height: 18px;
+      border-radius: 3px;
+    }
+
+    .x-input__native {
+      padding: 0 4px;
+    }
+
+    .x-input__clear {
+      width: 10px;
+      height: 10px;
+      margin-right: 3px;
+    }
+
+    .x-input__label {
+      left: 4px;
+      right: 16px;
+      font-size: 10px;
+
+      &--shrunk {
+        top: 2px;
+        transform: none;
+        font-size: 8px;
+        color: #8e8e93;
+      }
+    }
+
+    &.x-input--has-label {
+      .x-input__inner-wrapper {
+        height: 26px;
+      }
+
+      .x-input__native {
+        padding: 10px 4px 1px 4px;
+      }
+    }
+  }
+
+  &--size-sm {
     font-size: 11px;
 
     .x-input__inner-wrapper {
@@ -248,6 +299,155 @@ const clear = () => {
       width: 12px;
       height: 12px;
       margin-right: 4px;
+    }
+
+    .x-input__label {
+      left: 6px;
+      right: 20px;
+      font-size: 11px;
+
+      &--shrunk {
+        top: 3px;
+        transform: none;
+        font-size: 9px;
+        color: #8e8e93;
+      }
+    }
+
+    &.x-input--has-label {
+      .x-input__inner-wrapper {
+        height: 30px;
+      }
+
+      .x-input__native {
+        padding: 11px 6px 1px 6px;
+      }
+    }
+  }
+
+  &--size-md {
+    font-size: 13px;
+
+    .x-input__inner-wrapper {
+      height: 24px;
+      border-radius: 5px;
+    }
+
+    .x-input__native {
+      padding: 0 8px;
+    }
+
+    .x-input__clear {
+      width: 14px;
+      height: 14px;
+      margin-right: 6px;
+    }
+
+    .x-input__label {
+      left: 8px;
+      right: 24px;
+      font-size: 13px;
+
+      &--shrunk {
+        top: 4px;
+        transform: none;
+        font-size: 10px;
+        color: #8e8e93;
+      }
+    }
+
+    &.x-input--has-label {
+      .x-input__inner-wrapper {
+        height: 38px;
+      }
+
+      .x-input__native {
+        padding: 14px 8px 2px 8px;
+      }
+    }
+  }
+
+  &--size-lg {
+    font-size: 15px;
+
+    .x-input__inner-wrapper {
+      height: 32px;
+      border-radius: 6px;
+    }
+
+    .x-input__native {
+      padding: 0 10px;
+    }
+
+    .x-input__clear {
+      width: 16px;
+      height: 16px;
+      margin-right: 8px;
+    }
+
+    .x-input__label {
+      left: 10px;
+      right: 30px;
+      font-size: 15px;
+
+      &--shrunk {
+        top: 6px;
+        transform: none;
+        font-size: 12px;
+        color: #8e8e93;
+      }
+    }
+
+    &.x-input--has-label {
+      .x-input__inner-wrapper {
+        height: 48px;
+      }
+
+      .x-input__native {
+        padding: 18px 10px 2px 10px;
+      }
+    }
+  }
+
+  &--size-xl {
+    font-size: 18px;
+
+    .x-input__inner-wrapper {
+      height: 40px;
+      border-radius: 8px;
+    }
+
+    .x-input__native {
+      padding: 0 12px;
+    }
+
+    .x-input__clear {
+      width: 18px;
+      height: 18px;
+      margin-right: 10px;
+    }
+
+    .x-input__label {
+      left: 12px;
+      right: 36px;
+      font-size: 18px;
+
+      &--shrunk {
+        top: 8px;
+        transform: none;
+        font-size: 14px;
+        color: #8e8e93;
+      }
+    }
+
+    &.x-input--has-label {
+      .x-input__inner-wrapper {
+        height: 58px;
+      }
+
+      .x-input__native {
+        padding: 22px 12px 2px 12px;
+      }
     }
   }
 
@@ -269,8 +469,6 @@ const clear = () => {
 
   &__label {
     position: absolute;
-    left: 8px;
-    right: 24px;
     pointer-events: none;
     white-space: nowrap;
     overflow: hidden;
@@ -278,47 +476,8 @@ const clear = () => {
     line-height: 1;
     z-index: 1;
     color: rgba(0, 0, 0, 0.35);
-    font-size: 13px;
     top: 50%;
     transform: translateY(-50%);
-
-    &--shrunk {
-      top: 4px;
-      transform: none;
-      font-size: 10px;
-      color: #8e8e93;
-    }
-  }
-
-  &--has-label {
-    .x-input__inner-wrapper {
-      height: 38px;
-    }
-
-    .x-input__native {
-      padding: 14px 8px 2px 8px;
-    }
-
-    &.x-input--dense {
-      .x-input__inner-wrapper {
-        height: 30px;
-      }
-
-      .x-input__native {
-        padding: 11px 6px 1px 6px;
-      }
-
-      .x-input__label {
-        left: 6px;
-        right: 20px;
-        font-size: 11px;
-
-        &--shrunk {
-          top: 3px;
-          font-size: 9px;
-        }
-      }
-    }
   }
 }
 </style>

@@ -253,51 +253,157 @@ const chipRemoveCount = ref(0);
         <div class="zoo-section">
           <div class="zoo-label">Sizes</div>
           <div class="zoo-row align-center">
-            <XChip label="Extra Small (xs)" size="xs" color="default" />
-            <XChip label="Small (sm)" size="sm" color="default" />
-            <XChip label="Medium (md)" size="md" color="default" />
-            <XChip label="Large (lg)" size="lg" color="default" />
+            <XChip
+              label="Extra Small (xs)"
+              size="xs"
+              color="default"
+            />
+            <XChip
+              label="Small (sm)"
+              size="sm"
+              color="default"
+            />
+            <XChip
+              label="Medium (md)"
+              size="md"
+              color="default"
+            />
+            <XChip
+              label="Large (lg)"
+              size="lg"
+              color="default"
+            />
           </div>
         </div>
 
         <div class="zoo-section q-mt-md">
           <div class="zoo-label">Colors & Status Variants</div>
           <div class="zoo-row">
-            <XChip label="Default" color="default" />
-            <XChip label="Primary" color="primary" icon="sparkles" />
-            <XChip label="Positive" color="positive" icon="check" />
-            <XChip label="Negative" color="negative" icon="alert-triangle" />
-            <XChip label="Warning" color="warning" icon="alert-circle" />
-            <XChip label="Info" color="info" icon="info-circle" />
-            <XChip label="Active" color="active" />
-            <XChip label="Armed" color="armed" />
+            <XChip
+              label="Default"
+              color="default"
+            />
+            <XChip
+              label="Primary"
+              color="primary"
+              icon="sparkles"
+            />
+            <XChip
+              label="Positive"
+              color="positive"
+              icon="check"
+            />
+            <XChip
+              label="Negative"
+              color="negative"
+              icon="alert-triangle"
+            />
+            <XChip
+              label="Warning"
+              color="warning"
+              icon="alert-circle"
+            />
+            <XChip
+              label="Info"
+              color="info"
+              icon="info-circle"
+            />
+            <XChip
+              label="Active"
+              color="active"
+            />
+            <XChip
+              label="Armed"
+              color="armed"
+            />
           </div>
         </div>
 
         <div class="zoo-section q-mt-md">
           <div class="zoo-label">Outline Style</div>
           <div class="zoo-row">
-            <XChip label="Default" color="default" outline />
-            <XChip label="Primary" color="primary" icon="sparkles" outline />
-            <XChip label="Positive" color="positive" icon="check" outline />
-            <XChip label="Negative" color="negative" icon="alert-triangle" outline />
-            <XChip label="Warning" color="warning" icon="alert-circle" outline />
-            <XChip label="Info" color="info" icon="info-circle" outline />
+            <XChip
+              label="Default"
+              color="default"
+              outline
+            />
+            <XChip
+              label="Primary"
+              color="primary"
+              icon="sparkles"
+              outline
+            />
+            <XChip
+              label="Positive"
+              color="positive"
+              icon="check"
+              outline
+            />
+            <XChip
+              label="Negative"
+              color="negative"
+              icon="alert-triangle"
+              outline
+            />
+            <XChip
+              label="Warning"
+              color="warning"
+              icon="alert-circle"
+              outline
+            />
+            <XChip
+              label="Info"
+              color="info"
+              icon="info-circle"
+              outline
+            />
           </div>
         </div>
 
         <div class="zoo-section q-mt-md">
           <div class="zoo-label">Dense, Clickable & Removable</div>
           <div class="zoo-row align-center">
-            <XChip label="Dense Chip" dense color="primary" />
-            <XChip label="Clickable Chip" clickable color="warning" @click="buttonClickedCount++" />
-            <XChip v-if="showChip1" label="Removable 1" removable color="negative" @remove="showChip1 = false; chipRemoveCount++" />
-            <XChip v-if="showChip2" label="Removable 2" removable color="info" icon="info-circle" @remove="showChip2 = false; chipRemoveCount++" />
-            <XButton v-if="!showChip1 || !showChip2" label="Reset Chips" size="xs" flat color="primary" @click="showChip1 = true; showChip2 = true" />
+            <XChip
+              label="Dense Chip"
+              dense
+              color="primary"
+            />
+            <XChip
+              label="Clickable Chip"
+              clickable
+              color="warning"
+              @click="buttonClickedCount++"
+            />
+            <XChip
+              v-if="showChip1"
+              label="Removable 1"
+              removable
+              color="negative"
+              @remove="showChip1 = false; chipRemoveCount++"
+            />
+            <XChip
+              v-if="showChip2"
+              label="Removable 2"
+              removable
+              color="info"
+              icon="info-circle"
+              @remove="showChip2 = false; chipRemoveCount++"
+            />
+            <XButton
+              v-if="!showChip1 || !showChip2"
+              label="Reset Chips"
+              size="xs"
+              flat
+              color="primary"
+              @click="showChip1 = true; showChip2 = true"
+            />
           </div>
         </div>
 
-        <div class="zoo-section q-mt-md" v-if="chipRemoveCount > 0">
+        <div
+          class="zoo-section q-mt-md"
+          v-if="chipRemoveCount > 0"
+        >
           <div class="zoo-text-info">
             Chips removed: <strong>{{ chipRemoveCount }}</strong> times
           </div>
@@ -430,109 +536,211 @@ const chipRemoveCount = ref(0);
       </XCard>
 
       <!-- Column 3: Selectors & Dropdowns -->
-      <XCard title="Selectors & Dropdowns">
-        <div class="zoo-section">
-          <div class="zoo-label">XSelect (Dropdown Selector)</div>
-          <XSelect
-            v-model="selectedValue"
-            :options="selectOptions"
-          />
-          <div class="q-mt-sm">
-            <XSelect
-              v-model="selectedValue"
-              :options="selectOptions"
-              label="Selected Preset"
-            />
-          </div>
-          <div class="q-mt-sm">
-            <XSelect
-              v-model="emptySelectValue"
-              :options="emptySelectOptions"
-              label="Choose Option (Empty)"
-            />
-          </div>
-          <div class="q-mt-sm">
-            <XSelect
-              v-model="selectedValue"
-              :options="selectOptions"
-              label="Dense Selected Preset"
-              dense
-            />
-          </div>
-          <div class="zoo-row q-mt-sm">
-            <div class="zoo-text-info">
-              Selected value: <strong class="sdmx-text-mono">{{ typeof selectedValue === 'object' ?
-                JSON.stringify(selectedValue) : selectedValue }}</strong>
+      <XCard
+        title="Selectors & Dropdowns"
+        class="zoo-card--full-width"
+      >
+        <div class="zoo-flex-row">
+          <!-- Column 3a: Selectors -->
+          <div class="zoo-flex-col">
+            <div class="zoo-section">
+              <div class="zoo-label">XSelect (Dropdown Selector)</div>
+              <XSelect
+                v-model="selectedValue"
+                :options="selectOptions"
+              />
+              <div class="q-mt-sm">
+                <XSelect
+                  v-model="selectedValue"
+                  :options="selectOptions"
+                  label="Selected Preset"
+                />
+              </div>
+              <div class="q-mt-sm">
+                <XSelect
+                  v-model="emptySelectValue"
+                  :options="emptySelectOptions"
+                  label="Choose Option (Empty)"
+                />
+              </div>
+              <div class="q-mt-sm">
+                <XSelect
+                  v-model="selectedValue"
+                  :options="selectOptions"
+                  label="Dense Selected Preset"
+                  dense
+                />
+              </div>
+              <div class="zoo-row q-mt-sm">
+                <div class="zoo-text-info">
+                  Selected value: <strong class="sdmx-text-mono">{{ typeof selectedValue === 'object' ?
+                    JSON.stringify(selectedValue) : selectedValue }}</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="zoo-section q-mt-md">
+              <div class="zoo-label">XDropdown (Arbitrary Menu Slot)</div>
+              <XDropdown
+                label="Actions Menu"
+                color="default"
+                outline
+              >
+                <XListView
+                  :bordered="false"
+                  dense
+                >
+                  <XListItem @click="buttonClickedCount++">
+                    <template #prepend>
+                      <XIcon name="plus" />
+                    </template>
+                    Add Component
+                  </XListItem>
+                  <XListItem @click="buttonClickedCount++">
+                    <template #prepend>
+                      <XIcon name="pencil" />
+                    </template>
+                    Edit Layout
+                  </XListItem>
+                  <XListItem disable>
+                    <template #prepend>
+                      <XIcon name="trash" />
+                    </template>
+                    Delete Selected (Disabled)
+                  </XListItem>
+                </XListView>
+              </XDropdown>
             </div>
           </div>
-        </div>
 
-        <div class="zoo-section">
-          <div class="zoo-label">XInput (Text Field)</div>
-          <XInput
-            v-model="textValue"
-            placeholder="Type something..."
-            clearable
-          />
-          <div class="q-mt-sm">
-            <XInput
-              v-model="textValue"
-              label="Device Name"
-              clearable
-            />
-          </div>
-          <div class="q-mt-sm">
-            <XInput
-              v-model="denseTextValue"
-              placeholder="Dense field without label"
-              dense
-            />
-          </div>
-          <div class="q-mt-sm">
-            <XInput
-              v-model="denseTextValue"
-              label="Dense IP Address (Empty)"
-              dense
-            />
-          </div>
-          <div class="q-mt-sm">
-            <XInput
-              model-value="Disabled text input"
-              disable
-            />
-          </div>
-          <div class="zoo-row q-mt-sm">
-            <div class="zoo-text-info">
-              Value: <strong class="sdmx-text-mono">{{ textValue }}</strong>
+          <!-- Column 3b: Text Inputs -->
+          <div class="zoo-flex-col">
+            <div class="zoo-section">
+              <div class="zoo-label">XInput (Text Field)</div>
+              <XInput
+                v-model="textValue"
+                placeholder="Type something..."
+                clearable
+              />
+              <div class="q-mt-sm">
+                <XInput
+                  v-model="textValue"
+                  label="Device Name"
+                  clearable
+                />
+              </div>
+              <div class="q-mt-sm">
+                <XInput
+                  v-model="denseTextValue"
+                  placeholder="Dense field without label"
+                  dense
+                />
+              </div>
+              <div class="q-mt-sm">
+                <XInput
+                  v-model="denseTextValue"
+                  label="Dense IP Address (Empty)"
+                  dense
+                />
+              </div>
+              <div class="q-mt-sm">
+                <XInput
+                  model-value="Disabled text input"
+                  disable
+                />
+              </div>
+              <div class="zoo-row q-mt-sm">
+                <div class="zoo-text-info">
+                  Value: <strong class="sdmx-text-mono">{{ textValue }}</strong>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="zoo-section">
-          <div class="zoo-label">XDropdown (Arbitrary Menu Slot)</div>
-          <XDropdown
-            label="Actions Menu"
-            color="default"
-            outline
-          >
-            <XListView
-              :bordered="false"
-              dense
-            >
-              <XListItem @click="buttonClickedCount++">
-                <template #prepend><XIcon name="plus" /></template>
-                Add Component
-              </XListItem>
-              <XListItem @click="buttonClickedCount++">
-                <template #prepend><XIcon name="pencil" /></template>
-                Edit Layout
-              </XListItem>
-              <XListItem disable>
-                <template #prepend><XIcon name="trash" /></template>
-                Delete Selected (Disabled)
-              </XListItem>
-            </XListView>
-          </XDropdown>
+          <!-- Column 3c: Sizing Presets -->
+          <div class="zoo-flex-col">
+            <div class="zoo-section">
+              <div class="zoo-label">Size Presets (No Labels)</div>
+              <div class="q-mt-xs">
+                <XInput
+                  v-model="denseTextValue"
+                  placeholder="Size XS (10px font, 18px height)"
+                  size="xs"
+                />
+              </div>
+              <div class="q-mt-xs">
+                <XInput
+                  v-model="denseTextValue"
+                  placeholder="Size SM (11px font, 20px height)"
+                  size="sm"
+                />
+              </div>
+              <div class="q-mt-xs">
+                <XInput
+                  v-model="denseTextValue"
+                  placeholder="Size MD (13px font, 24px height)"
+                  size="md"
+                />
+              </div>
+              <div class="q-mt-xs">
+                <XInput
+                  v-model="denseTextValue"
+                  placeholder="Size LG (15px font, 32px height)"
+                  size="lg"
+                />
+              </div>
+              <div class="q-mt-xs">
+                <XInput
+                  v-model="denseTextValue"
+                  placeholder="Size XL (18px font, 40px height)"
+                  size="xl"
+                />
+              </div>
+            </div>
+            <div class="zoo-section q-mt-md">
+              <div class="zoo-label">Size Presets (With Labels)</div>
+              <div class="q-mt-xs">
+                <XInput
+                  v-model="denseTextValue"
+                  label="XS Label"
+                  placeholder="Extra Small"
+                  size="xs"
+                />
+              </div>
+              <div class="q-mt-xs">
+                <XInput
+                  v-model="denseTextValue"
+                  label="SM Label"
+                  placeholder="Small"
+                  size="sm"
+                />
+              </div>
+              <div class="q-mt-xs">
+                <XInput
+                  v-model="denseTextValue"
+                  label="MD Label"
+                  placeholder="Medium"
+                  size="md"
+                />
+              </div>
+              <div class="q-mt-xs">
+                <XInput
+                  v-model="denseTextValue"
+                  label="LG Label"
+                  placeholder="Large"
+                  size="lg"
+                />
+              </div>
+              <div class="q-mt-xs">
+                <XInput
+                  v-model="denseTextValue"
+                  label="XL Label"
+                  placeholder="Extra Large"
+                  size="xl"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </XCard>
 
@@ -790,7 +998,6 @@ const chipRemoveCount = ref(0);
 <style scoped lang="scss">
 .basic-controls-zoo {
   width: 100%;
-  max-width: 960px;
   margin: 0 auto;
   padding: 24px;
   display: flex;
