@@ -6,7 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { ref, computed, toRaw, watch, type Component } from 'vue';
+import { ref, computed, toRaw, watch, type Component, onMounted, onUnmounted } from 'vue';
 import XSidebarButton from 'src/components/controls/XSidebarButton.vue';
 import WSWorkspaceInstance from 'src/components/workspace/WSWorkspaceInstance.vue';
 import { getPanelsMenu, type PanelMenuItem } from 'src/lib/workspace/panels';
@@ -476,6 +476,33 @@ function showNativeSpawnMenu() {
 
     createMenu(template).show();
 }
+
+function onKeydown(event: KeyboardEvent) {
+    if (event.ctrlKey && event.key === 'Tab') {
+        if (!outerApi || outerApi.panels.length <= 1) return;
+        event.preventDefault();
+
+        const panels = outerApi.panels;
+        const activeId = workspaceStore.activeWorkspaceId;
+        const currentIndex = panels.findIndex((panel) => panel.id === activeId);
+
+        if (event.shiftKey) {
+            const prevIndex = currentIndex === -1 ? panels.length - 1 : (currentIndex - 1 + panels.length) % panels.length;
+            panels[prevIndex]?.api.setActive();
+        } else {
+            const nextIndex = currentIndex === -1 ? 0 : (currentIndex + 1) % panels.length;
+            panels[nextIndex]?.api.setActive();
+        }
+    }
+}
+
+onMounted(() => {
+    window.addEventListener('keydown', onKeydown);
+});
+
+onUnmounted(() => {
+    window.removeEventListener('keydown', onKeydown);
+});
 </script>
 
 <template>
