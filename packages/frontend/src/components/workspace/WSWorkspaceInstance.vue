@@ -175,6 +175,11 @@ function onReady(event: DockviewReadyEvent) {
   });
   disposables.push(() => activeDisposable.dispose());
 
+  const removeDisposable = innerApi.onDidRemovePanel((panel) => {
+    workspaceStore.deleteTextContent(panel.id);
+  });
+  disposables.push(() => removeDisposable.dispose());
+
   // Restore using hydrated data. We wait for ensureHydrated() so that
   // dynamically created workspace instances (from outer layout restore or
   // user actions) see the correct persisted inner layout from the client.

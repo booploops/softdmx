@@ -74,6 +74,89 @@ function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMe
       },
     },
     {
+      label: "Duplicate",
+      action: () => {
+        const workspaceId = params.panel.id;
+        const title = params.panel.title || "Workspace";
+        const savedLayout = workspaceStore.getWorkspaceLayout(workspaceId);
+
+        const newWorkspaceId = `workspace-${Date.now()}-${workspaceCounter.value++}`;
+        const newTitle = `${title} (Copy)`;
+
+        if (savedLayout) {
+          const rawLayout = toRaw(savedLayout) as any;
+          const idMap = new Map<string, string>();
+          const newPanels: Record<string, any> = {};
+
+          if (rawLayout.panels) {
+            for (const [oldId, panel] of Object.entries(rawLayout.panels)) {
+              const cleanBase = oldId.replace(/-\d+-\d+$/, "").replace(/-\d+$/, "");
+              const newId = `${cleanBase}-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+              idMap.set(oldId, newId);
+
+              const clonedPanel = JSON.parse(JSON.stringify(panel));
+              clonedPanel.id = newId;
+              newPanels[newId] = clonedPanel;
+
+              // Duplicate any textContent linked to this panel ID
+              const oldText = workspaceStore.textContents[oldId];
+              if (oldText !== undefined) {
+                workspaceStore.saveTextContent(newId, oldText);
+              }
+            }
+          }
+
+          const replaceStringValues = (obj: any, map: Map<string, string>): any => {
+            if (obj === null || obj === undefined) return obj;
+
+            if (typeof obj === "string") {
+              return map.get(obj) || obj;
+            }
+
+            if (Array.isArray(obj)) {
+              return obj.map((item) => replaceStringValues(item, map));
+            }
+
+            if (typeof obj === "object") {
+              const result: any = {};
+              for (const [key, value] of Object.entries(obj)) {
+                if (key === "panels") {
+                  result[key] = value;
+                } else {
+                  result[key] = replaceStringValues(value, map);
+                }
+              }
+              return result;
+            }
+
+            return obj;
+          };
+
+          const clonedLayout = JSON.parse(JSON.stringify(rawLayout));
+          clonedLayout.panels = newPanels;
+          const duplicatedLayout = replaceStringValues(clonedLayout, idMap);
+
+          workspaceStore.saveWorkspaceLayout(newWorkspaceId, duplicatedLayout);
+        }
+
+        if (outerApi) {
+          const panel = outerApi.addPanel({
+            id: newWorkspaceId,
+            component: "WorkspaceInstance",
+            title: newTitle,
+            params: {
+              workspaceId: newWorkspaceId,
+            },
+          });
+
+          if (panel) {
+            panel.api.setActive();
+          }
+          workspaceStore.setActiveWorkspace(newWorkspaceId);
+        }
+      },
+    },
+    {
       label: "Export Workspace",
       action: async () => {
         const workspaceId = params.panel.id;
