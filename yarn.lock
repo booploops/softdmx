@@ -3365,6 +3365,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@softdmx/buffers@workspace:*, @softdmx/buffers@workspace:packages/buffers":
+  version: 0.0.0-use.local
+  resolution: "@softdmx/buffers@workspace:packages/buffers"
+  dependencies:
+    flatbuffers: "npm:^24.12.23"
+    typescript: "npm:~6.0.3"
+  languageName: unknown
+  linkType: soft
+
 "@softdmx/client@workspace:packages/client":
   version: 0.0.0-use.local
   resolution: "@softdmx/client@workspace:packages/client"
@@ -3533,6 +3542,7 @@ __metadata:
   dependencies:
     "@jazzer.js/core": "npm:^4.0.0"
     "@playwright/test": "npm:^1.61.0"
+    "@softdmx/buffers": "workspace:*"
     "@softdmx/engine": "workspace:*"
     "@softdmx/frontend": "workspace:*"
     "@softdmx/wasm": "workspace:*"
@@ -7153,6 +7163,13 @@ __metadata:
     fast-querystring: "npm:^1.0.0"
     safe-regex2: "npm:^5.0.0"
   checksum: 10c0/f221bc0c70b2c2a6f9282fd3e0ac1911fcbb68ac718da043ddcefdec3b9d884a54d6ef1bf92e1b2ff83400e50f3c22141206a8ea3308bf0e9e37fd177843425d
+  languageName: node
+  linkType: hard
+
+"flatbuffers@npm:^24.12.23":
+  version: 24.12.23
+  resolution: "flatbuffers@npm:24.12.23"
+  checksum: 10c0/f6c7e4440c724ee337dac54db1d6ae428e84b2bf6618c542d095956e77b521bdd8a0e4d87dc93b15ae6ed4d07a8b269b5c99fd766e5acbe67546ef81034b1e05
   languageName: node
   linkType: hard
 

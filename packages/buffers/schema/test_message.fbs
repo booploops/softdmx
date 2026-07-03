@@ -6,6 +6,12 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { signal } from "alien-signals";
+namespace SoftDMX.Buffers;
 
-function createSession() {}
+table TestMessage {
+  id: uint;
+  name: string;
+  values: [double];
+}
+
+root_type TestMessage;

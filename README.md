@@ -9,6 +9,7 @@ Early-stage software lighting controller built with Vue, Quasar, and Electron. A
 **Build Requirements:** 
 - Node.js (Currently Node 22 LTS)
 - Zig
+- Flatbuffers (`flatc`)
 - Visual Studio Build Tools (Windows only)
 
 ```bash

@@ -1,0 +1,24 @@
+{
+  "name": "@softdmx/buffers",
+  "version": "0.0.1",
+  "description": "FlatBuffers schemas and compiled TS files for SoftDMX",
+  "license": "MPL-2.0",
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "import": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "compile": "flatc --ts -o src schema/*.fbs"
+  },
+  "dependencies": {
+    "flatbuffers": "^24.12.23"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3"
+  }
+}

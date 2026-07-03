@@ -21,6 +21,7 @@
     "test:all": "yarn test"
   },
   "dependencies": {
+    "@softdmx/buffers": "workspace:*",
     "@softdmx/engine": "workspace:*",
     "@softdmx/frontend": "workspace:*",
     "@softdmx/wasm": "workspace:*",
