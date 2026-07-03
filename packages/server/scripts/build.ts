@@ -27,6 +27,7 @@ async function runBuild() {
       output: {
         file: outputPath,
         format: "esm",
+        sourcemap: true,
       },
       platform: "node",
     });
