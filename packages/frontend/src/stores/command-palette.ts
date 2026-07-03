@@ -124,6 +124,7 @@ export const useCommandPaletteStore = defineStore("command-palette", () => {
         id: "create-workspace",
         title: "Create New Workspace",
         section: "Workspace",
+        hotkey: "meta+n",
         handler: () => {
           workspaceStore.requestCreateWorkspace("New Workspace");
         },
@@ -243,15 +244,23 @@ export const useCommandPaletteStore = defineStore("command-palette", () => {
 
   const panelCommands = computed<NinjaKeysCommand[]>(() => {
     const workspaceStore = useWorkspaceStore();
-    return WorkspacePanels.filter((panel) => panel.showInSpawnMenu).map((panel) => ({
-      id: `spawn-panel-${panel.path}`,
-      title: panel.label,
-      parent: "spawn-panel",
-      handler: () => {
-        const path = panel.path.startsWith("/") ? panel.path : `/${panel.path}`;
-        workspaceStore.requestSpawnPanel(workspaceStore.activeWorkspaceId, path, panel.label);
-      },
-    }));
+    return WorkspacePanels.filter((panel) => panel.showInSpawnMenu).map(
+      (panel) => ({
+        id: `spawn-panel-${panel.path}`,
+        title: panel.label,
+        parent: "spawn-panel",
+        handler: () => {
+          const path = panel.path.startsWith("/")
+            ? panel.path
+            : `/${panel.path}`;
+          workspaceStore.requestSpawnPanel(
+            workspaceStore.activeWorkspaceId,
+            path,
+            panel.label,
+          );
+        },
+      }),
+    );
   });
 
   const themeCommands = computed<NinjaKeysCommand[]>(() => {

@@ -22,6 +22,13 @@ export default defineConfig({
     vue({
       template: {
         transformAssetUrls,
+        compilerOptions: {
+          isCustomElement: (e) => {
+            if (e.includes("ninja-keys")) {
+              return true;
+            }
+          },
+        },
       },
     }),
     quasar({

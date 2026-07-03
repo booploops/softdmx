@@ -11,6 +11,7 @@ import { createPinia } from "pinia";
 import { Quasar, Dialog, Notify, Dark, Screen, Platform } from "quasar";
 import App from "./App.vue";
 import createRouter from "./router";
+import { createVfm } from "vue-final-modal";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "@quasar/extras/ionicons-v4/ionicons-v4.css";
@@ -18,6 +19,7 @@ import "@quasar/extras/mdi-v7/mdi-v7.css";
 import "@quasar/extras/fontawesome-v7/fontawesome-v7.css";
 import "quasar/src/css/index.sass";
 import "@vscode/codicons/dist/codicon.css";
+import "vue-final-modal/style.css";
 import "ninja-keys";
 
 // Custom Styles
@@ -30,9 +32,11 @@ const app = createApp(App);
 // Create Pinia and Router
 const pinia = createPinia();
 const router = createRouter();
+const vfm = createVfm();
 
 app.use(pinia);
 app.use(router);
+app.use(vfm);
 
 // Configure Quasar
 app.use(Quasar, {

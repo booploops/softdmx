@@ -24,6 +24,8 @@ declare module 'vue' {
     XDialogBody: typeof import('./../components/controls/XDialogBody.vue')['default']
     XDialogFooter: typeof import('./../components/controls/XDialogFooter.vue')['default']
     XDialogHeader: typeof import('./../components/controls/XDialogHeader.vue')['default']
+    XDialogTitlebar: typeof import('./../components/controls/XDialogTitlebar.vue')['default']
+    XDialogWindow: typeof import('./../components/controls/XDialogWindow.vue')['default']
     XDropdown: typeof import('./../components/controls/XDropdown.vue')['default']
     XIcon: typeof import('./../components/controls/XIcon.vue')['default']
     XInput: typeof import('./../components/controls/XInput.vue')['default']

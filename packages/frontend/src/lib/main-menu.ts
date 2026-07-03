@@ -15,6 +15,7 @@ import {
   showThemeSettingsDialog,
   showAudioSettingsDialog,
   showBindingsDialog,
+  showAboutDialog,
 } from "src/lib/CommonDialogs";
 import { showSettingsUI } from "./settings-ui";
 import { exampleVrClubShow } from "src/shows/example-vr-club";
@@ -289,6 +290,13 @@ export function getMainMenu(options?: {
           },
         },
       ],
+    },
+    {
+      label: "About",
+      icon: "info",
+      click: () => {
+        showAboutDialog();
+      },
     },
   ];
 }

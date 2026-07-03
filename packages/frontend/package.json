@@ -38,6 +38,7 @@
     "socket.io-client": "^4.8.3",
     "three": "^0.175.0",
     "vue": "3.6.0-beta.16",
+    "vue-final-modal": "^4.5.5",
     "vue-i18n": "^11.4.6",
     "vue-router": "^5.1.0",
     "yaml": "^2.9.0"

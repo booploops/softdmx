@@ -996,6 +996,15 @@ const chipRemoveCount = ref(0);
         </div>
       </XCard>
 
+      <XCard
+        title="Dialog Window"
+        class="zoo-card--full-width"
+      >
+        <XDialogWindow></XDialogWindow>
+        <XDialogTitlebar title="Test">
+        </XDialogTitlebar>
+      </XCard>
+
     </div>
   </div>
 </template>

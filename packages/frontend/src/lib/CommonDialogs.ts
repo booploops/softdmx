@@ -6,12 +6,14 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { createDialog } from './Dialog';
-import SettingsDialog from 'src/components/SettingsDialog.vue';
-import InterfaceSettingsDialog from 'src/components/InterfaceSettingsDialog.vue';
-import ThemeSettingsDialog from 'src/components/ThemeSettingsDialog.vue';
-import AudioSettingsDialog from 'src/components/AudioSettingsDialog.vue';
-import { createWorkspaceWithPanels } from './workspace';
+import { createDialog } from "./Dialog";
+import SettingsDialog from "src/components/SettingsDialog.vue";
+import InterfaceSettingsDialog from "src/components/InterfaceSettingsDialog.vue";
+import ThemeSettingsDialog from "src/components/ThemeSettingsDialog.vue";
+import AudioSettingsDialog from "src/components/AudioSettingsDialog.vue";
+import { createWorkspaceWithPanels } from "./workspace";
+import { useModal } from "vue-final-modal";
+import AboutDialog from "src/components/dialogs/AboutDialog.vue";
 
 export function showSettingsDialog() {
   return createDialog({ component: SettingsDialog });
@@ -30,5 +32,14 @@ export function showAudioSettingsDialog() {
 }
 
 export function showBindingsDialog() {
-  return createWorkspaceWithPanels('Bindings', ['/bindings-midi', '/bindings-osc']);
+  return createWorkspaceWithPanels("Bindings", [
+    "/bindings-midi",
+    "/bindings-osc",
+  ]);
+}
+
+export function showAboutDialog() {
+  return useModal({
+    component: AboutDialog,
+  }).open();
 }
