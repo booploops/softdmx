@@ -1,15 +1,22 @@
 {
   "name": "@softdmx/server",
+  "bin": "build/index.js",
   "scripts": {
     "dev": "tsx watch ./src/main.ts",
-    "lint": "oxlint .",
+    "lint": "oxlint --ignore-pattern build .",
     "format": "oxfmt",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:js": "tsx ./scripts/build.ts",
+    "build:pkg": "pkg . --sea",
+    "build:exe": "yarn build:js && yarn build:pkg"
   },
+  "type": "module",
   "devDependencies": {
+    "@yao-pkg/pkg": "^6.20.0",
     "hono": "^4.12.27",
     "oxfmt": "^0.56.0",
     "oxlint": "^1.71.0",
+    "rolldown": "^1.1.3",
     "tsx": "^4.22.4",
     "typescript": "^6.0.3"
   },
