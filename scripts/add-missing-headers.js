@@ -1,0 +1,147 @@
+/*
+ * Copyright (C) 2025-Present booploops and contributors
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const repoRoot = path.resolve(__dirname, '..');
+
+const EXCLUDED_DIRS = new Set([
+  'node_modules',
+  '.git',
+  '.yarn',
+  '.cursor',
+  'dist',
+  'dist-electron',
+  '.agents',
+  'temp',
+  '.output',
+  '.quasar',
+]);
+
+const EXCLUDED_FILES = new Set([
+  path.join('packages', 'frontend', 'auto-imports.d.ts'),
+  path.join('packages', 'frontend', 'src', 'types', 'components.d.ts'),
+]);
+
+const ALLOWED_EXTENSIONS = new Set([
+  '.ts',
+  '.tsx',
+  '.js',
+  '.jsx',
+  '.vue',
+  '.zig',
+  '.css',
+  '.scss',
+  '.html',
+]);
+
+// Headers format definitions
+const HEADERS = {
+  standard: `/*
+ * Copyright (C) 2025-Present booploops and contributors
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */`,
+  html: `<!--
+  Copyright (C) 2025-Present booploops and contributors
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+-->`,
+  zig: `///
+/// Copyright (C) 2025-Present booploops and contributors
+///
+/// This Source Code Form is subject to the terms of the Mozilla Public
+/// License, v. 2.0. If a copy of the MPL was not distributed with this
+/// file, You can obtain one at https://mozilla.org/MPL/2.0/.
+///`
+};
+
+function getHeaderForExtension(ext) {
+  switch (ext) {
+    case '.vue':
+    case '.html':
+      return HEADERS.html;
+    case '.zig':
+      return HEADERS.zig;
+    default:
+      return HEADERS.standard;
+  }
+}
+
+const missingFiles = [];
+
+function scanDir(dir) {
+  const entries = fs.readdirSync(dir, { withFileTypes: true });
+  for (const entry of entries) {
+    const fullPath = path.join(dir, entry.name);
+    const relPath = path.relative(repoRoot, fullPath);
+
+    if (entry.isDirectory()) {
+      if (EXCLUDED_DIRS.has(entry.name)) {
+        continue;
+      }
+      scanDir(fullPath);
+    } else if (entry.isFile()) {
+      const ext = path.extname(entry.name).toLowerCase();
+      if (ALLOWED_EXTENSIONS.has(ext)) {
+        if (EXCLUDED_FILES.has(relPath)) {
+          continue;
+        }
+
+        const content = fs.readFileSync(fullPath, 'utf8');
+        if (!content.includes('mozilla.org/MPL/2.0')) {
+          missingFiles.push({
+            fullPath,
+            relPath,
+            ext
+          });
+        }
+      }
+    }
+  }
+}
+
+console.log('Scanning workspace and automatically adding missing MPL headers...');
+scanDir(repoRoot);
+
+if (missingFiles.length === 0) {
+  console.log('\nAll checked files already contain the MPL license header.\n');
+  process.exit(0);
+}
+
+for (const file of missingFiles) {
+  const header = getHeaderForExtension(file.ext);
+  let content = fs.readFileSync(file.fullPath, 'utf8');
+
+  let newContent = '';
+  if (content.startsWith('#!')) {
+    // Has shebang line, preserve it as first line
+    const newlineIndex = content.indexOf('\n');
+    if (newlineIndex !== -1) {
+      const shebang = content.substring(0, newlineIndex + 1);
+      const rest = content.substring(newlineIndex + 1);
+      newContent = `${shebang}\n${header}\n\n${rest}`;
+    } else {
+      // Only shebang line in file
+      newContent = `${content}\n\n${header}\n`;
+    }
+  } else {
+    // Normal file
+    newContent = `${header}\n\n${content}`;
+  }
+
+  fs.writeFileSync(file.fullPath, newContent, 'utf8');
+  console.log(`  Added header to: ${file.relPath}`);
+}
+
+console.log(`\nSuccessfully added MPL headers to ${missingFiles.length} file(s)!\n`);

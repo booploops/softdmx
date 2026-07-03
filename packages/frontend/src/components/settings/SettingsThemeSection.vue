@@ -1,3 +1,11 @@
+<!--
+  Copyright (C) 2025-Present booploops and contributors
+
+  This Source Code Form is subject to the terms of the Mozilla Public
+  License, v. 2.0. If a copy of the MPL was not distributed with this
+  file, You can obtain one at https://mozilla.org/MPL/2.0/.
+-->
+
 <script setup lang="ts">
 import { Dialog } from 'quasar';
 import { computed, ref, watch } from 'vue';
@@ -32,6 +40,27 @@ const themeOptions = computed(() =>
     value: theme.id,
   }))
 );
+
+const dockviewThemeOptions = [
+  { label: 'Dark', value: 'dark' },
+  { label: 'Light', value: 'light' },
+  { label: 'Dracula', value: 'dracula' },
+  { label: 'Nord', value: 'nord' },
+  { label: 'Nord (Spaced)', value: 'nord-spaced' },
+  { label: 'Abyss', value: 'abyss' },
+  { label: 'Abyss (Spaced)', value: 'abyss-spaced' },
+  { label: 'Catppuccin Mocha', value: 'catppuccin-mocha' },
+  { label: 'Catppuccin Mocha (Spaced)', value: 'catppuccin-mocha-spaced' },
+  { label: 'GitHub Dark', value: 'github-dark' },
+  { label: 'GitHub Dark (Spaced)', value: 'github-dark-spaced' },
+  { label: 'GitHub Light', value: 'github-light' },
+  { label: 'GitHub Light (Spaced)', value: 'github-light-spaced' },
+  { label: 'Light (Spaced)', value: 'light-spaced' },
+  { label: 'Monokai', value: 'monokai' },
+  { label: 'Solarized Light', value: 'solarized-light' },
+  { label: 'Solarized Light (Spaced)', value: 'solarized-light-spaced' },
+  { label: 'VS', value: 'vs' },
+];
 
 watch(
   () => themeStore.resolvedTheme,
@@ -114,6 +143,13 @@ function importTheme() {
         :options="themeOptions"
         label="Theme preset"
         @update:model-value="themeStore.setActiveThemeId"
+      />
+
+      <XSelect
+        :model-value="themeStore.dockviewTheme"
+        :options="dockviewThemeOptions"
+        label="Dockview theme"
+        @update:model-value="themeStore.setDockviewTheme"
       />
 
       <div class="settings-subtitle">Quick Token Overrides</div>

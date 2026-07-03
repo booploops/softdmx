@@ -133,6 +133,7 @@ export type ThemeOverrides = {
 
 export type ThemePersistedState = {
   activeThemeId: string;
+  dockviewTheme?: string;
   overrides: ThemeOverrides;
 };
 

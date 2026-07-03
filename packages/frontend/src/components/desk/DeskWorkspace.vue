@@ -13,12 +13,16 @@ import DeskDockviewPanel from './DeskDockviewPanel.vue';
 import { useDeskViewStore } from 'src/stores/desk-view';
 import { useUIStore } from 'src/stores/ui';
 import { useQuasar } from 'quasar';
+import { useThemeStore } from 'src/stores/theme';
 import { DockviewVue, type DockviewApi, type DockviewReadyEvent } from 'dockview-vue';
 import 'dockview-core/dist/styles/dockview.css';
 
 const deskView = useDeskViewStore();
 const ui = useUIStore();
 const $q = useQuasar();
+const themeStore = useThemeStore();
+
+const dockviewClass = computed(() => `dockview-theme-${themeStore.dockviewTheme} sdmx-dockview`);
 
 let dockviewApi: DockviewApi | undefined;
 
@@ -201,7 +205,7 @@ watch(
 <template>
   <div class="desk-workspace-root">
     <DockviewVue
-      class="dockview-theme-dark sdmx-dockview"
+      :class="dockviewClass"
       :components="components"
       @ready="onReady"
     />

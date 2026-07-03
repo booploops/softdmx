@@ -22,10 +22,12 @@ import 'dockview-core/dist/styles/dockview.css';
 import { showSettingsUI } from 'src/lib/settings-ui';
 import { useUIStore } from 'src/stores/ui';
 import { SIDEBAR_SHORTCUTS } from 'src/lib/sidebar-shortcuts';
+import { useThemeStore } from 'src/stores/theme';
 
 const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
 const ui = useUIStore();
+const themeStore = useThemeStore();
 const containerRef = ref<HTMLElement | null>(null);
 const disposables: (() => void)[] = [];
 const components: Record<string, any> = {
@@ -672,7 +674,7 @@ onUnmounted(() => {
         </div>
         <div ref="containerRef" class="workspace-viewport">
             <DockviewVue
-                class="dockview-theme-dark sdmx-dockview"
+                :class="`dockview-theme-${themeStore.dockviewTheme} sdmx-dockview`"
                 :components="components"
                 :getTabContextMenuItems="getTabContextMenuItems"
                 :floatingGroupDragHandle="'titlebar'"

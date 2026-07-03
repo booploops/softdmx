@@ -11,6 +11,7 @@ import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type IDockviewP
 import { useQuasar } from 'quasar';
 import WSWorkspacePanel from './WSWorkspacePanel.vue';
 import { useWorkspaceStore } from 'src/stores/workspace';
+import { useThemeStore } from 'src/stores/theme';
 
 const props = defineProps<{
   params: IDockviewPanelProps<{ workspaceId: string }>;
@@ -18,6 +19,7 @@ const props = defineProps<{
 
 const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
+const themeStore = useThemeStore();
 const workspaceId = props.params.params?.workspaceId || props.params.api.id;
 const containerRef = ref<HTMLElement | null>(null);
 
@@ -257,7 +259,7 @@ onUnmounted(() => {
     @pointerdown="workspaceStore.setActiveWorkspace(workspaceId)"
   >
     <DockviewVue
-      class="dockview-theme-dark sdmx-dockview-inner"
+      :class="`dockview-theme-${themeStore.dockviewTheme} sdmx-dockview-inner`"
       :components="components"
       :getTabContextMenuItems="getTabContextMenuItems"
       :floatingGroupDragHandle="'titlebar'"

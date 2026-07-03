@@ -27,7 +27,9 @@
     "test:playwright:electron": "yarn workspace @softdmx/tests test:playwright:electron",
     "test:coverage": "yarn workspace @softdmx/tests test:coverage",
     "test:all": "yarn test",
-    "cli": "node packages/client/scripts/softdmx-cli.mjs"
+    "cli": "node packages/client/scripts/softdmx-cli.mjs",
+    "license:check": "node scripts/find-missing-headers.js",
+    "license:fix": "node scripts/add-missing-headers.js"
   },
   "devDependencies": {
     "concurrently": "^10.0.3",

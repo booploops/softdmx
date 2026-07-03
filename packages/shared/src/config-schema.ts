@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 2025-Present booploops and contributors
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 import { z } from "zod";
 
 export const sidebarShortcutOpenModeSchema = z.enum(["current-workspace", "new-workspace"]);
@@ -18,6 +26,7 @@ export const configSidebarSettingsSchema = z.object({
 
 export const configThemeSettingsSchema = z.object({
   activeThemeId: z.string().default("default-dark"),
+  dockviewTheme: z.string().default("dark"),
   overrides: z.record(z.string(), z.unknown()).default({}),
 });
 
@@ -64,6 +73,7 @@ export const configSidebarSettingsPatchSchema = z.object({
 
 export const configThemeSettingsPatchSchema = z.object({
   activeThemeId: z.string().optional(),
+  dockviewTheme: z.string().optional(),
   overrides: z.record(z.string(), z.unknown()).optional(),
 });
 

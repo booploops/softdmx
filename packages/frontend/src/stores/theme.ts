@@ -25,19 +25,20 @@ const STORAGE_KEY = 'softdmx-theme-state';
 
 function readPersistedState(): ThemePersistedState {
   if (typeof localStorage === 'undefined') {
-    return { activeThemeId: defaultDarkTheme.id, overrides: {} };
+    return { activeThemeId: defaultDarkTheme.id, dockviewTheme: 'dark', overrides: {} };
   }
 
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return { activeThemeId: defaultDarkTheme.id, overrides: {} };
+    if (!raw) return { activeThemeId: defaultDarkTheme.id, dockviewTheme: 'dark', overrides: {} };
     const parsed = JSON.parse(raw) as ThemePersistedState;
     return {
       activeThemeId: parsed.activeThemeId ?? defaultDarkTheme.id,
+      dockviewTheme: parsed.dockviewTheme ?? 'dark',
       overrides: parsed.overrides ?? {},
     };
   } catch {
-    return { activeThemeId: defaultDarkTheme.id, overrides: {} };
+    return { activeThemeId: defaultDarkTheme.id, dockviewTheme: 'dark', overrides: {} };
   }
 }
 
@@ -46,11 +47,12 @@ function writePersistedState(state: ThemePersistedState): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-function persistThemeConfig(activeThemeId: string, overrides: ThemeOverrides): void {
+function persistThemeConfig(activeThemeId: string, dockviewTheme: string, overrides: ThemeOverrides): void {
   if (!isElectronConfigEnv) return;
   persistConfigPatch({
     theme: {
       activeThemeId,
+      dockviewTheme,
       overrides: overrides as Record<string, unknown>,
     },
   });
@@ -58,9 +60,10 @@ function persistThemeConfig(activeThemeId: string, overrides: ThemeOverrides): v
 
 export const useThemeStore = defineStore('theme', () => {
   const persisted = isElectronConfigEnv
-    ? { activeThemeId: DEFAULT_THEME_SETTINGS.activeThemeId, overrides: {} as ThemeOverrides }
+    ? { activeThemeId: DEFAULT_THEME_SETTINGS.activeThemeId, dockviewTheme: DEFAULT_THEME_SETTINGS.dockviewTheme, overrides: {} as ThemeOverrides }
     : readPersistedState();
   const activeThemeId = ref(persisted.activeThemeId);
+  const dockviewTheme = ref(persisted.dockviewTheme ?? 'dark');
   const overrides = ref<ThemeOverrides>(persisted.overrides);
   const importedThemes = ref<ThemeDefinition[]>([]);
 
@@ -82,13 +85,15 @@ export const useThemeStore = defineStore('theme', () => {
   function persist() {
     writePersistedState({
       activeThemeId: activeThemeId.value,
+      dockviewTheme: dockviewTheme.value,
       overrides: overrides.value,
     });
-    persistThemeConfig(activeThemeId.value, overrides.value);
+    persistThemeConfig(activeThemeId.value, dockviewTheme.value, overrides.value);
   }
 
   function applyConfigTheme(settings: ConfigThemeSettings) {
     activeThemeId.value = settings.activeThemeId;
+    dockviewTheme.value = settings.dockviewTheme ?? 'dark';
     overrides.value = (settings.overrides ?? {}) as ThemeOverrides;
     applyActiveTheme();
   }
@@ -102,6 +107,11 @@ export const useThemeStore = defineStore('theme', () => {
     activeThemeId.value = id;
     persist();
     applyActiveTheme();
+  }
+
+  function setDockviewTheme(theme: string) {
+    dockviewTheme.value = theme;
+    persist();
   }
 
   function patchTokenOverrides(patch: ThemeOverrides['tokens']) {
@@ -152,11 +162,13 @@ export const useThemeStore = defineStore('theme', () => {
 
   return {
     activeThemeId,
+    dockviewTheme,
     overrides,
     availableThemes,
     activePreset,
     resolvedTheme,
     setActiveThemeId,
+    setDockviewTheme,
     patchTokenOverrides,
     setCustomCss,
     resetOverrides,

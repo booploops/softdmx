@@ -1,3 +1,11 @@
+/*
+ * Copyright (C) 2025-Present booploops and contributors
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at https://mozilla.org/MPL/2.0/.
+ */
+
 /**
  * Workspace definitions are stored in a WorkspaceFile, since they are written to far more often than the general configuration file.
  * Uses an efficient XML representation persisted to appdata/workspace.xml.
