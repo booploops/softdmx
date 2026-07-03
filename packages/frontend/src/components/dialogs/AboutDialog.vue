@@ -15,13 +15,17 @@ import { VueFinalModal } from 'vue-final-modal'
     class="flex justify-center items-center"
     content-class="sdmx-dialog-card sdmx-dialog-card--narrow"
   >
-    <div class="q-pa-md">
-      <h3 class="text-h6 q-mt-none q-mb-md">About SoftDMX</h3>
-      <p class="text-body1">
-        SoftDMX is a software lighting controller for live performance and virtual-world applications.
-      </p>
-      <p class="text-body2 q-mb-none">Version: 0.0.1</p>
-    </div>
+    <XDialogWindow>
+      <XDialogTitlebar title="About SoftDMX" />
+      <XDialogContent>
+        <div class="q-pa-md">
+          <p class="text-body1">
+            SoftDMX is a software lighting controller for live performance and virtual-world applications.
+          </p>
+          <p class="text-body2 q-mb-none">Version: 0.0.1</p>
+        </div>
+      </XDialogContent>
+    </XDialogWindow>
   </VueFinalModal>
 </template>
 

@@ -22,6 +22,7 @@ declare module 'vue' {
     XCollapseItem: typeof import('./../components/controls/XCollapseItem.vue')['default']
     XDialog: typeof import('./../components/controls/XDialog.vue')['default']
     XDialogBody: typeof import('./../components/controls/XDialogBody.vue')['default']
+    XDialogContent: typeof import('./../components/controls/XDialogContent.vue')['default']
     XDialogFooter: typeof import('./../components/controls/XDialogFooter.vue')['default']
     XDialogHeader: typeof import('./../components/controls/XDialogHeader.vue')['default']
     XDialogTitlebar: typeof import('./../components/controls/XDialogTitlebar.vue')['default']

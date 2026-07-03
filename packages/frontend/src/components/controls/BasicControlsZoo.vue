@@ -1000,9 +1000,14 @@ const chipRemoveCount = ref(0);
         title="Dialog Window"
         class="zoo-card--full-width"
       >
-        <XDialogWindow></XDialogWindow>
-        <XDialogTitlebar title="Test">
-        </XDialogTitlebar>
+        <XDialogWindow>
+          <XDialogTitlebar title="Test">
+          </XDialogTitlebar>
+          <XDialogContent>
+            Dialog content
+          </XDialogContent>
+        </XDialogWindow>
+
       </XCard>
 
     </div>

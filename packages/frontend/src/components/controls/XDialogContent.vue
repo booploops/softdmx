@@ -11,15 +11,11 @@
 </script>
 
 <template>
-  <div class="x-dialog-window">
-    <slot />
-  </div>
+    <div class="x-dialog-content">
+        <slot />
+    </div>
 </template>
 
 <style scoped lang="scss">
-.x-dialog-window {
-  box-shadow: 0 0 0 1px var(--sdmx-color-primary);
-  border-radius: 3px;
-  background: var(--sdmx-color-bg-elevated);
-}
+.x-dialog-content {}
 </style>

@@ -12,6 +12,14 @@ const props = defineProps<{
   title?: string;
 }>();
 
+const emit = defineEmits([
+  'close',
+]);
+
+function onClose() {
+  emit('close');
+}
+
 </script>
 
 <template>
@@ -23,7 +31,10 @@ const props = defineProps<{
       {{ title }}
     </div>
     <!-- Close -->
-    <button class="dialog-button">
+    <button
+      class="dialog-button"
+      @click="onClose"
+    >
       <div class="codicon codicon-close"></div>
     </button>
   </div>
@@ -34,10 +45,13 @@ const props = defineProps<{
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: var(--sdmx-color-bg-muted);
+  background: var(--sdmx-color-bg-toolbar);
   color: var(--text-primary);
   height: 32px;
   user-select: none;
+  border-top-left-radius: inherit;
+  border-top-right-radius: inherit;
+  overflow: hidden;
 }
 
 .titlebar-text {
