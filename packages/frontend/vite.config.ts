@@ -7,6 +7,7 @@
  */
 
 import { fileURLToPath, URL } from "node:url";
+import { join } from "node:path";
 import { defineConfig } from "vite";
 import vue from "@vitejs/plugin-vue";
 import AutoImport from "unplugin-auto-import/vite";
@@ -14,6 +15,7 @@ import vueI18n from "@intlify/unplugin-vue-i18n/vite";
 import { quasar, transformAssetUrls } from "@quasar/vite-plugin";
 import VueDevTools from "vite-plugin-vue-devtools";
 import Components from "unplugin-vue-components/vite";
+import license from "rollup-plugin-license";
 
 export default defineConfig({
   base: "./",
@@ -45,6 +47,14 @@ export default defineConfig({
     Components({
       dts: "src/types/components.d.ts",
       dirs: ["src/components/controls"],
+    }),
+    license({
+      thirdParty: {
+        output: {
+          file: join("dist", "THIRD_PARTY.txt"),
+          encoding: "utf-8", // Default is utf-8.
+        },
+      },
     }),
   ],
   resolve: {

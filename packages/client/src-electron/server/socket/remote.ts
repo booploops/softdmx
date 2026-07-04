@@ -11,6 +11,7 @@ import type { ClientIdentity, ShowAudioMapping, ShowDocument } from "@softdmx/en
 import { isSupportedShowVersion } from "@softdmx/engine";
 import type { RemoteContext } from "../context";
 import type { ScratchStateSnapshot } from "../scratch-authority";
+import { showStore } from "../../state/show";
 
 type RemoteHandler = (socket: Socket, payload: unknown, ctx: RemoteContext) => void;
 type AudioMappingMutationPayload =
@@ -73,16 +74,54 @@ const handlers: Record<string, RemoteHandler> = {
 
   "show:get": (socket, _payload, ctx) => {
     const show = ctx.getShow();
-    if (show) socket.emit("show:state", show);
+    if (show) {
+      socket.emit("show:state", show);
+      socket.emit("show:state-sync", {
+        document: showStore.document(),
+        isDirty: showStore.isDirty(),
+        filePath: showStore.filePath(),
+        undoStack: showStore.undoStack(),
+        redoStack: showStore.redoStack(),
+      });
+    }
   },
 
   "show:load": (socket, payload, ctx) => {
     const show = payload as ShowDocument;
     if (isSupportedShowVersion(show?.version)) {
       ctx.setShow(show);
-      ctx.outputManager.setShowfile(show);
-      ctx.io.emit("show:state", show);
     }
+  },
+
+  "show:action:load": (socket, payload, ctx) => {
+    const { document, filePath } = (payload ?? {}) as { document: ShowDocument; filePath?: string | null };
+    if (isSupportedShowVersion(document?.version)) {
+      showStore.loadShow(document, filePath ?? null);
+    }
+  },
+
+  "show:action:new": (socket, payload, ctx) => {
+    const { showName } = (payload ?? {}) as { showName?: string };
+    showStore.newShow(showName);
+  },
+
+  "show:action:updateDocument": (socket, payload, ctx) => {
+    const { document } = (payload ?? {}) as { document: ShowDocument };
+    if (isSupportedShowVersion(document?.version)) {
+      showStore.updateDocument(document);
+    }
+  },
+
+  "show:action:undo": (socket, payload, ctx) => {
+    showStore.undo();
+  },
+
+  "show:action:redo": (socket, payload, ctx) => {
+    showStore.redo();
+  },
+
+  "show:action:save": (socket, payload, ctx) => {
+    showStore.saveShow();
   },
 
   "scratch:set": (socket, payload, ctx) => {

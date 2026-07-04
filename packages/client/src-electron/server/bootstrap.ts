@@ -17,7 +17,11 @@ import { registerRemoteHandlers } from "./socket/remote";
 import { registerSettingsHandlers } from "./socket/settings";
 import { app, createRemoteContext, httpServer, io, outputManager } from "./context";
 
+import { effect } from "alien-signals";
+import { showStore } from "../state/show";
+
 let serverStarted = false;
+let showEffectDisposer: (() => void) | null = null;
 
 export function startServer() {
   if (serverStarted) return;
@@ -46,8 +50,40 @@ export function startServer() {
   attachChannelPipeline(io, outputManager);
   httpServer.listen(AppState.port);
 
+  showEffectDisposer = effect(() => {
+    const doc = showStore.document();
+    const dirty = showStore.isDirty();
+    const path = showStore.filePath();
+    const undo = showStore.undoStack();
+    const redo = showStore.redoStack();
+
+    // Keep outputManager in sync
+    outputManager.setShowfile(doc);
+
+    // Broadcast legacy show:state
+    io.emit("show:state", doc);
+
+    // Broadcast new show:state-sync
+    io.emit("show:state-sync", {
+      document: doc,
+      isDirty: dirty,
+      filePath: path,
+      undoStack: undo,
+      redoStack: redo,
+    });
+  });
+
   io.on("connection", (socket) => {
     console.log("New client connected:", socket.id);
+
+    // Immediately send the newly connected client the latest show state
+    socket.emit("show:state-sync", {
+      document: showStore.document(),
+      isDirty: showStore.isDirty(),
+      filePath: showStore.filePath(),
+      undoStack: showStore.undoStack(),
+      redoStack: showStore.redoStack(),
+    });
 
     registerSettingsHandlers(socket, remoteContext);
     registerRemoteHandlers(socket, remoteContext);
@@ -58,6 +94,11 @@ export function startServer() {
 }
 
 export async function stopServer() {
+  if (showEffectDisposer) {
+    showEffectDisposer();
+    showEffectDisposer = null;
+  }
+
   if (!serverStarted) {
     await outputManager.destroy();
     return;

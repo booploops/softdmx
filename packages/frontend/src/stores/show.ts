@@ -40,6 +40,9 @@ export const useShowStore = defineStore('show', () => {
   const undoStack = ref<ShowDocument[]>([]);
   const redoStack = ref<ShowDocument[]>([]);
 
+  const isHydrated = ref(false);
+  const showStartupDialogVisible = ref(false);
+
   const name = computed(() => document.value.meta.name);
   const canUndo = computed(() => undoStack.value.length > 0);
   const canRedo = computed(() => redoStack.value.length > 0);
@@ -53,11 +56,56 @@ export const useShowStore = defineStore('show', () => {
 
   if (!showSyncConnectHookInstalled) {
     showSyncConnectHookInstalled = true;
-    useIOClient().on('connect', () => {
-      // Ensure backend always has latest show after reconnects.
-      queueMicrotask(() => {
-        useIOClient().emit('show:state', document.value);
-      });
+    const io = useIOClient();
+    io.on('connect', () => {
+      io.emit('show:get');
+    });
+
+    io.on('show:state-sync', (payload: {
+      document: ShowDocument;
+      isDirty: boolean;
+      filePath: string | null;
+      undoStack: ShowDocument[];
+      redoStack: ShowDocument[];
+    }) => {
+      const isLoaded = !payload.isDirty && payload.undoStack.length === 0;
+
+      document.value = payload.document;
+      isDirty.value = payload.isDirty;
+      filePath.value = payload.filePath;
+      undoStack.value = payload.undoStack;
+      redoStack.value = payload.redoStack;
+
+      const dmx = useDMXStore();
+      dmx.rebuildFromShow(document.value);
+
+      const engine = useOutputEngineStore();
+      engine.syncPlaybackFromShow(document.value);
+
+      if (isLoaded) {
+        engine.resetPlayback();
+      }
+
+      persistCrashSnapshot();
+      persistLastSession();
+
+      const isPayloadEmpty =
+        payload.document.fixtures.length === 0 &&
+        (!payload.document.groups || payload.document.groups.length === 0) &&
+        (!payload.document.presets || payload.document.presets.length === 0) &&
+        (!payload.document.cues || payload.document.cues.length === 0) &&
+        (!payload.document.effects || payload.document.effects.length === 0) &&
+        payload.filePath === null &&
+        !payload.isDirty &&
+        payload.undoStack.length === 0 &&
+        payload.redoStack.length === 0;
+
+      if (!isHydrated.value) {
+        showStartupDialogVisible.value = isPayloadEmpty;
+        isHydrated.value = true;
+      } else if (!isPayloadEmpty) {
+        showStartupDialogVisible.value = false;
+      }
     });
   }
 
@@ -82,17 +130,12 @@ export const useShowStore = defineStore('show', () => {
   }
 
   function markDirty() {
-    isDirty.value = true;
     document.value.meta.modified = new Date().toISOString();
-    persistCrashSnapshot();
-    syncToBackend();
+    useIOClient().emit('show:action:updateDocument', { document: document.value });
   }
 
   function syncToBackend() {
-    // Defer emit to avoid synchronous re-entrancy during boot/load
-    queueMicrotask(() => {
-      useIOClient().emit('show:state', document.value);
-    });
+    // No-op - backend stays in sync using unidirectional data flow on any server actions
   }
 
   function persistLastSession() {
@@ -104,41 +147,26 @@ export const useShowStore = defineStore('show', () => {
   }
 
   function applyDocument(nextDoc: ShowDocument, options?: { sync?: boolean; resetPlayback?: boolean }) {
-    document.value = nextDoc;
-
-    const dmx = useDMXStore();
-    dmx.rebuildFromShow(document.value);
-
-    const engine = useOutputEngineStore();
-    engine.syncPlaybackFromShow(document.value);
-
-    if (options?.resetPlayback !== false) {
-      engine.resetPlayback();
-    }
-
-    if (options?.sync !== false) {
-      syncToBackend();
-    }
+    // In server-side show state model, state mutations flow unidirectionally from backend state-sync,
+    // so we no longer mutate document.value or call rebuildFromShow directly here.
+    // Instead we emit updateDocument to the backend.
+    useIOClient().emit('show:action:updateDocument', { document: nextDoc });
   }
 
   function loadShow(doc: ShowDocument, options?: { sync?: boolean; persist?: boolean }) {
-    document.value = validateShowDocument(doc);
-    isDirty.value = false;
-    resetHistory();
-    applyDocument(document.value, { sync: options?.sync, resetPlayback: true });
-    persistCrashSnapshot();
-    if (options?.persist !== false) {
-      persistLastSession();
-    }
+    useIOClient().emit('show:action:load', {
+      document: validateShowDocument(doc),
+      filePath: filePath.value,
+    });
   }
 
   function loadLastSession(): boolean {
     const session = readLastShow();
     if (!session?.document) return false;
 
+    filePath.value = session.filePath ?? null;
     loadShow(session.document, { persist: false });
     useScratchStore().setEntries(session.scratch ?? []);
-    filePath.value = session.filePath ?? null;
     persistLastSession();
     return true;
   }
@@ -171,17 +199,16 @@ export const useShowStore = defineStore('show', () => {
     const doc = flags.showParseWorkerEnabled
       ? await parseShowDocumentInWorker(content)
       : parseShowDocument(content);
-    loadShow(doc);
     filePath.value = file.name;
+    loadShow(doc);
   }
 
   function newShow(showName?: string) {
-    loadShow(createEmptyShow(showName));
-    filePath.value = null;
+    useIOClient().emit('show:action:new', { showName });
   }
 
   function saveShow(): string {
-    isDirty.value = false;
+    useIOClient().emit('show:action:save');
     clearCrashSnapshot();
     return serializeShowDocument(document.value);
   }
@@ -191,29 +218,17 @@ export const useShowStore = defineStore('show', () => {
   }
 
   function updateDocument(mutator: (doc: ShowDocument) => void) {
-    pushUndoSnapshot();
-    mutator(document.value);
-    markDirty();
+    const nextDoc = cloneDocument(document.value);
+    mutator(nextDoc);
+    useIOClient().emit('show:action:updateDocument', { document: nextDoc });
   }
 
   function undo() {
-    const previous = undoStack.value.pop();
-    if (!previous) return;
-
-    redoStack.value.push(cloneDocument(document.value));
-    document.value = previous;
-    markDirty();
-    applyDocument(document.value, { sync: true, resetPlayback: true });
+    useIOClient().emit('show:action:undo');
   }
 
   function redo() {
-    const next = redoStack.value.pop();
-    if (!next) return;
-
-    undoStack.value.push(cloneDocument(document.value));
-    document.value = next;
-    markDirty();
-    applyDocument(document.value, { sync: true, resetPlayback: true });
+    useIOClient().emit('show:action:redo');
   }
 
   function ensureProgrammerConfig() {
@@ -274,6 +289,8 @@ export const useShowStore = defineStore('show', () => {
     canRedo,
     storeProfiles,
     operators,
+    isHydrated,
+    showStartupDialogVisible,
     ensureProgrammerConfig,
     upsertStoreProfile,
     removeStoreProfile,
