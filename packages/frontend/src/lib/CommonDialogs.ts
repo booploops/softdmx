@@ -16,6 +16,13 @@ import { useModal } from "vue-final-modal";
 import AboutDialog from "src/components/dialogs/AboutDialog.vue";
 import ConfirmDialog from "src/components/dialogs/ConfirmDialog.vue";
 import PromptDialog from "src/components/dialogs/PromptDialog.vue";
+import WelcomeDialog from "src/components/dialogs/WelcomeDialog.vue";
+import DemoShowPickerDialog from "src/components/dialogs/DemoShowPickerDialog.vue";
+import { useShowStore } from "src/stores/show";
+import { simpleWashShow } from "src/shows/simple-wash";
+import { laserDemoShow } from "src/shows/laser-demo";
+import { exampleVrClubShow } from "src/shows/example-vr-club";
+import ThirdPartyDialog from "src/components/dialogs/ThirdPartyDialog.vue";
 
 export function showSettingsDialog() {
   return createDialog({ component: SettingsDialog });
@@ -43,6 +50,19 @@ export function showBindingsDialog() {
 export function showAboutDialog() {
   const { close, open } = useModal({
     component: AboutDialog,
+    attrs: {
+      onConfirm() {
+        close();
+      },
+    },
+  });
+
+  open();
+}
+
+export function showThirdPartyDialog() {
+  const { close, open } = useModal({
+    component: ThirdPartyDialog,
     attrs: {
       onConfirm() {
         close();
@@ -101,7 +121,9 @@ export interface PromptOptions {
   cancelLabel?: string;
 }
 
-export function createPrompt(options: PromptOptions): Promise<string | undefined> {
+export function createPrompt(
+  options: PromptOptions,
+): Promise<string | undefined> {
   return new Promise((resolve) => {
     let resolved = false;
     const safeResolve = (value: string | undefined) => {
@@ -135,3 +157,95 @@ export function createPrompt(options: PromptOptions): Promise<string | undefined
   });
 }
 
+const demoShowOptions = [
+  {
+    label: "Simple Wash",
+    value: "simple-wash",
+    icon: "sun",
+    show: simpleWashShow,
+  },
+  {
+    label: "Laser Demo",
+    value: "laser-demo",
+    icon: "bolt",
+    show: laserDemoShow,
+  },
+  {
+    label: "VR Club",
+    value: "vr-club",
+    icon: "nightlife",
+    show: exampleVrClubShow,
+  },
+] as const;
+
+export async function showLoadDemoDialog() {
+  const showStore = useShowStore();
+  const selectedDemoId = await createDialog<string>({
+    component: DemoShowPickerDialog,
+    componentProps: {
+      title: "Load Demo Show",
+      message: "Choose a demo show to load.",
+      options: demoShowOptions,
+    },
+  });
+
+  if (!selectedDemoId) {
+    return;
+  }
+
+  if (showStore.isDirty) {
+    const confirmed = await createConfirm({
+      title: "Discard Unsaved Changes?",
+      message: "Load a demo show and discard current unsaved changes?",
+      confirmLabel: "Discard",
+      cancelLabel: "Cancel",
+    });
+    if (!confirmed) return;
+  }
+
+  const selectedDemo = demoShowOptions.find(
+    (option) => option.value === selectedDemoId,
+  );
+  if (selectedDemo) {
+    showStore.loadShow(selectedDemo.show);
+  }
+}
+
+export function showWelcomeDialog() {
+  const { close, open } = useModal({
+    component: WelcomeDialog,
+    attrs: {
+      onConfirm() {
+        close();
+      },
+      async onCreateNewShow() {
+        close();
+        const showStore = useShowStore();
+        if (showStore.isDirty) {
+          const confirmed = await createConfirm({
+            title: "Discard Unsaved Changes?",
+            message: "Create a new show and discard current unsaved changes?",
+            confirmLabel: "Discard",
+            cancelLabel: "Cancel",
+          });
+          if (!confirmed) return;
+        }
+        showStore.newShow();
+      },
+      onLoadDemoShow() {
+        close();
+        showLoadDemoDialog();
+      },
+      onConfigureBindings() {
+        close();
+        showBindingsDialog();
+      },
+      onConfigureThemes() {
+        close();
+        showThemeSettingsDialog();
+      },
+    },
+  });
+
+  open();
+}

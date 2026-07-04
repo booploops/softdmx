@@ -17,13 +17,11 @@ import {
   showBindingsDialog,
   showAboutDialog,
   createConfirm,
+  showWelcomeDialog,
+  showLoadDemoDialog,
 } from "src/lib/CommonDialogs";
 import { showSettingsUI } from "./settings-ui";
-import { exampleVrClubShow } from "src/shows/example-vr-club";
-import { simpleWashShow } from "src/shows/simple-wash";
-import { laserDemoShow } from "src/shows/laser-demo";
 import StockMessageDialog from "src/components/dialogs/StockMessageDialog.vue";
-import DemoShowPickerDialog from "src/components/dialogs/DemoShowPickerDialog.vue";
 
 export type MainMenuItem = {
   label: string;
@@ -39,27 +37,6 @@ export function getMainMenu(options?: {
   const showStore = useShowStore();
   const gridNodeOverlay = useGridNodeOverlayStore();
   const deskView = useDeskViewStore();
-  const demoShowOptions = [
-    {
-      label: "Simple Wash",
-      value: "simple-wash",
-      icon: "sun",
-      show: simpleWashShow,
-    },
-    {
-      label: "Laser Demo",
-      value: "laser-demo",
-      icon: "bolt",
-      show: laserDemoShow,
-    },
-    {
-      label: "VR Club",
-      value: "vr-club",
-      icon: "nightlife",
-      show: exampleVrClubShow,
-    },
-  ] as const;
-
   async function showMessageDialog(title: string, message: string) {
     await createDialog<boolean>({
       component: StockMessageDialog,
@@ -79,13 +56,7 @@ export function getMainMenu(options?: {
     });
   }
 
-  function loadDemoShowById(demoId: string) {
-    const selectedDemo = demoShowOptions.find(
-      (option) => option.value === demoId,
-    );
-    if (!selectedDemo) return;
-    showStore.loadShow(selectedDemo.show);
-  }
+
 
   return [
     {
@@ -107,28 +78,8 @@ export function getMainMenu(options?: {
         {
           label: "Load Demo Show",
           icon: "sparkles",
-          click: async () => {
-            const selectedDemoId = await createDialog<string>({
-              component: DemoShowPickerDialog,
-              componentProps: {
-                title: "Load Demo Show",
-                message: "Choose a demo show to load.",
-                options: demoShowOptions,
-              },
-            });
-
-            if (!selectedDemoId) {
-              return;
-            }
-
-            if (showStore.isDirty) {
-              const confirmed = await confirmDiscard(
-                "Load a demo show and discard current unsaved changes?",
-              );
-              if (!confirmed) return;
-            }
-
-            loadDemoShowById(selectedDemoId);
+          click: () => {
+            showLoadDemoDialog();
           },
         },
         {
@@ -288,11 +239,23 @@ export function getMainMenu(options?: {
       ],
     },
     {
-      label: "About",
-      icon: "info",
-      click: () => {
-        showAboutDialog();
-      },
+      label: "Help",
+      children: [
+        {
+          label: "Welcome Dialog",
+          icon: "star",
+          click: () => {
+            showWelcomeDialog();
+          },
+        },
+        {
+          label: "About",
+          icon: "info",
+          click: () => {
+            showAboutDialog();
+          },
+        },
+      ],
     },
   ];
 }

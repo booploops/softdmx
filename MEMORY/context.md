@@ -34,8 +34,9 @@ Welcome! This folder houses memory files designed to help developer agents and h
 7. **[Custom Controls (XControls) Guide](./xcontrols.md)**
    * Details the design system, accessibility requirements, and development guidelines for creating and modifying the custom controls suite (`X*` prefix).
 
-8. **[Vue & Pinia Development Guide](./vue-development.md)**
+8. **[Vue, Pinia & UnoCSS Development Guide](./vue-development.md)**
    * Outlines the auto-import guidelines for Vue and Pinia functions (e.g. `ref`, `computed`) in `.vue` vs `.ts` files, as well as component auto-importing.
+   * Details our styling system using UnoCSS and the `presetWind4` preset, prioritizing it over Quasar's utility classes.
 
 ---
 

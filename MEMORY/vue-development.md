@@ -86,3 +86,16 @@ Any component stored under `src/components/controls/` (prefixed with `X`, such a
 * You **do not** need to import these controls explicitly in `.vue` files.
 * You **do not** need to register them in the `components` options.
 * Simply use them in your template (e.g. `<XButton>Click Me</XButton>`).
+
+---
+
+## 🎨 Styling with UnoCSS
+
+SoftDMX utilizes **UnoCSS** for high-performance, utility-first styling.
+
+### Configuration
+* We use the **`presetWind4`** preset (which provides Tailwind v4 / Windi CSS compatibility).
+
+### Styling Rules & Best Practices
+* **Always prefer UnoCSS utility classes** over utility classes from third-party packages (such as Quasar).
+* Using UnoCSS utility classes keeps our styles lightweight, consistent, and easy to maintain across custom components.

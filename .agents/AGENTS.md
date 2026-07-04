@@ -19,7 +19,7 @@ Before writing any code or making architectural changes, you **MUST** read the f
 
 ## 🛠️ Technology Stack & Environment
 
-* **Frontend**: Vue 3, Quasar Framework, SCSS, lodash-es, Pinia (Vue and Pinia reactivity are auto-imported in all frontend components).
+* **Frontend**: Vue 3, Quasar Framework, SCSS, lodash-es, Pinia, UnoCSS (with the `presetWind4` preset; always prefer UnoCSS over Quasar utility classes).
 * **Backend / Desktop**: Electron (backend resides in `packages/client/src-electron/` only).
 * **Computation Engine**: WebAssembly built with Zig (`packages/wasm/`).
 * **Package Management**: Yarn 4.
@@ -71,3 +71,7 @@ The `@softdmx/engine` package must remain entirely side-effect free and compatib
 * Build the frontend and check for errors: `yarn build:frontend`
 * Run development server (note: UI is only visible when run in correct environments): `yarn dev`
 * Run test suites: `yarn test`
+
+### 4. Styling with UnoCSS
+We use **UnoCSS** with the **`presetWind4`** preset. Always prefer UnoCSS utility classes over existing utility classes from third-party packages (such as Quasar).
+

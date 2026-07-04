@@ -7,6 +7,7 @@
 -->
 
 <script setup lang="ts">
+import { showThirdPartyDialog } from 'src/lib/CommonDialogs';
 import { VueFinalModal } from 'vue-final-modal'
 
 const fm = useTemplateRef('fm');
@@ -28,11 +29,17 @@ const emit = defineEmits<{
         @close="$emit('confirm')"
       />
       <XDialogContent>
-        <div class="q-pa-md">
-          <p class="text-body1">
-            SoftDMX is a software lighting controller for live performance and virtual-world applications.
-          </p>
-          <p class="text-body2 q-mb-none">Version: 0.0.1</p>
+        <div class="p-10 flex flex-col items-center gap-4">
+          <div class="font-bold text-4xl">
+            SoftDMX
+          </div>
+          <div class="text-gray-400">
+            Version: 0.0.1
+          </div>
+          <XButton
+            @click="showThirdPartyDialog"
+            label="Third Party Licenses"
+          ></XButton>
         </div>
       </XDialogContent>
     </XDialogWindow>

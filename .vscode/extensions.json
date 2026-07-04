@@ -5,7 +5,8 @@
     "wayou.vscode-todo-highlight",
     "oxc.oxc-vscode",
     "ziglang.vscode-zig",
-    "floxay.vscode-flatbuffers"
+    "floxay.vscode-flatbuffers",
+    "antfu.unocss"
   ],
   "unwantedRecommendations": [
     "octref.vetur",

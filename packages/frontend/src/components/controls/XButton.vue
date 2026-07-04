@@ -190,7 +190,8 @@ function handleClick(event: MouseEvent) {
   outline: none;
   box-sizing: border-box;
   text-decoration: none;
-  border: 1px solid var(--border-color);
+  line-height: 16px;
+  border: 0;
 
   // Default theme tokens local to component (Light Mode default - Flat Big Sur style)
   --border-color: rgba(0, 0, 0, 0.15);

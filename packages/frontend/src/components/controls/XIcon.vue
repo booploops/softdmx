@@ -11,6 +11,9 @@ import { computed } from "vue";
 import * as tablerIcons from "@tabler/icons-vue";
 
 const props = defineProps<{
+  /**
+   * Tabler Icon name
+   */
   name?: string;
   size?: string | number;
   color?: string;

@@ -12,6 +12,7 @@ import { Quasar, Dialog, Notify, Dark, Screen, Platform } from "quasar";
 import App from "./App.vue";
 import createRouter from "./router";
 import { createVfm } from "vue-final-modal";
+import "virtual:uno.css";
 
 import "@quasar/extras/material-icons/material-icons.css";
 import "@quasar/extras/ionicons-v4/ionicons-v4.css";
@@ -22,7 +23,7 @@ import "@vscode/codicons/dist/codicon.css";
 import "vue-final-modal/style.css";
 import "ninja-keys";
 import "@fontsource-variable/noto-sans";
-
+import "@fontsource/noto-mono";
 // Custom Styles
 import "./css/app.scss";
 import "./css/desk.scss";

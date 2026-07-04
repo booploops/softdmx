@@ -42,6 +42,10 @@ body.body--dark {
   color-scheme: dark;
 }
 
+.monospace {
+  font-family: var(--sdmx-font-family-mono);
+}
+
 .no-app-drag {
   -webkit-app-region: no-drag;
 }

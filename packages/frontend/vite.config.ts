@@ -16,6 +16,7 @@ import { quasar, transformAssetUrls } from "@quasar/vite-plugin";
 import VueDevTools from "vite-plugin-vue-devtools";
 import Components from "unplugin-vue-components/vite";
 import license from "rollup-plugin-license";
+import UnoCSS from "unocss/vite";
 
 export default defineConfig({
   base: "./",
@@ -36,6 +37,7 @@ export default defineConfig({
     quasar({
       sassVariables: "src/css/quasar.variables.scss",
     }),
+    UnoCSS(),
     AutoImport({
       include: [/\.vue$/, /\.vue\?vue/],
       imports: ["vue", "pinia"],
@@ -51,7 +53,7 @@ export default defineConfig({
     license({
       thirdParty: {
         output: {
-          file: join("dist", "THIRD_PARTY.txt"),
+          file: join("dist", "spa", "THIRD_PARTY.txt"),
           encoding: "utf-8", // Default is utf-8.
         },
       },
