@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { fastifyStatic } from "@fastify/static";
+import { serveStatic } from "@hono/node-server/serve-static";
 import { join } from "path";
 import { fileURLToPath } from "node:url";
 import { getDevUrl, isDev } from "../runtime/env";
@@ -15,7 +15,7 @@ import { registerRemoteRestRoutes } from "./api/remote-rest";
 import { attachChannelPipeline } from "./socket/channels";
 import { registerRemoteHandlers } from "./socket/remote";
 import { registerSettingsHandlers } from "./socket/settings";
-import { createRemoteContext, httpServer, io, outputManager } from "./context";
+import { app, createRemoteContext, httpServer, io, outputManager } from "./context";
 
 let serverStarted = false;
 
@@ -28,24 +28,23 @@ export function startServer() {
 
   AppState.io = io;
 
-  httpServer.register(fastifyStatic, {
-    root: assetsPath,
-    prefix: "/app/",
-  });
+  app.use("/app/*", serveStatic({
+    root: "./",
+    rewriteRequestPath: (path) => path.replace(/^\/app/, assetsPath),
+  }));
 
-  httpServer.get("/source", (req, reply) => {
+  app.get("/source", (c) => {
     if (isDev()) {
-      reply.redirect(getDevUrl() + "/#/artnet");
-      return;
+      return c.redirect(getDevUrl() + "/#/artnet");
     }
-    reply.redirect("/app/index.html#/artnet");
+    return c.redirect("/app/index.html#/artnet");
   });
 
   const remoteContext = createRemoteContext();
 
-  registerRemoteRestRoutes(httpServer, remoteContext);
+  registerRemoteRestRoutes(app, remoteContext);
   attachChannelPipeline(io, outputManager);
-  httpServer.listen({ port: AppState.port, ipv6Only: false });
+  httpServer.listen(AppState.port);
 
   io.on("connection", (socket) => {
     console.log("New client connected:", socket.id);
@@ -72,6 +71,8 @@ export async function stopServer() {
     io.close(() => resolve());
   });
 
-  await httpServer.close();
+  await new Promise<void>((resolve) => {
+    httpServer.close(() => resolve());
+  });
   AppState.io = null;
 }

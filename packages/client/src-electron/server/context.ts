@@ -6,7 +6,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import fastify from "fastify";
+import { createServer } from "node:http";
+import { Hono } from "hono";
+import { getRequestListener, type HttpBindings } from "@hono/node-server";
 import { Server } from "socket.io";
 import type { ConflictResolutionMode, ShowDocument } from "@softdmx/engine";
 import { OutputManager } from "../output/output-manager";
@@ -36,9 +38,11 @@ function getIOCors() {
   };
 }
 
-export const httpServer = fastify();
+export const app = new Hono<{ Bindings: HttpBindings }>();
 
-export const io = new Server(httpServer.server, {
+export const httpServer = createServer(getRequestListener(app.fetch));
+
+export const io = new Server(httpServer, {
   cors: getIOCors(),
 });
 

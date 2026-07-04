@@ -6,7 +6,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import fastify, { type FastifyInstance } from 'fastify';
+import { createServer, type Server as HTTPServer } from 'node:http';
+import { getRequestListener } from '@hono/node-server';
+import { Hono } from 'hono';
 import { Server } from 'socket.io';
 import { registerRemoteRestRoutes } from '../../../client/src-electron/server/api/remote-rest.ts';
 import {
@@ -25,7 +27,7 @@ export interface MockOutputManager {
 }
 
 export interface TestServer {
-  server: FastifyInstance;
+  server: HTTPServer;
   io: Server;
   url: string;
   remoteApiUrl: string;
@@ -59,8 +61,9 @@ export async function createTestServer(
     },
   };
 
-  const server = fastify();
-  const io = new Server(server.server, { cors: getIOCors() });
+  const app = new Hono();
+  const server = createServer(getRequestListener(app.fetch));
+  const io = new Server(server, { cors: getIOCors() });
 
   const requiredToken = getRequiredRemoteApiToken();
   if (requiredToken) {
@@ -86,7 +89,7 @@ export async function createTestServer(
     },
   };
 
-  registerRemoteRestRoutes(server, ctx);
+  registerRemoteRestRoutes(app, ctx);
 
   if (options.withSocketHandlers) {
     io.on('connection', (socket) => {
@@ -94,8 +97,10 @@ export async function createTestServer(
     });
   }
 
-  await server.listen({ port: 0, host: '127.0.0.1' });
-  const address = server.server.address();
+  await new Promise<void>((resolve) => {
+    server.listen(0, '127.0.0.1', () => resolve());
+  });
+  const address = server.address();
   const port = typeof address === 'object' && address ? address.port : 0;
   const url = `http://127.0.0.1:${port}`;
   const remoteApiUrl = `${url}/api/v1/remote`;
@@ -109,7 +114,7 @@ export async function createTestServer(
     outputManager,
     close: async () => {
       await new Promise<void>((resolve) => io.close(() => resolve()));
-      await server.close();
+      await new Promise<void>((resolve) => server.close(() => resolve()));
     },
   };
 }

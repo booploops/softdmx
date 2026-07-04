@@ -6,8 +6,9 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import type { FastifyInstance } from "fastify";
-import fastifyRateLimit from "@fastify/rate-limit";
+import { Hono } from "hono";
+import type { Context } from "hono";
+import type { HttpBindings } from "@hono/node-server";
 import type { ShowAudioMapping, ShowDocument } from "@softdmx/engine";
 import type { RemoteContext } from "../context";
 import { isSupportedShowVersion } from "@softdmx/engine";
@@ -28,6 +29,29 @@ type AudioMappingUpdatePayload = {
 const REMOTE_RATE_LIMIT_WINDOW_MS = 60_000;
 const REMOTE_RATE_LIMIT_MAX_REQUESTS = 240;
 
+const clientRequests = new Map<string, { count: number; resetAt: number }>();
+
+function cleanRateLimitCache() {
+  const now = Date.now();
+  for (const [key, record] of clientRequests.entries()) {
+    if (now > record.resetAt) {
+      clientRequests.delete(key);
+    }
+  }
+}
+
+// Every minute, prune expired rate-limit records
+setInterval(cleanRateLimitCache, 60_000).unref?.();
+
+function getClientIp(c: Context<{ Bindings: HttpBindings }>): string {
+  const forwarded = c.req.header("x-forwarded-for");
+  if (forwarded) {
+    return forwarded.split(",")[0]?.trim() || "unknown";
+;
+  }
+  return c.env?.incoming?.socket?.remoteAddress || "unknown";
+}
+
 function isShowDocument(payload: unknown): payload is ShowDocument {
   return (
     !!payload &&
@@ -36,300 +60,360 @@ function isShowDocument(payload: unknown): payload is ShowDocument {
   );
 }
 
-export function registerRemoteRestRoutes(server: FastifyInstance, ctx: RemoteContext): void {
+export function registerRemoteRestRoutes(app: Hono<{ Bindings: HttpBindings }>, ctx: RemoteContext): void {
   const requiredToken = getRequiredRemoteApiToken();
 
-  function resolveClientKey(request: { ip: string; headers: Record<string, unknown> }): string {
-    const token = extractTokenFromHeaders(request.headers);
-    if (token) return `token:${token}`;
-    return `ip:${request.ip}`;
-  }
+  const remoteRouter = new Hono<{ Bindings: HttpBindings }>();
 
-  server.register(
-    (instance, _opts, done) => {
-      const routeRateLimitOptions = {
+  // Custom rate-limiting middleware
+  remoteRouter.use("*", async (c, next) => {
+    const token = extractTokenFromHeaders(c.req.header());
+    const clientKey = token ? `token:${token}` : `ip:${getClientIp(c)}`;
+
+    const now = Date.now();
+    let record = clientRequests.get(clientKey);
+
+    if (!record || now > record.resetAt) {
+      record = { count: 0, resetAt: now + REMOTE_RATE_LIMIT_WINDOW_MS };
+      clientRequests.set(clientKey, record);
+    }
+
+    record.count++;
+
+    if (record.count > REMOTE_RATE_LIMIT_MAX_REQUESTS) {
+      c.status(429);
+      return c.json({
+        error: "Too many requests",
         max: REMOTE_RATE_LIMIT_MAX_REQUESTS,
-        timeWindow: REMOTE_RATE_LIMIT_WINDOW_MS,
-        keyGenerator: (request: { ip: string; headers: Record<string, unknown> }) =>
-          resolveClientKey({
-            ip: request.ip,
-            headers: request.headers,
-          }),
-        errorResponseBuilder: (_request: unknown, context: { max: number; after: string | number }) => ({
-          error: "Too many requests",
-          max: context.max,
-          timeWindow: context.after,
-        }),
-      };
-
-      const authorizeRequest = (
-        request: { headers: Record<string, unknown> },
-        reply: { code: (statusCode: number) => { send: (payload: unknown) => void } },
-        hookDone: () => void,
-      ) => {
-        if (requiredToken) {
-          const token = extractTokenFromHeaders(request.headers);
-          if (!isRemoteApiTokenAuthorized(token, requiredToken)) {
-            reply.code(401).send({ error: "Unauthorized" });
-            return;
-          }
-        }
-        hookDone();
-      };
-
-      instance.register(fastifyRateLimit, {
-        global: false,
-        ...routeRateLimitOptions,
+        timeWindow: Math.max(0, Math.ceil((record.resetAt - now) / 1000)),
       });
+    }
 
-      const protectedRouteOptions = {
-        config: {
-          rateLimit: routeRateLimitOptions,
-        },
-        preHandler: authorizeRequest,
-      } as const;
+    await next();
+  });
 
-      instance.get("/show", protectedRouteOptions, (_request, reply) => {
-        const show = ctx.getShow();
-        if (!show) {
-          reply.code(404).send({ error: "No show loaded" });
-          return;
-        }
-        reply.send(show);
+  // Custom authorization middleware
+  remoteRouter.use("*", async (c, next) => {
+    if (requiredToken) {
+      const token = extractTokenFromHeaders(c.req.header());
+      if (!isRemoteApiTokenAuthorized(token, requiredToken)) {
+        c.status(401);
+        return c.json({ error: "Unauthorized" });
+      }
+    }
+    await next();
+  });
+
+  remoteRouter.get("/show", (c) => {
+    const show = ctx.getShow();
+    if (!show) {
+      c.status(404);
+      return c.json({ error: "No show loaded" });
+    }
+    return c.json(show);
+  });
+
+  remoteRouter.get("/scratch", (c) => {
+    return c.json(ctx.scratchAuthority.getSnapshot());
+  });
+
+  remoteRouter.get("/scratch/clients", (c) => {
+    return c.json({
+      clients: ctx.scratchAuthority.listClients(),
+      layers: ctx.scratchAuthority.getLayers(),
+    });
+  });
+
+  remoteRouter.get("/sessions", (c) => {
+    const show = ctx.getShow();
+    return c.json({
+      sessions: show?.timeline?.programmerSessions ?? [],
+    });
+  });
+
+  remoteRouter.get("/sessions/:id", (c) => {
+    const show = ctx.getShow();
+    const id = c.req.param("id");
+    const session = show?.timeline?.programmerSessions?.find((entry) => entry.id === id);
+    if (!session) {
+      c.status(404);
+      return c.json({ error: "Session not found" });
+    }
+    return c.json(session);
+  });
+
+  remoteRouter.post("/sessions/arm", async (c) => {
+    let body: { sessionId?: string; clock?: string } | undefined;
+    try {
+      body = await c.req.json();
+    } catch {
+      // Empty or invalid JSON
+    }
+    const sessionId = body?.sessionId ?? `session-${Date.now()}`;
+    ctx.io.emit("programmer-session:arm", {
+      sessionId,
+      clock: body?.clock ?? "session",
+    });
+    return c.json({ ok: true, sessionId });
+  });
+
+  remoteRouter.post("/sessions/disarm", async (c) => {
+    let body: { sessionId?: string; persist?: boolean } | undefined;
+    try {
+      body = await c.req.json();
+    } catch {
+      // Empty or invalid JSON
+    }
+    ctx.io.emit("programmer-session:disarm", {
+      sessionId: body?.sessionId,
+      persist: body?.persist !== false,
+    });
+    return c.json({ ok: true });
+  });
+
+  remoteRouter.post("/show", async (c) => {
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      c.status(400);
+      return c.json({ error: "Invalid show document payload" });
+    }
+    if (!isShowDocument(body)) {
+      c.status(400);
+      return c.json({ error: "Invalid show document payload" });
+    }
+
+    ctx.setShow(body);
+    ctx.outputManager.setShowfile(body);
+    ctx.io.emit("show:state", body);
+    return c.json({ ok: true });
+  });
+
+  remoteRouter.post("/scratch/set", async (c) => {
+    let body: any;
+    try {
+      body = await c.req.json();
+    } catch {
+      c.status(400);
+      return c.json({ error: "Invalid payload" });
+    }
+    const token = extractTokenFromHeaders(c.req.header());
+    const clientKey = token ? `token:${token}` : `ip:${getClientIp(c)}`;
+    const clientId = body?.clientId ?? `rest:${clientKey}`;
+    const ack = ctx.scratchAuthority.applySetPayload(clientId, body);
+    const snapshot = ctx.scratchAuthority.getSnapshot();
+    ctx.io.emit("scratch:layers", snapshot);
+    ctx.io.emit("scratch:state", snapshot);
+    if (snapshot.conflicts.length > 0) {
+      ctx.io.emit("scratch:conflicts", snapshot.conflicts);
+    }
+    if (snapshot.merged.length === 0) {
+      ctx.io.emit("remote:scratch:clear");
+    } else if (snapshot.merged.length === 1) {
+      const entry = snapshot.merged[0]!;
+      ctx.io.emit("remote:scratch:set", {
+        path: entry.path,
+        value: entry.value,
+        attributeType: entry.attributeType,
       });
-
-      instance.get("/scratch", protectedRouteOptions, (_request, reply) => {
-        reply.send(ctx.scratchAuthority.getSnapshot());
+    } else {
+      ctx.io.emit("remote:scratch:set", {
+        channels: snapshot.merged.map((entry) => ({
+          path: entry.path,
+          value: entry.value,
+          attributeType: entry.attributeType,
+        })),
       });
+    }
+    return c.json({ ok: true, ack, seq: snapshot.seq });
+  });
 
-      instance.get("/scratch/clients", protectedRouteOptions, (_request, reply) => {
-        reply.send({
-          clients: ctx.scratchAuthority.listClients(),
-          layers: ctx.scratchAuthority.getLayers(),
-        });
-      });
+  remoteRouter.post("/scratch/clear", async (c) => {
+    let body: { clientId?: string } | undefined;
+    try {
+      body = await c.req.json();
+    } catch {
+      // Empty or invalid JSON
+    }
+    const clientId = body?.clientId;
+    if (clientId) {
+      ctx.scratchAuthority.clear(clientId);
+    } else {
+      ctx.scratchAuthority.clear();
+    }
+    const snapshot = ctx.scratchAuthority.getSnapshot();
+    ctx.io.emit("scratch:layers", snapshot);
+    ctx.io.emit("scratch:state", snapshot);
+    ctx.io.emit("remote:scratch:clear");
+    return c.json({ ok: true, seq: snapshot.seq });
+  });
 
-      instance.get("/sessions", protectedRouteOptions, (_request, reply) => {
-        const show = ctx.getShow();
-        reply.send({
-          sessions: show?.timeline?.programmerSessions ?? [],
-        });
-      });
+  remoteRouter.post("/preset/fire", async (c) => {
+    let body: any;
+    try {
+      body = await c.req.json();
+    } catch {
+      c.status(400);
+      return c.json({ error: "Invalid payload" });
+    }
+    ctx.io.emit("remote:preset:fire", body);
+    return c.json({ ok: true });
+  });
 
-      instance.get<{ Params: { id: string } }>("/sessions/:id", protectedRouteOptions, (request, reply) => {
-        const show = ctx.getShow();
-        const session = show?.timeline?.programmerSessions?.find((entry) => entry.id === request.params.id);
-        if (!session) {
-          reply.code(404).send({ error: "Session not found" });
-          return;
-        }
-        reply.send(session);
-      });
+  remoteRouter.post("/cue/play", async (c) => {
+    let body: any;
+    try {
+      body = await c.req.json();
+    } catch {
+      c.status(400);
+      return c.json({ error: "Invalid payload" });
+    }
+    ctx.io.emit("remote:cue:play", body);
+    return c.json({ ok: true });
+  });
 
-      instance.post<{ Body: { sessionId?: string; clock?: string } }>(
-        "/sessions/arm",
-        protectedRouteOptions,
-        (request, reply) => {
-          const sessionId = request.body?.sessionId ?? `session-${Date.now()}`;
-          ctx.io.emit("programmer-session:arm", {
-            sessionId,
-            clock: request.body?.clock ?? "session",
-          });
-          reply.send({ ok: true, sessionId });
-        },
-      );
+  remoteRouter.post("/cue/stop", async (c) => {
+    let body: any;
+    try {
+      body = await c.req.json();
+    } catch {
+      c.status(400);
+      return c.json({ error: "Invalid payload" });
+    }
+    ctx.io.emit("remote:cue:stop", body);
+    return c.json({ ok: true });
+  });
 
-      instance.post<{ Body: { sessionId?: string; persist?: boolean } }>(
-        "/sessions/disarm",
-        protectedRouteOptions,
-        (request, reply) => {
-          ctx.io.emit("programmer-session:disarm", {
-            sessionId: request.body?.sessionId,
-            persist: request.body?.persist !== false,
-          });
-          reply.send({ ok: true });
-        },
-      );
+  remoteRouter.post("/cue/stack/go", async (c) => {
+    let body: any;
+    try {
+      body = await c.req.json();
+    } catch {
+      c.status(400);
+      return c.json({ error: "Invalid payload" });
+    }
+    ctx.io.emit("remote:cue:stack:go", body);
+    return c.json({ ok: true });
+  });
 
-      instance.post<{ Body: ShowDocument }>("/show", protectedRouteOptions, (request, reply) => {
-        const body = request.body;
-        if (!isShowDocument(body)) {
-          reply.code(400).send({ error: "Invalid show document payload" });
-          return;
-        }
+  remoteRouter.post("/blackout", async (c) => {
+    let body: any;
+    try {
+      body = await c.req.json();
+    } catch {
+      // Body might be raw boolean, or object
+    }
+    const value =
+      typeof body === "boolean"
+        ? body
+        : Boolean((body as { value?: boolean })?.value);
+    ctx.io.emit("remote:blackout", value);
+    return c.json({ ok: true });
+  });
 
-        ctx.setShow(body);
-        ctx.outputManager.setShowfile(body);
-        ctx.io.emit("show:state", body);
-        reply.send({ ok: true });
-      });
+  remoteRouter.post("/grandmaster", async (c) => {
+    let body: any;
+    try {
+      body = await c.req.json();
+    } catch {
+      // Body might be raw number, or object
+    }
+    const value =
+      typeof body === "number"
+        ? body
+        : Number((body as { value?: number })?.value ?? 0);
+    ctx.io.emit("remote:grandmaster", Math.max(0, Math.min(1, value)));
+    return c.json({ ok: true });
+  });
 
-      instance.post<{ Body: ScratchSetPayload }>("/scratch/set", protectedRouteOptions, (request, reply) => {
-        const clientId = request.body?.clientId ?? `rest:${resolveClientKey(request)}`;
-        const ack = ctx.scratchAuthority.applySetPayload(clientId, request.body);
-        const snapshot = ctx.scratchAuthority.getSnapshot();
-        ctx.io.emit("scratch:layers", snapshot);
-        ctx.io.emit("scratch:state", snapshot);
-        if (snapshot.conflicts.length > 0) {
-          ctx.io.emit("scratch:conflicts", snapshot.conflicts);
-        }
-        if (snapshot.merged.length === 0) {
-          ctx.io.emit("remote:scratch:clear");
-        } else if (snapshot.merged.length === 1) {
-          const entry = snapshot.merged[0]!;
-          ctx.io.emit("remote:scratch:set", {
-            path: entry.path,
-            value: entry.value,
-            attributeType: entry.attributeType,
-          });
-        } else {
-          ctx.io.emit("remote:scratch:set", {
-            channels: snapshot.merged.map((entry) => ({
-              path: entry.path,
-              value: entry.value,
-              attributeType: entry.attributeType,
-            })),
-          });
-        }
-        reply.send({ ok: true, ack, seq: snapshot.seq });
-      });
+  remoteRouter.post("/audio/enabled", async (c) => {
+    let body: any;
+    try {
+      body = await c.req.json();
+    } catch {
+      // Body might be raw boolean, or object
+    }
+    const enabled =
+      typeof body === "boolean"
+        ? body
+        : Boolean((body as { enabled?: boolean })?.enabled);
+    ctx.io.emit("remote:audio:setEnabled", { enabled });
+    return c.json({ ok: true });
+  });
 
-      instance.post<{ Body: { clientId?: string } | undefined }>(
-        "/scratch/clear",
-        protectedRouteOptions,
-        (request, reply) => {
-          const clientId = request.body?.clientId;
-          if (clientId) {
-            ctx.scratchAuthority.clear(clientId);
-          } else {
-            ctx.scratchAuthority.clear();
-          }
-          const snapshot = ctx.scratchAuthority.getSnapshot();
-          ctx.io.emit("scratch:layers", snapshot);
-          ctx.io.emit("scratch:state", snapshot);
-          ctx.io.emit("remote:scratch:clear");
-          reply.send({ ok: true, seq: snapshot.seq });
-        },
-      );
+  remoteRouter.post("/audio/mappings", async (c) => {
+    let body: any;
+    try {
+      body = await c.req.json();
+    } catch {
+      c.status(400);
+      return c.json({ error: "Invalid payload" });
+    }
+    const mapping = body?.mapping;
+    if (!mapping || typeof mapping.id !== "string" || mapping.id.length === 0) {
+      c.status(400);
+      return c.json({ error: "Invalid mapping payload" });
+    }
+    ctx.io.emit("remote:audio:mappings:create", { mapping });
+    return c.json({ ok: true });
+  });
 
-      instance.post<{ Body: { presetId: string; fade?: number } }>(
-        "/preset/fire",
-        protectedRouteOptions,
-        (request, reply) => {
-          ctx.io.emit("remote:preset:fire", request.body);
-          reply.send({ ok: true });
-        },
-      );
+  remoteRouter.patch("/audio/mappings/:id", async (c) => {
+    const id = c.req.param("id");
+    if (!id || typeof id !== "string") {
+      c.status(400);
+      return c.json({ error: "Invalid mapping id" });
+    }
+    let body: any;
+    try {
+      body = await c.req.json();
+    } catch {
+      // Empty/invalid body
+    }
+    ctx.io.emit("remote:audio:mappings:update", {
+      id,
+      mapping: body?.mapping ?? {},
+    });
+    return c.json({ ok: true });
+  });
 
-      instance.post<{ Body: { cueId: string } }>("/cue/play", protectedRouteOptions, (request, reply) => {
-        ctx.io.emit("remote:cue:play", request.body);
-        reply.send({ ok: true });
-      });
+  remoteRouter.delete("/audio/mappings/:id", (c) => {
+    const id = c.req.param("id");
+    if (!id || typeof id !== "string") {
+      c.status(400);
+      return c.json({ error: "Invalid mapping id" });
+    }
+    ctx.io.emit("remote:audio:mappings:delete", { id });
+    return c.json({ ok: true });
+  });
 
-      instance.post<{ Body: { cueId: string } }>("/cue/stop", protectedRouteOptions, (request, reply) => {
-        ctx.io.emit("remote:cue:stop", request.body);
-        reply.send({ ok: true });
-      });
+  remoteRouter.post("/channel/set", async (c) => {
+    let body: any;
+    try {
+      body = await c.req.json();
+    } catch {
+      c.status(400);
+      return c.json({ error: "Invalid payload" });
+    }
+    const token = extractTokenFromHeaders(c.req.header());
+    const clientKey = token ? `token:${token}` : `ip:${getClientIp(c)}`;
+    const clientId = body?.clientId ?? `rest:${clientKey}`;
+    const ack = ctx.scratchAuthority.applySetPayload(clientId, {
+      path: body.path,
+      value: body.value,
+      attributeType: body.attributeType ?? "generic",
+    });
+    const snapshot = ctx.scratchAuthority.getSnapshot();
+    ctx.io.emit("scratch:layers", snapshot);
+    ctx.io.emit("scratch:state", snapshot);
+    ctx.io.emit("remote:scratch:set", {
+      path: body.path,
+      value: body.value,
+      attributeType: body.attributeType ?? "generic",
+    });
+    return c.json({ ok: true, ack, seq: snapshot.seq });
+  });
 
-      instance.post<{ Body: { cueId: string } }>("/cue/stack/go", protectedRouteOptions, (request, reply) => {
-        ctx.io.emit("remote:cue:stack:go", request.body);
-        reply.send({ ok: true });
-      });
-
-      instance.post<{ Body: { value: boolean } | boolean }>("/blackout", protectedRouteOptions, (request, reply) => {
-        const value =
-          typeof request.body === "boolean"
-            ? request.body
-            : Boolean((request.body as { value?: boolean })?.value);
-        ctx.io.emit("remote:blackout", value);
-        reply.send({ ok: true });
-      });
-
-      instance.post<{ Body: { value: number } | number }>("/grandmaster", protectedRouteOptions, (request, reply) => {
-        const value =
-          typeof request.body === "number"
-            ? request.body
-            : Number((request.body as { value?: number })?.value ?? 0);
-        ctx.io.emit("remote:grandmaster", Math.max(0, Math.min(1, value)));
-        reply.send({ ok: true });
-      });
-
-      instance.post<{ Body: { enabled: boolean } | boolean }>(
-        "/audio/enabled",
-        protectedRouteOptions,
-        (request, reply) => {
-          const enabled =
-            typeof request.body === "boolean"
-              ? request.body
-              : Boolean((request.body as { enabled?: boolean })?.enabled);
-          ctx.io.emit("remote:audio:setEnabled", { enabled });
-          reply.send({ ok: true });
-        },
-      );
-
-      instance.post<{ Body: { mapping: ShowAudioMapping } }>(
-        "/audio/mappings",
-        protectedRouteOptions,
-        (request, reply) => {
-          const mapping = request.body?.mapping;
-          if (!mapping || typeof mapping.id !== "string" || mapping.id.length === 0) {
-            reply.code(400).send({ error: "Invalid mapping payload" });
-            return;
-          }
-          ctx.io.emit("remote:audio:mappings:create", { mapping });
-          reply.send({ ok: true });
-        },
-      );
-
-      instance.patch<{ Body: AudioMappingUpdatePayload }>(
-        "/audio/mappings/:id",
-        protectedRouteOptions,
-        (request, reply) => {
-          const id = (request.params as { id?: string })?.id;
-          if (!id || typeof id !== "string") {
-            reply.code(400).send({ error: "Invalid mapping id" });
-            return;
-          }
-          ctx.io.emit("remote:audio:mappings:update", {
-            id,
-            mapping: request.body?.mapping ?? {},
-          });
-          reply.send({ ok: true });
-        },
-      );
-
-      instance.delete("/audio/mappings/:id", protectedRouteOptions, (request, reply) => {
-        const id = (request.params as { id?: string })?.id;
-        if (!id || typeof id !== "string") {
-          reply.code(400).send({ error: "Invalid mapping id" });
-          return;
-        }
-        ctx.io.emit("remote:audio:mappings:delete", { id });
-        reply.send({ ok: true });
-      });
-
-      instance.post<{
-        Body: { path: string; value: number; attributeType?: string; clientId?: string };
-      }>("/channel/set", protectedRouteOptions, (request, reply) => {
-        const clientId = request.body.clientId ?? `rest:${resolveClientKey(request)}`;
-        const ack = ctx.scratchAuthority.applySetPayload(clientId, {
-          path: request.body.path,
-          value: request.body.value,
-          attributeType: request.body.attributeType ?? "generic",
-        });
-        const snapshot = ctx.scratchAuthority.getSnapshot();
-        ctx.io.emit("scratch:layers", snapshot);
-        ctx.io.emit("scratch:state", snapshot);
-        ctx.io.emit("remote:scratch:set", {
-          path: request.body.path,
-          value: request.body.value,
-          attributeType: request.body.attributeType ?? "generic",
-        });
-        reply.send({ ok: true, ack, seq: snapshot.seq });
-      });
-
-      done();
-    },
-    { prefix: "/api/v1/remote" },
-  );
+  app.route("/api/v1/remote", remoteRouter);
 }

@@ -8,7 +8,7 @@
 
 import { test, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
-import Fastify from 'fastify';
+import { Hono } from 'hono';
 import type { ShowDocument } from '../../../frontend/src/show/document.ts';
 import { createEmptyShow } from '../../../frontend/src/show/document.ts';
 import type { RemoteContext } from '../../../client/src-electron/server/context.ts';
@@ -47,10 +47,10 @@ function createMockContext() {
 }
 
 async function createTestServer(ctx: RemoteContext) {
-  const server = Fastify();
-  registerRemoteRestRoutes(server, ctx);
-  await server.ready();
-  return server;
+  const app = new Hono() as Hono & { close: () => Promise<void> };
+  registerRemoteRestRoutes(app, ctx);
+  app.close = async () => {};
+  return app;
 }
 
 afterEach(() => {
@@ -66,9 +66,9 @@ test('GET /show returns 404 when no show is loaded', async () => {
   const { ctx } = createMockContext();
   const server = await createTestServer(ctx);
 
-  const response = await server.inject({ method: 'GET', url: `${API_PREFIX}/show` });
-  assert.equal(response.statusCode, 404);
-  assert.deepEqual(response.json(), { error: 'No show loaded' });
+  const response = await server.request(`${API_PREFIX}/show`, { method: 'GET' });
+  assert.equal(response.status, 404);
+  assert.deepEqual(await response.json(), { error: 'No show loaded' });
 
   await server.close();
 });
@@ -79,14 +79,16 @@ test('POST /show accepts a valid show document', async () => {
   const server = await createTestServer(ctx);
   const show = createEmptyShow('Remote Show');
 
-  const response = await server.inject({
+  const response = await server.request(`${API_PREFIX}/show`, {
     method: 'POST',
-    url: `${API_PREFIX}/show`,
-    payload: show,
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(show),
   });
 
-  assert.equal(response.statusCode, 200);
-  assert.deepEqual(response.json(), { ok: true });
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true });
   assert.equal(ctx.getShow()?.meta.name, 'Remote Show');
   assert.equal(getShowfile()?.meta.name, 'Remote Show');
   assert.ok(emitted.some((entry) => entry.event === 'show:state'));
@@ -99,14 +101,16 @@ test('POST /show rejects invalid show documents', async () => {
   const { ctx } = createMockContext();
   const server = await createTestServer(ctx);
 
-  const response = await server.inject({
+  const response = await server.request(`${API_PREFIX}/show`, {
     method: 'POST',
-    url: `${API_PREFIX}/show`,
-    payload: { version: '9.9', meta: { name: 'Bad' } },
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ version: '9.9', meta: { name: 'Bad' } }),
   });
 
-  assert.equal(response.statusCode, 400);
-  assert.deepEqual(response.json(), { error: 'Invalid show document payload' });
+  assert.equal(response.status, 400);
+  assert.deepEqual(await response.json(), { error: 'Invalid show document payload' });
   assert.equal(ctx.getShow(), null);
 
   await server.close();
@@ -117,16 +121,15 @@ test('routes return 401 when SOFTDMX_API_TOKEN is set without credentials', asyn
   const { ctx } = createMockContext();
   const server = await createTestServer(ctx);
 
-  const unauthorized = await server.inject({ method: 'GET', url: `${API_PREFIX}/show` });
-  assert.equal(unauthorized.statusCode, 401);
-  assert.deepEqual(unauthorized.json(), { error: 'Unauthorized' });
+  const unauthorized = await server.request(`${API_PREFIX}/show`, { method: 'GET' });
+  assert.equal(unauthorized.status, 401);
+  assert.deepEqual(await unauthorized.json(), { error: 'Unauthorized' });
 
-  const authorized = await server.inject({
+  const authorized = await server.request(`${API_PREFIX}/show`, {
     method: 'GET',
-    url: `${API_PREFIX}/show`,
     headers: { authorization: 'Bearer route-secret' },
   });
-  assert.equal(authorized.statusCode, 404);
+  assert.equal(authorized.status, 404);
 
   await server.close();
 });
@@ -136,14 +139,16 @@ test('POST /scratch/set emits scratch layers through authority', async () => {
   const { ctx, emitted } = createMockContext();
   const server = await createTestServer(ctx);
 
-  const response = await server.inject({
+  const response = await server.request(`${API_PREFIX}/scratch/set`, {
     method: 'POST',
-    url: `${API_PREFIX}/scratch/set`,
-    payload: { path: 'show://Light 1/1', value: 128 },
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ path: 'show://Light 1/1', value: 128 }),
   });
 
-  assert.equal(response.statusCode, 200);
-  const body = response.json() as { ok: boolean; ack: { seq: number }; seq: number };
+  assert.equal(response.status, 200);
+  const body = (await response.json()) as { ok: boolean; ack: { seq: number }; seq: number };
   assert.equal(body.ok, true);
   assert.ok(body.ack.seq >= 1);
   assert.ok(emitted.some((entry) => entry.event === 'scratch:layers'));
@@ -157,13 +162,15 @@ test('POST /blackout emits remote blackout value', async () => {
   const { ctx, emitted } = createMockContext();
   const server = await createTestServer(ctx);
 
-  const response = await server.inject({
+  const response = await server.request(`${API_PREFIX}/blackout`, {
     method: 'POST',
-    url: `${API_PREFIX}/blackout`,
-    payload: { value: true },
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ value: true }),
   });
 
-  assert.equal(response.statusCode, 200);
+  assert.equal(response.status, 200);
   assert.equal(emitted.find((entry) => entry.event === 'remote:blackout')?.payload, true);
 
   await server.close();
@@ -174,20 +181,24 @@ test('POST /grandmaster clamps values to 0-1', async () => {
   const { ctx, emitted } = createMockContext();
   const server = await createTestServer(ctx);
 
-  const high = await server.inject({
+  const high = await server.request(`${API_PREFIX}/grandmaster`, {
     method: 'POST',
-    url: `${API_PREFIX}/grandmaster`,
-    payload: { value: 2.5 },
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({ value: 2.5 }),
   });
-  assert.equal(high.statusCode, 200);
+  assert.equal(high.status, 200);
   assert.equal(emitted.find((entry) => entry.event === 'remote:grandmaster')?.payload, 1);
 
-  const low = await server.inject({
+  const low = await server.request(`${API_PREFIX}/grandmaster`, {
     method: 'POST',
-    url: `${API_PREFIX}/grandmaster`,
-    payload: -0.5,
+    headers: {
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify(-0.5),
   });
-  assert.equal(low.statusCode, 200);
+  assert.equal(low.status, 200);
   assert.equal(
     emitted.filter((entry) => entry.event === 'remote:grandmaster').at(-1)?.payload,
     0,

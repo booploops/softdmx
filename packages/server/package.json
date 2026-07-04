@@ -22,6 +22,7 @@
   },
   "dependencies": {
     "@hono/node-server": "^2.0.6",
-    "alien-signals": "^3.2.1"
+    "alien-signals": "^3.2.1",
+    "bonjour-service": "^1.4.2"
   }
 }
