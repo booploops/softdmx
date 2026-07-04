@@ -28,6 +28,14 @@ const SHOW_OPERATE_LOCK_ICON_KEY = 'softdmx-show-operate-lock-icon';
 const SIDEBAR_SHORTCUTS_KEY = 'softdmx-sidebar-shortcuts';
 const SIDEBAR_SHORTCUT_OPEN_MODE_KEY = 'softdmx-sidebar-shortcut-open-mode';
 const SIDEBAR_SHORTCUT_NEW_WORKSPACE_POLICY_KEY = 'softdmx-sidebar-shortcut-new-workspace-policy';
+const SHOW_WELCOME_ON_STARTUP_KEY = 'softdmx-show-welcome-on-startup';
+
+function readShowWelcomeOnStartup(): boolean {
+  if (typeof localStorage === 'undefined') return true;
+  const stored = localStorage.getItem(SHOW_WELCOME_ON_STARTUP_KEY);
+  if (stored === null) return true;
+  return stored === 'true';
+}
 
 function readOperateLocked(): boolean {
   if (typeof localStorage === 'undefined') return true;
@@ -91,6 +99,9 @@ export const useUIStore = defineStore('ui', () => {
   const cueBarCollapsed = ref(
     isElectronConfigEnv ? DEFAULT_INTERFACE_SETTINGS.cueBarCollapsed : false
   );
+  const showWelcomeOnStartup = ref(
+    isElectronConfigEnv ? DEFAULT_INTERFACE_SETTINGS.showWelcomeOnStartup : readShowWelcomeOnStartup()
+  );
   const infoMode = ref(false);
   const commandLineOpen = ref(false);
   const attributePanelOpen = ref(false);
@@ -120,6 +131,7 @@ export const useUIStore = defineStore('ui', () => {
         interface: {
           programmerCollapsed: programmerCollapsed.value,
           cueBarCollapsed: cueBarCollapsed.value,
+          showWelcomeOnStartup: showWelcomeOnStartup.value,
         },
       });
       return;
@@ -143,6 +155,7 @@ export const useUIStore = defineStore('ui', () => {
   function applyConfigInterface(settings: ConfigInterfaceSettings) {
     programmerCollapsed.value = settings.programmerCollapsed;
     cueBarCollapsed.value = settings.cueBarCollapsed;
+    showWelcomeOnStartup.value = settings.showWelcomeOnStartup;
   }
 
   function applyConfigSidebar(settings: ConfigSidebarSettings) {
@@ -156,7 +169,12 @@ export const useUIStore = defineStore('ui', () => {
     );
   }
 
-  watch([programmerCollapsed, cueBarCollapsed], persistInterfaceConfig);
+  watch([programmerCollapsed, cueBarCollapsed, showWelcomeOnStartup], () => {
+    persistInterfaceConfig();
+    if (!isElectronConfigEnv && typeof localStorage !== 'undefined') {
+      localStorage.setItem(SHOW_WELCOME_ON_STARTUP_KEY, showWelcomeOnStartup.value ? 'true' : 'false');
+    }
+  });
 
   function setMode(nextMode: WorkspaceMode) {
     mode.value = nextMode;
@@ -284,6 +302,7 @@ export const useUIStore = defineStore('ui', () => {
     sidebarShortcutOpenMode,
     sidebarShortcutNewWorkspacePolicy,
     dialogs,
+    showWelcomeOnStartup,
     isLive,
     isProgram,
     isTimeline,

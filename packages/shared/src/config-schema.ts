@@ -15,6 +15,7 @@ export const plotAlignModeSchema = z.enum(["row", "column"]);
 export const configInterfaceSettingsSchema = z.object({
   programmerCollapsed: z.boolean().default(false),
   cueBarCollapsed: z.boolean().default(false),
+  showWelcomeOnStartup: z.boolean().default(true),
 });
 
 export const configSidebarSettingsSchema = z.object({
@@ -62,6 +63,7 @@ export type ConfigFileData = {
 export const configInterfaceSettingsPatchSchema = z.object({
   programmerCollapsed: z.boolean().optional(),
   cueBarCollapsed: z.boolean().optional(),
+  showWelcomeOnStartup: z.boolean().optional(),
 });
 
 export const configSidebarSettingsPatchSchema = z.object({

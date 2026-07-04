@@ -30,11 +30,15 @@ import { useUIStore } from "src/stores/ui";
 import { SIDEBAR_SHORTCUTS } from "src/lib/sidebar-shortcuts";
 import { useThemeStore } from "src/stores/theme";
 import NinjaKeysHelper from "src/components/NinjaKeysHelper.vue";
+import { useShowStore } from "src/stores/show";
+import { showWelcomeDialog } from "src/lib/CommonDialogs";
 
 const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
 const ui = useUIStore();
 const themeStore = useThemeStore();
+const showStore = useShowStore();
+
 const containerRef = ref<HTMLElement | null>(null);
 const disposables: (() => void)[] = [];
 const components: Record<string, any> = {
@@ -713,6 +717,10 @@ function onKeydown(event: KeyboardEvent) {
 
 onMounted(() => {
   window.addEventListener("keydown", onKeydown);
+
+  if (ui.showWelcomeOnStartup) {
+    showWelcomeDialog();
+  }
 });
 
 onUnmounted(() => {

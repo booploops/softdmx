@@ -8,8 +8,10 @@
 
 <script setup lang="ts">
 import { VueFinalModal } from 'vue-final-modal'
+import { useUIStore } from 'src/stores/ui';
 
 const fm = useTemplateRef('fm');
+const ui = useUIStore();
 
 const emit = defineEmits<{
   (e: 'confirm'): void;
@@ -34,131 +36,127 @@ const props = defineProps<{
         title="Welcome to SoftDMX"
         @close="$emit('confirm')"
       />
-      <XDialogContent class="q-pa-none overflow-hidden">
+      <XDialogContent class="p-0 overflow-hidden">
         <!-- Hero Section with Stage Light Gradient -->
-        <div class="welcome-hero q-pa-xl text-center relative-position">
+        <div class="welcome-hero p-12 text-center relative">
           <div class="welcome-hero__overlay"></div>
-          <div class="welcome-hero__content relative-position">
+          <div class="welcome-hero__content relative">
             <XIcon
               name="sun"
               size="56px"
-              class="welcome-hero__icon q-mb-md text-amber"
+              class="welcome-hero__icon mb-4 text-amber-500"
             />
-            <h1 class="text-h3 text-bold text-white q-my-none tracking-tight">
+            <h1 class="text-5xl font-bold text-white my-0 tracking-tight">
               SoftDMX
             </h1>
-            <p class="text-subtitle1 text-grey-3 q-mt-sm q-mb-none">
+            <p class="text-base text-gray-300 mt-2 mb-0">
               A modern software DMX lighting console and visual controller.
             </p>
-            <div class="text-caption text-grey-4 q-mt-xs">Version 0.0.1</div>
+            <div class="text-xs text-gray-400 mt-1">Version 0.0.1</div>
           </div>
         </div>
 
         <!-- Description & Main Content -->
-        <div class="q-pa-lg">
-          <p class="text-body1 text-grey-4 text-center q-px-md q-mb-xl">
+        <div class="p-6">
+          <p class="text-base text-gray-400 text-center px-4 mb-12">
             SoftDMX is built from the ground up for high-performance, real-time lighting control.
             Connect hardware consoles, map fixtures, design dynamic cues, and orchestrate gorgeous light shows with our
             unified control suite.
           </p>
 
           <!-- Quick Action Grid -->
-          <div class="row q-col-gutter-md">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <!-- New Show Card -->
-            <div class="col-12 col-sm-6">
-              <div
-                class="action-card cursor-pointer q-pa-md sdmx-panel--inset"
-                tabindex="0"
-                @click="props.onCreateNewShow?.(); $emit('confirm')"
-                @keydown.space.prevent="props.onCreateNewShow?.(); $emit('confirm')"
-                @keydown.enter.prevent="props.onCreateNewShow?.(); $emit('confirm')"
-              >
-                <div class="row no-wrap items-center">
-                  <XIcon
-                    name="circle-plus"
-                    size="32px"
-                    class="action-card__icon text-primary q-mr-md"
-                  />
-                  <div>
-                    <div class="text-subtitle1 text-bold text-white">Create New Show</div>
-                    <div class="text-caption text-grey-5">Start designing a fresh showfile from scratch.</div>
-                  </div>
+            <div
+              class="action-card cursor-pointer p-4 sdmx-panel--inset"
+              tabindex="0"
+              @click="props.onCreateNewShow?.(); $emit('confirm')"
+              @keydown.space.prevent="props.onCreateNewShow?.(); $emit('confirm')"
+              @keydown.enter.prevent="props.onCreateNewShow?.(); $emit('confirm')"
+            >
+              <div class="flex flex-nowrap items-center">
+                <XIcon
+                  name="circle-plus"
+                  size="32px"
+                  class="action-card__icon text-[var(--sdmx-color-primary)] mr-4"
+                />
+                <div>
+                  <div class="text-base font-bold text-white">Create New Show</div>
+                  <div class="text-xs text-gray-400">Start designing a fresh showfile from scratch.</div>
                 </div>
               </div>
             </div>
 
             <!-- Demo Show Card -->
-            <div class="col-12 col-sm-6">
-              <div
-                class="action-card cursor-pointer q-pa-md sdmx-panel--inset"
-                tabindex="0"
-                @click="props.onLoadDemoShow?.(); $emit('confirm')"
-                @keydown.space.prevent="props.onLoadDemoShow?.(); $emit('confirm')"
-                @keydown.enter.prevent="props.onLoadDemoShow?.(); $emit('confirm')"
-              >
-                <div class="row no-wrap items-center">
-                  <XIcon
-                    name="sparkles"
-                    size="32px"
-                    class="action-card__icon text-secondary q-mr-md"
-                  />
-                  <div>
-                    <div class="text-subtitle1 text-bold text-white">Load Demo Show</div>
-                    <div class="text-caption text-grey-5">Explore pre-built 3D wash and laser demonstrations.</div>
-                  </div>
+            <div
+              class="action-card cursor-pointer p-4 sdmx-panel--inset"
+              tabindex="0"
+              @click="props.onLoadDemoShow?.(); $emit('confirm')"
+              @keydown.space.prevent="props.onLoadDemoShow?.(); $emit('confirm')"
+              @keydown.enter.prevent="props.onLoadDemoShow?.(); $emit('confirm')"
+            >
+              <div class="flex flex-nowrap items-center">
+                <XIcon
+                  name="sparkles"
+                  size="32px"
+                  class="action-card__icon text-[var(--sdmx-color-secondary)] mr-4"
+                />
+                <div>
+                  <div class="text-base font-bold text-white">Load Demo Show</div>
+                  <div class="text-xs text-gray-400">Explore pre-built 3D wash and laser demonstrations.</div>
                 </div>
               </div>
             </div>
 
             <!-- Bindings Card -->
-            <div class="col-12 col-sm-6">
-              <div
-                class="action-card cursor-pointer q-pa-md sdmx-panel--inset"
-                tabindex="0"
-                @click="props.onConfigureBindings?.(); $emit('confirm')"
-                @keydown.space.prevent="props.onConfigureBindings?.(); $emit('confirm')"
-                @keydown.enter.prevent="props.onConfigureBindings?.(); $emit('confirm')"
-              >
-                <div class="row no-wrap items-center">
-                  <XIcon
-                    name="adjustments"
-                    size="32px"
-                    class="action-card__icon text-amber q-mr-md"
-                  />
-                  <div>
-                    <div class="text-subtitle1 text-bold text-white">MIDI & OSC Bindings</div>
-                    <div class="text-caption text-grey-5">Map physical hardware knobs and sliders to controls.</div>
-                  </div>
+            <div
+              class="action-card cursor-pointer p-4 sdmx-panel--inset"
+              tabindex="0"
+              @click="props.onConfigureBindings?.(); $emit('confirm')"
+              @keydown.space.prevent="props.onConfigureBindings?.(); $emit('confirm')"
+              @keydown.enter.prevent="props.onConfigureBindings?.(); $emit('confirm')"
+            >
+              <div class="flex flex-nowrap items-center">
+                <XIcon
+                  name="adjustments"
+                  size="32px"
+                  class="action-card__icon text-amber-500 mr-4"
+                />
+                <div>
+                  <div class="text-base font-bold text-white">MIDI & OSC Bindings</div>
+                  <div class="text-xs text-gray-400">Map physical hardware knobs and sliders to controls.</div>
                 </div>
               </div>
             </div>
 
             <!-- Theme Settings Card -->
-            <div class="col-12 col-sm-6">
-              <div
-                class="action-card cursor-pointer q-pa-md sdmx-panel--inset"
-                tabindex="0"
-                @click="props.onConfigureThemes?.(); $emit('confirm')"
-                @keydown.space.prevent="props.onConfigureThemes?.(); $emit('confirm')"
-                @keydown.enter.prevent="props.onConfigureThemes?.(); $emit('confirm')"
-              >
-                <div class="row no-wrap items-center">
-                  <XIcon
-                    name="palette"
-                    size="32px"
-                    class="action-card__icon text-positive q-mr-md"
-                  />
-                  <div>
-                    <div class="text-subtitle1 text-bold text-white">Customize Theme</div>
-                    <div class="text-caption text-grey-5">Personalize the editor visual theme and colors.</div>
-                  </div>
+            <div
+              class="action-card cursor-pointer p-4 sdmx-panel--inset"
+              tabindex="0"
+              @click="props.onConfigureThemes?.(); $emit('confirm')"
+              @keydown.space.prevent="props.onConfigureThemes?.(); $emit('confirm')"
+              @keydown.enter.prevent="props.onConfigureThemes?.(); $emit('confirm')"
+            >
+              <div class="flex flex-nowrap items-center">
+                <XIcon
+                  name="palette"
+                  size="32px"
+                  class="action-card__icon text-[var(--sdmx-color-positive)] mr-4"
+                />
+                <div>
+                  <div class="text-base font-bold text-white">Customize Theme</div>
+                  <div class="text-xs text-gray-400">Personalize the editor visual theme and colors.</div>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <XDialogFooter class="q-pa-md border-top sdmx-panel--inset justify-center">
+        <XDialogFooter align="between" class="p-4 border-top sdmx-panel--inset">
+          <XCheckbox
+            v-model="ui.showWelcomeOnStartup"
+            label="Show on Startup"
+          />
           <XButton
             label="Let's Go!"
             color="primary"
