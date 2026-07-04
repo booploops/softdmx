@@ -72,6 +72,7 @@ export const useDMXStore = defineStore('dmx', () => {
     const built = buildChannelMap(doc);
     baseChannels.value = built.map((ch) => ({ ...ch }));
     channels.value = built.map((ch) => ({ ...ch }));
+    useIOClient().emit('show:state', doc);
   }
 
   function applyMergedOutput(merged: ActiveChannel[]) {

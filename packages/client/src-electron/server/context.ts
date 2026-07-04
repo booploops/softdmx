@@ -20,8 +20,6 @@ import {
   isRemoteApiTokenAuthorized,
 } from "./auth/remote-token";
 
-import { showStore } from "../state/show";
-
 export interface RemoteContext {
   io: Server;
   outputManager: OutputManager;
@@ -63,18 +61,18 @@ if (requiredRemoteToken) {
 export const config = new ConfigFile();
 export const outputManager = new OutputManager(config);
 
+let currentShow: ShowDocument | null = null;
+
 export function getCurrentShow(): ShowDocument | null {
-  return showStore.document();
+  return currentShow;
 }
 
 export function setCurrentShow(show: ShowDocument | null): void {
-  if (show) {
-    showStore.loadShow(show);
-  }
+  currentShow = show;
 }
 
 function resolveScratchConflictMode(): ConflictResolutionMode {
-  return showStore.document().programmer?.conflictMode ?? "attribute-merge";
+  return currentShow?.programmer?.conflictMode ?? "attribute-merge";
 }
 
 const scratchAuthority = new ScratchAuthority(resolveScratchConflictMode);
@@ -84,9 +82,9 @@ export function createRemoteContext(): RemoteContext {
     io,
     outputManager,
     scratchAuthority,
-    getShow: () => showStore.document(),
+    getShow: () => currentShow,
     setShow: (show: ShowDocument) => {
-      showStore.loadShow(show);
+      currentShow = show;
     },
   };
 }
