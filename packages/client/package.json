@@ -13,7 +13,7 @@
     "postinstall": "node scripts/run-postinstall.mjs",
     "rebuild:native": "node scripts/run-postinstall.mjs",
     "type-check": "tsgo",
-    "icon:generate": "node scripts/create-icns.mjs"
+    "icon:generate": "node scripts/create-icons.mjs"
   },
   "dependencies": {
     "@hono/node-server": "^2.0.6",
