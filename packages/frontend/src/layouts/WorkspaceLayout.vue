@@ -32,6 +32,7 @@ import { useThemeStore } from "src/stores/theme";
 import NinjaKeysHelper from "src/components/NinjaKeysHelper.vue";
 import { useShowStore } from "src/stores/show";
 import { showWelcomeDialog } from "src/lib/CommonDialogs";
+import SidebarMainButton from "src/components/SidebarMainButton.vue";
 
 const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
@@ -733,6 +734,7 @@ onUnmounted(() => {
   <div class="workspace-shell">
     <div class="workspace-sidebar">
       <div class="workspace-sidebar__top">
+        <SidebarMainButton></SidebarMainButton>
         <XSidebarButton
           tooltip="Main Menu"
           @click="isElectron ? showNativeMainMenu() : undefined"

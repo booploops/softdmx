@@ -10,7 +10,8 @@
     "dev": "vite",
     "build": "vite build",
     "story:dev": "histoire dev",
-    "story:build": "histoire build"
+    "story:build": "histoire build",
+    "favicon:generate": "node scripts/generate-favicons.mjs"
   },
   "dependencies": {
     "@booploops/pod-router": "^0.1.4",
