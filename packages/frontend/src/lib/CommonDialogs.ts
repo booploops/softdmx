@@ -26,7 +26,6 @@ import { exampleVrClubShow } from "src/shows/example-vr-club";
 import ThirdPartyDialog from "src/components/dialogs/ThirdPartyDialog.vue";
 import StockMessageDialog from "src/components/dialogs/StockMessageDialog.vue";
 
-
 export function showSettingsDialog() {
   return createDialog({ component: SettingsDialog });
 }
@@ -120,7 +119,7 @@ export interface ChoiceOption<T = any> {
   value: T;
   color?: string;
   textColor?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: "sm" | "md" | "lg";
   flat?: boolean;
   outline?: boolean;
 }
@@ -247,7 +246,6 @@ export function createAlert(options: AlertOptions): Promise<void> {
   });
 }
 
-
 const demoShowOptions = [
   {
     label: "Simple Wash",
@@ -264,7 +262,7 @@ const demoShowOptions = [
   {
     label: "VR Club",
     value: "vr-club",
-    icon: "nightlife",
+    icon: "music",
     show: exampleVrClubShow,
   },
 ] as const;

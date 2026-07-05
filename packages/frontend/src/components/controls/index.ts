@@ -11,6 +11,7 @@ export { default as XIcon } from './XIcon.vue';
 export { default as XButtonGroup } from './XButtonGroup.vue';
 export { default as XSelect } from './XSelect.vue';
 export { default as XCheckbox } from './XCheckbox.vue';
+export { default as XRadioButton } from './XRadioButton.vue';
 export { default as XRange } from './XRange.vue';
 export { default as XSlider } from './XSlider.vue';
 export { default as XDropdown } from './XDropdown.vue';

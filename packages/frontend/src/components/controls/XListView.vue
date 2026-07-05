@@ -14,11 +14,13 @@ const props = withDefaults(
     bordered?: boolean;
     dense?: boolean;
     zebra?: boolean;
+    separator?: boolean;
   }>(),
   {
     bordered: true,
     dense: false,
     zebra: false,
+    separator: false,
   }
 );
 
@@ -33,6 +35,7 @@ provide('listViewProps', props);
       'x-list-view--bordered': bordered,
       'x-list-view--dense': dense,
       'x-list-view--zebra': zebra,
+      'x-list-view--separator': separator,
     }"
   >
     <div class="x-list-view__content">
@@ -55,6 +58,12 @@ provide('listViewProps', props);
     border-radius: 5px;
   }
 
+  &--separator {
+    :deep(.x-list-item:not(:last-child)) {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    }
+  }
+
   &__content {
     display: flex;
     flex-direction: column;
@@ -71,6 +80,12 @@ provide('listViewProps', props);
 
     &--bordered {
       border-color: rgba(255, 255, 255, 0.15) !important;
+    }
+
+    &--separator {
+      .x-list-item:not(:last-child) {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+      }
     }
   }
 }

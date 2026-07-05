@@ -32,6 +32,7 @@ declare module 'vue' {
     XInput: typeof import('./../components/controls/XInput.vue')['default']
     XListItem: typeof import('./../components/controls/XListItem.vue')['default']
     XListView: typeof import('./../components/controls/XListView.vue')['default']
+    XRadioButton: typeof import('./../components/controls/XRadioButton.vue')['default']
     XRange: typeof import('./../components/controls/XRange.vue')['default']
     XSelect: typeof import('./../components/controls/XSelect.vue')['default']
     XSidebarButton: typeof import('./../components/controls/XSidebarButton.vue')['default']

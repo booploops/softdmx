@@ -46,29 +46,39 @@ function confirmSelection() {
         @close="emit('cancel')"
       />
       <XDialogContent>
-        <XDialogBody class="q-gutter-y-md">
+        <XDialogBody class="flex flex-col gap-4">
           <div class="text-body2">{{ props.message }}</div>
-          <q-list bordered separator class="rounded-borders">
-            <q-item
+          <XListView
+            :bordered="true"
+            separator
+          >
+            <XListItem
               v-for="option in props.options"
               :key="option.value"
               clickable
               :active="selected === option.value"
               @click="selected = option.value"
             >
-              <q-item-section avatar>
+              <template #prepend>
                 <XIcon :name="option.icon || 'auto_awesome'" />
-              </q-item-section>
-              <q-item-section>{{ option.label }}</q-item-section>
-              <q-item-section side>
-                <q-radio :model-value="selected" :val="option.value" @update:model-value="selected = option.value" />
-              </q-item-section>
-            </q-item>
-          </q-list>
+              </template>
+              {{ option.label }}
+            </XListItem>
+          </XListView>
         </XDialogBody>
         <XDialogFooter>
-          <XButton label="Cancel" flat color="default" @click="emit('cancel')" />
-          <XButton label="Load" color="primary" :disable="!selected" @click="confirmSelection" />
+          <XButton
+            label="Cancel"
+            flat
+            color="default"
+            @click="emit('cancel')"
+          />
+          <XButton
+            label="Load"
+            color="primary"
+            :disable="!selected"
+            @click="confirmSelection"
+          />
         </XDialogFooter>
       </XDialogContent>
     </XDialogWindow>
