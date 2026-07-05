@@ -10,7 +10,6 @@ import { ref, computed, toRaw, watch, type Component, onMounted, onUnmounted } f
 import XSidebarButton from "src/components/controls/XSidebarButton.vue";
 import WSWorkspaceInstance from "src/components/workspace/WSWorkspaceInstance.vue";
 import { getPanelsMenu, type PanelMenuItem } from "src/lib/workspace/panels";
-import { getMainMenu, type MainMenuItem } from "src/lib/main-menu";
 import { WorkspaceLayouts, createWorkspaceWithPanels } from "src/lib/workspace";
 import type { Route } from "@booploops/pod-router";
 import {
@@ -641,30 +640,7 @@ async function importWorkspaceJSON() {
   }
 }
 
-function showNativeMainMenu() {
-  const mapMenu = (items: MainMenuItem[]): FrontendMenuItem[] => {
-    return items.map((item) => {
-      const mapped: FrontendMenuItem = {
-        label: item.label,
-        id: item.label,
-      };
-      if (item.click) {
-        mapped.click = item.click;
-      }
-      if (item.children) {
-        mapped.submenu = mapMenu(item.children);
-      }
-      return mapped;
-    });
-  };
 
-  const template = mapMenu(
-    getMainMenu({
-      onImportWorkspace: importWorkspaceJSON,
-    }),
-  );
-  createMenu(template).show();
-}
 
 function showNativeSpawnMenu() {
   if (!isElectron.value) return;
@@ -734,13 +710,7 @@ onUnmounted(() => {
   <div class="workspace-shell">
     <div class="workspace-sidebar">
       <div class="workspace-sidebar__top">
-        <SidebarMainButton></SidebarMainButton>
-        <XSidebarButton
-          tooltip="Main Menu"
-          @click="isElectron ? showNativeMainMenu() : undefined"
-        >
-          <i class="codicon codicon-menu" />
-        </XSidebarButton>
+        <SidebarMainButton :on-import-workspace="importWorkspaceJSON"></SidebarMainButton>
         <XSidebarButton
           tooltip="Spawn Panel"
           @click="isElectron ? showNativeSpawnMenu() : undefined"
@@ -811,6 +781,7 @@ onUnmounted(() => {
   flex-direction: column;
   align-items: center;
   border-right: 1px solid var(--sdmx-color-border-subtle);
+  width: 50px;
 }
 
 .workspace-sidebar__top {

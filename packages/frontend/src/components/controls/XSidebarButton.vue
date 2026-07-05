@@ -105,8 +105,7 @@ function onClick(event: MouseEvent) {
         &::before {
             content: '';
             position: absolute;
-            inset: 6px;
-            border-radius: 5px;
+            inset: 0px;
             background: rgba(255, 255, 255, 0.07);
         }
     }
@@ -118,8 +117,6 @@ function onClick(event: MouseEvent) {
         &::before {
             content: '';
             position: absolute;
-            inset: 6px;
-            border-radius: 5px;
             background: rgba(255, 255, 255, 0.12);
         }
     }

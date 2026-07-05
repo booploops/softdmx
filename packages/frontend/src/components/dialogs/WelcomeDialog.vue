@@ -41,10 +41,14 @@ const props = defineProps<{
         <div class="welcome-hero p-12 text-center relative">
           <div class="welcome-hero__overlay"></div>
           <div class="welcome-hero__content relative">
-            <XIcon
-              name="sun"
-              size="56px"
-              class="welcome-hero__icon mb-4 text-amber-500"
+            <img
+              src="/icon.avif"
+              width="80"
+              height="80"
+              alt="SoftDMX Logo"
+              class="welcome-hero__icon mb-4 mx-auto"
+              loading="eager"
+              decoding="async"
             />
             <h1 class="text-5xl font-bold text-white my-0 tracking-tight">
               SoftDMX
@@ -152,7 +156,10 @@ const props = defineProps<{
           </div>
         </div>
 
-        <XDialogFooter align="between" class="p-4 border-top sdmx-panel--inset">
+        <XDialogFooter
+          align="between"
+          class="p-4 border-top sdmx-panel--inset"
+        >
           <XCheckbox
             v-model="ui.showWelcomeOnStartup"
             label="Show on Startup"
@@ -170,10 +177,27 @@ const props = defineProps<{
 
 <style scoped lang="scss">
 .welcome-hero {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 40%, #db2777 100%);
   position: relative;
   overflow: hidden;
   border-bottom: 1px solid var(--sdmx-color-border-subtle, #2b2b2b);
+  background: #111;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url("/Logo1.avif");
+    background-size: cover;
+    background-position: center;
+    filter: blur(24px);
+    transform: scale(1.15);
+    opacity: 0.5;
+    pointer-events: none;
+    z-index: 0;
+  }
 
   &__overlay {
     position: absolute;
@@ -181,12 +205,23 @@ const props = defineProps<{
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.4) 100%);
+    background: radial-gradient(circle at 50% 50%, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.7) 100%);
     pointer-events: none;
+    z-index: 1;
+  }
+
+  &__content {
+    position: relative;
+    z-index: 2;
   }
 
   &__icon {
-    filter: drop-shadow(0 0 12px rgba(251, 191, 36, 0.4));
+    display: block;
+    margin: 0 auto;
+    width: 80px;
+    height: 80px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 12px rgba(255, 255, 255, 0.25));
   }
 }
 

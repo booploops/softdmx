@@ -55,6 +55,37 @@ for (const { name, size } of targets) {
   }
 }
 
+// Generate icon.avif
+console.log("Generating icon.avif...");
+const avifOutputPath = path.resolve(destDir, "icon.avif");
+try {
+  execSync(`sips -s format avif "${sourcePngPath}" --out "${avifOutputPath}"`, {
+    stdio: "ignore",
+  });
+} catch (error) {
+  console.error("Failed to generate icon.avif:", error);
+  process.exit(1);
+}
+
+// Generate logo.avif and Logo1.avif from Logo1.png
+const sourceLogoPath = path.resolve(rootDir, "assets/Logo1.png");
+const logoOutputPath = path.resolve(destDir, "logo.avif");
+const logo1OutputPath = path.resolve(destDir, "Logo1.avif");
+if (fs.existsSync(sourceLogoPath)) {
+  console.log("Generating logo AVIF images...");
+  try {
+    execSync(`sips -s format avif "${sourceLogoPath}" --out "${logoOutputPath}"`, {
+      stdio: "ignore",
+    });
+    execSync(`sips -s format avif "${sourceLogoPath}" --out "${logo1OutputPath}"`, {
+      stdio: "ignore",
+    });
+  } catch (error) {
+    console.error("Failed to generate logo AVIF files:", error);
+    process.exit(1);
+  }
+}
+
 // Generate favicon.ico using 16x16, 32x32, and 48x48
 console.log("Generating favicon.ico...");
 const icoSizes = [16, 32, 48];
