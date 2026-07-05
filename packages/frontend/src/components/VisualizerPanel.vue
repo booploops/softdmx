@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import type { FixturePosition } from '@softdmx/engine';
 import { resolveFixturePosition } from '@softdmx/engine';
+import { useShowStore } from 'src/stores/show';
 import { useThemeStore } from 'src/stores/theme';
 import { readThemeCanvasPalette } from 'src/utils/theme-css';
 import XCard from 'src/components/controls/XCard.vue';
@@ -18,7 +19,7 @@ type VisualizerFixture = {
 };
 
 const props = defineProps<{
-  fixtures: VisualizerFixture[];
+  fixtures?: VisualizerFixture[];
   selectedFixtures?: string[];
   snapEnabled?: boolean;
   snapStep?: number;
@@ -34,9 +35,17 @@ const emit = defineEmits<{
   'move-fixture': [name: string, position: { x: number; y: number; z: number }];
 }>();
 
+const showStore = useShowStore();
 const containerRef = ref<HTMLElement | null>(null);
 const canvasRef = ref<HTMLCanvasElement | null>(null);
 const themeStore = useThemeStore();
+const resolvedFixtures = computed(() =>
+  props.fixtures ??
+  showStore.document.fixtures.map((fixture) => ({
+    name: fixture.name,
+    position: fixture.position,
+  }))
+);
 let resizeObserver: ResizeObserver | null = null;
 const zoomLevel = ref(1);
 const panOffset = ref({ x: 0, y: 0 });
@@ -64,9 +73,10 @@ function computeLayout(canvas: HTMLCanvasElement): PlotLayout {
   const width = canvas.width;
   const height = canvas.height;
   const margin = 30;
-  const resolved = props.fixtures.map((fixture, index) => ({
+  const fixtures = resolvedFixtures.value;
+  const resolved = fixtures.map((fixture, index) => ({
     name: fixture.name,
-    position: resolveFixturePosition(fixture.position, index, props.fixtures.length),
+    position: resolveFixturePosition(fixture.position, index, fixtures.length),
   }));
   const allX = [0, ...resolved.map((fixture) => fixture.position.x)];
   const allZ = [0, ...resolved.map((fixture) => fixture.position.z)];
@@ -159,7 +169,7 @@ function render() {
   ctx.fillStyle = palette.background;
   ctx.fillRect(0, 0, width, height);
 
-  if (!props.fixtures.length) {
+  if (!resolvedFixtures.value.length) {
     ctx.fillStyle = palette.empty;
     ctx.font = '13px sans-serif';
     ctx.textAlign = 'center';
@@ -231,7 +241,7 @@ function render() {
 }
 
 watch(
-  () => props.fixtures,
+  resolvedFixtures,
   () => {
     render();
   },
@@ -284,7 +294,7 @@ function onCanvasClick(event: MouseEvent) {
   }
   const canvas = canvasRef.value;
   const container = containerRef.value;
-  if (!canvas || !container || !props.fixtures.length) return;
+  if (!canvas || !container || !resolvedFixtures.value.length) return;
 
   const click = canvasCoordinates(event, canvas);
   const layout = computeLayout(canvas);

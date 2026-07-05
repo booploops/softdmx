@@ -17,6 +17,7 @@ import { resolveFixtureChannelsForMode } from '@softdmx/engine';
 import type { FixtureChannelWithReference, ShowfileFixture } from '@softdmx/engine';
 import { computeAimPanTilt16Bit, resolveFixturePosition } from '@softdmx/engine';
 import { useFixtureImport } from 'src/composables/useFixtureImport';
+import { useInfoText } from 'src/composables/useInfoText';
 import PatchGrid from './PatchGrid.vue';
 import PixelMapPanel from './PixelMapPanel.vue';
 import VisualizerPanel from './VisualizerPanel.vue';
@@ -27,6 +28,7 @@ const showStore = useShowStore();
 const dmx = useDMXStore();
 const control = useChannelControl();
 const { importFixtureFile, exportFixture } = useFixtureImport();
+const { info } = useInfoText();
 
 const importInputRef = ref<HTMLInputElement | null>(null);
 

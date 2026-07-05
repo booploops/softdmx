@@ -9,9 +9,11 @@
 import { SdmxButton, SdmxIconButton } from 'src/components/ui';
 import { useCueStore } from 'src/stores/cue';
 import { useUIStore } from 'src/stores/ui';
+import { useInfoText } from 'src/composables/useInfoText';
 
 const cueStore = useCueStore();
 const ui = useUIStore();
+const { info } = useInfoText();
 
 function openCueEditor() {
   ui.openDialog('cueEditor');

@@ -9,6 +9,7 @@
 import type { FixturePosition } from '@softdmx/engine';
 import { resolveFixturePosition } from '@softdmx/engine';
 import { useDMXStore } from 'src/stores/dmx';
+import { useShowStore } from 'src/stores/show';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { useThemeStore } from 'src/stores/theme';
@@ -20,7 +21,7 @@ type VisualizerFixture = {
 };
 
 const props = defineProps<{
-  fixtures: VisualizerFixture[];
+  fixtures?: VisualizerFixture[];
   selectedFixtures?: string[];
   snapEnabled?: boolean;
   snapStep?: number;
@@ -37,7 +38,15 @@ const emit = defineEmits<{
 
 const containerRef = ref<HTMLElement | null>(null);
 const dmx = useDMXStore();
+const showStore = useShowStore();
 const themeStore = useThemeStore();
+const resolvedFixtures = computed(() =>
+  props.fixtures ??
+  showStore.document.fixtures.map((fixture) => ({
+    name: fixture.name,
+    position: fixture.position,
+  }))
+);
 
 let renderer: THREE.WebGLRenderer | null = null;
 let scene: THREE.Scene | null = null;
@@ -104,8 +113,9 @@ function buildScene() {
   scene.add(stagePlane);
 
   fixtureMeshes.clear();
-  props.fixtures.forEach((fixture, index) => {
-    const pos = resolveFixturePosition(fixture.position, index, props.fixtures.length);
+  const fixtures = resolvedFixtures.value;
+  fixtures.forEach((fixture, index) => {
+    const pos = resolveFixturePosition(fixture.position, index, fixtures.length);
     const geometry = new THREE.CylinderGeometry(0.25, 0.35, 1.2, 12);
     const material = new THREE.MeshStandardMaterial({
       color: palette.fixture,
@@ -272,7 +282,7 @@ onMounted(() => {
 onBeforeUnmount(dispose);
 
 watch(
-  () => props.fixtures,
+  resolvedFixtures,
   () => {
     dispose();
     buildScene();
