@@ -12,7 +12,8 @@
     "dist": "electron-builder --config electron-builder.config.js",
     "postinstall": "node scripts/run-postinstall.mjs",
     "rebuild:native": "node scripts/run-postinstall.mjs",
-    "type-check": "tsgo"
+    "type-check": "tsgo",
+    "icon:generate": "node scripts/create-icns.mjs"
   },
   "dependencies": {
     "@hono/node-server": "^2.0.6",

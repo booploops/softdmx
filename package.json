@@ -28,6 +28,7 @@
     "test:coverage": "yarn workspace @softdmx/tests test:coverage",
     "test:all": "yarn test",
     "cli": "node packages/client/scripts/softdmx-cli.mjs",
+    "icon:generate": "yarn workspace @softdmx/client icon:generate",
     "license:check": "node scripts/find-missing-headers.js",
     "license:fix": "node scripts/add-missing-headers.js"
   },
