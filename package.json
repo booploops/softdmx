@@ -36,7 +36,7 @@
   "devDependencies": {
     "concurrently": "^10.0.3",
     "oxfmt": "^0.56.0",
-    "oxlint": "^1.71.0"
+    "oxlint": "^1.72.0"
   },
   "resolutions": {
     "@xmldom/xmldom": "0.8.13",

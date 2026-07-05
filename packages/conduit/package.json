@@ -2,7 +2,7 @@
   "name": "@softdmx/conduit",
   "description": "Minimal client that talks to the @softdmx/server and handles hardware and IO operations for devices connected to it.",
   "devDependencies": {
-    "rolldown": "^1.1.2",
+    "rolldown": "^1.1.4",
     "typescript": "^6.0.3"
   }
 }
