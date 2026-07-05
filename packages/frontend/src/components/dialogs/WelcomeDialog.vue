@@ -42,7 +42,7 @@ const props = defineProps<{
           <div class="welcome-hero__overlay"></div>
           <div class="welcome-hero__content relative">
             <img
-              src="/icon.avif"
+              src="icon.avif"
               width="80"
               height="80"
               alt="SoftDMX Logo"

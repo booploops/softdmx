@@ -51,14 +51,17 @@ function showNativeMainMenu() {
         @pointerdown.left="isElectron ? showNativeMainMenu() : undefined"
     >
         <img
-            src="/logo.avif"
+            src="logo.avif"
             width="32"
             height="32"
             alt="SoftDMX Logo"
             loading="eager"
             decoding="async"
         />
-        <span class="menu-indicator" aria-hidden="true" />
+        <span
+            class="menu-indicator"
+            aria-hidden="true"
+        />
     </button>
 </template>
 
