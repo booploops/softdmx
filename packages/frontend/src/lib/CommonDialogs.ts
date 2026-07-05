@@ -14,6 +14,7 @@ import AudioSettingsDialog from "src/components/AudioSettingsDialog.vue";
 import { createWorkspaceWithPanels } from "./workspace";
 import { useModal } from "vue-final-modal";
 import AboutDialog from "src/components/dialogs/AboutDialog.vue";
+import ChoiceDialog from "src/components/dialogs/ChoiceDialog.vue";
 import ConfirmDialog from "src/components/dialogs/ConfirmDialog.vue";
 import PromptDialog from "src/components/dialogs/PromptDialog.vue";
 import WelcomeDialog from "src/components/dialogs/WelcomeDialog.vue";
@@ -23,6 +24,8 @@ import { simpleWashShow } from "src/shows/simple-wash";
 import { laserDemoShow } from "src/shows/laser-demo";
 import { exampleVrClubShow } from "src/shows/example-vr-club";
 import ThirdPartyDialog from "src/components/dialogs/ThirdPartyDialog.vue";
+import StockMessageDialog from "src/components/dialogs/StockMessageDialog.vue";
+
 
 export function showSettingsDialog() {
   return createDialog({ component: SettingsDialog });
@@ -112,6 +115,55 @@ export function createConfirm(options: ConfirmOptions): Promise<boolean> {
   });
 }
 
+export interface ChoiceOption<T = any> {
+  label: string;
+  value: T;
+  color?: string;
+  textColor?: string;
+  size?: 'sm' | 'md' | 'lg';
+  flat?: boolean;
+  outline?: boolean;
+}
+
+export interface ChoiceOptions<T = any> {
+  title: string;
+  message: string;
+  choices: ChoiceOption<T>[];
+}
+
+export function createChoice<T = any>(
+  options: ChoiceOptions<T>,
+): Promise<T | undefined> {
+  return new Promise((resolve) => {
+    let resolved = false;
+    const safeResolve = (value: T | undefined) => {
+      if (!resolved) {
+        resolved = true;
+        resolve(value);
+      }
+    };
+
+    const { open, close } = useModal({
+      component: ChoiceDialog,
+      attrs: {
+        title: options.title,
+        message: options.message,
+        choices: options.choices,
+        onConfirm(val: T) {
+          safeResolve(val);
+          close();
+        },
+        onCancel() {
+          safeResolve(undefined);
+          close();
+        },
+      },
+    });
+
+    open();
+  });
+}
+
 export interface PromptOptions {
   title: string;
   message: string;
@@ -156,6 +208,45 @@ export function createPrompt(
     open();
   });
 }
+
+export interface AlertOptions {
+  title: string;
+  message: string;
+  confirmLabel?: string;
+}
+
+export function createAlert(options: AlertOptions): Promise<void> {
+  return new Promise((resolve) => {
+    let resolved = false;
+    const safeResolve = () => {
+      if (!resolved) {
+        resolved = true;
+        resolve();
+      }
+    };
+
+    const { open, close } = useModal({
+      component: StockMessageDialog,
+      attrs: {
+        title: options.title,
+        message: options.message,
+        confirmLabel: options.confirmLabel,
+        showCancel: false,
+        onConfirm() {
+          safeResolve();
+          close();
+        },
+        onCancel() {
+          safeResolve();
+          close();
+        },
+      },
+    });
+
+    open();
+  });
+}
+
 
 const demoShowOptions = [
   {

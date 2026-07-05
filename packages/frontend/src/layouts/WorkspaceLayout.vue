@@ -20,7 +20,6 @@ import {
   type ContextMenuItem,
 } from "dockview-vue";
 import { useWorkspaceStore } from "src/stores/workspace";
-import { useQuasar } from "quasar";
 import { trpc } from "src/lib/trpc";
 import { createMenu } from "src/lib/menus";
 import "dockview-core/dist/styles/dockview.css";
@@ -30,10 +29,9 @@ import { SIDEBAR_SHORTCUTS } from "src/lib/sidebar-shortcuts";
 import { useThemeStore } from "src/stores/theme";
 import NinjaKeysHelper from "src/components/NinjaKeysHelper.vue";
 import { useShowStore } from "src/stores/show";
-import { showWelcomeDialog } from "src/lib/CommonDialogs";
+import { showWelcomeDialog, createPrompt, createAlert } from "src/lib/CommonDialogs";
 import SidebarMainButton from "src/components/SidebarMainButton.vue";
 
-const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
 const ui = useUIStore();
 const themeStore = useThemeStore();
@@ -60,17 +58,11 @@ function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMe
     {
       label: "Rename",
       action: () => {
-        $q.dialog({
+        createPrompt({
           title: "Rename Workspace",
           message: "Enter a new name for this workspace:",
-          prompt: {
-            model: params.panel.title || "",
-            type: "text",
-          },
-          cancel: true,
-          persistent: true,
-          dark: true,
-        }).onOk((newName: string) => {
+          initialValue: params.panel.title || "",
+        }).then((newName) => {
           if (newName && newName.trim()) {
             params.panel.api.setTitle(newName.trim());
           }
@@ -162,10 +154,9 @@ function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMe
         const savedLayout = workspaceStore.getWorkspaceLayout(workspaceId);
 
         if (!savedLayout) {
-          $q.dialog({
+          createAlert({
             title: "Export Failed",
             message: "No layout data found for this workspace.",
-            dark: true,
           });
           return;
         }
@@ -185,10 +176,9 @@ function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMe
             downloadAnchor.click();
             downloadAnchor.remove();
           } catch (err: unknown) {
-            $q.dialog({
+            createAlert({
               title: "Export Failed",
               message: err instanceof Error ? err.message : String(err),
-              dark: true,
             });
           }
           return;
@@ -200,17 +190,15 @@ function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMe
           if (res.success) {
             // Successfully exported
           } else if (res.error) {
-            $q.dialog({
+            createAlert({
               title: "Export Failed",
               message: res.error,
-              dark: true,
             });
           }
         } catch (err: unknown) {
-          $q.dialog({
+          createAlert({
             title: "Export Failed",
             message: err instanceof Error ? err.message : String(err),
-            dark: true,
           });
         }
       },
@@ -608,10 +596,9 @@ async function importWorkspaceJSON() {
         const parsed = JSON.parse(text);
         handleImportedJSON(parsed);
       } catch (err: unknown) {
-        $q.dialog({
+        createAlert({
           title: "Import Failed",
           message: err instanceof Error ? err.message : String(err),
-          dark: true,
         });
       }
     };
@@ -625,17 +612,15 @@ async function importWorkspaceJSON() {
     if (res.success && res.data) {
       handleImportedJSON(res.data);
     } else if (res.error) {
-      $q.dialog({
+      createAlert({
         title: "Import Failed",
         message: res.error,
-        dark: true,
       });
     }
   } catch (err: unknown) {
-    $q.dialog({
+    createAlert({
       title: "Import Failed",
       message: err instanceof Error ? err.message : String(err),
-      dark: true,
     });
   }
 }

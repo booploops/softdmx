@@ -8,16 +8,15 @@
 <script setup lang="ts">
 import { ref, watch, onUnmounted, type Component } from 'vue';
 import { DockviewVue, type DockviewApi, type DockviewReadyEvent, type IDockviewPanelProps, type GetTabContextMenuItemsParams, type ContextMenuItem } from 'dockview-vue';
-import { useQuasar } from 'quasar';
 import WSWorkspacePanel from './WSWorkspacePanel.vue';
 import { useWorkspaceStore } from 'src/stores/workspace';
 import { useThemeStore } from 'src/stores/theme';
+import { createPrompt } from 'src/lib/CommonDialogs';
 
 const props = defineProps<{
   params: IDockviewPanelProps<{ workspaceId: string }>;
 }>();
 
-const $q = useQuasar();
 const workspaceStore = useWorkspaceStore();
 const themeStore = useThemeStore();
 const workspaceId = props.params.params?.workspaceId || props.params.api.id;
@@ -32,17 +31,11 @@ function getTabContextMenuItems(params: GetTabContextMenuItemsParams): ContextMe
     {
       label: 'Rename',
       action: () => {
-        $q.dialog({
+        createPrompt({
           title: 'Rename Panel',
           message: 'Enter a new name for this panel:',
-          prompt: {
-            model: params.panel.title || '',
-            type: 'text',
-          },
-          cancel: true,
-          persistent: true,
-          dark: true,
-        }).onOk((newName: string) => {
+          initialValue: params.panel.title || '',
+        }).then((newName) => {
           if (newName && newName.trim()) {
             params.panel.api.setTitle(newName.trim());
           }

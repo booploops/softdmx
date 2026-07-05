@@ -34,12 +34,18 @@ const emit = defineEmits<{
 const value = ref(props.initialValue);
 const inputRef = ref<any>(null);
 
+const focusInput = () => {
+  nextTick(() => {
+    const el = inputRef.value?.$el?.querySelector('input') || inputRef.value?.querySelector?.('input');
+    if (el) {
+      el.focus();
+      el.select();
+    }
+  });
+};
+
 onMounted(() => {
-  const el = inputRef.value?.$el?.querySelector('input') || inputRef.value?.querySelector?.('input');
-  if (el) {
-    el.focus();
-    el.select();
-  }
+  focusInput();
 });
 </script>
 
@@ -48,6 +54,7 @@ onMounted(() => {
     class="flex justify-center items-center"
     content-class="sdmx-dialog-card sdmx-dialog-card--narrow"
     @closed="emit('cancel')"
+    @opened="focusInput"
   >
     <XDialogWindow>
       <XDialogTitlebar

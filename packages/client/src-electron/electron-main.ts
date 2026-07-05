@@ -89,6 +89,24 @@ async function createWindow() {
 
   trpcHandler.attachWindow(mainWindow);
 
+  mainWindow.on("close", (event) => {
+    if (shutdownStarted) return;
+
+    const choice = dialog.showMessageBoxSync(mainWindow!, {
+      type: "question",
+      buttons: ["Yes, Quit", "Cancel"],
+      defaultId: 0,
+      cancelId: 1,
+      title: "Confirm Quit",
+      message: "Are you sure you want to quit SoftDMX?",
+      detail: "Unsaved changes may be lost.",
+    });
+
+    if (choice === 1) {
+      event.preventDefault();
+    }
+  });
+
   mainWindow.on("closed", () => {
     mainWindow = undefined;
     void shutdownAndQuit();
