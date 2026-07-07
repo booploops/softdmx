@@ -17,7 +17,7 @@ const emit = defineEmits<{
 }>()
 
 onMounted(async () => {
-    const r = await fetch('/THIRD_PARTY.txt');
+    const r = await fetch('THIRD_PARTY.txt');
     content.value = await r.text();
 })
 </script>
