@@ -31,5 +31,7 @@ const path = defineModel<string>();
     flex-direction: column;
     overflow: hidden;
     overflow-y: auto;
+    container-type: inline-size;
+    container-name: panel;
 }
 </style>
