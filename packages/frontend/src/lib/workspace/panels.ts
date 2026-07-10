@@ -7,10 +7,14 @@
  */
 import { Route } from "@booploops/pod-router";
 
+export type SpawnMenuGroup = "layouts" | "widgets";
+
 export type WorkspaceRoute = Route & {
   label: string;
   parent?: string;
   showInSpawnMenu?: boolean;
+  /** Top-level spawn submenu for panels without a parent. */
+  menuGroup?: SpawnMenuGroup;
 };
 
 export const WorkspacePanels: WorkspaceRoute[] = [
@@ -19,12 +23,14 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     path: "test",
     component: () => import("pages/TestPage.vue"),
     showInSpawnMenu: true,
+    menuGroup: "widgets",
   },
   {
     label: "Text",
     path: "text-panel",
     component: () => import("components/TextPanel.vue"),
     showInSpawnMenu: true,
+    menuGroup: "widgets",
   },
   {
     label: "Desk Shell",
@@ -37,30 +43,35 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     path: "timeline-desk",
     component: () => import("components/desk/TimelineDesk.vue"),
     showInSpawnMenu: true,
+    menuGroup: "layouts",
   },
   {
     label: "Live Desk",
     path: "live-desk",
     component: () => import("components/desk/LiveDesk.vue"),
     showInSpawnMenu: true,
+    menuGroup: "layouts",
   },
   {
     label: "Setup Desk",
     path: "setup-desk",
     component: () => import("components/desk/SetupDesk.vue"),
     showInSpawnMenu: true,
+    menuGroup: "layouts",
   },
   {
     label: "Program Desk",
     path: "program-desk",
     component: () => import("components/desk/ProgramDesk.vue"),
     showInSpawnMenu: true,
+    menuGroup: "layouts",
   },
   {
     label: "Audio",
     path: "audio",
     component: () => import("components/AudioPanel.vue"),
     showInSpawnMenu: true,
+    menuGroup: "widgets",
   },
   {
     label: "Bindings",
@@ -85,42 +96,49 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     path: "effects",
     component: () => import("components/EffectsPanel.vue"),
     showInSpawnMenu: true,
+    menuGroup: "widgets",
   },
   {
     label: "Patch",
     path: "patch",
     component: () => import("components/PatchPanel.vue"),
     showInSpawnMenu: true,
+    menuGroup: "widgets",
   },
   {
     label: "Pixel Map",
     path: "pixel-map",
     component: () => import("components/PixelMapPanel.vue"),
     showInSpawnMenu: true,
+    menuGroup: "widgets",
   },
   {
     label: "Presets",
     path: "presets",
     component: () => import("components/PresetPanel.vue"),
     showInSpawnMenu: true,
+    menuGroup: "widgets",
   },
   {
     label: "Video Mapping",
     path: "video-mapping",
     component: () => import("components/VideoMappingPanel.vue"),
     showInSpawnMenu: true,
+    menuGroup: "widgets",
   },
   {
     label: "Visualizer",
     path: "visualizer",
     component: () => import("components/VisualizerPanel.vue"),
     showInSpawnMenu: true,
+    menuGroup: "widgets",
   },
   {
     label: "3D Visualizer",
     path: "visualizer-3d",
     component: () => import("components/VisualizerPanel3D.vue"),
     showInSpawnMenu: true,
+    menuGroup: "widgets",
   },
   {
     label: "Programmer",
@@ -213,6 +231,7 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     path: "command-bar",
     component: () => import("components/desk/CommandLineBar.vue"),
     showInSpawnMenu: true,
+    menuGroup: "widgets",
   },
   {
     label: "Settings",
@@ -268,31 +287,52 @@ export type PanelMenuItem = {
 };
 
 export function getPanelsMenu(): PanelMenuItem[] {
-  // Create a menu based on WorkspacePanels, have submenus based on parent
-  const menu: PanelMenuItem[] = [];
+  const layouts: PanelMenuItem[] = [];
+  const widgets: PanelMenuItem[] = [];
+  const topLevel: PanelMenuItem[] = [];
   const parentGroups = new Map<string, PanelMenuItem[]>();
 
   for (const panel of WorkspacePanels) {
     if (!panel.showInSpawnMenu) {
       continue;
     }
+
+    const item: PanelMenuItem = {
+      label: panel.label,
+      path: panel.path,
+      children: [],
+    };
+
     if (panel.parent) {
       if (!parentGroups.has(panel.parent)) {
         parentGroups.set(panel.parent, []);
       }
-      parentGroups.get(panel.parent)!.push({
-        label: panel.label,
-        path: panel.path,
-        children: [],
-      });
+      parentGroups.get(panel.parent)!.push(item);
+      continue;
+    }
+
+    if (panel.menuGroup === "layouts") {
+      layouts.push(item);
+    } else if (panel.menuGroup === "widgets") {
+      widgets.push(item);
     } else {
-      menu.push({
-        label: panel.label,
-        path: panel.path,
-        children: [],
-      });
+      topLevel.push(item);
     }
   }
+
+  const menu: PanelMenuItem[] = [
+    {
+      label: "Layouts",
+      path: "",
+      children: layouts,
+    },
+    {
+      label: "Widgets",
+      path: "",
+      children: widgets,
+    },
+    ...topLevel,
+  ];
 
   for (const [parent, items] of parentGroups.entries()) {
     menu.push({

@@ -630,6 +630,20 @@ async function importWorkspaceJSON() {
 function showNativeSpawnMenu() {
   if (!isElectron.value) return;
 
+  const panelsMenu = getPanelsMenu().map(mapPanelMenuItem);
+  const layoutsItem = panelsMenu.find((item) => item.label === "Layouts");
+  if (layoutsItem) {
+    layoutsItem.submenu = [
+      ...WorkspaceLayouts.map((layoutPreset) => ({
+        label: layoutPreset.title,
+        click: () => {
+          importWorkspaceData(layoutPreset.title, layoutPreset.layout);
+        },
+      })),
+      ...(layoutsItem.submenu ?? []),
+    ];
+  }
+
   const template: FrontendMenuItem[] = [
     {
       label: "New Workspace",
@@ -638,18 +652,9 @@ function showNativeSpawnMenu() {
       },
     },
     {
-      label: "Layouts",
-      submenu: WorkspaceLayouts.map((layoutPreset) => ({
-        label: layoutPreset.title,
-        click: () => {
-          importWorkspaceData(layoutPreset.title, layoutPreset.layout);
-        },
-      })),
-    },
-    {
       type: "separator",
     },
-    ...getPanelsMenu().map(mapPanelMenuItem),
+    ...panelsMenu,
   ];
 
   createMenu(template).show();
