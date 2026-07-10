@@ -20,8 +20,7 @@ import type { ShowDocument } from '@softdmx/engine';
 import { createEmptyShow } from '@softdmx/engine';
 import { ref, computed, watch, onMounted } from 'vue';
 import type { ShowfileFixture, FixtureDefinition } from '@softdmx/engine';
-import { Dialog } from 'quasar';
-import { createConfirm } from 'src/lib/CommonDialogs';
+import { createConfirm, createAlert } from 'src/lib/CommonDialogs';
 import * as YAML from 'yaml';
 import FixtureBrowser from './FixtureBrowser.vue';
 import {
@@ -30,15 +29,6 @@ import {
   groupColorStyle,
   normalizeGroupColor,
 } from '@softdmx/engine';
-import { SdmxIconButton } from 'src/components/ui';
-import XTabs from 'src/components/controls/XTabs.vue';
-import XTab from 'src/components/controls/XTab.vue';
-import XButton from 'src/components/controls/XButton.vue';
-import XInput from 'src/components/controls/XInput.vue';
-import XSelect from 'src/components/controls/XSelect.vue';
-import XCard from 'src/components/controls/XCard.vue';
-import XCheckbox from 'src/components/controls/XCheckbox.vue';
-import XDropdown from 'src/components/controls/XDropdown.vue';
 
 const showStore = useShowStore();
 const ui = useUIStore();
@@ -102,7 +92,7 @@ const onFilePicked = async (event: Event) => {
     isEditing.value = true;
     hasUnsavedChanges.value = false;
   } catch (error) {
-    Dialog.create({
+    await createAlert({
       title: 'Error',
       message: `Failed to load showfile: ${error instanceof Error ? error.message : 'Unknown error'}`,
     });
@@ -385,9 +375,9 @@ const validationErrors = computed(() => {
 });
 
 // Save operations
-const saveShowfile = () => {
+const saveShowfile = async () => {
   if (!isValidShowfile.value) {
-    Dialog.create({
+    await createAlert({
       title: 'Validation Error',
       message: validationErrors.value.join('\n'),
     });
@@ -401,16 +391,16 @@ const saveShowfile = () => {
     ui.setMode('live');
     leaveEditor();
   } catch (error) {
-    Dialog.create({
+    await createAlert({
       title: 'Error',
       message: `Failed to load showfile: ${error instanceof Error ? error.message : 'Unknown error'}`,
     });
   }
 };
 
-const saveAndExport = () => {
+const saveAndExport = async () => {
   if (!isValidShowfile.value) {
-    Dialog.create({
+    await createAlert({
       title: 'Validation Error',
       message: validationErrors.value.join('\n'),
     });
@@ -425,7 +415,7 @@ const saveAndExport = () => {
     ui.setMode('live');
     leaveEditor();
   } catch (error) {
-    Dialog.create({
+    await createAlert({
       title: 'Error',
       message: `Failed to save and export showfile: ${error instanceof Error ? error.message : 'Unknown error'}`,
     });
@@ -530,13 +520,19 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
         <div class="header-info">
           <h5 class="editor-title">
             Showfile Editor
-            <q-badge v-if="hasUnsavedChanges" color="warning" label="Unsaved" />
+            <XChip
+              v-if="hasUnsavedChanges"
+              color="warning"
+              dense
+              size="sm"
+              label="Unsaved"
+            />
           </h5>
           <div class="showfile-info">
-            <div class="column showfile-name-input">
-              <div class="q-mb-xs text-caption text-grey-4">Showfile Name</div>
+            <div class="showfile-name-input">
               <XInput
                 v-model="editingShowfile.name"
+                label="Showfile Name"
                 placeholder="Showfile Name"
               />
             </div>
@@ -579,14 +575,12 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 
       <!-- Validation Errors -->
       <div v-if="validationErrors.length > 0" class="validation-errors">
-        <q-banner class="text-negative">
-          <template v-slot:avatar>
-            <XIcon name="alert-triangle" />
-          </template>
+        <XWell class="validation-errors__well">
+          <XIcon name="alert-triangle" class="validation-errors__icon" />
           <div class="error-list">
             <div v-for="error in validationErrors" :key="error">{{ error }}</div>
           </div>
-        </q-banner>
+        </XWell>
       </div>
 
       <!-- Tabs -->
@@ -599,12 +593,12 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
       </XTabs>
 
       <!-- Tab Panels -->
-      <q-tab-panels v-model="selectedTab" class="editor-panels">
+      <div class="editor-panels">
         <!-- Basic Info Tab -->
-        <q-tab-panel name="basic" class="basic-panel">
+        <div v-show="selectedTab === 'basic'" class="basic-panel">
           <div class="basic-info">
             <div class="column name-input">
-              <div class="q-mb-xs text-caption text-grey-4">Showfile Name</div>
+              <div class="field-label">Showfile Name</div>
               <XInput
                 v-model="editingShowfile.name"
                 placeholder="Choose a descriptive name for your lighting setup"
@@ -613,31 +607,31 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 
             <div class="showfile-stats">
               <XCard class="stat-card">
-                <div class="q-pa-md">
+                <div class="stat-card__body">
                   <div class="stat-number">{{ editingShowfile.fixtures.length }}</div>
                   <div class="stat-label">Fixtures</div>
                 </div>
               </XCard>
 
               <XCard class="stat-card">
-                <div class="q-pa-md">
+                <div class="stat-card__body">
                   <div class="stat-number">{{ editingShowfile.linkedGroups?.length || 0 }}</div>
                   <div class="stat-label">Groups</div>
                 </div>
               </XCard>
 
               <XCard class="stat-card">
-                <div class="q-pa-md">
+                <div class="stat-card__body">
                   <div class="stat-number">{{ availableFixtureTypes.length }}</div>
                   <div class="stat-label">Available Types</div>
                 </div>
               </XCard>
             </div>
           </div>
-        </q-tab-panel>
+        </div>
 
         <!-- Fixtures Tab -->
-        <q-tab-panel name="fixtures" class="fixtures-panel">
+        <div v-show="selectedTab === 'fixtures'" class="fixtures-panel">
           <div class="panel-header">
             <XInput
               v-model="fixtureSearchText"
@@ -645,7 +639,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
               class="search-input"
             >
               <template #prepend>
-                <XIcon name="search" class="q-mr-xs" />
+                <XIcon name="search" class="search-icon" />
               </template>
             </XInput>
 
@@ -663,7 +657,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
               :key="index"
               class="fixture-card"
             >
-              <div class="q-pa-md">
+              <div class="fixture-card__body">
                 <div class="fixture-header">
                   <div class="fixture-info">
                     <div class="fixture-name">{{ fixture.name }}</div>
@@ -680,24 +674,43 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
                   </div>
 
                   <div class="fixture-actions">
-                    <SdmxIconButton icon="pencil" info-key="program.showfile.editSection" @click="editFixture(index)" />
-                    <SdmxIconButton icon="copy" info-key="program.showfile.duplicateSection" @click="duplicateFixture(index)" />
-                    <SdmxIconButton icon="trash" color="negative" info-key="program.showfile.removeSection" @click="removeFixture(index)" />
+                    <XButton
+                      flat
+                      size="sm"
+                      icon="pencil"
+                      v-info="'program.showfile.editSection'"
+                      @click="editFixture(index)"
+                    />
+                    <XButton
+                      flat
+                      size="sm"
+                      icon="copy"
+                      v-info="'program.showfile.duplicateSection'"
+                      @click="duplicateFixture(index)"
+                    />
+                    <XButton
+                      flat
+                      size="sm"
+                      icon="trash"
+                      color="danger"
+                      v-info="'program.showfile.removeSection'"
+                      @click="removeFixture(index)"
+                    />
                   </div>
                 </div>
               </div>
             </XCard>
 
             <div v-if="filteredFixtures.length === 0" class="empty-state">
-              <XIcon name="lightbulb" size="4rem" class="text-grey-5" />
+              <XIcon name="lightbulb" size="4rem" class="empty-state__icon" />
               <div class="empty-message">No fixtures found</div>
               <div class="empty-hint">Add fixtures to get started</div>
             </div>
           </div>
-        </q-tab-panel>
+        </div>
 
         <!-- Groups Tab -->
-        <q-tab-panel name="users" class="groups-panel">
+        <div v-show="selectedTab === 'users'" class="groups-panel">
           <div class="panel-header">
             <XInput
               v-model="groupSearchText"
@@ -705,7 +718,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
               class="search-input"
             >
               <template #prepend>
-                <XIcon name="search" class="q-mr-xs" />
+                <XIcon name="search" class="search-icon" />
               </template>
             </XInput>
 
@@ -726,7 +739,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
               :class="{ 'has-group-color': !!group.color }"
               :style="groupColorStyle(group.color)"
             >
-              <div class="q-pa-md">
+              <div class="group-card__body">
                 <div class="group-header">
                   <div class="group-info">
                     <div class="group-name-row">
@@ -741,13 +754,26 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
                   </div>
 
                   <div class="group-actions">
-                    <SdmxIconButton icon="pencil" info-key="program.showfile.editSection" @click="editGroup(index)" />
-                    <SdmxIconButton icon="trash" color="negative" info-key="program.showfile.removeSection" @click="removeGroup(index)" />
+                    <XButton
+                      flat
+                      size="sm"
+                      icon="pencil"
+                      v-info="'program.showfile.editSection'"
+                      @click="editGroup(index)"
+                    />
+                    <XButton
+                      flat
+                      size="sm"
+                      icon="trash"
+                      color="danger"
+                      v-info="'program.showfile.removeSection'"
+                      @click="removeGroup(index)"
+                    />
                   </div>
                 </div>
 
                 <div class="group-members">
-                  <q-chip
+                  <XChip
                     v-for="fixtureName in group.names"
                     :key="fixtureName"
                     :label="fixtureName"
@@ -760,41 +786,41 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
             </XCard>
 
             <div v-if="filteredGroups.length === 0" class="empty-state">
-              <XIcon name="hierarchy" size="4rem" class="text-grey-5" />
+              <XIcon name="hierarchy" size="4rem" class="empty-state__icon" />
               <div class="empty-message">No groups found</div>
               <div class="empty-hint">Create groups to organize your fixtures</div>
             </div>
           </div>
-        </q-tab-panel>
+        </div>
 
         <!-- Preview Tab -->
-        <q-tab-panel name="preview" class="preview-panel">
+        <div v-show="selectedTab === 'preview'" class="preview-panel">
           <div class="preview-content">
             <h6>YAML Preview</h6>
             <XCard class="yaml-preview">
-              <div class="q-pa-md">
+              <div class="yaml-preview__body">
                 <pre>{{ YAML.stringify(editingShowfile) }}</pre>
               </div>
             </XCard>
           </div>
-        </q-tab-panel>
+        </div>
 
         <!-- Browse Fixtures Tab -->
-        <q-tab-panel name="browser" class="browser-panel">
+        <div v-show="selectedTab === 'browser'" class="browser-panel">
           <FixtureBrowser />
-        </q-tab-panel>
-      </q-tab-panels>
+        </div>
+      </div>
     </div>
 
     <!-- Start Screen -->
     <div v-else class="start-screen">
-      <XCard class="start-card text-center">
-        <div class="q-pa-xl column items-center">
-          <XIcon name="pencil" size="4rem" class="text-primary q-mb-md" />
+      <XCard class="start-card">
+        <div class="start-card__body">
+          <XIcon name="pencil" size="4rem" class="start-card__icon" />
           <h5>Showfile Editor</h5>
-          <p class="text-grey-6 q-mb-lg">Create and modify lighting showfiles</p>
+          <p class="start-card__subtitle">Create and modify lighting showfiles</p>
 
-          <div class="start-actions full-width">
+          <div class="start-actions">
             <XButton
               @click="createNewShowfile"
               color="primary"
@@ -843,11 +869,11 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
             />
           </div>
 
-          <div v-if="showStore.document.fixtures.length" class="current-showfile-info full-width">
-            <hr class="sdmx-separator q-my-md" />
-            <div class="text-caption text-grey-6">Current Showfile</div>
-            <div class="text-body1 text-weight-bold">{{ showStore.document.meta.name }}</div>
-            <div class="text-caption">
+          <div v-if="showStore.document.fixtures.length" class="current-showfile-info">
+            <hr class="sdmx-separator" />
+            <div class="current-showfile-info__label">Current Showfile</div>
+            <div class="current-showfile-info__name">{{ showStore.document.meta.name }}</div>
+            <div class="current-showfile-info__meta">
               {{ showStore.document.fixtures.length }} fixtures,
               {{ showStore.document.groups.length }} groups
             </div>
@@ -857,192 +883,149 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
     </div>
 
     <!-- Add Fixture Dialog -->
-    <q-dialog v-model="showAddFixtureDialog">
-      <q-card style="min-width: 400px" class="sdmx-dialog-card">
-        <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
-          <div class="text-h6">Add Fixture</div>
-        </q-card-section>
-
-        <q-card-section class="q-gutter-y-md q-pt-md">
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">Fixture Name</div>
-            <XInput
-              v-model="newFixtureName"
-              placeholder="Fixture Name"
-              autofocus
-              @keyup.enter="addFixture"
-            />
-          </div>
-
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">Fixture Type</div>
-            <XSelect
-              v-model="selectedFixtureType"
-              :options="availableFixtureTypes.map(f => ({ label: f.name, value: f.id }))"
-            />
-          </div>
-
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">Starting Channel (optional)</div>
-            <XInput
-              v-model.number="newFixtureStartingChannel"
-              placeholder="Starting Channel (optional)"
-              type="number"
-              min="1"
-              max="512"
-            />
-            <div class="text-caption text-grey-5 q-mt-xs">If not specified, will continue from previous fixture</div>
-          </div>
-        </q-card-section>
-
-        <q-card-actions align="right" class="q-pa-md sdmx-border-top">
-          <XButton flat label="Cancel" v-close-popup />
-          <XButton
-            color="primary"
-            label="Add"
-            @click="addFixture"
-            :disable="!newFixtureName.trim() || !selectedFixtureType"
+    <XDialog v-model="showAddFixtureDialog">
+      <XDialogHeader title="Add Fixture" />
+      <XDialogBody class="showfile-dialog-body">
+        <XInput
+          v-model="newFixtureName"
+          label="Fixture Name"
+          placeholder="Fixture Name"
+          @keyup.enter="addFixture"
+        />
+        <XSelect
+          v-model="selectedFixtureType"
+          label="Fixture Type"
+          :options="availableFixtureTypes.map(f => ({ label: f.name, value: f.id }))"
+        />
+        <div>
+          <XInput
+            v-model.number="newFixtureStartingChannel"
+            label="Starting Channel (optional)"
+            placeholder="Starting Channel (optional)"
+            type="number"
           />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+          <div class="field-hint">If not specified, will continue from previous fixture</div>
+        </div>
+      </XDialogBody>
+      <XDialogFooter>
+        <XButton flat label="Cancel" @click="showAddFixtureDialog = false" />
+        <XButton
+          color="primary"
+          label="Add"
+          @click="addFixture"
+          :disable="!newFixtureName.trim() || !selectedFixtureType"
+        />
+      </XDialogFooter>
+    </XDialog>
 
     <!-- Edit Fixture Dialog -->
-    <q-dialog v-model="showEditFixtureDialog">
-      <q-card style="min-width: 400px" class="sdmx-dialog-card">
-        <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
-          <div class="text-h6">Edit Fixture</div>
-        </q-card-section>
-
-        <q-card-section class="q-gutter-y-md q-pt-md">
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">Fixture Name</div>
-            <XInput
-              v-model="newFixtureName"
-              placeholder="Fixture Name"
-              autofocus
-              @keyup.enter="updateFixture"
-            />
-          </div>
-
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">Fixture Type</div>
-            <XSelect
-              v-model="selectedFixtureType"
-              :options="availableFixtureTypes.map(f => ({ label: f.name, value: f.id }))"
-            />
-          </div>
-
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">Starting Channel (optional)</div>
-            <XInput
-              v-model.number="newFixtureStartingChannel"
-              placeholder="Starting Channel (optional)"
-              type="number"
-              min="1"
-              max="512"
-            />
-            <div class="text-caption text-grey-5 q-mt-xs">If not specified, will continue from previous fixture</div>
-          </div>
-        </q-card-section>
-
-        <q-card-actions align="right" class="q-pa-md sdmx-border-top">
-          <XButton flat label="Cancel" v-close-popup />
-          <XButton
-            color="primary"
-            label="Update"
-            @click="updateFixture"
-            :disable="!newFixtureName.trim() || !selectedFixtureType"
+    <XDialog v-model="showEditFixtureDialog">
+      <XDialogHeader title="Edit Fixture" />
+      <XDialogBody class="showfile-dialog-body">
+        <XInput
+          v-model="newFixtureName"
+          label="Fixture Name"
+          placeholder="Fixture Name"
+          @keyup.enter="updateFixture"
+        />
+        <XSelect
+          v-model="selectedFixtureType"
+          label="Fixture Type"
+          :options="availableFixtureTypes.map(f => ({ label: f.name, value: f.id }))"
+        />
+        <div>
+          <XInput
+            v-model.number="newFixtureStartingChannel"
+            label="Starting Channel (optional)"
+            placeholder="Starting Channel (optional)"
+            type="number"
           />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+          <div class="field-hint">If not specified, will continue from previous fixture</div>
+        </div>
+      </XDialogBody>
+      <XDialogFooter>
+        <XButton flat label="Cancel" @click="showEditFixtureDialog = false" />
+        <XButton
+          color="primary"
+          label="Update"
+          @click="updateFixture"
+          :disable="!newFixtureName.trim() || !selectedFixtureType"
+        />
+      </XDialogFooter>
+    </XDialog>
 
     <!-- Add/Edit Group Dialog -->
-    <q-dialog v-model="showAddGroupDialog">
-      <q-card style="min-width: 400px" class="sdmx-dialog-card">
-        <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
-          <div class="text-h6">
-            {{ editingGroupIndex !== null ? 'Edit Group' : 'Add Group' }}
-          </div>
-        </q-card-section>
-
-        <q-card-section class="q-gutter-y-md q-pt-md">
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">Group Name</div>
-            <XInput
-              v-model="newGroupName"
-              placeholder="Group Name"
-              @keyup.enter="addGroup"
-            />
-          </div>
-
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">Select Fixtures</div>
-            <XDropdown :label="newGroupFixtures.length > 0 ? `${newGroupFixtures.length} selected` : 'Select fixtures'">
-              <div class="column q-pa-sm q-gutter-y-xs" style="max-height: 200px; overflow-y: auto; min-width: 160px;" @click.stop>
-                <XCheckbox
-                  v-for="opt in availableFixturesForGroup"
-                  :key="opt.value"
-                  :label="opt.label"
-                  :model-value="newGroupFixtures.includes(opt.value)"
-                  @update:model-value="(checked) => {
-                    const current = [...newGroupFixtures];
-                    if (checked) {
-                      if (!current.includes(opt.value)) current.push(opt.value);
-                    } else {
-                      const idx = current.indexOf(opt.value);
-                      if (idx > -1) current.splice(idx, 1);
-                    }
-                    newGroupFixtures = current;
-                  }"
-                />
-              </div>
-            </XDropdown>
-          </div>
-
-          <div class="group-color-picker column">
-            <div class="text-caption text-grey-6 q-mb-sm">Group Color</div>
-            <div class="color-swatch-row q-mb-sm">
-              <button
-                v-for="color in GROUP_COLOR_PALETTE"
-                :key="color"
-                type="button"
-                class="color-swatch"
-                :class="{ active: newGroupColor === color }"
-                :style="{ background: color }"
-                :aria-label="`Use color ${color}`"
-                @click="newGroupColor = color"
+    <XDialog v-model="showAddGroupDialog">
+      <XDialogHeader :title="editingGroupIndex !== null ? 'Edit Group' : 'Add Group'" />
+      <XDialogBody class="showfile-dialog-body">
+        <XInput
+          v-model="newGroupName"
+          label="Group Name"
+          placeholder="Group Name"
+          @keyup.enter="addGroup"
+        />
+        <div>
+          <div class="field-label">Select Fixtures</div>
+          <XDropdown :label="newGroupFixtures.length > 0 ? `${newGroupFixtures.length} selected` : 'Select fixtures'">
+            <div class="fixture-picker" @click.stop>
+              <XCheckbox
+                v-for="opt in availableFixturesForGroup"
+                :key="opt.value"
+                :label="opt.label"
+                :model-value="newGroupFixtures.includes(opt.value)"
+                @update:model-value="(checked) => {
+                  const current = [...newGroupFixtures];
+                  if (checked) {
+                    if (!current.includes(opt.value)) current.push(opt.value);
+                  } else {
+                    const idx = current.indexOf(opt.value);
+                    if (idx > -1) current.splice(idx, 1);
+                  }
+                  newGroupFixtures = current;
+                }"
               />
             </div>
-            <div class="column">
-              <div class="q-mb-xs text-caption text-grey-4">Color (hex)</div>
-              <XInput
-                v-model="newGroupColor"
-                placeholder="Hex Color"
-              >
-                <template #prepend>
-                  <span
-                    class="group-color-dot q-mr-xs"
-                    :style="{ background: newGroupColor }"
-                  />
-                </template>
-              </XInput>
-            </div>
-          </div>
-        </q-card-section>
+          </XDropdown>
+        </div>
 
-        <q-card-actions align="right" class="q-pa-md sdmx-border-top">
-          <XButton flat label="Cancel" v-close-popup @click="resetGroupDialog" />
-          <XButton
-            color="primary"
-            :label="editingGroupIndex !== null ? 'Update' : 'Add'"
-            @click="addGroup"
-            :disable="!newGroupName.trim() || newGroupFixtures.length === 0"
-          />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+        <div class="group-color-picker">
+          <div class="field-label">Group Color</div>
+          <div class="color-swatch-row">
+            <button
+              v-for="color in GROUP_COLOR_PALETTE"
+              :key="color"
+              type="button"
+              class="color-swatch"
+              :class="{ active: newGroupColor === color }"
+              :style="{ background: color }"
+              :aria-label="`Use color ${color}`"
+              @click="newGroupColor = color"
+            />
+          </div>
+          <XInput
+            v-model="newGroupColor"
+            label="Color (hex)"
+            placeholder="Hex Color"
+          >
+            <template #prepend>
+              <span
+                class="group-color-dot"
+                :style="{ background: newGroupColor }"
+              />
+            </template>
+          </XInput>
+        </div>
+      </XDialogBody>
+      <XDialogFooter>
+        <XButton flat label="Cancel" @click="resetGroupDialog(); showAddGroupDialog = false" />
+        <XButton
+          color="primary"
+          :label="editingGroupIndex !== null ? 'Update' : 'Add'"
+          @click="addGroup"
+          :disable="!newGroupName.trim() || newGroupFixtures.length === 0"
+        />
+      </XDialogFooter>
+    </XDialog>
   </div>
 </template>
 
@@ -1106,6 +1089,18 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 .validation-errors {
   margin: 16px;
 
+  &__well {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    color: var(--sdmx-color-negative, #ff3b30);
+  }
+
+  &__icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
   .error-list {
     line-height: 1.5;
   }
@@ -1118,19 +1113,51 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 .editor-panels {
   flex: 1;
   min-height: 0;
-  overflow: hidden;
+  overflow: auto;
+}
+
+.field-label {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+  margin-bottom: 6px;
+}
+
+.field-hint {
+  font-size: 11px;
+  color: var(--sdmx-color-text-muted);
+  margin-top: 4px;
+}
+
+.search-icon {
+  margin-right: 4px;
+}
+
+.stat-card__body,
+.fixture-card__body,
+.group-card__body,
+.yaml-preview__body {
+  padding: 16px;
+}
+
+.empty-state__icon {
+  color: var(--sdmx-color-text-muted);
+}
+
+.showfile-dialog-body {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+  min-width: 360px;
+}
 
-  :deep(.q-tab-panels) {
-    flex: 1;
-    min-height: 0;
-  }
-
-  :deep(.q-panel) {
-    min-height: 0;
-    overflow: auto;
-  }
+.fixture-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  min-width: 160px;
+  padding: 8px;
 }
 
 .basic-panel {
@@ -1313,6 +1340,24 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
     max-width: 500px;
     background: var(--sdmx-color-border-subtle);
 
+    &__body {
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+    }
+
+    &__icon {
+      color: var(--sdmx-color-primary);
+      margin-bottom: 8px;
+    }
+
+    &__subtitle {
+      color: var(--sdmx-color-text-muted);
+      margin: 0 0 8px;
+    }
+
     h5 {
       margin: 16px 0 8px;
     }
@@ -1322,6 +1367,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
       flex-direction: column;
       gap: 12px;
       margin: 24px 0;
+      width: 100%;
 
       .start-btn {
         min-height: 48px;
@@ -1330,6 +1376,25 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
 
     .current-showfile-info {
       text-align: center;
+      width: 100%;
+
+      .sdmx-separator {
+        margin: 16px 0;
+      }
+
+      &__label {
+        font-size: 12px;
+        color: var(--sdmx-color-text-muted);
+      }
+
+      &__name {
+        font-weight: 700;
+      }
+
+      &__meta {
+        font-size: 12px;
+        color: var(--sdmx-color-text-muted);
+      }
     }
   }
 }
@@ -1352,6 +1417,7 @@ const getFixtureChannelInfo = (fixture: ShowfileFixture, fixtureIndex: number) =
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin-bottom: 8px;
 }
 
 .color-swatch {

@@ -11,11 +11,6 @@ import { useQuasar } from 'quasar';
 import { useShowStore } from 'src/stores/show';
 import { useVideoStore } from 'src/stores/video';
 import type { PixelMapDefinition, VideoInputKind, VideoSampleFps, VideoSampleRegion } from '@softdmx/engine';
-import XButton from 'src/components/controls/XButton.vue';
-import XInput from 'src/components/controls/XInput.vue';
-import XSelect from 'src/components/controls/XSelect.vue';
-import XSwitch from 'src/components/controls/XSwitch.vue';
-import XCheckbox from 'src/components/controls/XCheckbox.vue';
 import {
   FULL_VIDEO_SAMPLE_REGION,
   normalizeSampleRegion,
@@ -397,14 +392,14 @@ watch(
 </script>
 
 <template>
-  <div class="video-mapping-panel column q-pa-md q-gutter-y-md">
-    <div class="text-h6">Video → Pixel Map</div>
-    <div class="text-caption text-grey-5">
+  <div class="video-mapping-panel">
+    <div class="video-mapping-panel__title">Video → Pixel Map</div>
+    <div class="video-mapping-panel__subtitle">
       Sample live video into one or more pixel maps. Each map has its own ROI on the shared source —
       use disjoint regions to drive different fixture groups from the same feed.
     </div>
 
-    <section class="preview-section column q-gutter-y-sm">
+    <section class="preview-section">
       <div class="preview-wrap">
         <canvas
           ref="previewRef"
@@ -412,18 +407,34 @@ watch(
           @mousedown="onPointerDown"
         />
       </div>
-      <div class="row q-gutter-sm items-center wrap">
-        <div v-if="activeVideoMaps.length > 1" class="column" style="min-width: 180px">
-          <div class="q-mb-xs text-caption text-grey-4">Edit ROI for</div>
+      <div class="preview-toolbar">
+        <div
+          v-if="activeVideoMaps.length > 1"
+          class="preview-toolbar__select"
+        >
           <XSelect
             :model-value="selectedRoiMapId"
             :options="roiMapOptions"
+            label="Edit ROI for"
             @update:model-value="selectedRoiMapId = String($event ?? '')"
           />
         </div>
-        <XButton flat label="Full frame" :disable="!selectedRoiMap" @click="resetRegion" />
-        <XButton flat label="Lock map aspect" :disable="!selectedRoiMap" @click="lockMapAspect" />
-        <span v-if="selectedRoiMap" class="text-caption text-grey-5">
+        <XButton
+          flat
+          label="Full frame"
+          :disable="!selectedRoiMap"
+          @click="resetRegion"
+        />
+        <XButton
+          flat
+          label="Lock map aspect"
+          :disable="!selectedRoiMap"
+          @click="lockMapAspect"
+        />
+        <span
+          v-if="selectedRoiMap"
+          class="preview-toolbar__roi"
+        >
           {{ selectedRoiMap.name }} ROI:
           x {{ (sampleRegion.x * 100).toFixed(1) }}%
           y {{ (sampleRegion.y * 100).toFixed(1) }}%
@@ -431,132 +442,104 @@ watch(
           h {{ (sampleRegion.height * 100).toFixed(1) }}%
         </span>
       </div>
-      <div v-if="selectedRoiMap" class="row q-col-gutter-md q-mt-xs">
-        <div class="col-12 col-sm-6 col-md-3">
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">{{ selectedRoiMap.name }} gain</div>
-            <XInput
-              type="number"
-              :model-value="selectedMapGain"
-              step="0.05"
-              min="0"
-              max="2"
-              @update:model-value="patchPixelMap(selectedRoiMap.id, { videoGain: Number($event) })"
-            />
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-md-3">
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">{{ selectedRoiMap.name }} smoothing (ms)</div>
-            <XInput
-              type="number"
-              :model-value="selectedMapSmoothingMs"
-              step="10"
-              min="0"
-              @update:model-value="
-                patchPixelMap(selectedRoiMap.id, { videoSmoothingMs: Number($event) })
-              "
-            />
-          </div>
-        </div>
+      <div
+        v-if="selectedRoiMap"
+        class="preview-params"
+      >
+        <XInput
+          type="number"
+          :label="`${selectedRoiMap.name} gain`"
+          :model-value="selectedMapGain"
+          @update:model-value="patchPixelMap(selectedRoiMapId, { videoGain: Number($event) })"
+        />
+        <XInput
+          type="number"
+          :label="`${selectedRoiMap.name} smoothing (ms)`"
+          :model-value="selectedMapSmoothingMs"
+          @update:model-value="
+            patchPixelMap(selectedRoiMapId, { videoSmoothingMs: Number($event) })
+          "
+        />
       </div>
     </section>
 
-    <section class="options-section column q-gutter-y-sm">
+    <section class="options-section">
       <XSwitch
         :model-value="videoConfig?.enabled === true"
         label="Enable video mapping"
         @update:model-value="patchVideo({ enabled: $event })"
       />
 
-      <div class="row q-col-gutter-md">
-        <div class="col-12 col-md-6">
-          <div class="column q-gutter-y-xs">
-            <div class="text-caption text-grey-4">Pixel maps</div>
-            <div class="column q-pl-xs q-gutter-y-xs">
-              <XCheckbox
-                v-for="opt in pixelMapOptions"
-                :key="opt.value"
-                :label="opt.label"
-                :model-value="activeVideoMapIds.includes(opt.value)"
-                @update:model-value="(checked) => {
-                  const current = [...activeVideoMapIds];
-                  if (checked) {
-                    if (!current.includes(opt.value)) current.push(opt.value);
-                  } else {
-                    const idx = current.indexOf(opt.value);
-                    if (idx > -1) current.splice(idx, 1);
-                  }
-                  patchVideo({ pixelMapIds: current });
-                }"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 col-sm-6 col-md-3">
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">Source</div>
-            <XSelect
-              :model-value="videoConfig?.inputKind ?? 'none'"
-              :options="inputKindOptions"
-              @update:model-value="patchVideo({ inputKind: $event })"
+      <div class="options-grid">
+        <div class="options-grid__maps">
+          <div class="field-label">Pixel maps</div>
+          <div class="options-grid__map-list">
+            <XCheckbox
+              v-for="opt in pixelMapOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :model-value="activeVideoMapIds.includes(opt.value)"
+              @update:model-value="(checked) => {
+                const current = [...activeVideoMapIds];
+                if (checked) {
+                  if (!current.includes(opt.value)) current.push(opt.value);
+                } else {
+                  const idx = current.indexOf(opt.value);
+                  if (idx > -1) current.splice(idx, 1);
+                }
+                patchVideo({ pixelMapIds: current });
+              }"
             />
           </div>
         </div>
 
-        <div v-if="videoConfig?.inputKind === 'webcam'" class="col-12 col-sm-6 col-md-3">
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">Camera device</div>
-            <XSelect
-              :model-value="videoConfig?.deviceId"
-              :options="deviceOptions"
-              @update:model-value="patchVideo({ deviceId: $event })"
-            />
-          </div>
-        </div>
+        <XSelect
+          :model-value="videoConfig?.inputKind ?? 'none'"
+          :options="inputKindOptions"
+          label="Source"
+          @update:model-value="patchVideo({ inputKind: $event })"
+        />
+
+        <XSelect
+          v-if="videoConfig?.inputKind === 'webcam'"
+          :model-value="videoConfig?.deviceId"
+          :options="deviceOptions"
+          label="Camera device"
+          @update:model-value="patchVideo({ deviceId: $event })"
+        />
 
         <div
           v-if="videoConfig?.inputKind === 'syphon' || videoConfig?.inputKind === 'spout'"
-          class="col-12 col-sm-6 col-md-3 row q-gutter-sm items-center"
+          class="options-grid__sender"
         >
-          <div class="col column">
-            <div class="q-mb-xs text-caption text-grey-4">Sender</div>
-            <XSelect
-              :model-value="videoConfig?.senderName"
-              :options="senderOptions"
-              @update:model-value="patchVideo({ senderName: $event })"
-            />
-          </div>
-          <XButton flat icon="refresh" class="q-mt-md" @click="videoStore.refreshSenders()" />
+          <XSelect
+            :model-value="videoConfig?.senderName"
+            :options="senderOptions"
+            label="Sender"
+            @update:model-value="patchVideo({ senderName: $event })"
+          />
+          <XButton
+            flat
+            icon="refresh"
+            @click="videoStore.refreshSenders()"
+          />
         </div>
 
-        <div class="col-12 col-sm-6 col-md-3">
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">Black level</div>
-            <XInput
-              type="number"
-              :model-value="videoConfig?.blackLevel ?? 0"
-              step="1"
-              min="0"
-              max="255"
-              @update:model-value="patchVideo({ blackLevel: Number($event) })"
-            />
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-md-3">
-          <div class="column">
-            <div class="q-mb-xs text-caption text-grey-4">Sample FPS</div>
-            <XSelect
-              :model-value="videoConfig?.fps ?? 30"
-              :options="sampleFpsOptions"
-              @update:model-value="patchVideo({ fps: $event as VideoSampleFps })"
-            />
-          </div>
-        </div>
+        <XInput
+          type="number"
+          label="Black level"
+          :model-value="videoConfig?.blackLevel ?? 0"
+          @update:model-value="patchVideo({ blackLevel: Number($event) })"
+        />
+        <XSelect
+          :model-value="videoConfig?.fps ?? 30"
+          :options="sampleFpsOptions"
+          label="Sample FPS"
+          @update:model-value="patchVideo({ fps: $event as VideoSampleFps })"
+        />
       </div>
 
-      <div class="text-caption">
+      <div class="status-line">
         Status: {{ videoStore.status.connected ? 'connected' : 'idle' }}
         · {{ videoStore.status.fps }} fps
         <span v-if="videoStore.status.sourceWidth">
@@ -566,7 +549,10 @@ watch(
           · {{ activeVideoMaps.length }} map{{ activeVideoMaps.length === 1 ? '' : 's' }} active
         </span>
       </div>
-      <div v-if="videoConfig?.enabled && activeVideoMaps.length === 0" class="text-caption text-warning">
+      <div
+        v-if="videoConfig?.enabled && activeVideoMaps.length === 0"
+        class="status-warning"
+      >
         Select at least one pixel map to drive fixtures. Preview still works without one.
       </div>
     </section>
@@ -578,10 +564,27 @@ watch(
   flex: 1 1 auto;
   min-height: 0;
   overflow: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+}
+
+.video-mapping-panel__title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.video-mapping-panel__subtitle {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
 }
 
 .preview-section {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
 .preview-wrap {
@@ -592,10 +595,75 @@ watch(
   aspect-ratio: 16 / 9;
 }
 
+.preview-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.preview-toolbar__select {
+  min-width: 180px;
+}
+
+.preview-toolbar__roi {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+}
+
+.preview-params {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 220px));
+  gap: 12px;
+}
+
 .options-section {
   width: 100%;
-  padding-top: 4px;
+  padding-top: 12px;
   border-top: 1px solid var(--sdmx-color-border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  align-items: start;
+}
+
+.options-grid__maps {
+  grid-column: 1 / -1;
+}
+
+.options-grid__map-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-left: 4px;
+}
+
+.options-grid__sender {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.field-label {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+  margin-bottom: 6px;
+}
+
+.status-line {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+}
+
+.status-warning {
+  font-size: 12px;
+  color: var(--sdmx-color-warning, #ff9f0a);
 }
 
 .video-preview-canvas {

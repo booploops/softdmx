@@ -60,8 +60,8 @@ const channelTicks = computed(() => {
 
 <template>
   <div class="patch-grid">
-    <div class="text-subtitle2 q-mb-sm">{{ title }}</div>
-    <q-scroll-area class="grid-scroll">
+    <div class="patch-grid__title">{{ title }}</div>
+    <div class="grid-scroll">
       <div class="grid-content" :style="{ width: `${gridWidth}px` }">
         <div class="channel-strip">
           <div
@@ -74,7 +74,7 @@ const channelTicks = computed(() => {
           </div>
         </div>
 
-        <div v-if="sortedFixtures.length === 0" class="text-caption text-grey-6 q-py-sm">
+        <div v-if="sortedFixtures.length === 0" class="patch-grid__empty">
           No fixtures routed to this destination.
         </div>
 
@@ -83,7 +83,7 @@ const channelTicks = computed(() => {
           :key="`${fixture.name}-${fixture.startChannel}`"
           class="fixture-row"
         >
-          <div class="fixture-name text-caption ellipsis">{{ fixture.name }}</div>
+          <div class="fixture-name">{{ fixture.name }}</div>
           <div class="fixture-track">
             <div
               class="fixture-block"
@@ -96,14 +96,14 @@ const channelTicks = computed(() => {
                 width: `${widthToPx(fixture.startChannel, fixture.endChannel)}px`,
               }"
             >
-              <span class="text-caption">
+              <span class="fixture-block__label">
                 {{ fixture.startChannel }}-{{ fixture.endChannel }}
               </span>
             </div>
           </div>
         </div>
       </div>
-    </q-scroll-area>
+    </div>
   </div>
 </template>
 
@@ -115,8 +115,20 @@ const channelTicks = computed(() => {
   background: var(--sdmx-color-bg-inset);
 }
 
+.patch-grid__title {
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.patch-grid__empty {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+  padding: 8px 0;
+}
+
 .grid-scroll {
   height: 220px;
+  overflow: auto;
 }
 
 .grid-content {
@@ -157,6 +169,10 @@ const channelTicks = computed(() => {
 
 .fixture-name {
   color: var(--sdmx-color-text-muted);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .fixture-block {
@@ -171,6 +187,10 @@ const channelTicks = computed(() => {
   overflow: hidden;
   white-space: nowrap;
   color: var(--sdmx-color-text);
+}
+
+.fixture-block__label {
+  font-size: 12px;
 }
 
 .fixture-block.overlap {

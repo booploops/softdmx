@@ -23,9 +23,15 @@ const ui = useUIStore();
       <PatchPanel v-if="ui.setupSection === 'patch'" />
       <div v-else-if="ui.setupSection === 'video'" class="setup-video-column">
         <VideoMappingPanel />
-        <GridNodePreview class="q-mt-md" />
+        <GridNodePreview class="setup-video-column__preview" />
       </div>
       <ShowfileEditor v-else-if="ui.setupSection === 'showfile'" embedded />
     </div>
   </div>
 </template>
+
+<style scoped>
+.setup-video-column__preview {
+  margin-top: 16px;
+}
+</style>

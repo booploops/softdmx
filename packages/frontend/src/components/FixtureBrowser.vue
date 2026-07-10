@@ -12,9 +12,7 @@
 import { getAllFixtures, pluginRegistryVersion, registerRuntimeFixtureFromYaml } from 'src/fixture-library/registry';
 import { ref, computed } from 'vue';
 import type { FixtureDefinition } from '@softdmx/engine';
-import { Dialog, Notify } from 'quasar';
-import XButton from 'src/components/controls/XButton.vue';
-import XInput from 'src/components/controls/XInput.vue';
+import { createAlert } from 'src/lib/CommonDialogs';
 
 const searchText = ref('');
 const selectedFixture = ref<FixtureDefinition | null>(null);
@@ -52,12 +50,12 @@ const onFixtureYamlPicked = async (event: Event) => {
 
   try {
     const fixture = registerRuntimeFixtureFromYaml(await file.text());
-    Notify.create({
-      type: 'positive',
+    await createAlert({
+      title: 'Success',
       message: `Imported fixture "${fixture.name}" (${fixture.id})`,
     });
   } catch (error) {
-    Dialog.create({
+    await createAlert({
       title: 'Fixture Import Failed',
       message: error instanceof Error ? error.message : 'Unknown fixture import error',
     });
@@ -77,10 +75,13 @@ const onFixtureYamlPicked = async (event: Event) => {
       @change="onFixtureYamlPicked"
     />
 
-    <div v-if="!selectedFixture" class="fixture-list">
+    <div
+      v-if="!selectedFixture"
+      class="fixture-list"
+    >
       <div class="list-header">
-        <div class="header-title-row q-mb-md">
-          <h6 class="q-ma-none font-weight-bold">Available Fixtures</h6>
+        <div class="header-title-row">
+          <h6>Available Fixtures</h6>
           <XButton
             color="primary"
             icon="file-upload"
@@ -89,13 +90,19 @@ const onFixtureYamlPicked = async (event: Event) => {
             @click="openFixtureImportPicker"
           />
         </div>
-        <XInput v-model="searchText" placeholder="Search fixtures..." class="search-input">
-          <template #prepend><XIcon name="search" /></template>
+        <XInput
+          v-model="searchText"
+          placeholder="Search fixtures..."
+          class="search-input"
+        >
+          <template #prepend>
+            <XIcon name="search" />
+          </template>
         </XInput>
       </div>
 
       <div class="fixtures-grid">
-        <div
+        <XCard
           v-for="fixture in filteredFixtures"
           :key="fixture.id"
           class="fixture-card"
@@ -107,37 +114,51 @@ const onFixtureYamlPicked = async (event: Event) => {
             <div class="fixture-channels">{{ fixture.channels.length }} channels</div>
 
             <div class="channel-preview">
-              <span
+              <XChip
                 v-for="channel in fixture.channels.slice(0, 3)"
                 :key="channel.name"
-                class="sdmx-badge sdmx-badge--outline"
+                :label="channel.name"
+                size="sm"
+                outline
+                dense
+              />
+              <span
+                v-if="fixture.channels.length > 3"
+                class="more-channels"
               >
-                {{ channel.name }}
-              </span>
-              <span v-if="fixture.channels.length > 3" class="more-channels">
                 +{{ fixture.channels.length - 3 }} more
               </span>
             </div>
           </div>
-        </div>
+        </XCard>
       </div>
 
-      <div v-if="filteredFixtures.length === 0" class="empty-state">
-        <XIcon name="search-off" size="3rem" class="text-grey-5" />
+      <div
+        v-if="filteredFixtures.length === 0"
+        class="empty-state"
+      >
+        <XIcon
+          name="search-off"
+          size="3rem"
+          class="empty-state__icon"
+        />
         <div class="empty-message">No fixtures found</div>
         <div class="empty-hint">Try adjusting your search terms</div>
       </div>
     </div>
 
-    <div v-else class="fixture-details">
+    <div
+      v-else
+      class="fixture-details"
+    >
       <div class="details-header">
         <XButton
-          @click="clearSelection"
           icon="arrow-left"
           flat
           size="sm"
+          @click="clearSelection"
         />
-        <h6 class="q-ma-none font-weight-bold">{{ selectedFixture.name }}</h6>
+        <h6>{{ selectedFixture.name }}</h6>
       </div>
 
       <div class="fixture-info">
@@ -152,7 +173,7 @@ const onFixtureYamlPicked = async (event: Event) => {
       </div>
 
       <div class="channels-section">
-        <h6 class="font-weight-bold">Channels</h6>
+        <h6>Channels</h6>
         <div class="channels-list">
           <div
             v-for="(channel, index) in selectedFixture.channels"
@@ -192,10 +213,12 @@ const onFixtureYamlPicked = async (event: Event) => {
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-    }
+      margin-bottom: 12px;
 
-    h6 {
-      margin: 0 0 12px 0;
+      h6 {
+        margin: 0;
+        font-weight: 700;
+      }
     }
 
     .search-input {
@@ -214,9 +237,7 @@ const onFixtureYamlPicked = async (event: Event) => {
     .fixture-card {
       background: var(--sdmx-color-border-subtle);
       border: 1px solid var(--sdmx-color-border);
-      border-radius: 6px;
       cursor: default;
-      transition: background-color 0.2s;
 
       &:hover {
         background: var(--sdmx-color-border);
@@ -267,6 +288,10 @@ const onFixtureYamlPicked = async (event: Event) => {
     text-align: center;
     color: var(--sdmx-color-text-faint);
 
+    &__icon {
+      color: var(--sdmx-color-text-muted);
+    }
+
     .empty-message {
       font-size: 18px;
       margin: 16px 0 8px;
@@ -293,6 +318,7 @@ const onFixtureYamlPicked = async (event: Event) => {
 
     h6 {
       margin: 0;
+      font-weight: 700;
     }
   }
 
@@ -325,6 +351,7 @@ const onFixtureYamlPicked = async (event: Event) => {
     h6 {
       margin: 0;
       padding: 16px 16px 0;
+      font-weight: 700;
     }
 
     .channels-list {

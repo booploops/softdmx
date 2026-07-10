@@ -6,9 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { SdmxButton } from 'src/components/ui';
 import { ref, computed, watch } from 'vue';
-import { Notify } from 'quasar';
 import { useShowStore } from 'src/stores/show';
 import { useDMXStore } from 'src/stores/dmx';
 import { useChannelControl } from 'src/composables/useChannelControl';
@@ -17,18 +15,15 @@ import { resolveFixtureChannelsForMode } from '@softdmx/engine';
 import type { FixtureChannelWithReference, ShowfileFixture } from '@softdmx/engine';
 import { computeAimPanTilt16Bit, resolveFixturePosition } from '@softdmx/engine';
 import { useFixtureImport } from 'src/composables/useFixtureImport';
-import { useInfoText } from 'src/composables/useInfoText';
+import { createAlert } from 'src/lib/CommonDialogs';
 import PatchGrid from './PatchGrid.vue';
 import PixelMapPanel from './PixelMapPanel.vue';
 import VisualizerPanel from './VisualizerPanel.vue';
-import XTabs from 'src/components/controls/XTabs.vue';
-import XTab from 'src/components/controls/XTab.vue';
 
 const showStore = useShowStore();
 const dmx = useDMXStore();
 const control = useChannelControl();
 const { importFixtureFile, exportFixture } = useFixtureImport();
-const { info } = useInfoText();
 
 const importInputRef = ref<HTMLInputElement | null>(null);
 
@@ -257,26 +252,35 @@ function resolveFocusChannels(channels: FixtureChannelWithReference[]) {
   return { pan, panFine, tilt, tiltFine };
 }
 
-function aimFixtureAtCenter(index: number) {
+async function aimFixtureAtCenter(index: number) {
   const fixture = showStore.document.fixtures[index];
   if (!fixture) return;
 
   const mappedFixture = dmx.showfileFixturesMapped.find((mapped) => mapped.fixtureName === fixture.name);
   if (!mappedFixture) {
-    Notify.create({ type: 'warning', message: `Fixture "${fixture.name}" is unavailable in the DMX map.` });
+    await createAlert({
+      title: 'Warning',
+      message: `Fixture "${fixture.name}" is unavailable in the DMX map.`,
+    });
     return;
   }
 
   const focusChannels = resolveFocusChannels(mappedFixture.def.channels);
   if (!focusChannels) {
-    Notify.create({ type: 'warning', message: `Fixture "${fixture.name}" has no pan/tilt channels.` });
+    await createAlert({
+      title: 'Warning',
+      message: `Fixture "${fixture.name}" has no pan/tilt channels.`,
+    });
     return;
   }
 
   const source = resolveFixturePosition(fixture.position, index, showStore.document.fixtures.length);
   const aim = computeAimPanTilt16Bit(source, { x: 0, y: 0, z: 0 });
   if (!aim) {
-    Notify.create({ type: 'warning', message: `Fixture "${fixture.name}" is already at stage center.` });
+    await createAlert({
+      title: 'Warning',
+      message: `Fixture "${fixture.name}" is already at stage center.`,
+    });
     return;
   }
 
@@ -289,7 +293,10 @@ function aimFixtureAtCenter(index: number) {
     control.setChannel(focusChannels.tiltFine.reference.path, aim.tiltFine, 'position');
   }
 
-  Notify.create({ type: 'positive', message: `Aimed "${fixture.name}" at stage center.` });
+  await createAlert({
+    title: 'Success',
+    message: `Aimed "${fixture.name}" at stage center.`,
+  });
 }
 
 function autoPatchAll() {
@@ -460,17 +467,31 @@ function addFixtureFromLibrary() {
 </script>
 
 <template>
-  <div class="patch-panel q-pa-md" style="height: 100%; display: flex; flex-direction: column;">
-    <div class="row items-center justify-between q-mb-md">
+  <div class="patch-panel">
+    <div class="patch-panel__header">
       <div>
-        <div class="text-h5 text-weight-bold">Patch Manager</div>
-        <div class="text-caption text-grey-5">
+        <div class="patch-panel__title">Patch Manager</div>
+        <div class="patch-panel__subtitle">
           Route fixtures to destinations, set DMX starts, and verify universe layout.
         </div>
       </div>
-      <div v-if="selectedPatchTab === 'fixtures'" class="row q-gutter-sm">
-        <SdmxButton variant="primary" :info="info('setup.patch.addFixture')" icon="plus" label="Add Fixture from Library" @click="openAddFixtureDialog" />
-        <SdmxButton variant="secondary" :info="info('setup.patch.importFixtures')" icon="upload" label="Import GDTF/YAML" @click="triggerImportFixture" />
+      <div
+        v-if="selectedPatchTab === 'fixtures'"
+        class="patch-panel__actions"
+      >
+        <XButton
+          v-info="'setup.patch.addFixture'"
+          color="primary"
+          icon="plus"
+          label="Add Fixture from Library"
+          @click="openAddFixtureDialog"
+        />
+        <XButton
+          v-info="'setup.patch.importFixtures'"
+          icon="upload"
+          label="Import GDTF/YAML"
+          @click="triggerImportFixture"
+        />
         <input
           ref="importInputRef"
           type="file"
@@ -478,10 +499,9 @@ function addFixtureFromLibrary() {
           hidden
           @change="onImportFixtureSelected"
         />
-        <q-btn
+        <XButton
           v-if="showStore.document.fixtures.length > 0"
           v-info="'setup.patch.autoPatch'"
-          color="secondary"
           icon="wand"
           label="Auto Patch Sequentially"
           @click="autoPatchAll"
@@ -489,53 +509,89 @@ function addFixtureFromLibrary() {
       </div>
     </div>
 
-    <XTabs v-model="selectedPatchTab" class="q-mb-md">
-      <XTab name="fixtures" icon="git-branch" label="Fixtures" />
-      <XTab name="pixel-maps" icon="grid-3x3" label="Pixel Maps" />
+    <XTabs
+      v-model="selectedPatchTab"
+      class="patch-panel__tabs"
+    >
+      <XTab
+        name="fixtures"
+        icon="git-branch"
+        label="Fixtures"
+      />
+      <XTab
+        name="pixel-maps"
+        icon="grid-3x3"
+        label="Pixel Maps"
+      />
     </XTabs>
 
-    <div v-show="selectedPatchTab === 'fixtures'" class="row q-col-gutter-sm q-mb-md">
-      <div class="col">
-        <q-banner dense rounded class="bg-blue-grey-10 text-grey-2">
-          <XIcon name="database" class="q-mr-sm" />
-          {{ patchedFixtures.length }} patched fixture{{ patchedFixtures.length === 1 ? '' : 's' }}
-        </q-banner>
-      </div>
-      <div class="col">
-        <q-banner dense rounded :class="overlapCount ? 'bg-negative text-white' : 'bg-green-10 text-green-2'">
-          <XIcon :name="overlapCount ? 'alert-triangle' : 'circle-check'" class="q-mr-sm" />
-          {{ overlapCount }} overlap warning{{ overlapCount === 1 ? '' : 's' }}
-        </q-banner>
-      </div>
-      <div class="col">
-        <q-banner
-          dense
-          rounded
-          :class="outOfRangeCount ? 'bg-orange-10 text-orange-3' : 'bg-green-10 text-green-2'"
-        >
-          <XIcon :name="outOfRangeCount ? 'alert-triangle' : 'circle-check'" class="q-mr-sm" />
-          {{ outOfRangeCount }} range issue{{ outOfRangeCount === 1 ? '' : 's' }}
-        </q-banner>
-      </div>
+    <div
+      v-show="selectedPatchTab === 'fixtures'"
+      class="patch-panel__stats"
+    >
+      <XWell
+        dense
+        class="patch-panel__stat"
+      >
+        <XIcon
+          name="database"
+          class="patch-panel__stat-icon"
+        />
+        {{ patchedFixtures.length }} patched fixture{{ patchedFixtures.length === 1 ? '' : 's' }}
+      </XWell>
+      <XWell
+        dense
+        class="patch-panel__stat"
+        :class="overlapCount ? 'patch-panel__stat--danger' : 'patch-panel__stat--ok'"
+      >
+        <XIcon
+          :name="overlapCount ? 'alert-triangle' : 'circle-check'"
+          class="patch-panel__stat-icon"
+        />
+        {{ overlapCount }} overlap warning{{ overlapCount === 1 ? '' : 's' }}
+      </XWell>
+      <XWell
+        dense
+        class="patch-panel__stat"
+        :class="outOfRangeCount ? 'patch-panel__stat--warn' : 'patch-panel__stat--ok'"
+      >
+        <XIcon
+          :name="outOfRangeCount ? 'alert-triangle' : 'circle-check'"
+          class="patch-panel__stat-icon"
+        />
+        {{ outOfRangeCount }} range issue{{ outOfRangeCount === 1 ? '' : 's' }}
+      </XWell>
     </div>
 
-    <div v-show="selectedPatchTab === 'fixtures'" class="row q-gutter-xs q-mb-sm items-center">
-      <q-btn
-        dense
-        :color="visualizerSnapEnabled ? 'primary' : 'grey-7'"
+    <div
+      v-show="selectedPatchTab === 'fixtures'"
+      class="patch-panel__toolbar"
+    >
+      <XButton
+        size="sm"
+        :color="visualizerSnapEnabled ? 'primary' : 'default'"
         :outline="!visualizerSnapEnabled"
         :label="visualizerSnapEnabled ? `Snap ${visualizerSnapStep}m` : 'Snap Off'"
         @click="visualizerSnapEnabled = !visualizerSnapEnabled"
       />
-      <q-btn dense flat color="grey-3" label="Snap Step" @click="cycleVisualizerSnapStep" />
-      <q-btn
-        dense
+      <XButton
+        size="sm"
         flat
-        color="grey-3"
+        label="Snap Step"
+        @click="cycleVisualizerSnapStep"
+      />
+      <XButton
+        size="sm"
+        flat
         :label="visualizerAutoAlignMode === 'row' ? 'Mode: Row' : 'Mode: Column'"
         @click="cycleVisualizerAlignMode"
       />
-      <q-btn dense flat color="grey-3" label="Auto Align" @click="autoAlignVisualizerFixtures" />
+      <XButton
+        size="sm"
+        flat
+        label="Auto Align"
+        @click="autoAlignVisualizerFixtures"
+      />
     </div>
 
     <VisualizerPanel
@@ -548,252 +604,475 @@ function addFixtureFromLibrary() {
       @move-fixture="onVisualizerFixtureMove"
     />
 
-    <div v-show="selectedPatchTab === 'fixtures'" class="col scroll-area-container">
-      <q-scroll-area v-if="showStore.document.fixtures.length > 0" class="fit">
-        <q-list bordered class="rounded-borders bg-dark-card border-grey q-mb-md">
-          <q-item class="patch-header q-py-sm">
-            <q-item-section class="col-3 text-weight-bold text-caption text-uppercase text-grey-5">Fixture</q-item-section>
-            <q-item-section class="col-4 text-weight-bold text-caption text-uppercase text-grey-5">Destination</q-item-section>
-            <q-item-section class="col-3 text-weight-bold text-caption text-uppercase text-grey-5">Universe / Endpoint</q-item-section>
-            <q-item-section class="col-2 text-weight-bold text-caption text-uppercase text-grey-5 text-right">Address</q-item-section>
-          </q-item>
-          <q-item v-for="item in patchedFixtures" :key="item.index" class="patch-item q-py-md border-bottom">
-            <q-item-section class="col-3">
-              <q-item-label class="text-weight-bold text-subtitle1">{{ item.fixture.name }}</q-item-label>
-              <q-item-label caption class="text-grey-5">{{ item.fixture.fixtureId }}</q-item-label>
-              <q-item-label class="q-mt-sm row q-gutter-xs">
-                <q-chip
+    <div
+      v-show="selectedPatchTab === 'fixtures'"
+      class="patch-panel__scroll"
+    >
+      <template v-if="showStore.document.fixtures.length > 0">
+        <div class="patch-table">
+          <div class="patch-table__header">
+            <div>Fixture</div>
+            <div>Destination</div>
+            <div>Universe / Endpoint</div>
+            <div class="patch-table__addr">Address</div>
+          </div>
+          <div
+            v-for="item in patchedFixtures"
+            :key="item.index"
+            class="patch-table__row"
+          >
+            <div class="patch-table__fixture">
+              <div class="patch-table__name">{{ item.fixture.name }}</div>
+              <div class="patch-table__id">{{ item.fixture.fixtureId }}</div>
+              <div class="patch-table__chips">
+                <XChip
                   v-if="item.hasOverlap"
                   color="negative"
-                  text-color="white"
                   dense
+                  size="sm"
                   icon="alert-triangle"
                   label="Overlap"
-                  size="sm"
                 />
-                <q-chip
+                <XChip
                   v-if="item.outOfRange"
-                  color="orange"
-                  text-color="black"
+                  color="warning"
                   dense
+                  size="sm"
                   icon="straighten"
                   label="Out of 1-512"
-                  size="sm"
                 />
-              </q-item-label>
-              <q-item-label v-if="item.overlapsWith.length" caption class="text-negative">
-                Conflicts with: {{ item.overlapsWith.join(', ') }}
-              </q-item-label>
-              <div class="row q-col-gutter-xs q-mt-sm">
-                <div class="col-4">
-                  <q-input
-                    :model-value="item.fixture.position?.x"
-                    type="number"
-                    label="X"
-                    dark
-                    filled
-                    dense
-                    placeholder="auto"
-                    @update:model-value="val => updateFixturePosition(item.index, 'x', val)"
-                  />
-                </div>
-                <div class="col-4">
-                  <q-input
-                    :model-value="item.fixture.position?.y"
-                    type="number"
-                    label="Y"
-                    dark
-                    filled
-                    dense
-                    placeholder="auto"
-                    @update:model-value="val => updateFixturePosition(item.index, 'y', val)"
-                  />
-                </div>
-                <div class="col-4">
-                  <q-input
-                    :model-value="item.fixture.position?.z"
-                    type="number"
-                    label="Z"
-                    dark
-                    filled
-                    dense
-                    placeholder="auto"
-                    @update:model-value="val => updateFixturePosition(item.index, 'z', val)"
-                  />
-                </div>
               </div>
-              <SdmxButton variant="ghost" size="sm" icon="current-location" label="Aim at center" class="q-mt-sm" @click="aimFixtureAtCenter(item.index)" />
-            </q-item-section>
+              <div
+                v-if="item.overlapsWith.length"
+                class="patch-table__conflict"
+              >
+                Conflicts with: {{ item.overlapsWith.join(', ') }}
+              </div>
+              <div class="patch-table__xyz">
+                <XInput
+                  :model-value="item.fixture.position?.x"
+                  type="number"
+                  label="X"
+                  dense
+                  placeholder="auto"
+                  @update:model-value="val => updateFixturePosition(item.index, 'x', val)"
+                />
+                <XInput
+                  :model-value="item.fixture.position?.y"
+                  type="number"
+                  label="Y"
+                  dense
+                  placeholder="auto"
+                  @update:model-value="val => updateFixturePosition(item.index, 'y', val)"
+                />
+                <XInput
+                  :model-value="item.fixture.position?.z"
+                  type="number"
+                  label="Z"
+                  dense
+                  placeholder="auto"
+                  @update:model-value="val => updateFixturePosition(item.index, 'z', val)"
+                />
+              </div>
+              <XButton
+                flat
+                size="sm"
+                icon="current-location"
+                label="Aim at center"
+                class="patch-table__aim"
+                @click="aimFixtureAtCenter(item.index)"
+              />
+            </div>
 
-            <q-item-section class="col-4 q-px-sm">
-              <q-select
+            <div>
+              <XSelect
                 :model-value="item.destId"
                 :options="destinationOptions"
                 label="Output Destination"
-                dark
-                filled
                 dense
-                emit-value
-                map-options
-                @update:model-value="val => updatePatch(item.index, { outputDestinationId: val })"
+                @update:model-value="val => updatePatch(item.index, { outputDestinationId: String(val) })"
               />
-            </q-item-section>
+            </div>
 
-            <q-item-section class="col-3 q-px-sm">
-              <q-item-label class="text-grey-4 text-caption">
-                {{ getDestUniverseLabel(item.destId) }}
-              </q-item-label>
-              <q-item-label caption class="text-grey-6">{{ getDestName(item.destId) }}</q-item-label>
-            </q-item-section>
+            <div>
+              <div class="patch-table__universe">{{ getDestUniverseLabel(item.destId) }}</div>
+              <div class="patch-table__dest-name">{{ getDestName(item.destId) }}</div>
+            </div>
 
-            <q-item-section class="col-2 text-right">
-              <q-input
+            <div class="patch-table__addr">
+              <XInput
                 :model-value="item.fixture.startingChannel"
                 type="number"
                 label="Start"
-                dark
-                filled
                 dense
-                min="1"
-                max="512"
                 placeholder="Auto"
                 @update:model-value="val => updatePatch(item.index, { startingChannel: val ? Number(val) : undefined })"
               />
-              <div class="text-caption text-grey-5 q-mt-xs">
+              <div class="patch-table__range">
                 Ch {{ item.startChannel }}-{{ item.endChannel }} ({{ item.channelCount }})
               </div>
-            </q-item-section>
-          </q-item>
-        </q-list>
-
-        <div class="q-mb-sm row items-center q-col-gutter-sm">
-          <div class="col-auto text-caption text-grey-4 text-uppercase">Patch Grid Destination</div>
-          <div class="col-5">
-            <q-select
-              v-model="selectedGridDestinationId"
-              :options="destinationOptions"
-              dense
-              dark
-              filled
-              emit-value
-              map-options
-            />
+            </div>
           </div>
+        </div>
+
+        <div class="patch-panel__grid-picker">
+          <div class="patch-panel__grid-label">Patch Grid Destination</div>
+          <XSelect
+            v-model="selectedGridDestinationId"
+            :options="destinationOptions"
+            dense
+            class="patch-panel__grid-select"
+          />
         </div>
 
         <PatchGrid
           :fixtures="selectedGridFixtures"
           :title="`Channel Map: ${getDestName(selectedGridDestinationId)}`"
         />
-      </q-scroll-area>
+      </template>
 
-      <div v-else class="fit flex flex-center text-center text-grey-5">
-        <div>
-          <XIcon name="network" size="4rem" class="q-mb-md" />
-          <div class="text-h6">No fixtures patched yet</div>
-          <div class="text-subtitle2 q-mb-md">Add a fixture from the library to start patching.</div>
-          <SdmxButton variant="primary" icon="plus" label="Add Fixture from Library" @click="openAddFixtureDialog" />
+      <XWell
+        v-else
+        class="patch-panel__empty"
+      >
+        <XIcon
+          name="network"
+          size="4rem"
+          class="patch-panel__empty-icon"
+        />
+        <div class="patch-panel__empty-title">No fixtures patched yet</div>
+        <div class="patch-panel__empty-hint">Add a fixture from the library to start patching.</div>
+        <XButton
+          color="primary"
+          icon="plus"
+          label="Add Fixture from Library"
+          @click="openAddFixtureDialog"
+        />
+      </XWell>
+    </div>
+
+    <div
+      v-show="selectedPatchTab === 'pixel-maps'"
+      class="patch-panel__scroll"
+    >
+      <PixelMapPanel />
+    </div>
+
+    <XDialog v-model="showAddFixtureDialog">
+      <XDialogHeader title="Add Fixture from Library" />
+      <XDialogBody class="patch-panel__dialog-body">
+        <div class="patch-panel__dialog-caption">Select a fixture definition and patch destination.</div>
+        <XSelect
+          v-model="selectedFixtureType"
+          :options="fixtureTypeOptions"
+          label="Fixture Type"
+        />
+        <XInput
+          v-model="newFixtureName"
+          label="Fixture Name"
+          placeholder="Leave empty to auto-generate from fixture type"
+        />
+        <XSelect
+          v-if="selectedFixtureModes.length > 0"
+          v-model="newFixtureModeId"
+          :options="selectedFixtureModes.map((mode) => ({ label: mode.name, value: mode.id }))"
+          label="DMX Mode"
+        />
+        <div
+          v-if="selectedFixtureType"
+          class="patch-panel__export-row"
+        >
+          <XButton
+            flat
+            size="sm"
+            icon="download"
+            label="Export YAML"
+            @click="exportFixture(selectedFixtureType, 'yaml')"
+          />
+          <XButton
+            flat
+            size="sm"
+            icon="download"
+            label="Export GDTF"
+            @click="exportFixture(selectedFixtureType, 'gdtf')"
+          />
         </div>
-      </div>
-    </div>
-
-    <div v-show="selectedPatchTab === 'pixel-maps'" class="col">
-      <q-scroll-area class="fit">
-        <PixelMapPanel />
-      </q-scroll-area>
-    </div>
-
-    <q-dialog v-model="showAddFixtureDialog">
-      <q-card style="min-width: 460px">
-        <q-card-section>
-          <div class="text-h6">Add Fixture from Library</div>
-          <div class="text-caption text-grey-6">Select a fixture definition and patch destination.</div>
-        </q-card-section>
-        <q-card-section class="q-gutter-y-md">
-          <q-select
-            v-model="selectedFixtureType"
-            :options="fixtureTypeOptions"
-            label="Fixture Type"
-            emit-value
-            map-options
-            dark
-            filled
-          />
-          <q-input
-            v-model="newFixtureName"
-            label="Fixture Name"
-            dark
-            filled
-            hint="Leave empty to auto-generate from fixture type"
-          />
-          <q-select
-            v-if="selectedFixtureModes.length > 0"
-            v-model="newFixtureModeId"
-            :options="selectedFixtureModes.map((mode) => ({ label: mode.name, value: mode.id }))"
-            label="DMX Mode"
-            emit-value
-            map-options
-            dark
-            filled
-          />
-          <div v-if="selectedFixtureType" class="row q-gutter-sm">
-            <SdmxButton variant="ghost" size="sm" icon="download" label="Export YAML" @click="exportFixture(selectedFixtureType, 'yaml')" />
-            <SdmxButton variant="ghost" size="sm" icon="download" label="Export GDTF" @click="exportFixture(selectedFixtureType, 'gdtf')" />
-          </div>
-          <q-select
-            v-model="newFixtureDestinationId"
-            :options="destinationOptions"
-            label="Output Destination"
-            emit-value
-            map-options
-            dark
-            filled
-          />
-          <q-input
-            v-model.number="newFixtureStartingChannel"
-            type="number"
-            min="1"
-            max="512"
-            label="Starting Channel (optional)"
-            dark
-            filled
-            hint="Leave empty to auto-place based on fixture order"
-          />
-        </q-card-section>
-        <q-card-actions align="right">
-          <q-btn flat label="Cancel" v-close-popup />
-          <q-btn color="primary" label="Add Fixture" :disable="!selectedFixtureType" @click="addFixtureFromLibrary" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+        <XSelect
+          v-model="newFixtureDestinationId"
+          :options="destinationOptions"
+          label="Output Destination"
+        />
+        <XInput
+          v-model.number="newFixtureStartingChannel"
+          type="number"
+          label="Starting Channel (optional)"
+          placeholder="Leave empty to auto-place based on fixture order"
+        />
+      </XDialogBody>
+      <XDialogFooter>
+        <XButton
+          flat
+          label="Cancel"
+          @click="showAddFixtureDialog = false"
+        />
+        <XButton
+          color="primary"
+          label="Add Fixture"
+          :disable="!selectedFixtureType"
+          @click="addFixtureFromLibrary"
+        />
+      </XDialogFooter>
+    </XDialog>
   </div>
 </template>
 
 <style scoped>
-.bg-dark-card {
-  background-color: var(--sdmx-color-bg-inset);
-}
-.border-grey {
-  border: 1px solid var(--sdmx-color-border-subtle);
-}
-.border-bottom {
-  border-bottom: 1px solid var(--sdmx-color-border-subtle);
-}
-.border-bottom:last-child {
-  border-bottom: none;
-}
-.patch-header {
-  background: var(--sdmx-color-bg-inset);
-}
-.patch-item {
-  transition: background-color 0.2s ease;
-}
-.patch-item:hover {
-  background-color: var(--sdmx-color-bg-muted);
-}
-.scroll-area-container {
-  border-radius: 8px;
-  overflow: hidden;
+.patch-panel {
   height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sdmx-space-md, 16px);
+  box-sizing: border-box;
+}
+
+.patch-panel__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.patch-panel__title {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.patch-panel__subtitle {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+  margin-top: 2px;
+}
+
+.patch-panel__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.patch-panel__tabs {
+  margin-bottom: 12px;
+}
+
+.patch-panel__stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.patch-panel__stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.patch-panel__stat-icon {
+  flex-shrink: 0;
+}
+
+.patch-panel__stat--ok {
+  color: var(--sdmx-color-positive, #34c759);
+}
+
+.patch-panel__stat--danger {
+  color: var(--sdmx-color-negative, #ff3b30);
+}
+
+.patch-panel__stat--warn {
+  color: var(--sdmx-color-warning, #ff9f0a);
+}
+
+.patch-panel__toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.patch-panel__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  border-radius: 8px;
+}
+
+.patch-table {
+  border: 1px solid var(--sdmx-color-border-subtle);
+  border-radius: 8px;
+  background: var(--sdmx-color-bg-inset);
+  margin-bottom: 16px;
+  overflow: hidden;
+}
+
+.patch-table__header,
+.patch-table__row {
+  display: grid;
+  grid-template-columns: 3fr 4fr 3fr 2fr;
+  gap: 8px;
+  padding: 12px;
+  align-items: start;
+}
+
+.patch-table__header {
+  background: var(--sdmx-color-bg-inset);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sdmx-color-text-muted);
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.patch-table__row {
+  border-top: 1px solid var(--sdmx-color-border-subtle);
+}
+
+.patch-table__row:hover {
+  background: var(--sdmx-color-bg-muted);
+}
+
+.patch-table__name {
+  font-weight: 700;
+  font-size: 15px;
+}
+
+.patch-table__id,
+.patch-table__dest-name,
+.patch-table__range {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+}
+
+.patch-table__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.patch-table__conflict {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--sdmx-color-negative, #ff3b30);
+}
+
+.patch-table__xyz {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 4px;
+  margin-top: 8px;
+}
+
+.patch-table__aim {
+  margin-top: 8px;
+}
+
+.patch-table__universe {
+  font-size: 12px;
+  color: var(--sdmx-color-text-secondary, var(--sdmx-color-text-muted));
+}
+
+.patch-table__addr {
+  text-align: right;
+}
+
+.patch-panel__grid-picker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.patch-panel__grid-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--sdmx-color-text-muted);
+}
+
+.patch-panel__grid-select {
+  min-width: 220px;
+  max-width: 360px;
+  flex: 1;
+}
+
+.patch-panel__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 8px;
+  min-height: 220px;
+}
+
+.patch-panel__empty-icon {
+  color: var(--sdmx-color-text-muted);
+  margin-bottom: 4px;
+}
+
+.patch-panel__empty-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.patch-panel__empty-hint {
+  font-size: 13px;
+  color: var(--sdmx-color-text-muted);
+  margin-bottom: 8px;
+}
+
+.patch-panel__dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 420px;
+}
+
+.patch-panel__dialog-caption {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+}
+
+.patch-panel__export-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+@media (max-width: 900px) {
+  .patch-panel__stats {
+    grid-template-columns: 1fr;
+  }
+
+  .patch-table__header {
+    display: none;
+  }
+
+  .patch-table__header,
+  .patch-table__row {
+    grid-template-columns: 1fr;
+  }
+
+  .patch-table__addr {
+    text-align: left;
+  }
 }
 </style>

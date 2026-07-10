@@ -364,7 +364,7 @@ function onCanvasPointerEnd(event: PointerEvent) {
     class="visualizer-root"
     :class="{ 'visualizer-root--compact': compact }"
   >
-    <XCard v-if="!compact" :flat="true" :bordered="true" class="visualizer-card sdmx-panel--inset q-mb-md">
+    <XCard v-if="!compact" :flat="true" :bordered="true" class="visualizer-card sdmx-panel--inset">
       <template #header>
         <div class="text-subtitle1 text-weight-medium">Fixture Layout Visualizer</div>
         <div class="text-caption text-grey-5">
@@ -400,6 +400,9 @@ function onCanvasPointerEnd(event: PointerEvent) {
 </template>
 
 <style scoped>
+.visualizer-card {
+  margin-bottom: 16px;
+}
 .visualizer-root--compact {
   flex: 1 1 auto;
   min-height: 0;

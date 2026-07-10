@@ -6,7 +6,7 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { Notify } from 'quasar';
+import { createAlert } from 'src/lib/CommonDialogs';
 import {
   registerRuntimeFixtureFromGdtf,
   registerRuntimeFixtureFromYaml,
@@ -27,37 +27,49 @@ export function useFixtureImport() {
       if (lower.endsWith('.gdtf')) {
         const bytes = await readFileBytes(file);
         const fixture = await registerRuntimeFixtureFromGdtf(bytes, file.name);
-        Notify.create({ type: 'positive', message: `Imported GDTF fixture ${fixture.name}` });
+        await createAlert({
+          title: 'Success',
+          message: `Imported GDTF fixture ${fixture.name}`,
+        });
         return fixture;
       }
 
       if (lower.endsWith('.yaml') || lower.endsWith('.yml')) {
         const yaml = await file.text();
         const fixture = registerRuntimeFixtureFromYaml(yaml);
-        Notify.create({ type: 'positive', message: `Imported YAML fixture ${fixture.name}` });
+        await createAlert({
+          title: 'Success',
+          message: `Imported YAML fixture ${fixture.name}`,
+        });
         return fixture;
       }
 
       throw new Error('Unsupported fixture file type');
     } catch (error) {
-      Notify.create({
-        type: 'negative',
+      await createAlert({
+        title: 'Import Failed',
         message: error instanceof Error ? error.message : 'Fixture import failed',
       });
       return null;
     }
   }
 
-  function exportFixture(fixtureId: string, format: 'yaml' | 'gdtf') {
+  async function exportFixture(fixtureId: string, format: 'yaml' | 'gdtf') {
     const fixture = getFixtureDefinition(fixtureId);
     if (!fixture) {
-      Notify.create({ type: 'negative', message: 'Fixture type not found' });
+      await createAlert({
+        title: 'Export Failed',
+        message: 'Fixture type not found',
+      });
       return false;
     }
 
     const ok = format === 'yaml' ? downloadFixtureYaml(fixture) : downloadFixtureGdtf(fixture);
     if (ok) {
-      Notify.create({ type: 'positive', message: `Exported ${fixture.name} as ${format.toUpperCase()}` });
+      await createAlert({
+        title: 'Success',
+        message: `Exported ${fixture.name} as ${format.toUpperCase()}`,
+      });
     }
     return ok;
   }

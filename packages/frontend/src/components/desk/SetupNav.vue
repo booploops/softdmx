@@ -17,25 +17,42 @@ const sections = Object.entries(SETUP_SECTION_META) as [SetupSection, { label: s
 </script>
 
 <template>
-  <q-list padding dense class="setup-nav">
-    <q-item-label header>Setup</q-item-label>
-    <q-item
-      v-for="[section, meta] in sections"
-      :key="section"
-      v-info="{ key: 'desk.nav.setupSection', vars: { label: meta.label } }"
-      clickable
-      :active="ui.setupSection === section"
-      active-class="sidebar-active"
-      @click="ui.setSetupSection(section)"
+  <nav class="setup-nav">
+    <div class="setup-nav__header">Setup</div>
+    <XListView
+      :bordered="false"
+      dense
+      class="setup-nav__list"
     >
-      <q-item-section avatar><XIcon :name="meta.icon" /></q-item-section>
-      <q-item-section>{{ meta.label }}</q-item-section>
-    </q-item>
-  </q-list>
+      <XListItem
+        v-for="[section, meta] in sections"
+        :key="section"
+        v-info="{ key: 'desk.nav.setupSection', vars: { label: meta.label } }"
+        clickable
+        :active="ui.setupSection === section"
+        @click="ui.setSetupSection(section)"
+      >
+        <template #prepend>
+          <XIcon :name="meta.icon" />
+        </template>
+        {{ meta.label }}
+      </XListItem>
+    </XListView>
+  </nav>
 </template>
 
 <style scoped>
-.sidebar-active {
-  background: var(--sdmx-color-selected);
+.setup-nav__header {
+  padding: 12px 12px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--sdmx-color-text-muted);
+}
+
+.setup-nav__list {
+  max-height: none;
+  background: transparent;
 }
 </style>
