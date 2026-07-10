@@ -18,25 +18,42 @@ const sections = Object.entries(PROGRAM_SECTION_META) as [ProgramSection, { labe
 </script>
 
 <template>
-  <q-list padding dense class="program-nav">
-    <q-item-label header>Program</q-item-label>
-    <q-item
-      v-for="[section, meta] in sections"
-      :key="section"
-      v-info="{ key: 'desk.nav.programSection', vars: { label: meta.label } }"
-      clickable
-      :active="ui.programSection === section"
-      active-class="sidebar-active"
-      @click="ui.setProgramSection(section)"
+  <nav class="program-nav">
+    <div class="program-nav__header">Program</div>
+    <XListView
+      :bordered="false"
+      dense
+      class="program-nav__list"
     >
-      <q-item-section avatar><XIcon :name="meta.icon" /></q-item-section>
-      <q-item-section>{{ meta.label }}</q-item-section>
-    </q-item>
-  </q-list>
+      <XListItem
+        v-for="[section, meta] in sections"
+        :key="section"
+        v-info="{ key: 'desk.nav.programSection', vars: { label: meta.label } }"
+        clickable
+        :active="ui.programSection === section"
+        @click="ui.setProgramSection(section)"
+      >
+        <template #prepend>
+          <XIcon :name="meta.icon" />
+        </template>
+        {{ meta.label }}
+      </XListItem>
+    </XListView>
+  </nav>
 </template>
 
 <style scoped>
-.sidebar-active {
-  background: var(--sdmx-color-selected);
+.program-nav__header {
+  padding: 12px 12px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--sdmx-color-text-muted);
+}
+
+.program-nav__list {
+  max-height: none;
+  background: transparent;
 }
 </style>

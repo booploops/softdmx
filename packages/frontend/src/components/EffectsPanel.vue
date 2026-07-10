@@ -11,12 +11,6 @@ import type { EffectDefinition } from '@softdmx/engine';
 import { useShowStore } from 'src/stores/show';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import EffectEditor from './EffectEditor.vue';
-import { SdmxEmptyState, SdmxIconButton } from 'src/components/ui';
-import XButton from 'src/components/controls/XButton.vue';
-import XButtonGroup from 'src/components/controls/XButtonGroup.vue';
-import XListView from 'src/components/controls/XListView.vue';
-import XListItem from 'src/components/controls/XListItem.vue';
-import XSwitch from 'src/components/controls/XSwitch.vue';
 
 const showStore = useShowStore();
 const outputEngine = useOutputEngineStore();
@@ -58,15 +52,14 @@ function targetSummary(effect: EffectDefinition): string[] {
 </script>
 
 <template>
-  <div class="effects-panel q-pa-md">
-    <div class="row items-center q-mb-sm">
+  <div class="effects-panel">
+    <div class="effects-panel__header">
       <div class="text-h6 font-weight-bold">Effects</div>
-      <div class="row items-center q-ml-auto q-gutter-x-xs">
+      <div class="effects-panel__header-meta">
         <span class="sdmx-badge sdmx-badge--primary">Enabled {{ enabledCount }}</span>
         <span class="sdmx-badge sdmx-badge--accent">Running {{ runningCount }}</span>
         <XButton
           v-info="'program.effects.addEffect'"
-          dense
           flat
           icon="external-link"
           label="Open Editor"
@@ -75,7 +68,7 @@ function targetSummary(effect: EffectDefinition): string[] {
       </div>
     </div>
 
-    <div class="row items-center q-mb-md">
+    <div class="effects-panel__modes">
       <XButtonGroup>
         <XButton
           :color="editorMode === 'inline' ? 'primary' : 'default'"
@@ -92,12 +85,20 @@ function targetSummary(effect: EffectDefinition): string[] {
       </XButtonGroup>
     </div>
 
-    <XListView v-if="effects.length" :bordered="true" class="q-mb-md">
-      <XListItem v-for="effect in effects" :key="effect.id" :clickable="false">
+    <XListView
+      v-if="effects.length"
+      :bordered="true"
+      class="effects-panel__list"
+    >
+      <XListItem
+        v-for="effect in effects"
+        :key="effect.id"
+        :clickable="false"
+      >
         <div class="effects-panel-item-main">
           <div class="effect-name">{{ effect.name }}</div>
           <div class="effect-type text-grey-5">{{ effect.type }}</div>
-          <div class="row items-center q-gutter-xs q-mt-xs">
+          <div class="effects-panel__chips">
             <span
               v-for="chip in targetSummary(effect)"
               :key="`${effect.id}-${chip}`"
@@ -108,7 +109,7 @@ function targetSummary(effect: EffectDefinition): string[] {
           </div>
         </div>
         <template #append>
-          <div class="row items-center q-gutter-x-sm">
+          <div class="effects-panel__item-actions">
             <span
               class="sdmx-badge"
               :class="effect.enabled ? 'sdmx-badge--positive' : 'sdmx-badge--grey'"
@@ -126,29 +127,120 @@ function targetSummary(effect: EffectDefinition): string[] {
               :model-value="effect.enabled"
               @update:model-value="(value) => toggleEffect(effect.id, Boolean(value))"
             />
-            <SdmxIconButton icon="copy" info-key="program.effects.duplicateEffect" @click="duplicateEffect(effect)" />
+            <XButton
+              v-info="'program.effects.duplicateEffect'"
+              flat
+              size="sm"
+              icon="copy"
+              @click="duplicateEffect(effect)"
+            />
           </div>
         </template>
       </XListItem>
     </XListView>
 
-    <SdmxEmptyState
+    <XWell
       v-else
-      icon="sparkles"
-      title="No effects configured"
-      description="Open the editor to add your first effect."
-      class="q-mb-md"
-    />
+      class="effects-panel__empty"
+    >
+      <XIcon
+        name="sparkles"
+        class="effects-panel__empty-icon"
+      />
+      <div class="effects-panel__empty-title">No effects configured</div>
+      <div class="effects-panel__empty-hint">Open the editor to add your first effect.</div>
+    </XWell>
 
     <EffectEditor v-if="editorMode === 'inline'" />
 
-    <q-dialog v-model="showEffectEditor" maximized>
-      <q-card><EffectEditor /></q-card>
-    </q-dialog>
+    <XDialog
+      v-model="showEffectEditor"
+      maximized
+    >
+      <XDialogTitlebar
+        title="Effect Editor"
+        @close="showEffectEditor = false"
+      />
+      <XDialogBody class="effects-panel__editor-body">
+        <EffectEditor />
+      </XDialogBody>
+    </XDialog>
   </div>
 </template>
 
 <style scoped>
+.effects-panel {
+  padding: var(--sdmx-space-md, 16px);
+}
+
+.effects-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.effects-panel__header-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.effects-panel__modes {
+  margin-bottom: 16px;
+}
+
+.effects-panel__list {
+  max-height: none;
+  margin-bottom: 16px;
+}
+
+.effects-panel__chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.effects-panel__item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.effects-panel__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+
+.effects-panel__empty-icon {
+  font-size: 28px;
+  opacity: 0.55;
+}
+
+.effects-panel__empty-title {
+  font-weight: 600;
+}
+
+.effects-panel__empty-hint {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+}
+
+.effects-panel__editor-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+
 .effects-panel-item-main {
   display: flex;
   flex-direction: column;

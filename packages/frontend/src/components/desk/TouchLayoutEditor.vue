@@ -9,13 +9,11 @@
 import type { TouchControl, TouchControlType } from '@softdmx/engine';
 import { useTouchLayoutStore } from 'src/stores/touch-layout';
 import { useShowStore } from 'src/stores/show';
-import { SdmxButton, SdmxToggle } from 'src/components/ui';
-import { useInfoText } from 'src/composables/useInfoText';
 import type { TooltipKey } from 'src/lib/info-text';
+import { contrastingSurfaceStyle } from 'src/lib/preset-button-style';
 
 const touchLayout = useTouchLayoutStore();
 const showStore = useShowStore();
-const { info } = useInfoText();
 
 const showMode = ref(true);
 const canvasRef = ref<HTMLElement | null>(null);
@@ -100,20 +98,44 @@ function onControlPointerUp() {
 }
 
 onBeforeUnmount(onControlPointerUp);
+
+function controlStyle(control: TouchControl) {
+  return {
+    gridColumn: `${control.rect.x + 1} / span ${control.rect.w}`,
+    gridRow: `${control.rect.y + 1} / span ${control.rect.h}`,
+    ...(control.color
+      ? contrastingSurfaceStyle(control.color)
+      : { backgroundColor: 'var(--sdmx-color-bg-elevated)' }),
+  };
+}
 </script>
 
 <template>
-  <div class="touch-layout-editor q-pa-md">
+  <div class="touch-layout-editor">
     <div class="touch-layout-editor__header">
       <div class="sdmx-text-title">Show Mode / Touch Layout</div>
-      <q-space />
-      <SdmxToggle v-model="showMode" label="Show Mode" :info="info('desk.touchEditor.showMode')" />
-      <SdmxToggle v-model="touchLayout.editMode" label="Edit mode" :info="info('desk.touchEditor.editMode')" />
-      <SdmxButton label="Rebuild from show" variant="ghost" :info="info('desk.touchEditor.rebuild')" @click="rebuild" />
+      <div class="touch-layout-editor__header-actions">
+        <XSwitch
+          v-model="showMode"
+          v-info="'desk.touchEditor.showMode'"
+          label="Show Mode"
+        />
+        <XSwitch
+          v-model="touchLayout.editMode"
+          v-info="'desk.touchEditor.editMode'"
+          label="Edit mode"
+        />
+        <XButton
+          v-info="'desk.touchEditor.rebuild'"
+          flat
+          label="Rebuild from show"
+          @click="rebuild"
+        />
+      </div>
     </div>
 
-    <div class="row q-col-gutter-md">
-      <div class="col-12 col-md-8">
+    <div class="touch-layout-editor__body">
+      <div class="touch-layout-editor__canvas-col">
         <div
           v-if="touchLayout.activePage"
           ref="canvasRef"
@@ -129,41 +151,37 @@ onBeforeUnmount(onControlPointerUp);
             :key="control.id"
             class="touch-editor-control sdmx-touch-target"
             :class="{ 'touch-editor-control--dragging': dragState?.controlId === control.id }"
-            :style="{
-              gridColumn: `${control.rect.x + 1} / span ${control.rect.w}`,
-              gridRow: `${control.rect.y + 1} / span ${control.rect.h}`,
-              backgroundColor: control.color ?? 'var(--sdmx-color-bg-elevated)',
-            }"
+            :style="controlStyle(control)"
             @pointerdown="onControlPointerDown($event, control)"
           >
             <span>{{ control.label ?? control.type }}</span>
-            <SdmxButton
+            <XButton
               v-if="touchLayout.editMode"
+              v-info="'desk.touchEditor.removeControl'"
               icon="x"
-              round
+              flat
               size="sm"
-              variant="ghost"
               class="touch-control-remove"
-              :info="info('desk.touchEditor.removeControl')"
               @click.stop="touchLayout.removeControl(control.id)"
             />
           </div>
         </div>
       </div>
-      <div class="col-12 col-md-4">
-        <div class="sdmx-text-label q-mb-sm">Add control</div>
-        <div class="column q-gutter-xs">
-          <SdmxButton
+
+      <div class="touch-layout-editor__palette">
+        <div class="sdmx-text-label touch-layout-editor__palette-label">Add control</div>
+        <div class="touch-layout-editor__palette-list">
+          <XButton
             v-for="item in palette"
             :key="item.type"
+            v-info="item.infoKey"
             :label="item.label"
             size="sm"
-            :disabled="!touchLayout.editMode"
-            :info="info(item.infoKey)"
+            :disable="!touchLayout.editMode"
             @click="addPaletteControl(item.type)"
           />
         </div>
-        <p class="sdmx-text-caption q-mt-md">
+        <p class="sdmx-text-caption touch-layout-editor__hint">
           Show Mode enables drag-to-reposition; Edit mode additionally enables add/remove controls.
         </p>
       </div>
@@ -172,12 +190,44 @@ onBeforeUnmount(onControlPointerUp);
 </template>
 
 <style scoped>
+.touch-layout-editor {
+  padding: var(--sdmx-space-md, 16px);
+}
+
 .touch-layout-editor__header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: var(--sdmx-space-sm);
   margin-bottom: var(--sdmx-space-md);
   flex-wrap: wrap;
+}
+
+.touch-layout-editor__header-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--sdmx-space-sm);
+  flex-wrap: wrap;
+}
+
+.touch-layout-editor__body {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(180px, 1fr);
+  gap: var(--sdmx-space-md);
+}
+
+.touch-layout-editor__palette-label {
+  margin-bottom: var(--sdmx-space-sm);
+}
+
+.touch-layout-editor__palette-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.touch-layout-editor__hint {
+  margin-top: var(--sdmx-space-md);
 }
 
 .touch-editor-canvas {
@@ -206,7 +256,6 @@ onBeforeUnmount(onControlPointerUp);
   font-size: var(--sdmx-font-size-label);
   user-select: none;
   touch-action: none;
-  transition: box-shadow var(--sdmx-motion-duration-fast) var(--sdmx-motion-easing);
 }
 
 .touch-editor-control--dragging {
@@ -223,5 +272,11 @@ onBeforeUnmount(onControlPointerUp);
   position: absolute;
   top: 2px;
   right: 2px;
+}
+
+@media (max-width: 900px) {
+  .touch-layout-editor__body {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

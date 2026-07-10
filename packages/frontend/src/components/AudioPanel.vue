@@ -12,16 +12,6 @@ import { useAudioStore } from 'src/stores/audio';
 import { useDMXStore } from 'src/stores/dmx';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useShowStore } from 'src/stores/show';
-import { SdmxEmptyState, SdmxIconButton } from 'src/components/ui';
-import XButton from 'src/components/controls/XButton.vue';
-import XButtonGroup from 'src/components/controls/XButtonGroup.vue';
-import XSelect from 'src/components/controls/XSelect.vue';
-import XInput from 'src/components/controls/XInput.vue';
-import XSwitch from 'src/components/controls/XSwitch.vue';
-import XSlider from 'src/components/controls/XSlider.vue';
-import XCard from 'src/components/controls/XCard.vue';
-import XListView from 'src/components/controls/XListView.vue';
-import XListItem from 'src/components/controls/XListItem.vue';
 
 type MappingTargetMode = 'channelPath' | 'groupAttr' | 'fixtureAttr';
 type MappingSourceForm = 'rms' | 'peak' | 'beat' | 'sub' | 'low' | 'mid' | 'high';
@@ -462,26 +452,27 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="audio-panel q-pa-md">
-    <div class="row items-center q-mb-md">
+  <div class="audio-panel">
+    <div class="audio-panel__header">
       <div class="text-h6">Audio</div>
-      <q-space />
-      <span class="sdmx-badge" :class="audioStore.enabled ? 'sdmx-badge--positive' : 'sdmx-badge--grey'">
+      <span
+        class="sdmx-badge"
+        :class="audioStore.enabled ? 'sdmx-badge--positive' : 'sdmx-badge--grey'"
+      >
         Analysis {{ audioStore.enabled ? 'On' : 'Off' }}
       </span>
     </div>
 
-    <XCard class="q-mb-md">
-      <div class="row q-col-gutter-md">
-        <div class="col-12 col-md-6">
-          <q-banner
+    <XCard class="audio-panel__card">
+      <div class="audio-panel__grid">
+        <div class="audio-panel__col">
+          <div
             v-if="!audioStore.isSupported"
-            dense
-            class="bg-negative text-white rounded-borders q-mb-sm"
+            class="x-alert x-alert--danger"
           >
-            <XIcon name="alert-triangle" class="q-mr-xs" />
+            <XIcon name="alert-triangle" />
             Audio capture is not supported in this runtime.
-          </q-banner>
+          </div>
 
           <XSwitch
             :model-value="audioStore.enabled"
@@ -490,9 +481,9 @@ onMounted(() => {
             @update:model-value="(value) => setAudioEnabled(Boolean(value))"
           />
 
-          <div class="row items-center q-col-gutter-sm q-mt-sm">
-            <div class="col">
-              <div class="q-mb-xs text-subtitle2 text-grey-4">Audio input device</div>
+          <div class="audio-panel__device-row">
+            <div class="audio-panel__device-select">
+              <div class="audio-panel__field-label">Audio input device</div>
               <XSelect
                 :model-value="audioStore.selectedDeviceId"
                 :options="audioDeviceOptions"
@@ -500,21 +491,21 @@ onMounted(() => {
                 @update:model-value="(value) => setInputDevice((value as string | null) ?? null)"
               />
             </div>
-            <div class="col-auto">
-              <SdmxIconButton
-                icon="refresh"
-                color="primary"
-                info-key="setup.audio.refreshDevices"
-                :disable="!audioStore.isSupported"
-                @click="audioStore.refreshDevices"
-              />
-            </div>
+            <XButton
+              v-info="'setup.audio.refreshDevices'"
+              flat
+              size="sm"
+              icon="refresh"
+              color="primary"
+              :disable="!audioStore.isSupported"
+              @click="audioStore.refreshDevices"
+            />
           </div>
 
-          <div class="q-mt-sm">
-            <div class="row items-center justify-between q-mb-xs">
-              <span class="text-subtitle2 text-grey-5">Input gain</span>
-              <span class="text-caption text-grey-5">{{ audioStore.gain.toFixed(2) }}x</span>
+          <div class="audio-panel__gain">
+            <div class="audio-panel__gain-header">
+              <span class="audio-panel__field-label">Input gain</span>
+              <span class="audio-panel__caption">{{ audioStore.gain.toFixed(2) }}x</span>
             </div>
             <XSlider
               v-model="audioStore.gain"
@@ -525,37 +516,52 @@ onMounted(() => {
             />
           </div>
 
-          <div class="q-mt-md">
-            <div class="q-mb-xs text-subtitle2 text-grey-4">Output latency (ms)</div>
+          <div class="audio-panel__latency">
+            <div class="audio-panel__field-label">Output latency (ms)</div>
             <XInput
               v-model.number="audioLatencyMs"
               type="number"
               min="0"
               @update:model-value="saveLatency"
             />
-            <div class="text-caption text-grey-5 q-mt-xs">
+            <div class="audio-panel__caption">
               Advance reactive mapping response for fixture/output lag
             </div>
           </div>
         </div>
 
-        <div class="col-12 col-md-6">
-          <div class="audio-meter-grid q-gutter-y-xs">
-            <div v-for="meter in audioMeterRows" :key="meter.label" class="audio-meter-row">
+        <div class="audio-panel__col">
+          <div class="audio-meter-grid">
+            <div
+              v-for="meter in audioMeterRows"
+              :key="meter.label"
+              class="audio-meter-row"
+            >
               <span class="audio-meter-label">{{ meter.label }}</span>
-              <q-linear-progress
-                rounded
-                size="9px"
-                color="primary"
-                track-color="grey-8"
-                :value="meter.value"
-              />
+              <div
+                class="x-meter"
+                role="meter"
+                :aria-valuenow="Math.round(meter.value * 100)"
+                aria-valuemin="0"
+                aria-valuemax="100"
+              >
+                <div
+                  class="x-meter__fill"
+                  :style="{ width: `${Math.max(0, Math.min(1, meter.value)) * 100}%` }"
+                />
+              </div>
             </div>
           </div>
 
-          <div class="q-mt-md">
-            <span class="sdmx-badge" :class="audioStore.beatPulse ? 'sdmx-badge--positive' : 'sdmx-badge--grey'">
-              <XIcon name="waveform" size="14px" class="q-mr-xs" />
+          <div class="audio-panel__beat">
+            <span
+              class="sdmx-badge"
+              :class="audioStore.beatPulse ? 'sdmx-badge--positive' : 'sdmx-badge--grey'"
+            >
+              <XIcon
+                name="waveform"
+                size="14px"
+              />
               Beat pulse {{ audioStore.beatPulse ? 'detected' : 'idle' }}
             </span>
           </div>
@@ -563,9 +569,8 @@ onMounted(() => {
       </div>
     </XCard>
 
-    <div class="row items-center q-mb-sm">
+    <div class="audio-panel__mappings-header">
       <div class="text-subtitle1">Audio Mappings</div>
-      <q-space />
       <XButton
         flat
         icon="plus"
@@ -574,190 +579,411 @@ onMounted(() => {
       />
     </div>
 
-    <div class="row items-center q-gutter-sm q-mb-sm">
-      <span class="text-caption text-grey-5">Templates:</span>
-      <XButton flat size="sm" label="Kick -> Dimmer" @click="applyTemplate('kickDimmer')" />
-      <XButton flat size="sm" label="Bass -> Color Pulse" @click="applyTemplate('bassColorPulse')" />
-      <XButton flat size="sm" label="Beat -> Strobe" @click="applyTemplate('beatStrobe')" />
+    <div class="audio-panel__templates">
+      <span class="audio-panel__caption">Templates:</span>
+      <XButton
+        flat
+        size="sm"
+        label="Kick -> Dimmer"
+        @click="applyTemplate('kickDimmer')"
+      />
+      <XButton
+        flat
+        size="sm"
+        label="Bass -> Color Pulse"
+        @click="applyTemplate('bassColorPulse')"
+      />
+      <XButton
+        flat
+        size="sm"
+        label="Beat -> Strobe"
+        @click="applyTemplate('beatStrobe')"
+      />
     </div>
 
-    <XListView v-if="audioMappings.length" :bordered="true">
-      <XListItem v-for="mapping in audioMappings" :key="mapping.id">
-        <div class="column full-width">
+    <XListView
+      v-if="audioMappings.length"
+      :bordered="true"
+      class="audio-panel__list"
+    >
+      <XListItem
+        v-for="mapping in audioMappings"
+        :key="mapping.id"
+      >
+        <div class="audio-panel__mapping-main">
           <div class="text-subtitle2">{{ describeTarget(mapping) }}</div>
-          <div class="text-caption text-grey-5">
+          <div class="audio-panel__caption">
             {{ mappingToFormSource(mapping).toUpperCase() }} · {{ mapping.min ?? 0 }}-{{ mapping.max ?? 255 }}
             · gain {{ (mapping.gain ?? 1).toFixed(2) }} · offset {{ (mapping.offset ?? 0).toFixed(2) }}
             · {{ mapping.invert ? 'inverted' : 'normal' }} · atk {{ mapping.attackMs ?? 20 }}ms · rel {{ mapping.releaseMs ?? 140 }}ms
           </div>
-          <div class="mapping-meter q-mt-xs">
-            <q-linear-progress
-              rounded
-              size="8px"
-              color="primary"
-              track-color="grey-8"
-              :value="meterRows.find((row) => row.id === mapping.id)?.input ?? 0"
-            />
+          <div class="mapping-meter">
+            <div
+              class="x-meter"
+              role="meter"
+              :aria-valuenow="Math.round((meterRows.find((row) => row.id === mapping.id)?.input ?? 0) * 100)"
+              aria-valuemin="0"
+              aria-valuemax="100"
+            >
+              <div
+                class="x-meter__fill"
+                :style="{ width: `${Math.max(0, Math.min(1, meterRows.find((row) => row.id === mapping.id)?.input ?? 0)) * 100}%` }"
+              />
+            </div>
             <span class="mapping-meter-value">{{ meterRows.find((row) => row.id === mapping.id)?.output ?? 0 }}</span>
           </div>
         </div>
         <template #append>
-          <div class="row no-wrap items-center q-gutter-sm">
+          <div class="audio-panel__mapping-actions">
             <XSwitch
               :model-value="mapping.enabled ?? true"
               @update:model-value="(value) => toggleMapping(mapping.id, Boolean(value))"
             />
-            <XButton icon="pencil" flat size="sm" @click="openEditMappingDialog(mapping)" />
-            <XButton icon="trash" flat size="sm" color="danger" @click="removeMapping(mapping.id)" />
+            <XButton
+              icon="pencil"
+              flat
+              size="sm"
+              @click="openEditMappingDialog(mapping)"
+            />
+            <XButton
+              icon="trash"
+              flat
+              size="sm"
+              color="danger"
+              @click="removeMapping(mapping.id)"
+            />
           </div>
         </template>
       </XListItem>
     </XListView>
-    <SdmxEmptyState
+
+    <XWell
       v-else
-      icon="waveform"
-      title="No audio mappings configured"
-      description="Add a mapping or apply a template to begin reactive control."
-    />
+      class="audio-panel__empty"
+    >
+      <XIcon
+        name="waveform"
+        class="audio-panel__empty-icon"
+      />
+      <div class="audio-panel__empty-title">No audio mappings configured</div>
+      <div class="audio-panel__empty-hint">Add a mapping or apply a template to begin reactive control.</div>
+    </XWell>
 
-    <q-dialog v-model="showMappingDialog">
-      <q-card class="sdmx-dialog-card mapping-dialog">
-        <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
-          <div class="text-h6 font-weight-bold">{{ editingMappingId ? 'Edit' : 'Add' }} Audio Mapping</div>
-          <q-space />
-          <XButton icon="x" flat size="sm" @click="showMappingDialog = false" />
-        </q-card-section>
+    <XDialog
+      v-model="showMappingDialog"
+      card-class="mapping-dialog"
+    >
+      <XDialogTitlebar
+        :title="`${editingMappingId ? 'Edit' : 'Add'} Audio Mapping`"
+        @close="showMappingDialog = false"
+      />
+      <XDialogBody class="audio-panel__dialog-body">
+        <XSwitch
+          v-model="mappingForm.enabled"
+          label="Enabled"
+        />
+        <XSwitch
+          v-model="mappingForm.invert"
+          label="Invert source value"
+        />
 
-        <q-card-section class="q-gutter-y-md q-pt-md">
-          <XSwitch v-model="mappingForm.enabled" label="Enabled" />
-          <XSwitch v-model="mappingForm.invert" label="Invert source value" />
+        <div>
+          <div class="audio-panel__field-label">Source</div>
+          <XSelect
+            v-model="mappingForm.source"
+            :options="SOURCE_OPTIONS"
+          />
+        </div>
 
+        <XButtonGroup class="audio-panel__target-modes">
+          <XButton
+            :color="mappingForm.targetMode === 'fixtureAttr' ? 'primary' : 'default'"
+            label="Fixture + Attr"
+            @click="mappingForm.targetMode = 'fixtureAttr'"
+          />
+          <XButton
+            :color="mappingForm.targetMode === 'groupAttr' ? 'primary' : 'default'"
+            label="Group + Attr"
+            @click="mappingForm.targetMode = 'groupAttr'"
+          />
+          <XButton
+            :color="mappingForm.targetMode === 'channelPath' ? 'primary' : 'default'"
+            label="Channel Path"
+            @click="mappingForm.targetMode = 'channelPath'"
+          />
+        </XButtonGroup>
+
+        <div
+          v-if="mappingForm.targetMode === 'fixtureAttr'"
+          class="audio-panel__target-grid"
+        >
           <div>
-            <div class="q-mb-xs text-subtitle2 text-grey-4">Source</div>
+            <div class="audio-panel__field-label">Target fixture</div>
             <XSelect
-              v-model="mappingForm.source"
-              :options="SOURCE_OPTIONS"
+              v-model="mappingForm.targetFixture"
+              :options="fixtureOptions"
             />
           </div>
-
-          <div class="q-mb-sm">
-            <XButtonGroup class="row spread">
-              <XButton
-                :color="mappingForm.targetMode === 'fixtureAttr' ? 'primary' : 'default'"
-                label="Fixture + Attr"
-                @click="mappingForm.targetMode = 'fixtureAttr'"
-              />
-              <XButton
-                :color="mappingForm.targetMode === 'groupAttr' ? 'primary' : 'default'"
-                label="Group + Attr"
-                @click="mappingForm.targetMode = 'groupAttr'"
-              />
-              <XButton
-                :color="mappingForm.targetMode === 'channelPath' ? 'primary' : 'default'"
-                label="Channel Path"
-                @click="mappingForm.targetMode = 'channelPath'"
-              />
-            </XButtonGroup>
-          </div>
-
-          <div v-if="mappingForm.targetMode === 'fixtureAttr'" class="row q-col-gutter-sm">
-            <div class="col-7">
-              <div class="q-mb-xs text-caption text-grey-4">Target fixture</div>
-              <XSelect
-                v-model="mappingForm.targetFixture"
-                :options="fixtureOptions"
-              />
-            </div>
-            <div class="col-5">
-              <div class="q-mb-xs text-caption text-grey-4">Attribute</div>
-              <XSelect
-                v-model="mappingForm.targetAttribute"
-                :options="ATTRIBUTE_OPTIONS"
-              />
-            </div>
-          </div>
-
-          <div v-else-if="mappingForm.targetMode === 'groupAttr'" class="row q-col-gutter-sm">
-            <div class="col-7">
-              <div class="q-mb-xs text-caption text-grey-4">Target group</div>
-              <XSelect
-                v-model="mappingForm.targetGroup"
-                :options="groupOptions"
-              />
-            </div>
-            <div class="col-5">
-              <div class="q-mb-xs text-caption text-grey-4">Attribute</div>
-              <XSelect
-                v-model="mappingForm.targetAttribute"
-                :options="ATTRIBUTE_OPTIONS"
-              />
-            </div>
-          </div>
-
-          <div v-else>
-            <div class="q-mb-xs text-subtitle2 text-grey-4">Target channel path</div>
+          <div>
+            <div class="audio-panel__field-label">Attribute</div>
             <XSelect
-              v-model="mappingForm.targetPath"
-              :options="channelPathOptions"
-            />
-            <div class="text-caption text-grey-5 q-mt-xs">Converted to fixture+attribute on save</div>
-          </div>
-
-          <div class="row q-col-gutter-sm">
-            <div class="col-6">
-              <div class="q-mb-xs text-caption text-grey-4">Min output</div>
-              <XInput v-model.number="mappingForm.min" type="number" />
-            </div>
-            <div class="col-6">
-              <div class="q-mb-xs text-caption text-grey-4">Max output</div>
-              <XInput v-model.number="mappingForm.max" type="number" />
-            </div>
-          </div>
-
-          <div class="row q-col-gutter-sm">
-            <div class="col-6">
-              <div class="q-mb-xs text-caption text-grey-4">Gain</div>
-              <XInput v-model.number="mappingForm.gain" type="number" />
-            </div>
-            <div class="col-6">
-              <div class="q-mb-xs text-caption text-grey-4">Offset</div>
-              <XInput v-model.number="mappingForm.offset" type="number" />
-            </div>
-          </div>
-
-          <div class="row q-col-gutter-sm">
-            <div class="col-6">
-              <div class="q-mb-xs text-caption text-grey-4">Attack (ms)</div>
-              <XInput v-model.number="mappingForm.attackMs" type="number" />
-            </div>
-            <div class="col-6">
-              <div class="q-mb-xs text-caption text-grey-4">Release (ms)</div>
-              <XInput v-model.number="mappingForm.releaseMs" type="number" />
-            </div>
-          </div>
-
-          <div class="mapping-preview">
-            <div class="text-caption text-grey-5">Live preview</div>
-            <q-linear-progress
-              rounded
-              size="9px"
-              color="primary"
-              track-color="grey-8"
-              :value="Math.max(0, Math.min(1, (mappingForm.invert ? 1 - getSourceLevel(mappingForm.source) : getSourceLevel(mappingForm.source)) * mappingForm.gain + mappingForm.offset))"
+              v-model="mappingForm.targetAttribute"
+              :options="ATTRIBUTE_OPTIONS"
             />
           </div>
-        </q-card-section>
+        </div>
 
-        <q-card-actions align="right" class="q-pa-md sdmx-border-top">
-          <XButton flat label="Cancel" @click="showMappingDialog = false" />
-          <XButton color="primary" label="Save Mapping" :disable="!isFormValid" @click="saveMapping" />
-        </q-card-actions>
-      </q-card>
-    </q-dialog>
+        <div
+          v-else-if="mappingForm.targetMode === 'groupAttr'"
+          class="audio-panel__target-grid"
+        >
+          <div>
+            <div class="audio-panel__field-label">Target group</div>
+            <XSelect
+              v-model="mappingForm.targetGroup"
+              :options="groupOptions"
+            />
+          </div>
+          <div>
+            <div class="audio-panel__field-label">Attribute</div>
+            <XSelect
+              v-model="mappingForm.targetAttribute"
+              :options="ATTRIBUTE_OPTIONS"
+            />
+          </div>
+        </div>
+
+        <div v-else>
+          <div class="audio-panel__field-label">Target channel path</div>
+          <XSelect
+            v-model="mappingForm.targetPath"
+            :options="channelPathOptions"
+          />
+          <div class="audio-panel__caption">Converted to fixture+attribute on save</div>
+        </div>
+
+        <div class="audio-panel__target-grid">
+          <div>
+            <div class="audio-panel__field-label">Min output</div>
+            <XInput
+              v-model.number="mappingForm.min"
+              type="number"
+            />
+          </div>
+          <div>
+            <div class="audio-panel__field-label">Max output</div>
+            <XInput
+              v-model.number="mappingForm.max"
+              type="number"
+            />
+          </div>
+        </div>
+
+        <div class="audio-panel__target-grid">
+          <div>
+            <div class="audio-panel__field-label">Gain</div>
+            <XInput
+              v-model.number="mappingForm.gain"
+              type="number"
+            />
+          </div>
+          <div>
+            <div class="audio-panel__field-label">Offset</div>
+            <XInput
+              v-model.number="mappingForm.offset"
+              type="number"
+            />
+          </div>
+        </div>
+
+        <div class="audio-panel__target-grid">
+          <div>
+            <div class="audio-panel__field-label">Attack (ms)</div>
+            <XInput
+              v-model.number="mappingForm.attackMs"
+              type="number"
+            />
+          </div>
+          <div>
+            <div class="audio-panel__field-label">Release (ms)</div>
+            <XInput
+              v-model.number="mappingForm.releaseMs"
+              type="number"
+            />
+          </div>
+        </div>
+
+        <div class="mapping-preview">
+          <div class="audio-panel__caption">Live preview</div>
+          <div
+            class="x-meter"
+            role="meter"
+            :aria-valuenow="Math.round(Math.max(0, Math.min(1, (mappingForm.invert ? 1 - getSourceLevel(mappingForm.source) : getSourceLevel(mappingForm.source)) * mappingForm.gain + mappingForm.offset)) * 100)"
+            aria-valuemin="0"
+            aria-valuemax="100"
+          >
+            <div
+              class="x-meter__fill"
+              :style="{ width: `${Math.max(0, Math.min(1, (mappingForm.invert ? 1 - getSourceLevel(mappingForm.source) : getSourceLevel(mappingForm.source)) * mappingForm.gain + mappingForm.offset)) * 100}%` }"
+            />
+          </div>
+        </div>
+      </XDialogBody>
+      <XDialogFooter>
+        <XButton
+          flat
+          label="Cancel"
+          @click="showMappingDialog = false"
+        />
+        <XButton
+          color="primary"
+          label="Save Mapping"
+          :disable="!isFormValid"
+          @click="saveMapping"
+        />
+      </XDialogFooter>
+    </XDialog>
   </div>
 </template>
 
 <style scoped>
+.audio-panel {
+  padding: var(--sdmx-space-md, 16px);
+}
+
+.audio-panel__header,
+.audio-panel__mappings-header,
+.audio-panel__gain-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.audio-panel__header,
+.audio-panel__card,
+.audio-panel__mappings-header,
+.audio-panel__templates {
+  margin-bottom: 12px;
+}
+
+.audio-panel__grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.audio-panel__col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.audio-panel__device-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.audio-panel__device-select {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.audio-panel__field-label {
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--sdmx-color-text-muted);
+}
+
+.audio-panel__caption {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+}
+
+.audio-panel__templates,
+.audio-panel__mapping-actions,
+.audio-panel__target-modes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.audio-panel__list {
+  max-height: none;
+}
+
+.audio-panel__mapping-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+}
+
+.audio-panel__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.audio-panel__empty-icon {
+  font-size: 28px;
+  opacity: 0.55;
+}
+
+.audio-panel__empty-title {
+  font-weight: 600;
+}
+
+.audio-panel__empty-hint {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+}
+
+.audio-panel__dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.audio-panel__target-grid {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: 12px;
+}
+
+.x-alert {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.x-alert--danger {
+  background: #ff3b30;
+  color: #ffffff;
+}
+
+.x-meter {
+  height: 9px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.x-meter__fill {
+  height: 100%;
+  border-radius: inherit;
+  background: #007aff;
+}
+
 .audio-meter-grid {
   display: grid;
   gap: 6px;
@@ -802,17 +1028,35 @@ onMounted(() => {
 .sdmx-badge {
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   padding: 2px 8px;
   border-radius: 10px;
   font-size: 11px;
   font-weight: 500;
 }
+
 .sdmx-badge--positive {
   background: rgba(48, 209, 88, 0.15);
   color: #30d158;
 }
+
 .sdmx-badge--grey {
   background: rgba(255, 255, 255, 0.1);
   color: #8e8e93;
+}
+
+@media (max-width: 900px) {
+  .audio-panel__grid,
+  .audio-panel__target-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+:global(.body--dark) .x-meter {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+:global(.body--dark) .x-meter__fill {
+  background: #0a84ff;
 }
 </style>

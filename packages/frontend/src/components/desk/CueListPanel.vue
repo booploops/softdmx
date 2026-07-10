@@ -6,14 +6,11 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { SdmxButton, SdmxIconButton } from 'src/components/ui';
 import { useCueStore } from 'src/stores/cue';
 import { useUIStore } from 'src/stores/ui';
-import { useInfoText } from 'src/composables/useInfoText';
 
 const cueStore = useCueStore();
 const ui = useUIStore();
-const { info } = useInfoText();
 
 function openCueEditor() {
   ui.openDialog('cueEditor');
@@ -21,27 +18,121 @@ function openCueEditor() {
 </script>
 
 <template>
-  <div class="cue-list-panel q-pa-md">
-    <div class="row items-center q-mb-md">
+  <div class="cue-list-panel">
+    <div class="cue-list-panel__header">
       <div class="text-h6">Cues</div>
-      <q-space />
-      <SdmxButton variant="primary" :info="info('desk.cueList.add')" icon="plus" label="New cue" @click="cueStore.addCue(`Cue ${cueStore.cues.length + 1}`)" />
-      <SdmxButton variant="ghost" :info="info('desk.cueList.openEditor')" icon="movie" label="Cue editor" class="q-ml-sm" @click="openCueEditor" />
+      <div class="cue-list-panel__actions">
+        <XButton
+          v-info="'desk.cueList.add'"
+          color="primary"
+          icon="plus"
+          label="New cue"
+          @click="cueStore.addCue(`Cue ${cueStore.cues.length + 1}`)"
+        />
+        <XButton
+          v-info="'desk.cueList.openEditor'"
+          flat
+          icon="movie"
+          label="Cue editor"
+          @click="openCueEditor"
+        />
+      </div>
     </div>
-    <q-list bordered separator>
-      <q-item v-for="cue in cueStore.cues" :key="cue.id" clickable @click="cueStore.activeCueId = cue.id">
-        <q-item-section>
-          <q-item-label>{{ cue.name }}</q-item-label>
-          <q-item-label caption>{{ cue.view === 'stack' ? 'Stack' : 'Timeline' }}</q-item-label>
-        </q-item-section>
-        <q-item-section side>
-          <SdmxIconButton size="sm" info-key='desk.cueList.play' icon="player-play-filled" @click.stop="cueStore.playCue(cue.id)" />
-          <SdmxIconButton color="negative" size="sm" info-key='desk.cueList.stop' icon="square" @click.stop="cueStore.stopCue(cue.id)" />
-        </q-item-section>
-      </q-item>
-      <q-item v-if="!cueStore.cues.length">
-        <q-item-section class="text-grey-5">No cues yet</q-item-section>
-      </q-item>
-    </q-list>
+
+    <XListView
+      bordered
+      separator
+      class="cue-list-panel__list"
+    >
+      <XListItem
+        v-for="cue in cueStore.cues"
+        :key="cue.id"
+        clickable
+        :active="cueStore.activeCueId === cue.id"
+        @click="cueStore.activeCueId = cue.id"
+      >
+        <div class="cue-list-panel__item-main">
+          <div class="cue-list-panel__name">{{ cue.name }}</div>
+          <div class="cue-list-panel__caption">{{ cue.view === 'stack' ? 'Stack' : 'Timeline' }}</div>
+        </div>
+        <template #append>
+          <div class="cue-list-panel__item-actions">
+            <XButton
+              v-info="'desk.cueList.play'"
+              flat
+              size="sm"
+              icon="player-play-filled"
+              @click.stop="cueStore.playCue(cue.id)"
+            />
+            <XButton
+              v-info="'desk.cueList.stop'"
+              flat
+              size="sm"
+              color="danger"
+              icon="square"
+              @click.stop="cueStore.stopCue(cue.id)"
+            />
+          </div>
+        </template>
+      </XListItem>
+
+      <XListItem
+        v-if="!cueStore.cues.length"
+        :clickable="false"
+      >
+        <span class="cue-list-panel__empty">No cues yet</span>
+      </XListItem>
+    </XListView>
   </div>
 </template>
+
+<style scoped>
+.cue-list-panel {
+  padding: var(--sdmx-space-md, 16px);
+}
+
+.cue-list-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.cue-list-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cue-list-panel__list {
+  max-height: none;
+}
+
+.cue-list-panel__item-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.cue-list-panel__name {
+  font-weight: 500;
+}
+
+.cue-list-panel__caption {
+  font-size: 11px;
+  color: var(--sdmx-color-text-muted);
+}
+
+.cue-list-panel__item-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.cue-list-panel__empty {
+  color: var(--sdmx-color-text-muted);
+}
+</style>

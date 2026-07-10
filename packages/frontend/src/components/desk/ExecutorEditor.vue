@@ -6,18 +6,10 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { SdmxIconButton } from 'src/components/ui';
 import { computed } from 'vue';
 import type { ExecutorSlot } from '@softdmx/engine';
 import { useCueStore } from 'src/stores/cue';
 import { useExecutorStore } from 'src/stores/executor';
-
-import XCard from 'src/components/controls/XCard.vue';
-import XInput from 'src/components/controls/XInput.vue';
-import XButton from 'src/components/controls/XButton.vue';
-import XSelect from 'src/components/controls/XSelect.vue';
-import XSlider from 'src/components/controls/XSlider.vue';
-import XChip from 'src/components/controls/XChip.vue';
 
 const cueStore = useCueStore();
 const executorStore = useExecutorStore();
@@ -43,27 +35,28 @@ function onSlotGoClick(slot: ExecutorSlot) {
 </script>
 
 <template>
-  <div class="executor-editor q-pa-md">
-    <div class="executor-toolbar row items-center justify-between q-mb-md">
+  <div class="executor-editor">
+    <div class="executor-toolbar">
       <div class="text-subtitle1">Executor Page {{ executorStore.activePage }} / {{ executorStore.pageCount }}</div>
-      <div class="row items-center q-gutter-sm">
+      <div class="executor-toolbar__actions">
         <XInput
           :model-value="executorStore.executor.defaultReleaseMs ?? 400"
-          dense
           type="number"
           label="Global release ms"
           style="width: 170px"
           @update:model-value="(value) => executorStore.updateExecutor({ defaultReleaseMs: Number(value ?? 0) })"
         />
-        <SdmxIconButton
+        <XButton
+          v-info="'desk.playback.pagePrev'"
           size="sm"
-          info-key="desk.playback.pagePrev"
+          flat
           icon="chevron-left"
           @click="executorStore.previousPage"
         />
-        <SdmxIconButton
+        <XButton
+          v-info="'desk.playback.pageNext'"
           size="sm"
-          info-key="desk.playback.pageNext"
+          flat
           icon="chevron-right"
           @click="executorStore.nextPage"
         />
@@ -85,56 +78,51 @@ function onSlotGoClick(slot: ExecutorSlot) {
         :class="{ active: executorStore.isSlotActive(slot.id), selected: executorStore.selectedSlotId === slot.id }"
         @click="executorStore.setSelectedSlot(slot.id)"
       >
-        <div class="q-pb-sm">
-          <div class="row items-center justify-between">
+        <div class="slot-card__body">
+          <div class="slot-card__title-row">
             <XInput
               :model-value="slot.name"
-              dense
               class="slot-name-input"
               placeholder="Slot name"
               @click.stop
               @update:model-value="(name) => executorStore.updateSlot(slot.id, { name: String(name ?? '') })"
             />
-            <XChip :label="slot.mode ?? 'go'" color="primary" dense size="xs" />
+            <XChip
+              class="slot-mode-chip"
+              :label="slot.mode ?? 'go'"
+              color="primary"
+              dense
+              size="xs"
+            />
           </div>
           <XSelect
             :model-value="slot.cueId ?? ''"
             :options="cueOptions"
-            dense
             label="Cue"
             @update:model-value="(cueId) => executorStore.assignSlot(slot.id, cueId || undefined)"
           />
-          <div class="row q-col-gutter-sm q-mt-sm">
-            <div class="col">
-              <XSelect
-                :model-value="slot.mode ?? 'go'"
-                :options="['go', 'toggle', 'flash', 'latch']"
-                dense
-                label="Mode"
-                @update:model-value="(mode) => executorStore.updateSlot(slot.id, { mode })"
-              />
-            </div>
-            <div class="col">
-              <XInput
-                :model-value="slot.fadeMs ?? 0"
-                dense
-                type="number"
-                label="Fade ms"
-                @update:model-value="(fadeMs) => executorStore.updateSlot(slot.id, { fadeMs: Number(fadeMs ?? 0) })"
-              />
-            </div>
-            <div class="col">
-              <XInput
-                :model-value="slot.releaseMs ?? 400"
-                dense
-                type="number"
-                label="Release ms"
-                @update:model-value="(releaseMs) => executorStore.updateSlot(slot.id, { releaseMs: Number(releaseMs ?? 0) })"
-              />
-            </div>
+          <div class="slot-card__fields">
+            <XSelect
+              :model-value="slot.mode ?? 'go'"
+              :options="['go', 'toggle', 'flash', 'latch']"
+              label="Mode"
+              @update:model-value="(mode) => executorStore.updateSlot(slot.id, { mode })"
+            />
+            <XInput
+              :model-value="slot.fadeMs ?? 0"
+              type="number"
+              label="Fade ms"
+              @update:model-value="(fadeMs) => executorStore.updateSlot(slot.id, { fadeMs: Number(fadeMs ?? 0) })"
+            />
+            <XInput
+              :model-value="slot.releaseMs ?? 400"
+              type="number"
+              label="Release ms"
+              @update:model-value="(releaseMs) => executorStore.updateSlot(slot.id, { releaseMs: Number(releaseMs ?? 0) })"
+            />
           </div>
-          <div class="q-mt-sm">
-            <div class="text-caption text-grey-5">Executor level</div>
+          <div class="slot-card__level">
+            <div class="slot-card__level-label">Executor level</div>
             <XSlider
               :model-value="slot.level ?? 1"
               :min="0"
@@ -145,7 +133,7 @@ function onSlotGoClick(slot: ExecutorSlot) {
           </div>
         </div>
         <template #footer>
-          <div class="row justify-between full-width">
+          <div class="slot-card__footer">
             <XButton
               v-info="'desk.playback.go'"
               color="positive"
@@ -170,27 +158,25 @@ function onSlotGoClick(slot: ExecutorSlot) {
 
     <div
       v-if="executorStore.submasters.length > 0"
-      class="q-mt-lg"
+      class="submasters"
     >
-      <div class="text-subtitle1 q-mb-sm">Submasters</div>
+      <div class="text-subtitle1 submasters__title">Submasters</div>
       <div class="submaster-grid">
         <XCard
           v-for="submaster in executorStore.submasters"
           :key="submaster.id"
         >
-          <div class="q-pb-sm">
-            <div class="text-caption text-grey-5">{{ submaster.mode ?? 'cue-intensity' }}</div>
+          <div class="submaster-card__meta">
+            <div class="submaster-card__mode">{{ submaster.mode ?? 'cue-intensity' }}</div>
             <div class="text-subtitle2">{{ submaster.name }}</div>
           </div>
-          <div>
-            <XSlider
-              :model-value="submaster.value"
-              :min="0"
-              :max="1"
-              :step="0.01"
-              @update:model-value="(value) => executorStore.setSubmasterValue(submaster.id, Number(value ?? 0))"
-            />
-          </div>
+          <XSlider
+            :model-value="submaster.value"
+            :min="0"
+            :max="1"
+            :step="0.01"
+            @update:model-value="(value) => executorStore.setSubmasterValue(submaster.id, Number(value ?? 0))"
+          />
         </XCard>
       </div>
     </div>
@@ -201,6 +187,23 @@ function onSlotGoClick(slot: ExecutorSlot) {
 .executor-editor {
   width: 100%;
   box-sizing: border-box;
+  padding: var(--sdmx-space-md, 16px);
+}
+
+.executor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.executor-toolbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .executor-grid {
@@ -222,15 +225,69 @@ function onSlotGoClick(slot: ExecutorSlot) {
   }
 }
 
+.slot-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 8px;
+}
+
+.slot-card__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.slot-card__fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.slot-card__level-label {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+  margin-bottom: 4px;
+}
+
+.slot-card__footer {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  gap: 8px;
+}
+
 .slot-name-input {
   flex: 1 1 auto;
   min-width: 0;
+}
+
+.slot-mode-chip {
+  flex-shrink: 0;
+}
+
+.submasters {
+  margin-top: 24px;
+}
+
+.submasters__title {
+  margin-bottom: 8px;
 }
 
 .submaster-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 12px;
+}
+
+.submaster-card__meta {
+  margin-bottom: 8px;
+}
+
+.submaster-card__mode {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
 }
 
 :deep(.x-select) {

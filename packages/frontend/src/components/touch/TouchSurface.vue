@@ -12,6 +12,7 @@ import { useShowStore } from 'src/stores/show';
 import { createDefaultTouchConfig } from '@softdmx/engine';
 import { useInfoText } from 'src/composables/useInfoText';
 import type { TooltipKey } from 'src/lib/info-text';
+import { contrastingSurfaceStyle } from 'src/lib/preset-button-style';
 
 type AudioMetersPayload = {
   rms?: number;
@@ -40,7 +41,7 @@ function controlStyle(control: TouchControl) {
   return {
     gridColumn: `${control.rect.x + 1} / span ${control.rect.w}`,
     gridRow: `${control.rect.y + 1} / span ${control.rect.h}`,
-    backgroundColor: control.color,
+    ...contrastingSurfaceStyle(control.color),
   };
 }
 

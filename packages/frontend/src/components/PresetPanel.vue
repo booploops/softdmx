@@ -10,8 +10,7 @@ import { useCueStore } from 'src/stores/cue';
 import { useShowStore } from 'src/stores/show';
 import { computed, ref } from 'vue';
 import PresetEditor from './PresetEditor.vue';
-import XButton from 'src/components/controls/XButton.vue';
-import XInput from 'src/components/controls/XInput.vue';
+import { presetButtonStyle } from 'src/lib/preset-button-style';
 
 const showStore = useShowStore();
 const cueStore = useCueStore();
@@ -26,32 +25,90 @@ function firePreset(presetId: string) {
 </script>
 
 <template>
-  <div class="preset-panel q-pa-md">
-    <div class="row items-center q-mb-md">
+  <div class="preset-panel">
+    <div class="preset-panel__header">
       <div class="text-h6">Presets</div>
-      <q-space />
-      <XInput
-        v-model.number="presetFadeMs"
-        type="number"
-        min="0"
-        label="Fade (ms)"
-        style="max-width: 130px"
-      />
-      <XButton v-info="'program.presets.editPreset'" flat icon="pencil" label="Edit Presets" class="q-ml-sm" @click="showPresetEditor = true" />
+      <div class="preset-panel__actions">
+        <XInput
+          v-model.number="presetFadeMs"
+          type="number"
+          min="0"
+          label="Fade (ms)"
+          style="max-width: 130px"
+        />
+        <XButton
+          v-info="'program.presets.editPreset'"
+          flat
+          icon="pencil"
+          label="Edit Presets"
+          @click="showPresetEditor = true"
+        />
+      </div>
     </div>
-    <div class="row q-gutter-sm q-mb-lg">
+
+    <div class="preset-panel__grid">
       <XButton
         v-for="preset in presets"
         :key="preset.id"
         :label="preset.name"
-        :style="preset.color ? { backgroundColor: preset.color, color: 'var(--sdmx-color-text)' } : {}"
+        :style="presetButtonStyle(preset.color)"
         @click="firePreset(preset.id)"
       />
-      <span v-if="presets.length === 0" class="text-grey-5">No presets — use Live bar to save one</span>
+      <span
+        v-if="presets.length === 0"
+        class="preset-panel__empty"
+      >No presets — use Live bar to save one</span>
     </div>
 
-    <q-dialog v-model="showPresetEditor" maximized>
-      <q-card><PresetEditor /></q-card>
-    </q-dialog>
+    <XDialog
+      v-model="showPresetEditor"
+      maximized
+    >
+      <XDialogTitlebar
+        title="Preset Editor"
+        @close="showPresetEditor = false"
+      />
+      <XDialogBody class="preset-panel__editor-body">
+        <PresetEditor />
+      </XDialogBody>
+    </XDialog>
   </div>
 </template>
+
+<style scoped>
+.preset-panel {
+  padding: var(--sdmx-space-md, 16px);
+}
+
+.preset-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.preset-panel__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.preset-panel__grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.preset-panel__empty {
+  color: var(--sdmx-color-text-muted);
+}
+
+.preset-panel__editor-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+}
+</style>

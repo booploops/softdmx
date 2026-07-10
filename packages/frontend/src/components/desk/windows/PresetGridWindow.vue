@@ -10,6 +10,7 @@ import { useShowStore } from 'src/stores/show';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import { SdmxButton, SdmxEmptyState, SdmxValueField } from 'src/components/ui';
 import { useInfoText } from 'src/composables/useInfoText';
+import { presetButtonStyle } from 'src/lib/preset-button-style';
 
 const showStore = useShowStore();
 const engine = useOutputEngineStore();
@@ -48,7 +49,7 @@ function firePreset(presetId: string) {
         size="lg"
         variant="default"
         :info="info('desk.presets.fire', { name: preset.name })"
-        :style="preset.color ? { backgroundColor: preset.color, color: 'var(--sdmx-color-text)' } : {}"
+        :style="presetButtonStyle(preset.color)"
         @click="firePreset(preset.id)"
       />
     </div>
