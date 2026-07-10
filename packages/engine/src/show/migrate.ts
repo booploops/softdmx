@@ -79,6 +79,14 @@ function ensureTimelineDefaults(doc: Partial<ShowDocument>): Partial<ShowDocumen
       markers: timeline.markers ?? [],
       sections: timeline.sections ?? [],
       programmerSessions: timeline.programmerSessions ?? [],
+      sessionView: timeline.sessionView ?? {
+        rows: [{ id: "scene-1", name: "Scene 1" }],
+        columns: [
+          { id: "col-main", name: "Main", trackId: "timeline-main-track" },
+          { id: "col-presets", name: "Presets" },
+        ],
+        slots: [],
+      },
     },
   };
 }

@@ -144,6 +144,34 @@ export interface ShowTimelineAudioAsset {
 
 export type TimelineSyncMode = "free" | "timecode";
 
+export interface TimelineSessionViewRow {
+  id: string;
+  name: string;
+  color?: string;
+}
+
+export interface TimelineSessionViewColumn {
+  id: string;
+  name: string;
+  trackId?: string;
+}
+
+export interface TimelineSessionViewSlot {
+  rowId: string;
+  columnId: string;
+  cueId?: string;
+  presetId?: string;
+  label?: string;
+  color?: string;
+  mode?: "go" | "toggle";
+}
+
+export interface TimelineSessionView {
+  rows: TimelineSessionViewRow[];
+  columns: TimelineSessionViewColumn[];
+  slots: TimelineSessionViewSlot[];
+}
+
 export interface ShowTimelineConfig {
   durationMs?: number;
   fps?: number;
@@ -162,6 +190,7 @@ export interface ShowTimelineConfig {
   markers?: TimelineMarker[];
   sections?: TimelineSection[];
   programmerSessions?: ProgrammerSession[];
+  sessionView?: TimelineSessionView;
 }
 
 export interface ShowAudioMapping {
@@ -373,6 +402,15 @@ export function createEmptyShow(name = "Untitled Show"): ShowDocument {
       tracks: [],
       markers: [],
       sections: [],
+      programmerSessions: [],
+      sessionView: {
+        rows: [{ id: "scene-1", name: "Scene 1" }],
+        columns: [
+          { id: "col-main", name: "Main", trackId: "timeline-main-track" },
+          { id: "col-presets", name: "Presets" },
+        ],
+        slots: [],
+      },
     },
     audioMappings: [],
     executors: [

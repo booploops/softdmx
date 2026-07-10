@@ -6,8 +6,7 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { useDialogPluginComponent } from 'quasar';
+import { computed, ref, watch } from 'vue';
 import {
   bakeSessionToKeyframe,
   bakeSessionToPresetTargets,
@@ -17,15 +16,17 @@ import { useShowStore } from 'src/stores/show';
 import { useCueStore } from 'src/stores/cue';
 import { useTimelineEditorStore } from 'src/stores/timeline-editor';
 import { useSessionReplay } from 'src/composables/useSessionReplay';
-import XButton from 'src/components/controls/XButton.vue';
+import { createAlert } from 'src/lib/CommonDialogs';
 
 const props = defineProps<{
   session: ProgrammerSession;
+  modelValue: boolean;
 }>();
 
-defineEmits([...useDialogPluginComponent.emits]);
-
-const { dialogRef, onDialogHide, onDialogOK, onDialogCancel } = useDialogPluginComponent();
+const emit = defineEmits<{
+  'update:modelValue': [boolean];
+  ok: [{ mode: 'preset' | 'keyframe'; presetId?: string; cueId?: string; channelCount: number }];
+}>();
 
 const showStore = useShowStore();
 const cueStore = useCueStore();
@@ -34,19 +35,21 @@ const replay = useSessionReplay(props.session);
 
 const bakeMode = ref<'preset' | 'keyframe'>('preset');
 const presetName = ref(`${props.session.name} Bake`);
-const clientIdFilter = ref<string | null>(null);
+const clientIdFilter = ref('');
 const atSec = ref(
   props.session.events.length > 0
     ? Math.max(...props.session.events.map((event) => event.tSec))
     : 0
 );
+const previewCount = ref(0);
+const errorMessage = ref('');
 
 const operatorOptions = computed(() => {
   const clientIds = new Set(
     props.session.events.map((event) => event.clientId).filter((clientId): clientId is string => Boolean(clientId))
   );
   return [
-    { label: 'Merged (all operators)', value: null },
+    { label: 'Merged (all operators)', value: '' },
     ...Array.from(clientIds).map((clientId) => ({
       label:
         props.session.events.find((event) => event.clientId === clientId)?.meta?.operatorLabel ??
@@ -56,21 +59,37 @@ const operatorOptions = computed(() => {
   ];
 });
 
-const previewCount = computed(() => {
-  replay.setClientIdFilter(clientIdFilter.value);
-  replay.seek(atSec.value);
-  return replay.entries.value.length;
-});
+const clientIdFilterValue = computed(() => clientIdFilter.value || null);
 
-function applyBake() {
-  replay.setClientIdFilter(clientIdFilter.value);
+function refreshPreview() {
+  replay.setClientIdFilter(clientIdFilterValue.value);
+  replay.seek(atSec.value);
+  previewCount.value = replay.entries.value.length;
+}
+
+watch(
+  [clientIdFilter, atSec, () => props.session.id],
+  () => refreshPreview(),
+  { immediate: true }
+);
+
+function close() {
+  emit('update:modelValue', false);
+}
+
+async function applyBake() {
+  errorMessage.value = '';
+  replay.setClientIdFilter(clientIdFilterValue.value);
   replay.seek(atSec.value);
 
   if (bakeMode.value === 'preset') {
     const targets = bakeSessionToPresetTargets(replay.filteredEvents.value, atSec.value, {
-      clientId: clientIdFilter.value ?? undefined,
+      clientId: clientIdFilterValue.value ?? undefined,
     });
-    if (targets.length === 0) return;
+    if (targets.length === 0) {
+      errorMessage.value = 'Nothing to bake at this time.';
+      return;
+    }
 
     const id = `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
     showStore.updateDocument((doc) => {
@@ -80,15 +99,22 @@ function applyBake() {
         targets,
       });
     });
-    onDialogOK({ mode: 'preset', presetId: id, channelCount: targets.length });
+    emit('ok', { mode: 'preset', presetId: id, channelCount: targets.length });
+    close();
     return;
   }
 
-  const cueId = timelineEditor.ensureTimelineCue(`${props.session.name} Bake`);
+  const absoluteSec = props.session.anchorSec + atSec.value;
+  const cueId = timelineEditor.createTimelineCue(
+    `${props.session.name} Bake`,
+    absoluteSec,
+    absoluteSec + 1
+  );
   const frame = bakeSessionToKeyframe(replay.filteredEvents.value, atSec.value, {
-    clientId: clientIdFilter.value ?? undefined,
+    clientId: clientIdFilterValue.value ?? undefined,
   });
 
+  let applied = false;
   showStore.updateDocument((doc) => {
     const cue = doc.cues.find((entry) => entry.id === cueId);
     const layer = cue?.layers?.[0];
@@ -98,69 +124,111 @@ function applyBake() {
       cue.modified = new Date().toISOString();
       cue.totalDuration = layer.frames.reduce((sum, entry) => sum + (entry.duration || 1000), 0);
     }
+    applied = true;
   });
+
+  if (!applied) {
+    errorMessage.value = 'Could not bake into cue — missing layer.';
+    await createAlert({
+      title: 'Bake failed',
+      message: errorMessage.value,
+    });
+    return;
+  }
 
   cueStore.activeCueId = cueId;
   cueStore.activeLayerId = showStore.document.cues.find((cue) => cue.id === cueId)?.layers?.[0]?.id ?? null;
-  onDialogOK({ mode: 'keyframe', cueId, channelCount: frame.channels.length });
+  emit('ok', { mode: 'keyframe', cueId, channelCount: frame.channels?.length ?? 0 });
+  close();
 }
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide">
-    <q-card class="sdmx-dialog-card q-dialog-plugin" style="min-width: 420px">
-      <q-card-section class="row items-center q-pb-md sdmx-border-bottom">
-        <div class="text-h6 font-weight-bold">Bake Session</div>
-      </q-card-section>
+  <XDialog
+    :model-value="modelValue"
+    @update:model-value="emit('update:modelValue', $event)"
+  >
+    <XDialogHeader title="Bake Session" />
+    <XDialogBody class="session-bake-dialog__body">
+      <div class="session-bake-dialog__caption">{{ props.session.name }}</div>
 
-      <q-card-section class="q-gutter-md">
-        <div class="text-body2 text-grey-5">{{ props.session.name }}</div>
-
-        <q-btn-toggle
-          v-model="bakeMode"
-          toggle-color="primary"
-          dense
-          unelevated
-          :options="[
-            { label: 'Preset', value: 'preset' },
-            { label: 'Cue keyframe', value: 'keyframe' },
-          ]"
+      <XButtonGroup size="sm">
+        <XButton
+          :color="bakeMode === 'preset' ? 'primary' : 'default'"
+          label="Preset"
+          @click="bakeMode = 'preset'"
         />
-
-        <q-select
-          v-model="clientIdFilter"
-          :options="operatorOptions"
-          emit-value
-          map-options
-          dense
-          label="Operator scope"
+        <XButton
+          :color="bakeMode === 'keyframe' ? 'primary' : 'default'"
+          label="Cue keyframe"
+          @click="bakeMode = 'keyframe'"
         />
+      </XButtonGroup>
 
-        <q-input
-          v-model.number="atSec"
-          type="number"
-          dense
-          label="Bake at (seconds)"
-          :min="0"
-          :step="0.1"
-        />
+      <XSelect
+        v-model="clientIdFilter"
+        :options="operatorOptions"
+        label="Operator scope"
+      />
 
-        <q-input
-          v-if="bakeMode === 'preset'"
-          v-model="presetName"
-          dense
-          label="Preset name"
-        />
+      <XInput
+        v-model.number="atSec"
+        type="number"
+        label="Bake at (seconds)"
+      />
 
-        <div class="text-caption text-grey-5">
-          Preview: {{ previewCount }} channel{{ previewCount === 1 ? '' : 's' }} at {{ atSec.toFixed(2) }}s
-        </div>
-      </q-card-section>
+      <XInput
+        v-if="bakeMode === 'preset'"
+        v-model="presetName"
+        label="Preset name"
+      />
 
-      <q-card-actions align="right" class="q-pa-md sdmx-border-top">
-        <XButton label="Cancel" flat color="default" @click="onDialogCancel" />
-        <XButton label="Bake" color="primary" :disable="previewCount === 0" @click="applyBake" />
-      </q-card-actions>
-    </q-card>
-  </q-dialog>
+      <div class="session-bake-dialog__preview">
+        Preview: {{ previewCount }} channel{{ previewCount === 1 ? '' : 's' }} at {{ Number(atSec).toFixed(2) }}s
+      </div>
+      <div
+        v-if="errorMessage"
+        class="session-bake-dialog__error"
+      >
+        {{ errorMessage }}
+      </div>
+    </XDialogBody>
+    <XDialogFooter>
+      <XButton
+        label="Cancel"
+        flat
+        color="default"
+        @click="close"
+      />
+      <XButton
+        label="Bake"
+        color="primary"
+        :disable="previewCount === 0"
+        @click="applyBake"
+      />
+    </XDialogFooter>
+  </XDialog>
 </template>
+
+<style scoped>
+.session-bake-dialog__body {
+  display: grid;
+  gap: 12px;
+  min-width: min(420px, 92vw);
+}
+
+.session-bake-dialog__caption {
+  font-size: 13px;
+  color: var(--sdmx-color-text-muted);
+}
+
+.session-bake-dialog__preview {
+  font-size: 12px;
+  color: var(--sdmx-color-text-muted);
+}
+
+.session-bake-dialog__error {
+  font-size: 12px;
+  color: var(--sdmx-color-danger, #ff453a);
+}
+</style>

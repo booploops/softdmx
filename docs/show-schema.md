@@ -435,6 +435,36 @@ Fields:
 
 Busk session transcripts anchored to the set timeline. Each session has `id`, `name`, `anchorSec`, `clock`, `events[]` with kinds `channel`, `channels`, `clear`, `store`, `marker`, `blind`.
 
+### `timeline.tracks` / markers / sections / audio
+
+- `tracks?: TimelineTrack[]` — arrangement lanes (`cue`, `audio`, `marker`, `automation`) with `clips[]`
+- `markers?: TimelineMarker[]`, `sections?: TimelineSection[]`
+- `audioAssets?: ShowTimelineAudioAsset[]`, `primaryAudioAssetId?: string | null`
+- Snap: `snapEnabled`, `snapMode` (`seconds` | `frames` | `beats`), `snapStep`, `snapToMarkers`, `snapToAudioTransients`
+- Sync: `syncMode` (`free` | `timecode`), `durationMs`, `fps`
+
+### `timeline.sessionView`
+
+Ableton-style Session launch grid (Timeline Desk Session mode):
+
+```ts
+sessionView?: {
+  rows: Array<{ id: string; name: string; color?: string }>;
+  columns: Array<{ id: string; name: string; trackId?: string }>;
+  slots: Array<{
+    rowId: string;
+    columnId: string;
+    cueId?: string;
+    presetId?: string;
+    label?: string;
+    color?: string;
+    mode?: "go" | "toggle";
+  }>;
+};
+```
+
+Cells launch existing cues/presets via the output engine. Does not replace Live desk executors or touch layouts.
+
 ## Minimal valid document example
 
 ```yaml

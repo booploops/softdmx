@@ -48,8 +48,7 @@ const visibleEvents = computed(() => {
 </script>
 
 <template>
-  <div class="timeline-session-lane timeline-lane" :style="{ width: `${timelineWidthPx}px` }">
-    <div class="lane-label"><span>Sessions</span></div>
+  <div class="timeline-session-lane" :style="{ width: `${timelineWidthPx}px` }">
     <div
       v-for="(event, index) in visibleEvents"
       :key="`${event.session.id}-${event.tSec}-${index}`"
@@ -60,26 +59,23 @@ const visibleEvents = computed(() => {
         borderColor: event.color,
       }"
       :title="`${event.kind}${event.path ? `: ${event.path}` : ''}${event.label ? ` (${event.label})` : ''}`"
-    >
-      <span class="timeline-session-event__dot" :style="{ backgroundColor: event.color }" />
-    </div>
-    <div v-if="visibleEvents.length === 0" class="lane-empty">No session events for current operator filter.</div>
+    />
   </div>
 </template>
 
 <style scoped lang="scss">
 .timeline-session-lane {
-  position: relative;
-  min-height: 48px;
-  border-bottom: 1px solid var(--sdmx-color-border-subtle);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
 .timeline-session-event {
   position: absolute;
-  top: 50%;
+  top: 70%;
   transform: translate(-50%, -50%);
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
   border: 2px solid var(--sdmx-color-scratch);
   background: var(--sdmx-color-bg-surface);
@@ -89,24 +85,10 @@ const visibleEvents = computed(() => {
   width: 0;
   height: 0;
   border: none;
-  border-left: 6px solid transparent;
-  border-right: 6px solid transparent;
-  border-bottom: 10px solid var(--sdmx-color-warning);
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 8px solid var(--sdmx-color-warning);
   border-radius: 0;
   background: transparent;
-}
-
-.timeline-session-event__dot {
-  display: none;
-}
-
-.lane-empty {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  padding-left: 120px;
-  color: var(--sdmx-color-text-muted);
-  font-size: var(--sdmx-font-size-caption);
 }
 </style>

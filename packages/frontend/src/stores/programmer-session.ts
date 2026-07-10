@@ -6,10 +6,11 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import { defineStore } from 'pinia';
 import {
   SessionRecorder,
+  msToSeconds,
   type ProgrammerSession,
   type ProgrammerSessionEvent,
   type ScratchWriteMeta,
@@ -32,13 +33,28 @@ export const useProgrammerSessionStore = defineStore('programmer-session', () =>
   const activeSessionId = ref<string | null>(null);
   const clockMode = ref<ProgrammerSession['clock']>('session');
   const sessionStartedAt = ref<string | null>(null);
+  const sessionAnchorSec = ref(0);
   const recordingPolicy = ref<SessionRecordingPolicy>({ ...DEFAULT_RECORDING_POLICY });
   const clientIdFilter = ref<string | null>(null);
 
-  const recorder = new SessionRecorder(
-    { nowSec: () => performance.now() / 1000 },
-    { ...DEFAULT_RECORDING_POLICY },
-  );
+  let recordingEpochSec = 0;
+  const clock = {
+    nowSec: () => Math.max(0, performance.now() / 1000 - recordingEpochSec),
+  };
+  const recorder = new SessionRecorder(clock, { ...DEFAULT_RECORDING_POLICY });
+
+  const clockLabel = computed(() => {
+    switch (clockMode.value) {
+      case 'set-playhead':
+        return 'Set playhead';
+      case 'timecode':
+        return 'Timecode';
+      case 'audio':
+        return 'Audio';
+      default:
+        return 'Session';
+    }
+  });
 
   function ensureTimeline() {
     const showStore = useShowStore();
@@ -100,7 +116,7 @@ export const useProgrammerSessionStore = defineStore('programmer-session', () =>
       const nextSession: ProgrammerSession = {
         id: activeSessionId.value!,
         name: existing?.name ?? `Session ${timelineSessions.length + 1}`,
-        anchorSec: existing?.anchorSec ?? 0,
+        anchorSec: sessionAnchorSec.value,
         startedAt: sessionStartedAt.value ?? existing?.startedAt ?? endedAt,
         endedAt,
         clock: clockMode.value,
@@ -130,6 +146,15 @@ export const useProgrammerSessionStore = defineStore('programmer-session', () =>
     activeSessionId.value = options?.sessionId ?? crypto.randomUUID();
     clockMode.value = options?.clock ?? clockMode.value;
     sessionStartedAt.value = new Date().toISOString();
+    recordingEpochSec = performance.now() / 1000;
+
+    if (clockMode.value === 'set-playhead' || clockMode.value === 'timecode') {
+      const timelineEditor = useTimelineEditorStore();
+      sessionAnchorSec.value = msToSeconds(timelineEditor.playheadMs);
+    } else {
+      sessionAnchorSec.value = 0;
+    }
+
     recorder.reset([]);
     persistSessionBuffer();
   }
@@ -147,6 +172,7 @@ export const useProgrammerSessionStore = defineStore('programmer-session', () =>
     armed.value = false;
     activeSessionId.value = null;
     sessionStartedAt.value = null;
+    sessionAnchorSec.value = 0;
     writeCrashSnapshot({ sessionBuffer: undefined });
   }
 
@@ -168,6 +194,18 @@ export const useProgrammerSessionStore = defineStore('programmer-session', () =>
       color: identity.color,
       ...meta,
     };
+  }
+
+  function dropMarker(label = 'Marker') {
+    if (!armed.value) return;
+    const identity = useClientIdentityStore();
+    appendEvent({
+      tSec: clock.nowSec(),
+      kind: 'marker',
+      label,
+      clientId: identity.clientId,
+      meta: buildWriteMeta('attribute-control'),
+    });
   }
 
   function recordChannel(
@@ -215,6 +253,7 @@ export const useProgrammerSessionStore = defineStore('programmer-session', () =>
     activeSessionId.value = session.id;
     clockMode.value = session.clock;
     sessionStartedAt.value = session.startedAt;
+    sessionAnchorSec.value = session.anchorSec;
     recorder.reset(session.events);
   }
 
@@ -222,13 +261,16 @@ export const useProgrammerSessionStore = defineStore('programmer-session', () =>
     armed,
     activeSessionId,
     clockMode,
+    clockLabel,
     sessionStartedAt,
+    sessionAnchorSec,
     recordingPolicy,
     clientIdFilter,
     recorder,
     arm,
     disarm,
     appendEvent,
+    dropMarker,
     recordChannel,
     recordChannels,
     persistActiveSession,

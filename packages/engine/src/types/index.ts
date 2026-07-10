@@ -22,6 +22,10 @@ import type {
   ShowTimelineAudioAsset,
   ShowTimelineConfig,
   TimelineSyncMode,
+  TimelineSessionViewRow,
+  TimelineSessionViewColumn,
+  TimelineSessionViewSlot,
+  TimelineSessionView,
   ShowAudioMapping,
   ShowExecutor,
   ExecutorSlot,
@@ -52,6 +56,10 @@ export type {
   ShowTimelineAudioAsset,
   ShowTimelineConfig,
   TimelineSyncMode,
+  TimelineSessionViewRow,
+  TimelineSessionViewColumn,
+  TimelineSessionViewSlot,
+  TimelineSessionView,
   ShowAudioMapping,
   ShowExecutor,
   ExecutorSlot,
@@ -93,6 +101,11 @@ export type {
   Cue,
   CuePlaybackState,
   CuePart,
+  TimelineTrackKind,
+  TimelineClip,
+  TimelineTrack,
+  TimelineMarker,
+  TimelineSection,
 } from "./cue";
 
 export type {
