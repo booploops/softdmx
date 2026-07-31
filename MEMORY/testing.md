@@ -10,7 +10,7 @@ All testing infrastructure is centralized under a single package, **`packages/te
 
 ```
 packages/tests/
-├── package.json               # Test package dependencies (fastify, fast-check, etc.)
+├── package.json               # Test package dependencies (vitest, fast-check, etc.)
 ├── tsconfig.json              # TypeScript configuration for tests
 └── src/
     ├── helpers/               # Test utilities, servers, and ESM resolution hooks
@@ -34,7 +34,7 @@ All test scripts are defined in `@softdmx/tests` but are aliased as top-level wo
 | Script | Description |
 | :--- | :--- |
 | `yarn test` | Runs all unit, integration, and E2E headless tests using Vitest once. |
-| `yarn test:watch` | Runs Vitest in interactive watch mode. |
+| `yarn workspace @softdmx/tests test:watch` | Runs Vitest in interactive watch mode (not aliased at monorepo root). |
 | `yarn test:unit` | Runs all unit, helper, fuzz, and fixture tests. |
 | `yarn test:property` | Runs property-based roundtrip and invariant tests. |
 | `yarn test:integration` | Runs API endpoint and Socket.IO mock server tests. |

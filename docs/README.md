@@ -14,6 +14,8 @@
 |-----|----------|
 | [api.md](api.md) | Socket.IO events, REST routes, CLI examples |
 | [security.md](security.md) | Remote API auth, CSP notes |
+| [programmer-contract.md](programmer-contract.md) | Scratch writes, session recording, multi-user |
+| [multi-user-scratch.md](multi-user-scratch.md) | Server-authoritative scratch architecture |
 
 Machine-readable REST contract: [`openapi/remote-api.yaml`](../openapi/remote-api.yaml).
 
@@ -21,7 +23,7 @@ Machine-readable REST contract: [`openapi/remote-api.yaml`](../openapi/remote-ap
 
 | Doc | Contents |
 |-----|----------|
-| [show-schema.md](show-schema.md) | Show file fields (schema 1.5) |
+| [show-schema.md](show-schema.md) | Show file fields (schema 1.6) |
 | [fixture-yaml.md](fixture-yaml.md) | YAML fixture plugin format |
 | [fixture-gdtf.md](fixture-gdtf.md) | GDTF import and YAML round-trip |
 
@@ -29,6 +31,7 @@ Machine-readable REST contract: [`openapi/remote-api.yaml`](../openapi/remote-ap
 
 | Doc | Contents |
 |-----|----------|
-| [architecture.md](architecture.md) | Process layout and module map |
+| [architecture.md](architecture.md) | Monorepo layout and module map |
 | [testing.md](testing.md) | Running and writing tests |
+| [design-tokens.md](design-tokens.md) | `--sdmx-*` tokens and UI primitives |
 | [release-checklist.md](release-checklist.md) | Pre-release checks |

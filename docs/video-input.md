@@ -45,4 +45,4 @@ Configure under **Setup → Video**.
 
 ## Electron desktop
 
-Syphon/Spout uses `@napolab/texture-bridge` in the main process. Requires Electron **42+** (`yarn dev` / `yarn build`).
+Syphon/Spout uses `@napolab/texture-bridge` in the main process (native `TextureReceiver` poll). Requires Electron **40+** (`yarn dev` / `yarn build`). SoftDMX currently pins Electron 40.

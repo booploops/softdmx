@@ -4,8 +4,8 @@
 
 - [ ] `yarn` installs cleanly
 - [ ] `yarn test` passes
-- [ ] `yarn build:spa` passes
-- [ ] `yarn build` (Electron) passes
+- [ ] `yarn build:frontend` passes
+- [ ] `yarn build` (frontend + Electron) passes
 - [ ] No unintended files in `git status`
 
 ## Smoke test

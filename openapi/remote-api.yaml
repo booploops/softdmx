@@ -699,11 +699,11 @@ components:
       type: object
       required: [version, meta]
       description: |
-        SoftDMX show document. Supported versions are 1.0–1.5 (see `src/show/version.ts`).
+        SoftDMX show document. Supported versions are 1.0–1.6 (see `packages/engine/src/show/version.ts`).
       properties:
         version:
           type: string
-          enum: ['1.0', '1.1', '1.2', '1.3', '1.4', '1.5']
+          enum: ['1.0', '1.1', '1.2', '1.3', '1.4', '1.5', '1.6']
         meta:
           type: object
           required: [name]

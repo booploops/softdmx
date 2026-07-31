@@ -15,7 +15,7 @@ graph TD
     end
 
     subgraph Node.js / OS Environment
-        Client["@softdmx/client<br>(Electron / Express Host)"]
+        Client["@softdmx/client<br>(Electron / Hono Host)"]
     end
 
     subgraph Platform Agnostic
@@ -70,7 +70,7 @@ Located under `packages/client/`, this is the Node.js/Electron main process orch
 
 * **Output Drivers (`src-electron/output/`)**: Physical network socket integrations such as `ArtNetDriver`, `SacnDriver`, and native serial ports like `DmxUsbProDriver`.
 * **OS File Scanning (`src-electron/fixture-lookup.ts`)**: Leverages `node:fs` to scan the local machine's disk folders for custom GDTF and YAML files, building a native registry on startup.
-* **Express & WebSockets (`src-electron/server/`)**: Boots a localized Socket.io server to bridge command events, showfile synchronizations, and raw channel values directly into the output drivers.
+* **Hono & WebSockets (`src-electron/server/`)**: Boots a localized Hono HTTP server and Socket.IO bridge for command events, showfile synchronizations, and raw channel values into the output drivers.
 
 ---
 
@@ -113,9 +113,9 @@ export function getFixtureDefinition(id: string): FixtureDefinition | undefined 
 ## 5. Development and Testing Setup
 
 ### Monorepo Alias Hooking
-During ESM test executions (e.g. executing frontend tests via Mocha), unresolved absolute and specifier paths are intercepted dynamically. 
+During Vitest runs in `@softdmx/tests`, unresolved absolute and specifier paths are intercepted dynamically.
 
-The monorepo utilizes an ESM loader hook ([resolve-src-hook.mjs](../packages/frontend/test/helpers/resolve-src-hook.mjs)) to translate speculation paths (such as `src/engine/*`, `src/show/*`, `src/types/*`) on the fly directly to their new home in `@softdmx/engine`. This keeps all legacy tests functional and green without forcing tedious import refactors across thousands of lines of code.
+The suite uses helpers under [`packages/tests/src/helpers/`](../packages/tests/src/helpers/) (including `resolve-src-hook.mjs`) plus the Vitest resolver in `packages/tests/vitest.config.ts` to map legacy paths such as `packages/frontend/src/engine/*` and `.../show/*` to `@softdmx/engine`. This keeps older tests functional without forcing import refactors across the suite.
 
 ### Build and Compilation Target
 The compilation of the workspace targets clean Modern ESM (`ESNext`), utilizing bundler-based module resolution settings (`allowImportingTsExtensions` and `resolveJsonModule`) to guarantee efficient tree-shaking and rapid compile times in Rolldown and Vite.

@@ -5,21 +5,21 @@ SoftDMX can run as a **headless output node** that merges show output and drives
 ## Usage
 
 ```bash
-yarn output-node -- --show ./my-show.yml
+yarn dev -- --output-node --show ./my-show.yml
 ```
 
-Or launch Electron directly:
+Or, after a production build, launch the Electron client with the same flags:
 
 ```bash
-yarn dev -- --output-node
+yarn workspace @softdmx/client dev -- --output-node --show ./my-show.yml
 ```
 
 The output node:
 
-- Loads the show file
+- Loads the show file (`--show <path>`)
 - Runs the merge engine (cues, effects, audio, video, scratch)
 - Sends Art-Net / sACN / DMX USB / GridNode output
-- Exposes universe health via Socket.IO (`destination:health`)
+- Exposes universe health via Socket.IO (`output:health`)
 - Supports **standby** role when `show.backup.role` is `standby`
 
 ## Primary / standby

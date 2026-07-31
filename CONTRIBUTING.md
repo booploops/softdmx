@@ -6,22 +6,28 @@ To ensure a smooth collaboration process, please read and follow these guideline
 
 ---
 
-## 🏗️ Monorepo Structure
+## Monorepo Structure
 
 SoftDMX is organized as a Yarn v4 monorepo with workspaces:
 
 - **`packages/frontend`**: The desktop/touch user interface built with **Vue 3**, **Quasar**, **Pinia**, and **Vite**.
-- **`packages/client`**: The **Electron** shell, local web server (**Fastify**), native integrations, and DMX engine.
+- **`packages/engine`**: Pure TypeScript merge engine, show YAML I/O, fixtures/GDTF, and programmer core (no Vue or Node APIs).
+- **`packages/client`**: The **Electron** shell, local web server (**Hono** + Socket.IO), native integrations, and DMX output drivers.
+- **`packages/wasm`**: Zig → WASM hot-path helpers.
+- **`packages/tests`**: Vitest / Playwright / fuzz suite.
 - **`docs/`**: Technical documentation detailing the system architecture, schemas, and APIs.
+
+Agent-oriented architecture notes also live in [`MEMORY/`](MEMORY/context.md).
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- **Node.js**
-- **Yarn**
+- **Node.js** 22 (see root `package.json` `engines`)
+- **Yarn** 4 (via Corepack)
+- **Zig** and **flatc** for WASM / FlatBuffers builds
 
 ### Local Setup
 
@@ -45,18 +51,18 @@ Always run these commands from the **root** of the monorepo:
 | `yarn dev`          | Start both Vite frontend & Electron client simultaneously (hot-reloaded) |
 | `yarn dev:frontend` | Start only the Vue/Quasar web server                                     |
 | `yarn dev:electron` | Start only the Electron application shell                                |
-| `yarn build`        | Compile both frontend and Electron assets for production                 |
-| `yarn cli --help`   | Invoke the local softdmx CLI                                             |
+| `yarn build`        | Compile frontend (incl. WASM) and Electron assets for production         |
+| `yarn cli -- help`  | Invoke the local softdmx CLI                                             |
 
 ---
 
-## 🧪 Testing
+## Testing
 
-We use the built-in Node.js test runner with experimental strip types. Tests are run via root npm/yarn scripts:
+We use **Vitest** in `@softdmx/tests`. Tests are run via root yarn scripts:
 
 | Script                  | Purpose                                                        |
 | :---------------------- | :------------------------------------------------------------- |
-| `yarn test`             | Run the complete test suite                                    |
+| `yarn test`             | Run the complete Vitest suite                                  |
 | `yarn test:unit`        | Focus on unit tests                                            |
 | `yarn test:property`    | Run fast-check property-based tests                            |
 | `yarn test:integration` | Run REST & Socket.IO API tests against an in-process server    |
@@ -67,20 +73,21 @@ We use the built-in Node.js test runner with experimental strip types. Tests are
 To run a specific test file:
 
 ```bash
-yarn test:unit test/show-io.test.ts
+yarn test:unit src/show-io.test.ts
 ```
 
 For more info, read the [Testing Documentation](docs/testing.md).
 
 ---
 
-## 📝 Guidelines & Best Practices
+## Guidelines & Best Practices
 
 ### Code Style
 
-- **TypeScript**: Write strictly-typed TypeScript across both frontend and client packages.
+- **TypeScript**: Write strictly-typed TypeScript across packages.
 - **Imports**: Use alias imports where configured (e.g., `src/` alias in client and frontend).
 - **Formatting**: Follow the project's `.editorconfig` rules (use 2 spaces for indentation).
+- **Engine boundary**: Do not import Node.js native APIs into `@softdmx/engine`.
 
 ### Pull Request (PR) Workflow
 
@@ -91,7 +98,7 @@ For more info, read the [Testing Documentation](docs/testing.md).
 
 ---
 
-## ⚖️ License Compliance (MPL 2.0)
+## License Compliance (MPL 2.0)
 
 SoftDMX is licensed under the [Mozilla Public License 2.0](LICENSE). By contributing, you agree that your contributions will be licensed under the MPL 2.0.
 
@@ -119,4 +126,3 @@ The MPL 2.0 is a file-level copyleft license. This means:
 If your contribution introduces new external dependencies:
 *   Ensure they use a compatible open-source license (such as MIT, BSD, Apache 2.0, or MPL 2.0).
 *   Avoid adding dependencies licensed under strict copyleft licenses (e.g., GPL/AGPL) unless discussed and approved beforehand.
-

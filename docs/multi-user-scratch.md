@@ -4,7 +4,7 @@ SoftDMX uses a **server-authoritative** scratch model for multi-client programmi
 
 ## Authority
 
-The Electron main process owns canonical scratch state via `scratch-authority.ts`. Renderers and remote clients send commands; the server assigns monotonic `seq` values and broadcasts `scratch:layers` snapshots.
+The Electron main process owns canonical scratch state via `packages/client/src-electron/server/scratch-authority.ts`. Renderers and remote clients send commands; the server assigns monotonic `seq` values and broadcasts `scratch:layers` snapshots.
 
 ## Per-client layers
 

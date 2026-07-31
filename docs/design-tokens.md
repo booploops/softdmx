@@ -41,7 +41,7 @@ Defined in [`packages/frontend/src/css/theme.scss`](../packages/frontend/src/css
 
 ## UI primitives
 
-Use components from `src/components/ui/` instead of raw Quasar controls:
+Use components from `packages/frontend/src/components/ui/` instead of raw Quasar controls:
 
 | Component | Replaces |
 |-----------|----------|
@@ -68,9 +68,9 @@ Themes are importable/exportable as JSON via Theme Settings.
 
 ## Adding a custom theme
 
-1. Copy an existing preset from `src/themes/presets/`
+1. Copy an existing preset from `packages/frontend/src/themes/presets/`
 2. Override `tokens.colors` (minimum) and optionally other token groups
-3. Register in `src/themes/presets/index.ts` or import via Theme Settings dialog
+3. Register in `packages/frontend/src/themes/presets/index.ts` or import via Theme Settings dialog
 
 ## Histoire component docs
 

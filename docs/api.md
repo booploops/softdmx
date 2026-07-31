@@ -8,7 +8,7 @@ OpenAPI spec: [`openapi/remote-api.yaml`](../openapi/remote-api.yaml).
 
 | Event | Payload | Description |
 |---|---|---|
-| `show:state` | Show document (schema 1.5) | Full show document |
+| `show:state` | Show document (schema 1.6) | Full show document |
 | `channels:state` | `ActiveChannel[]` | Merged DMX output |
 | `settings:current` | App config | Port and app prefs |
 | `scratch:layers` | `{ seq, layers, conflicts, merged }` | Canonical multi-client scratch snapshot |
@@ -24,8 +24,8 @@ OpenAPI spec: [`openapi/remote-api.yaml`](../openapi/remote-api.yaml).
 | Event | Payload | Description |
 |---|---|---|
 | `show:get` | — | Request current show |
-| `show:load` | Show document (schema 1.5) | Load show |
-| `show:state` | Show document (schema 1.5) | Broadcast show update |
+| `show:load` | Show document (schema 1.6) | Load show |
+| `show:state` | Show document (schema 1.6) | Broadcast show update |
 | `client:hello` | `{ clientId?, operatorLabel?, color? }` | Register operator identity |
 | `scratch:set` | `{ path, value, clientId? }` or `{ channels, clientId? }` | Set live scratch channels (server authority) |
 | `scratch:clear` | `{ clientId? }` | Clear scratch layer (one client or all) |
@@ -92,7 +92,7 @@ Optional auth (REST and Socket.IO):
 | `GET` | `/sessions/:id` | — | Get one programmer session |
 | `POST` | `/sessions/arm` | `{ sessionId?, clock? }` | Arm session recording (broadcast) |
 | `POST` | `/sessions/disarm` | `{ sessionId?, persist? }` | Disarm session recording (broadcast) |
-| `POST` | `/show` | Show document (schema 1.5) | Load full show document |
+| `POST` | `/show` | Show document (schema 1.6) | Load full show document |
 | `POST` | `/scratch/set` | `{ path, value, attributeType?, clientId? }` or `{ channels, clientId? }` | Set live scratch values (returns `ack`, `seq`) |
 | `POST` | `/scratch/clear` | `{ clientId? }` | Clear scratch layer |
 | `POST` | `/preset/fire` | `{ presetId, fade? }` | Fire preset |

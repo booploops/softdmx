@@ -32,9 +32,9 @@ programmer: {}
 
 ### `version`
 
-- Type: `"1.0" | "1.1" | "1.2" | "1.3" | "1.4" | "1.5"`
-- Current schema target: `"1.5"`
-- Older documents are migrated to `1.5` on load.
+- Type: `"1.0" | "1.1" | "1.2" | "1.3" | "1.4" | "1.5" | "1.6"`
+- Current schema target: `"1.6"`
+- Older documents are migrated to `1.6` on load.
 
 ### `presetPools`
 

@@ -52,7 +52,7 @@ widgets:
 
 ## Widget protocol
 
-Built-in widget types (registered in `WidgetRenderer.vue`):
+Built-in widget types (registered in `packages/frontend/src/components/widgets/WidgetRenderer.vue`):
 
 | Type | Required channel keys |
 |------|----------------------|

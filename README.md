@@ -2,11 +2,11 @@
 
 Early-stage software lighting controller built with Vue, Quasar, and Electron. Aimed at approachable desk workflows and virtual-world setups (VRChat/VRSL via GridNode), with network control and hackable YAML show files.
 
-**Stack:** Vue 3 · Quasar · Electron · Node 22
+**Stack:** Vue 3 · Quasar · Electron · Node 22 · Zig (WASM)
 
 ## Quick start
 
-**Build Requirements:** 
+**Build Requirements:**
 - Node.js (Currently Node 22 LTS)
 - Zig
 - Flatbuffers (`flatc`)
@@ -17,19 +17,24 @@ corepack enable
 yarn
 yarn dev          # Electron + desk UI
 yarn build        # production Electron build
-yarn output-node  # headless merge + DMX output
 yarn test         # full test suite
+```
+
+Headless output node (merge + DMX without the full desk UI):
+
+```bash
+yarn dev -- --output-node --show ./my-show.yml
 ```
 
 ## What it does
 
 - **Desk** — Live, Timeline, Program, and Setup modes for busking, cues, patch, and video mapping
-- **Shows** — YAML import/export, schema 1.5, GDTF fixture import
+- **Shows** — YAML import/export, schema 1.6, GDTF fixture import
 - **Control** — local UI, touch remote (`/#/remote`), Socket.IO, REST, OSC, MIDI, and CLI
 - **Output** — GridNode, Art-Net, sACN, USB DMX; optional headless output node and primary/standby backup
 - **Reactive** — audio-driven mappings; live video → pixel maps (webcam, OBS, Syphon, Spout)
 
-Starter shows ship in `src/shows/` (Simple Wash, Laser Demo, Example VR Club).
+Starter shows ship in `packages/frontend/src/shows/` (Simple Wash, Laser Demo, Example VR Club).
 
 ## Remote and CLI
 
