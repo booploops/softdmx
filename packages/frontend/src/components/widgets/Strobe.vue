@@ -5,27 +5,25 @@
   License, v. 2.0. If a copy of the MPL was not distributed with this
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
-<!--
-  Purpose: A strobe control widget for controlling strobe/flash effects
--->
 <script setup lang="ts">
 import { StrobeModel } from './strobe.types';
 import { useChannelBinding } from 'src/composables/useChannelBinding';
+import { useInfoText } from 'src/composables/useInfoText';
+import { SdmxButton, SdmxFader, SdmxStatusChip, SdmxValueField } from 'src/components/ui';
 
 const val = defineModel<StrobeModel>({ required: true });
 const strobe = useChannelBinding(val.value.strobeChannel, 'effect');
+const { info } = useInfoText();
 
-// Strobe speed presets - common DMX strobe values
 const strobePresets = [
   { label: 'Off', value: 0, description: 'No strobe' },
   { label: 'Open', value: 16, description: 'Always on' },
   { label: 'Slow', value: 64, description: 'Slow strobe' },
   { label: 'Medium', value: 128, description: 'Medium strobe' },
   { label: 'Fast', value: 192, description: 'Fast strobe' },
-  { label: 'Max', value: 255, description: 'Maximum strobe' }
+  { label: 'Max', value: 255, description: 'Maximum strobe' },
 ];
 
-// Current strobe mode based on DMX value
 const currentMode = computed(() => {
   const value = strobe.value;
   if (value === 0) return 'Off';
@@ -36,21 +34,17 @@ const currentMode = computed(() => {
   return 'Maximum Strobe';
 });
 
-// Strobe frequency estimation (rough approximation)
 const strobeFrequency = computed(() => {
   const value = strobe.value;
-  if (value <= 31) return 0; // No strobe
-  // Approximate frequency calculation (this varies by fixture)
-  const frequency = ((value - 32) / 223) * 30; // 0-30 Hz range
+  if (value <= 31) return 0;
+  const frequency = ((value - 32) / 223) * 30;
   return Math.round(frequency * 10) / 10;
 });
 
-// Visual indicator state for strobe effect
 const isFlashing = ref(false);
 let flashInterval: ReturnType<typeof setInterval> | null = null;
 
-// Start/stop visual flash effect based on strobe value
-const updateFlashEffect = () => {
+function updateFlashEffect() {
   if (flashInterval) {
     clearInterval(flashInterval);
     flashInterval = null;
@@ -60,7 +54,7 @@ const updateFlashEffect = () => {
   if (value > 31) {
     const frequency = strobeFrequency.value;
     if (frequency > 0) {
-      const intervalMs = (1000 / frequency) / 2; // Half period for on/off
+      const intervalMs = (1000 / frequency) / 2;
       flashInterval = setInterval(() => {
         isFlashing.value = !isFlashing.value;
       }, intervalMs);
@@ -68,129 +62,95 @@ const updateFlashEffect = () => {
   } else {
     isFlashing.value = false;
   }
-};
+}
 
-// Watch for changes in strobe value
 watch(strobe, updateFlashEffect, { immediate: true });
 
-// Cleanup interval on unmount
 onBeforeUnmount(() => {
   if (flashInterval) {
     clearInterval(flashInterval);
   }
 });
 
-// Quick preset buttons
-const setPreset = (presetValue: number) => {
+function setPreset(presetValue: number) {
   strobe.value = presetValue;
-};
+}
 
-const toggleStrobe = () => {
-  const currentValue = strobe.value;
-  if (currentValue === 0) {
-    // Turn on to medium strobe
-    strobe.value = 128;
-  } else {
-    strobe.value = 0;
-  }
-};
+function toggleStrobe() {
+  strobe.value = strobe.value === 0 ? 128 : 0;
+}
 </script>
 
 <template>
   <div
-    class="strobe-widget"
-    :class="{ 'flashing': isFlashing }"
+    class="strobe-widget sdmx-widget"
+    :class="{ flashing: isFlashing }"
   >
     <div class="strobe-header">
       <div class="title-section">
-        <span class="strobe-title">{{ val.strobeChannel.name }}</span>
-        <span class="strobe-mode">{{ currentMode }}</span>
+        <span class="sdmx-text-label">{{ val.strobeChannel.name }}</span>
+        <SdmxStatusChip :label="currentMode" variant="negative" />
       </div>
-      <div
-        class="frequency-display"
+      <SdmxStatusChip
         v-if="strobeFrequency > 0"
-      >
-        {{ strobeFrequency }} Hz
-      </div>
-    </div>
-
-    <!-- Quick Toggle Button -->
-    <div class="toggle-section">
-      <x-button
-        @click="toggleStrobe"
-        :color="strobe > 0 ? 'negative' : 'positive'"
-        :icon="strobe > 0 ? 'bolt-off' : 'bolt'"
-        :label="strobe > 0 ? 'Stop' : 'Strobe'"
-        class="toggle-btn"
-        size="md"
+        :label="`${strobeFrequency} Hz`"
+        variant="warning"
       />
     </div>
 
-    <!-- Preset Buttons -->
+    <SdmxButton
+      :label="strobe > 0 ? 'Stop' : 'Strobe'"
+      :icon="strobe > 0 ? 'bolt-off' : 'bolt'"
+      :variant="strobe > 0 ? 'danger' : 'primary'"
+      size="md"
+      class="toggle-btn"
+      @click="toggleStrobe"
+    />
+
     <div class="presets-section">
-      <div class="presets-label">Presets:</div>
+      <div class="presets-label">Presets</div>
       <div class="preset-buttons">
-        <x-button
+        <SdmxButton
           v-for="preset in strobePresets"
           :key="preset.value"
-          v-info="{ key: 'widgets.strobe.preset', vars: { description: preset.description } }"
-          @click="setPreset(preset.value)"
-          :color="strobe === preset.value ? 'primary' : 'grey-7'"
           :label="preset.label"
           size="sm"
+          :variant="strobe === preset.value ? 'primary' : 'secondary'"
+          :info="info('widgets.strobe.preset', { description: preset.description })"
           class="preset-btn"
-          dense
+          @click="setPreset(preset.value)"
         />
       </div>
     </div>
 
-    <!-- Fine Control Slider -->
-    <div class="slider-section">
-      <div class="slider-label">Fine Control:</div>
-      <q-slider
-        v-model="strobe"
-        :min="0"
-        :max="255"
-        :step="1"
-        color="negative"
-        track-color="grey-8"
-        thumb-color="red"
-        track-size="6px"
-        thumb-size="16px"
-        class="strobe-slider"
-      />
-    </div>
+    <SdmxFader
+      v-model="strobe"
+      label="Fine control"
+      :min="0"
+      :max="255"
+      :step="1"
+      color="negative"
+      :info="info('widgets.strobe.rate')"
+    />
 
-    <!-- Value Display -->
-    <div class="value-display">
-      <div class="dmx-value">
-        <span class="label">DMX:</span>
-        <span class="value">{{ strobe }}</span>
-      </div>
-    </div>
+    <SdmxValueField label="DMX" :value="strobe" size="sm" />
 
-    <!-- Visual Flash Indicator -->
-    <div
-      class="flash-indicator"
-      :class="{ 'active': isFlashing }"
-    >
-      <XIcon
-        name="bolt"
-        size="lg"
-      />
+    <div class="flash-indicator" :class="{ active: isFlashing }">
+      <XIcon name="bolt" size="lg" />
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
 .strobe-widget {
-  background: var(--sdmx-color-bg-surface);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--sdmx-radius-md);
+  padding: var(--sdmx-space-md);
   min-width: 250px;
   user-select: none;
-  transition: box-shadow 0.1s ease;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdmx-space-md);
 
   &.flashing {
     box-shadow: 0 0 20px var(--sdmx-color-negative-border);
@@ -212,112 +172,47 @@ const toggleStrobe = () => {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 16px;
-
-  .title-section {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-
-    .strobe-title {
-      font-weight: 500;
-      color: var(--sdmx-color-primary);
-      font-size: 16px;
-    }
-
-    .strobe-mode {
-      font-size: 12px;
-      color: var(--sdmx-color-negative);
-      font-weight: 600;
-      text-transform: uppercase;
-    }
-  }
-
-  .frequency-display {
-    background: var(--sdmx-color-negative-soft);
-    color: var(--sdmx-color-negative);
-    padding: 4px 8px;
-    border-radius: 4px;
-    font-size: 12px;
-    font-weight: bold;
-    font-family: 'Courier New', monospace;
-  }
+  gap: var(--sdmx-space-sm);
 }
 
-.toggle-section {
-  margin-bottom: 16px;
-  text-align: center;
+.title-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdmx-space-xs);
+  min-width: 0;
+}
 
-  .toggle-btn {
-    width: 100%;
-    height: 40px;
-    font-weight: 600;
-  }
+.toggle-btn {
+  width: 100%;
 }
 
 .presets-section {
-  margin-bottom: 16px;
-
-  .presets-label {
-    font-size: 12px;
-    color: var(--sdmx-color-text-muted);
-    margin-bottom: 8px;
-  }
-
-  .preset-buttons {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 4px;
-
-    .preset-btn {
-      min-height: 32px;
-      font-size: 11px;
-    }
-  }
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdmx-space-xs);
 }
 
-.slider-section {
-  margin-bottom: 16px;
-
-  .slider-label {
-    font-size: 12px;
-    color: var(--sdmx-color-text-muted);
-    margin-bottom: 8px;
-  }
-
-  .strobe-slider {
-    height: 32px;
-  }
+.presets-label {
+  font-size: var(--sdmx-font-size-caption);
+  color: var(--sdmx-color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
-.value-display {
-  text-align: center;
+.preset-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sdmx-space-xs);
+}
 
-  .dmx-value {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    gap: 8px;
-
-    .label {
-      font-size: 12px;
-      color: var(--sdmx-color-text-muted);
-    }
-
-    .value {
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      color: var(--sdmx-color-negative);
-      font-weight: bold;
-      min-width: 30px;
-    }
-  }
+.preset-btn {
+  width: 100%;
 }
 
 .flash-indicator {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: var(--sdmx-space-sm);
+  right: var(--sdmx-space-sm);
   opacity: 0.3;
   transition: all 0.1s ease;
 

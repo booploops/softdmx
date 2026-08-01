@@ -11,7 +11,7 @@
 <script setup lang="ts">
 import { LightMoverModel } from './light-mover.types';
 import { useChannelBinding } from 'src/composables/useChannelBinding';
-import { SdmxIconButton } from 'src/components/ui';
+import { SdmxIconButton, SdmxValueField } from 'src/components/ui';
 
 const val = defineModel<LightMoverModel>({required: true});
 
@@ -136,9 +136,9 @@ function resetPosition() {
 </script>
 
 <template>
-  <div class="light-mover-widget">
+  <div class="light-mover-widget sdmx-widget">
     <div class="mover-header">
-      <span class="mover-title">Light Mover</span>
+      <span class="sdmx-text-label">Light Mover</span>
       <SdmxIconButton
         icon="focus-2"
         info-key="widgets.lightMover.reset"
@@ -179,25 +179,17 @@ function resetPosition() {
       </div>
     </div>
 
-    <!-- Value display -->
     <div class="value-display">
-      <div class="value-row">
-        <span class="label">Pan:</span>
-        <span class="value">{{ panDisplay }}</span>
-      </div>
-      <div class="value-row">
-        <span class="label">Tilt:</span>
-        <span class="value">{{ tiltDisplay }}</span>
-      </div>
+      <SdmxValueField label="Pan" :value="panDisplay" size="sm" />
+      <SdmxValueField label="Tilt" :value="tiltDisplay" size="sm" />
     </div>
   </div>
 </template>
 
 <style scoped lang="scss">
 .light-mover-widget {
-  background: var(--sdmx-color-bg-surface);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--sdmx-radius-md);
+  padding: var(--sdmx-space-md);
   min-width: 280px;
   user-select: none;
 }
@@ -206,16 +198,7 @@ function resetPosition() {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-
-  .mover-title {
-    font-weight: 500;
-    color: var(--sdmx-color-primary);
-  }
-
-  .reset-btn {
-    color: var(--sdmx-color-accent);
-  }
+  margin-bottom: var(--sdmx-space-sm);
 }
 
 .mover-pad {
@@ -299,26 +282,6 @@ function resetPosition() {
 .value-display {
   display: flex;
   justify-content: space-between;
-  gap: 16px;
-
-  .value-row {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    flex: 1;
-
-    .label {
-      font-size: 12px;
-      color: var(--sdmx-color-text-muted);
-      margin-bottom: 2px;
-    }
-
-    .value {
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      color: var(--sdmx-color-accent);
-      font-weight: bold;
-    }
-  }
+  gap: var(--sdmx-space-md);
 }
 </style>

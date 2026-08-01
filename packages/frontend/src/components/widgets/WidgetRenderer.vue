@@ -17,6 +17,7 @@ import DimmerSlider from './DimmerSlider.vue';
 import Strobe from './Strobe.vue';
 import IndexedSelect from './IndexedSelect.vue';
 import ChannelAttributeControl from '../ChannelAttributeControl.vue';
+import { SdmxEmptyState } from 'src/components/ui';
 import type { ColorPickerModel } from './color-picker.types';
 import type { LightMoverModel } from './light-mover.types';
 import type { DimmerSliderModel } from './dimmer-slider.types';
@@ -144,34 +145,17 @@ const useFallback = computed(() => !registryEntry.value || resolvedModel.value =
       :key="`${fixture.fixtureName}-${widget.name}-fallback`"
     />
 
-    <div v-else class="widget-error">
-      <q-card flat bordered class="error-card">
-        <q-card-section>
-          <div class="text-h6 text-negative">
-            <XIcon name="alert-circle" class="q-mr-sm" />
-            Widget Error
-          </div>
-          <div class="text-body2">
-            Unknown widget type "{{ widget.type }}" or missing required channels.
-          </div>
-          <div class="text-caption q-mt-sm">
-            Widget: {{ widget.name }}
-          </div>
-        </q-card-section>
-      </q-card>
-    </div>
+    <SdmxEmptyState
+      v-else
+      icon="alert-circle"
+      title="Widget Error"
+      :hint="`Unknown widget type \"${widget.type}\" or missing required channels for ${widget.name}.`"
+    />
   </div>
 </template>
 
 <style scoped lang="scss">
 .widget-renderer {
-  margin-bottom: 12px;
-}
-
-.widget-error {
-  .error-card {
-    background: var(--sdmx-color-negative-soft);
-    border-color: var(--sdmx-color-negative-border);
-  }
+  margin-bottom: var(--sdmx-space-sm);
 }
 </style>

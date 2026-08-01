@@ -14,8 +14,7 @@ import {
   indexToDmx,
   isIndexedChannel,
 } from '@softdmx/engine';
-import XSelect from 'src/components/controls/XSelect.vue';
-import { SdmxEncoder, SdmxValueField } from 'src/components/ui';
+import { SdmxEncoder, SdmxSelect, SdmxValueField } from 'src/components/ui';
 import { useInfoText } from 'src/composables/useInfoText';
 
 const props = defineProps<{
@@ -47,11 +46,11 @@ function onEncoderUpdate(value: number) {
     <template v-if="isIndexed">
       <div class="indexed-select-container">
         <div class="indexed-select-label">{{ channel.name }}</div>
-        <XSelect
+        <SdmxSelect
           :model-value="selectedIndex"
           :options="indexedOptions"
-          class="indexed-select"
-          :data-sdmx-info="info('desk.fixtures.indexedChannel', { name: channel.name })"
+          size="sm"
+          :info="info('desk.fixtures.indexedChannel', { name: channel.name })"
           @update:model-value="onIndexedChange"
         />
       </div>
@@ -85,14 +84,10 @@ function onEncoderUpdate(value: number) {
 }
 
 .indexed-select-label {
-  font-size: 11px;
-  font-weight: 500;
-  color: var(--sdmx-text-muted, #8e8e93);
+  font-size: var(--sdmx-font-size-caption);
+  font-weight: var(--sdmx-font-weight-medium, 500);
+  color: var(--sdmx-color-text-muted);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.indexed-select {
-  width: 100%;
+  letter-spacing: 0.04em;
 }
 </style>

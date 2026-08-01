@@ -13,8 +13,8 @@ const val = defineModel<IndexedSelectModel>({ required: true });
 </script>
 
 <template>
-  <div class="indexed-select-widget">
-    <div class="widget-title">{{ val.channel.name }}</div>
+  <div class="indexed-select-widget sdmx-widget">
+    <div class="sdmx-text-label">{{ val.channel.name }}</div>
     <ChannelAttributeControl
       :channel="val.channel"
       :path="val.channel.reference.path"
@@ -24,14 +24,11 @@ const val = defineModel<IndexedSelectModel>({ required: true });
 
 <style scoped lang="scss">
 .indexed-select-widget {
-  background: var(--sdmx-color-bg-surface);
-  border-radius: 8px;
-  padding: 16px;
+  border-radius: var(--sdmx-radius-md);
+  padding: var(--sdmx-space-md);
   min-width: 200px;
-}
-
-.widget-title {
-  font-weight: 600;
-  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdmx-space-sm);
 }
 </style>

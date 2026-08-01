@@ -7,10 +7,16 @@
 -->
 
 <script setup lang="ts">
-import { SdmxButton, SdmxStatusChip, SdmxValueField, SdmxToggle, SdmxEncoder } from 'src/components/ui';
+import { SdmxButton, SdmxSelect, SdmxStatusChip, SdmxValueField, SdmxToggle, SdmxEncoder } from 'src/components/ui';
 
 const toggleOn = ref(true);
 const encoderValue = ref(128);
+const selectValue = ref('warm');
+const selectOptions = [
+  { label: 'Warm White', value: 'warm' },
+  { label: 'Cool White', value: 'cool' },
+  { label: 'Red', value: 'red' },
+];
 </script>
 
 <template>
@@ -43,6 +49,12 @@ const encoderValue = ref(128);
       <div style="display: flex; gap: 24px; padding: 16px; background: var(--sdmx-color-bg-page);">
         <SdmxToggle v-model="toggleOn" label="Blind Mode" />
         <SdmxEncoder v-model="encoderValue" label="Dimmer" unit="%" :changed="encoderValue !== 0" />
+      </div>
+    </Variant>
+    <Variant title="Select">
+      <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; max-width: 280px; background: var(--sdmx-color-bg-page);">
+        <SdmxSelect v-model="selectValue" :options="selectOptions" label="Color mode" />
+        <SdmxSelect v-model="selectValue" :options="selectOptions" size="sm" />
       </div>
     </Variant>
   </Story>

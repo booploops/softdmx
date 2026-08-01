@@ -14,6 +14,7 @@ import type { ShowGroup } from '@softdmx/engine';
 import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
 import WidgetRenderer from './widgets/WidgetRenderer.vue';
+import { SdmxEmptyState } from 'src/components/ui';
 
 const dmx = useDMXStore();
 const selection = useSelectionStore();
@@ -84,16 +85,12 @@ function toggleGroupSelection() {
       </div>
     </div>
 
-    <div v-if="widgets.length === 0" class="no-widgets">
-      <q-card flat bordered class="info-card">
-        <q-card-section class="text-center">
-          <XIcon name="layout-grid" size="2rem" class="text-grey-6 q-mb-sm" />
-          <div class="text-body2 text-grey-6">
-            No widgets configured for this fixture type
-          </div>
-        </q-card-section>
-      </q-card>
-    </div>
+    <SdmxEmptyState
+      v-if="widgets.length === 0"
+      icon="layout-grid"
+      title="No widgets configured"
+      hint="This fixture type has no widgets in its definition."
+    />
 
     <div v-else-if="controlFixture" class="widgets-grid">
       <WidgetRenderer
@@ -104,16 +101,12 @@ function toggleGroupSelection() {
       />
     </div>
 
-    <div v-else class="loading-state">
-      <q-card flat bordered class="info-card">
-        <q-card-section class="text-center">
-          <q-spinner size="2rem" class="text-primary q-mb-sm" />
-          <div class="text-body2">
-            Loading group controls...
-          </div>
-        </q-card-section>
-      </q-card>
-    </div>
+    <SdmxEmptyState
+      v-else
+      icon="loader-2"
+      title="Loading group controls"
+      hint="Waiting for group fixture data."
+    />
   </div>
 </template>
 
@@ -176,13 +169,6 @@ function toggleGroupSelection() {
       text-transform: uppercase;
       letter-spacing: 0.5px;
     }
-  }
-}
-
-.no-widgets, .loading-state {
-  .info-card {
-    background: var(--sdmx-color-border-faint);
-    border-color: var(--sdmx-color-border);
   }
 }
 

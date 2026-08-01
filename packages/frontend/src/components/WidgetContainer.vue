@@ -12,6 +12,7 @@
 import type { ShowfileFixtureMapped } from '@softdmx/engine';
 import WidgetRenderer from './widgets/WidgetRenderer.vue';
 import { useSelectionStore } from 'src/stores/selection';
+import { SdmxEmptyState } from 'src/components/ui';
 
 const props = defineProps<{
   fixture: ShowfileFixtureMapped;
@@ -37,16 +38,12 @@ function toggleFixtureSelection() {
       <div class="fixture-type">{{ fixture.def.name }}</div>
     </div>
 
-    <div v-if="widgets.length === 0" class="no-widgets">
-      <q-card flat bordered class="info-card">
-        <q-card-section class="text-center">
-          <XIcon name="layout-grid" size="2rem" class="text-grey-6 q-mb-sm" />
-          <div class="text-body2 text-grey-6">
-            No widgets configured for this fixture
-          </div>
-        </q-card-section>
-      </q-card>
-    </div>
+    <SdmxEmptyState
+      v-if="widgets.length === 0"
+      icon="layout-grid"
+      title="No widgets configured"
+      hint="This fixture has no widgets in its definition."
+    />
 
     <div v-else class="widgets-grid">
       <WidgetRenderer
@@ -92,13 +89,6 @@ function toggleFixtureSelection() {
     color: var(--sdmx-color-text-muted);
     text-transform: uppercase;
     letter-spacing: 0.5px;
-  }
-}
-
-.no-widgets {
-  .info-card {
-    background: var(--sdmx-color-border-faint);
-    border-color: var(--sdmx-color-border);
   }
 }
 
