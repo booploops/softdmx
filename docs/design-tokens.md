@@ -54,6 +54,8 @@ Use components from `packages/frontend/src/components/ui/` instead of raw Quasar
 | `SdmxWindowChrome` | desk window headers |
 | `SdmxPanel` | section panels |
 | `SdmxEmptyState` | empty placeholder states |
+| `SdmxIconButton` | icon-only desk actions |
+| `SdmxSelect` | indexed channel / option dropdowns |
 
 ## Built-in themes
 
@@ -71,7 +73,3 @@ Themes are importable/exportable as JSON via Theme Settings.
 1. Copy an existing preset from `packages/frontend/src/themes/presets/`
 2. Override `tokens.colors` (minimum) and optionally other token groups
 3. Register in `packages/frontend/src/themes/presets/index.ts` or import via Theme Settings dialog
-
-## Histoire component docs
-
-Run `yarn workspace @softdmx/frontend story:dev` to browse primitive stories.

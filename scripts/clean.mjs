@@ -28,7 +28,11 @@ const BUILD_PATHS = [
   "playwright/.cache",
 ];
 
-const DEV_PATHS = ["packages/frontend/node_modules/.vite", "packages/frontend/.quasar"];
+const DEV_PATHS = [
+  "packages/frontend/node_modules/.vite",
+  "packages/frontend/.quasar",
+  "packages/frontend/.histoire",
+];
 
 function getAppDataDir() {
   const appName = "dev.booploops.softdmx";
