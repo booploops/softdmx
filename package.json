@@ -30,6 +30,7 @@
     "cli": "node packages/client/scripts/softdmx-cli.mjs",
     "favicon:generate": "yarn workspace @softdmx/frontend favicon:generate",
     "icon:generate": "yarn workspace @softdmx/client icon:generate",
+    "clean": "node scripts/clean.mjs",
     "license:check": "node scripts/find-missing-headers.js",
     "license:fix": "node scripts/add-missing-headers.js"
   },
