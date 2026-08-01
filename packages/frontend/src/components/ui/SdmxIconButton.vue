@@ -43,6 +43,12 @@ const computedSize = computed(() => (props.dense ? 'sm' : 'md'));
 const computedColor = computed(() => {
   if (props.color === 'negative') return 'danger';
   if (props.color === 'primary') return 'primary';
+  if (
+    props.color &&
+    ['positive', 'warning', 'orange', 'secondary', 'info', 'accent'].includes(props.color)
+  ) {
+    return props.color;
+  }
   return 'default';
 });
 
@@ -65,7 +71,7 @@ function onClick(event: MouseEvent) {
     :data-sdmx-info="infoText"
     @click="onClick"
   >
-    <XIcon v-if="icon && !loading" :name="icon" size="sm" />
+    <XIcon v-if="icon && !loading" :name="icon" size="sm" :color="color" />
     <q-tooltip v-if="alwaysShow">{{ infoText }}</q-tooltip>
   </XButton>
 </template>

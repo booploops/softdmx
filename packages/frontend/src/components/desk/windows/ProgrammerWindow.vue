@@ -170,6 +170,65 @@ function onActiveChipTap() {
 function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']) {
   programmer.setFeatureGroup(id);
 }
+
+const RECORD_MODE_OPTIONS = [
+  { label: 'Off', value: 'off' as const },
+  { label: 'Snap', value: 'snapshot' as const },
+  { label: 'Session', value: 'session' as const },
+];
+
+const recordButtonDisabled = computed(() => {
+  if (programmer.recordMode === 'off') return true;
+  if (programmer.recordMode === 'snapshot' && !programmerSession.armed) {
+    return !cueStore.activeCue;
+  }
+  return false;
+});
+
+const recordButtonInfoKey = computed(() => {
+  if (programmer.recordMode === 'off') return 'desk.programmer.recordModeOff';
+  if (programmer.recordMode === 'snapshot') {
+    return programmerSession.armed
+      ? 'desk.programmer.recordSnapshotDisarm'
+      : 'desk.programmer.recordSnapshotArm';
+  }
+  return programmerSession.armed
+    ? 'desk.programmer.recordSessionDisarm'
+    : 'desk.programmer.recordSessionArm';
+});
+
+const blindToggleIcon = computed(() => (scratch.blindMode ? 'eye-off' : 'eye'));
+const blindToggleColor = computed(() => (scratch.blindMode ? 'orange' : 'positive'));
+
+function setRecordMode(mode: (typeof RECORD_MODE_OPTIONS)[number]['value']) {
+  programmer.setRecordMode(mode);
+}
+
+function toggleRecord() {
+  if (programmer.recordMode === 'off') return;
+
+  if (programmerSession.armed) {
+    if (programmer.recordMode === 'snapshot') {
+      programmerSession.disarm({ persist: false });
+      cueStore.recordFrame();
+      return;
+    }
+    programmerSession.disarm();
+    return;
+  }
+
+  if (programmer.recordMode === 'snapshot' && !cueStore.activeCue) return;
+  programmerSession.arm();
+}
+
+watch(
+  () => programmer.recordMode,
+  () => {
+    if (programmerSession.armed) {
+      programmerSession.disarm({ persist: false });
+    }
+  },
+);
 </script>
 
 <template>
@@ -177,9 +236,11 @@ function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']
     <div v-if="ui.programmerCollapsed" class="programmer-collapsed row items-center q-px-sm q-py-xs">
       <XIcon v-if="scratch.isActive" name="circle-filled" color="white" size="xs" class="pulse" />
       <span class="sdmx-text-caption">{{ scratch.activeCount }} in scratch</span>
-      <SdmxStatusChip
-        :label="scratch.blindMode ? 'Blind' : 'Live'"
-        :variant="scratch.blindMode ? 'warning' : 'positive'"
+      <SdmxIconButton
+        :icon="blindToggleIcon"
+        info-key="desk.programmer.blind"
+        :color="blindToggleColor"
+        @click="toggleBlind"
       />
       <q-space />
       <SdmxButton
@@ -195,15 +256,18 @@ function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']
       <header class="programmer-header">
         <div class="programmer-header__toolbar">
           <SdmxStatusChip
-            :label="scratch.blindMode ? 'Blind' : 'Live'"
-            :variant="scratch.blindMode ? 'warning' : 'positive'"
-          />
-          <SdmxStatusChip
-            v-if="programmerSession.armed"
+            v-if="programmerSession.armed && programmer.recordMode === 'session'"
             :label="programmerSession.clockLabel"
             variant="armed"
             icon="circle-filled"
             :info="info('desk.programmer.sessionClock')"
+          />
+          <SdmxStatusChip
+            v-if="programmerSession.armed && programmer.recordMode === 'snapshot'"
+            label="Snapshot"
+            variant="armed"
+            icon="circle-filled"
+            :info="info('desk.programmer.snapshotArmed')"
           />
           <SdmxStatusChip
             v-if="scratch.activeCount > 0"
@@ -224,22 +288,37 @@ function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']
             />
           </button>
 
+          <XButtonGroup
+            v-info="'desk.programmer.recordMode'"
+            size="sm"
+            class="programmer-record-mode"
+          >
+            <XButton
+              v-for="option in RECORD_MODE_OPTIONS"
+              :key="option.value"
+              :label="option.label"
+              :color="programmer.recordMode === option.value ? 'primary' : 'default'"
+              @click="setRecordMode(option.value)"
+            />
+          </XButtonGroup>
+
           <SdmxIconButton
             :icon="programmerSession.armed ? 'player-stop-filled' : 'player-record-filled'"
             :color="programmerSession.armed ? 'warning' : undefined"
-            info-key="desk.programmer.armRecord"
-            @click="programmerSession.armed ? programmerSession.disarm() : programmerSession.arm()"
+            :disable="recordButtonDisabled"
+            :info-key="recordButtonInfoKey"
+            @click="toggleRecord()"
           />
           <SdmxIconButton
             icon="flag"
             info-key="desk.programmer.dropMarker"
-            :disable="!programmerSession.armed"
+            :disable="!programmerSession.armed || programmer.recordMode !== 'session'"
             @click="programmerSession.dropMarker()"
           />
           <SdmxIconButton
-            icon="eye-off"
+            :icon="blindToggleIcon"
             info-key="desk.programmer.blind"
-            :color="scratch.blindMode ? 'warning' : undefined"
+            :color="blindToggleColor"
             @click="toggleBlind"
           />
           <SdmxIconButton
@@ -253,11 +332,6 @@ function selectFeatureGroup(id: (typeof PROGRAMMER_FEATURE_GROUPS)[number]['id']
             info-key="desk.programmer.redo"
             :disable="!scratch.canRedo"
             @click="scratch.redo()"
-          />
-          <SdmxIconButton
-            icon="circle-dot"
-            info-key="desk.programmer.record"
-            @click="cueStore.recordFrame()"
           />
           <SdmxButton
             label="Store"

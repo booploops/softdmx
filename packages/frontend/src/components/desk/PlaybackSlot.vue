@@ -38,22 +38,31 @@ const level = computed({
   },
 });
 
-function onGoClick() {
+function onGoPlusClick() {
   if (isGrandMaster.value) return;
   if ((props.slot.mode ?? 'go') === 'flash') return;
   executorStore.triggerSlot(props.slot.id);
 }
 
-function onGoDown() {
+function onGoPlusDown() {
   if (isGrandMaster.value) return;
   if ((props.slot.mode ?? 'go') !== 'flash') return;
   executorStore.triggerSlot(props.slot.id);
 }
 
-function onGoUp() {
+function onGoPlusUp() {
   if (isGrandMaster.value) return;
   if ((props.slot.mode ?? 'go') !== 'flash') return;
   executorStore.releaseFlash(props.slot.id);
+}
+
+function onGoMinusClick() {
+  if (isGrandMaster.value) return;
+  if ((props.slot.mode ?? 'go') === 'flash') {
+    executorStore.releaseFlash(props.slot.id);
+    return;
+  }
+  executorStore.stopSlot(props.slot.id);
 }
 
 function onStop() {
@@ -96,26 +105,37 @@ function onFaderCommit(value: number) {
       />
     </template>
     <template v-else>
-      <SdmxButton
-        label="GO"
-        variant="primary"
-        size="xs"
-        :active="isActive"
-        :info="info('desk.playback.go')"
-        @click="onGoClick"
-        @mousedown="onGoDown"
-        @mouseup="onGoUp"
-        @mouseleave="onGoUp"
-        @touchstart.prevent="onGoDown"
-        @touchend.prevent="onGoUp"
-      />
-      <SdmxButton
-        label="STOP"
-        variant="danger"
-        size="xs"
-        :info="info('desk.playback.stop')"
-        @click="onStop"
-      />
+      <div class="playback-slot-actions">
+        <div class="playback-slot-go-row">
+          <SdmxButton
+            label="-"
+            variant="secondary"
+            size="sm"
+            :info="info('desk.playback.goMinus')"
+            @click="onGoMinusClick"
+          />
+          <SdmxButton
+            label="+"
+            variant="primary"
+            size="sm"
+            :active="isActive"
+            :info="info('desk.playback.goPlus')"
+            @click="onGoPlusClick"
+            @mousedown="onGoPlusDown"
+            @mouseup="onGoPlusUp"
+            @mouseleave="onGoPlusUp"
+            @touchstart.prevent="onGoPlusDown"
+            @touchend.prevent="onGoPlusUp"
+          />
+        </div>
+        <SdmxButton
+          label="STOP"
+          variant="danger"
+          size="sm"
+          :info="info('desk.playback.stop')"
+          @click="onStop"
+        />
+      </div>
     </template>
   </div>
 </template>
@@ -126,6 +146,36 @@ function onFaderCommit(value: number) {
   flex-direction: column;
   gap: var(--sdmx-space-xs);
   width: 100%;
+}
+
+.playback-slot-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sdmx-space-xs);
+  width: 100%;
+}
+
+.playback-slot-go-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sdmx-space-xs);
+  width: 100%;
+}
+
+.playback-slot-go-row :deep(.x-btn) {
+  width: 100%;
+  min-width: 0;
+  min-height: 24px;
+  padding-inline: var(--sdmx-space-xs);
+  justify-content: center;
+}
+
+.playback-slot-actions :deep(.x-btn) {
+  width: 100%;
+  min-width: 0;
+  min-height: 24px;
+  padding-inline: var(--sdmx-space-xs);
+  justify-content: center;
 }
 
 :deep(.sdmx-fader__slider--vertical) {

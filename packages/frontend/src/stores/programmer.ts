@@ -13,6 +13,7 @@ import { useShowStore } from './show';
 
 export type ProgrammerFeatureGroup = AttributeFeature | 'all';
 export type ProgrammerStoreMode = 'store' | 'update' | 'merge' | 'remove';
+export type ProgrammerRecordMode = 'off' | 'snapshot' | 'session';
 
 export const PROGRAMMER_FEATURE_GROUPS: Array<{ id: ProgrammerFeatureGroup; label: string }> = [
   { id: 'all', label: 'All' },
@@ -29,6 +30,7 @@ export const useProgrammerStore = defineStore('programmer', () => {
 
   const activeFeatureGroup = ref<ProgrammerFeatureGroup>('all');
   const storeMode = ref<ProgrammerStoreMode>('store');
+  const recordMode = ref<ProgrammerRecordMode>('off');
   const selectedPoolId = ref('default-pool');
   const selectedPoolSlot = ref(0);
   const highlightSelection = ref(false);
@@ -52,6 +54,10 @@ export const useProgrammerStore = defineStore('programmer', () => {
 
   function setStoreMode(mode: ProgrammerStoreMode) {
     storeMode.value = mode;
+  }
+
+  function setRecordMode(mode: ProgrammerRecordMode) {
+    recordMode.value = mode;
   }
 
   function activateAttribute(path: string) {
@@ -100,6 +106,7 @@ export const useProgrammerStore = defineStore('programmer', () => {
   return {
     activeFeatureGroup,
     storeMode,
+    recordMode,
     selectedPoolId,
     selectedPoolSlot,
     highlightSelection,
@@ -113,6 +120,7 @@ export const useProgrammerStore = defineStore('programmer', () => {
     conflictMode,
     setFeatureGroup,
     setStoreMode,
+    setRecordMode,
     activateAttribute,
     deactivateAttribute,
     clearActiveAttributes,

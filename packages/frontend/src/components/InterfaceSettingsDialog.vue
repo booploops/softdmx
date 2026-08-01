@@ -52,11 +52,6 @@ const emit = defineEmits<{
             v-model="uiStore.programmerCollapsed"
             label="Collapse programmer panel by default"
           />
-
-          <XSwitch
-            v-model="uiStore.cueBarCollapsed"
-            label="Collapse cue bar by default"
-          />
         </XDialogBody>
         <XDialogFooter>
           <XButton label="Close" flat color="default" @click="emit('confirm')" />

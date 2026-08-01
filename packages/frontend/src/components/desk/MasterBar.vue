@@ -112,15 +112,6 @@ function onPlaybackBusCommit(value: number) {
       :info="info('desk.masterBar.commandLine')"
       @click="ui.toggleCommandLine()"
     />
-    <SdmxButton
-      v-if="ui.isLive"
-      :icon="ui.cueBarCollapsed ? 'chevron-up' : 'chevron-down'"
-      round
-      :variant="ui.cueBarCollapsed ? 'warning' : 'ghost'"
-      :active="!ui.cueBarCollapsed"
-      :info="info(ui.cueBarCollapsed ? 'desk.masterBar.showCueBar' : 'desk.masterBar.hideCueBar')"
-      @click="ui.cueBarCollapsed = !ui.cueBarCollapsed"
-    />
 
     <q-space />
 

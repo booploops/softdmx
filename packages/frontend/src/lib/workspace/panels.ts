@@ -46,13 +46,6 @@ export const WorkspacePanels: WorkspaceRoute[] = [
     menuGroup: "layouts",
   },
   {
-    label: "Live Desk",
-    path: "live-desk",
-    component: () => import("components/desk/LiveDesk.vue"),
-    showInSpawnMenu: true,
-    menuGroup: "layouts",
-  },
-  {
     label: "Setup Desk",
     path: "setup-desk",
     component: () => import("components/desk/SetupDesk.vue"),
@@ -285,6 +278,12 @@ export type PanelMenuItem = {
   path: string;
   children: PanelMenuItem[];
 };
+
+export function shouldSpawnInNewWorkspace(path: string): boolean {
+  const cleanPath = path.replace(/^\//, "");
+  const panel = WorkspacePanels.find((entry) => entry.path === cleanPath);
+  return panel?.menuGroup === "layouts";
+}
 
 export function getPanelsMenu(): PanelMenuItem[] {
   const layouts: PanelMenuItem[] = [];

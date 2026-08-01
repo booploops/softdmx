@@ -31,9 +31,6 @@ const deskView = useDeskViewStore();
         <div class="col-12 col-md-6">
           <XSwitch v-model="uiStore.programmerCollapsed" label="Collapse programmer by default" />
         </div>
-        <div class="col-12 col-md-6">
-          <XSwitch v-model="uiStore.cueBarCollapsed" label="Collapse cue bar by default" />
-        </div>
       </div>
     </div>
   </XCard>

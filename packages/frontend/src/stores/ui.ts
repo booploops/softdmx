@@ -96,9 +96,6 @@ export const useUIStore = defineStore('ui', () => {
   const programmerCollapsed = ref(
     isElectronConfigEnv ? DEFAULT_INTERFACE_SETTINGS.programmerCollapsed : false
   );
-  const cueBarCollapsed = ref(
-    isElectronConfigEnv ? DEFAULT_INTERFACE_SETTINGS.cueBarCollapsed : false
-  );
   const showWelcomeOnStartup = ref(
     isElectronConfigEnv ? DEFAULT_INTERFACE_SETTINGS.showWelcomeOnStartup : readShowWelcomeOnStartup()
   );
@@ -130,7 +127,6 @@ export const useUIStore = defineStore('ui', () => {
       persistConfigPatch({
         interface: {
           programmerCollapsed: programmerCollapsed.value,
-          cueBarCollapsed: cueBarCollapsed.value,
           showWelcomeOnStartup: showWelcomeOnStartup.value,
         },
       });
@@ -154,7 +150,6 @@ export const useUIStore = defineStore('ui', () => {
 
   function applyConfigInterface(settings: ConfigInterfaceSettings) {
     programmerCollapsed.value = settings.programmerCollapsed;
-    cueBarCollapsed.value = settings.cueBarCollapsed;
     showWelcomeOnStartup.value = settings.showWelcomeOnStartup;
   }
 
@@ -169,7 +164,7 @@ export const useUIStore = defineStore('ui', () => {
     );
   }
 
-  watch([programmerCollapsed, cueBarCollapsed, showWelcomeOnStartup], () => {
+  watch([programmerCollapsed, showWelcomeOnStartup], () => {
     persistInterfaceConfig();
     if (!isElectronConfigEnv && typeof localStorage !== 'undefined') {
       localStorage.setItem(SHOW_WELCOME_ON_STARTUP_KEY, showWelcomeOnStartup.value ? 'true' : 'false');
@@ -294,7 +289,6 @@ export const useUIStore = defineStore('ui', () => {
     operateLocked,
     showOperateLockIcon,
     programmerCollapsed,
-    cueBarCollapsed,
     infoMode,
     commandLineOpen,
     attributePanelOpen,

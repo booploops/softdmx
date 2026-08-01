@@ -13,7 +13,8 @@ import { useUIStore } from "src/stores/ui";
 import { useThemeStore } from "src/stores/theme";
 import { useWorkspaceStore } from "src/stores/workspace";
 import { useShowStore } from "src/stores/show";
-import { WorkspacePanels } from "src/lib/workspace/panels";
+import { createWorkspaceWithPanels } from "src/lib/workspace";
+import { WorkspacePanels, shouldSpawnInNewWorkspace } from "src/lib/workspace/panels";
 
 type NinjaKeysCommand = NinjaKeys["data"][number];
 
@@ -193,14 +194,6 @@ export const useCommandPaletteStore = defineStore("command-palette", () => {
         },
       },
       {
-        id: "toggle-cue-bar-pane",
-        title: "Toggle Cue Bar Pane (Collapse)",
-        section: "Interface",
-        handler: () => {
-          ui.cueBarCollapsed = !ui.cueBarCollapsed;
-        },
-      },
-      {
         id: "open-cue-editor",
         title: "Open Cue Editor Dialog",
         section: "Interface",
@@ -253,6 +246,10 @@ export const useCommandPaletteStore = defineStore("command-palette", () => {
           const path = panel.path.startsWith("/")
             ? panel.path
             : `/${panel.path}`;
+          if (shouldSpawnInNewWorkspace(path)) {
+            createWorkspaceWithPanels(panel.label, [path]);
+            return;
+          }
           workspaceStore.requestSpawnPanel(
             workspaceStore.activeWorkspaceId,
             path,

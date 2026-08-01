@@ -8,7 +8,6 @@
 <script setup lang="ts">
 import EditModeBanner from './EditModeBanner.vue';
 import DeskWorkspace from './DeskWorkspace.vue';
-import CueBar from './CueBar.vue';
 import { useUIStore } from 'src/stores/ui';
 
 const ui = useUIStore();
@@ -18,6 +17,5 @@ const ui = useUIStore();
   <div class="live-desk">
     <EditModeBanner v-if="!ui.operateLocked" />
     <DeskWorkspace />
-    <CueBar v-if="!ui.cueBarCollapsed" class="cue-bar" />
   </div>
 </template>

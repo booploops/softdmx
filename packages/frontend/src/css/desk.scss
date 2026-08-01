@@ -11,7 +11,6 @@
   --sdmx-desk-workspace-weight: 12;
   --sdmx-desk-rail-weight: 5;
   --sdmx-desk-rail-min-height: var(--sdmx-layout-playback-rail-min-height, 140px);
-  --sdmx-desk-cue-bar-height: 44px;
 }
 
 .live-desk {
@@ -35,13 +34,6 @@
   overflow: hidden;
   border-top: 1px solid var(--sdmx-color-border-subtle);
   background: var(--sdmx-color-bg-toolbar);
-}
-
-.cue-bar {
-  flex: 0 0 auto;
-  min-height: var(--sdmx-desk-cue-bar-height);
-  border-top: 1px solid var(--sdmx-color-border-subtle);
-  background: var(--sdmx-color-bg-elevated);
 }
 
 .master-bar {

@@ -9,7 +9,7 @@
 import { ref, computed, toRaw, watch, type Component, onMounted, onUnmounted } from "vue";
 import XSidebarButton from "src/components/controls/XSidebarButton.vue";
 import WSWorkspaceInstance from "src/components/workspace/WSWorkspaceInstance.vue";
-import { getPanelsMenu, type PanelMenuItem } from "src/lib/workspace/panels";
+import { getPanelsMenu, shouldSpawnInNewWorkspace, type PanelMenuItem } from "src/lib/workspace/panels";
 import { WorkspaceLayouts, createWorkspaceWithPanels } from "src/lib/workspace";
 import type { Route } from "@booploops/pod-router";
 import {
@@ -334,6 +334,15 @@ function handleSidebarShortcutClick(route: { id: string; path: string; label: st
   openToolInNewWorkspace(route);
 }
 
+function spawnPanelFromMenu(route: { path: string; label: string }) {
+  if (shouldSpawnInNewWorkspace(route.path)) {
+    openToolInNewWorkspace(route);
+    return;
+  }
+
+  spawnToolInActiveWorkspace(route);
+}
+
 function mapPanelMenuItem(item: PanelMenuItem): FrontendMenuItem {
   const mapped: FrontendMenuItem = {
     label: item.label,
@@ -342,7 +351,7 @@ function mapPanelMenuItem(item: PanelMenuItem): FrontendMenuItem {
     mapped.submenu = item.children.map(mapPanelMenuItem);
   } else {
     mapped.click = () => {
-      spawnToolInActiveWorkspace({ path: item.path, label: item.label });
+      spawnPanelFromMenu({ path: item.path, label: item.label });
     };
   }
   return mapped;
