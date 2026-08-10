@@ -21,6 +21,7 @@ import { useDMXStore } from 'src/stores/dmx';
 import { useChannelControl } from 'src/composables/useChannelControl';
 import { useActiveAttribute } from 'src/composables/useActiveAttribute';
 import { resolveDefaultStoreProfile } from 'src/utils/programmer-store-profile';
+import { createAlert } from 'src/lib/CommonDialogs';
 import { applyWingOffset, inferAttributeFeature, wingScaleForIndex } from '@softdmx/engine';
 import type { AlignMode, ScratchEntry, WingDirection } from '@softdmx/engine';
 import {
@@ -118,23 +119,36 @@ function applyWingsToSelection(attributeName: string, baseValue: number) {
   });
 }
 
-function applyDefaultStoreProfile() {
+function applyDefaultStoreProfile(): boolean {
   const profile = defaultStoreProfile.value;
   const mode = profile?.mode ?? programmer.storeMode;
   const poolId = profile?.poolId ?? programmer.selectedPoolId;
   const poolSlot = profile?.poolSlot ?? programmer.selectedPoolSlot;
-  const attributeFilter = profile?.featureFilter ?? programmer.attributeFilter();
+  const attributeFilter = programmer.attributeFilter() ?? profile?.featureFilter;
   const name = presetName.value.trim() || profile?.name || `Preset ${Date.now()}`;
 
-  cueStore.recordScratchAsPreset(name, {
+  const result = cueStore.recordScratchAsPreset(name, {
     mode,
     attributeFilter,
     poolId,
     poolSlot,
   });
+
+  if (!result.ok) {
+    const message =
+      result.reason === 'no-scratch'
+        ? 'Nothing in scratch to store. Adjust a channel first, then tap Store again.'
+        : result.reason === 'no-capture'
+          ? 'No scratch values matched the current store filter. Try the All feature group or clear the store profile feature filter.'
+          : 'Store produced no preset data for the current mode and filter.';
+    void createAlert({ title: 'Store failed', message });
+    return false;
+  }
+
   presetName.value = '';
   showSavePreset.value = false;
   engine.requestMerge();
+  return true;
 }
 
 function saveAsPreset() {
@@ -154,9 +168,14 @@ function onStorePressEnd() {
     clearTimeout(storePressTimer.value);
     storePressTimer.value = null;
   }
-  if (!storeLongPressTriggered.value) {
-    applyDefaultStoreProfile();
+}
+
+function onStoreClick() {
+  if (storeLongPressTriggered.value) {
+    storeLongPressTriggered.value = false;
+    return;
   }
+  applyDefaultStoreProfile();
 }
 
 
@@ -339,6 +358,7 @@ watch(
             size="sm"
             class="programmer-store-btn"
             :info="info('desk.programmer.store')"
+            @click="onStoreClick"
             @mousedown="onStorePressStart"
             @mouseup="onStorePressEnd"
             @mouseleave="onStorePressEnd"

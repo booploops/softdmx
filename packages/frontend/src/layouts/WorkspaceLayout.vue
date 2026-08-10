@@ -9,7 +9,7 @@
 import { ref, computed, toRaw, watch, type Component, onMounted, onUnmounted } from "vue";
 import XSidebarButton from "src/components/controls/XSidebarButton.vue";
 import WSWorkspaceInstance from "src/components/workspace/WSWorkspaceInstance.vue";
-import { getPanelsMenu, shouldSpawnInNewWorkspace, type PanelMenuItem } from "src/lib/workspace/panels";
+import { getPanelsMenu, type PanelMenuItem } from "src/lib/workspace/panels";
 import { WorkspaceLayouts, createWorkspaceWithPanels } from "src/lib/workspace";
 import type { Route } from "@booploops/pod-router";
 import {
@@ -335,12 +335,24 @@ function handleSidebarShortcutClick(route: { id: string; path: string; label: st
 }
 
 function spawnPanelFromMenu(route: { path: string; label: string }) {
-  if (shouldSpawnInNewWorkspace(route.path)) {
-    openToolInNewWorkspace(route);
-    return;
+  // Desk / layout views are panels inside the active workspace (top tabs),
+  // not sibling workspaces in the outer shell.
+  spawnToolInActiveWorkspace(route);
+}
+
+function applyLayoutToActiveWorkspace(layout: unknown) {
+  if (!outerApi) return;
+
+  let targetWorkspaceId = workspaceStore.activeWorkspaceId;
+  if (!targetWorkspaceId || !outerApi.getPanel(targetWorkspaceId)) {
+    targetWorkspaceId = createNewWorkspace(true);
+  } else {
+    const panel = outerApi.getPanel(targetWorkspaceId);
+    panel?.api.setActive();
   }
 
-  spawnToolInActiveWorkspace(route);
+  if (!targetWorkspaceId) return;
+  workspaceStore.requestApplyLayout(targetWorkspaceId, JSON.parse(JSON.stringify(layout)));
 }
 
 function mapPanelMenuItem(item: PanelMenuItem): FrontendMenuItem {
@@ -448,6 +460,47 @@ function updateFloatingWindowTitlebars() {
   });
 }
 
+/** Undo any left-header migration so workspace tabs stay a thin top strip. */
+function ensureOuterHeadersOnTop(api: DockviewApi) {
+  for (const group of api.groups) {
+    if (group.api.location.type !== "grid") continue;
+    if (group.api.getHeaderPosition() === "top") continue;
+    group.api.setHeaderPosition("top");
+  }
+}
+
+/** Strip persisted left/right header positions from saved outer layouts. */
+function sanitizeOuterLayout(layout: unknown): unknown {
+  if (!layout || typeof layout !== "object") return layout;
+  const cloned = JSON.parse(JSON.stringify(layout)) as {
+    grid?: { root?: unknown };
+  };
+
+  const visit = (node: unknown): void => {
+    if (!node || typeof node !== "object") return;
+    const record = node as {
+      type?: string;
+      data?: unknown;
+      headerPosition?: string;
+    };
+
+    if (record.type === "leaf" && record.data && typeof record.data === "object") {
+      const leaf = record.data as { headerPosition?: string };
+      if (leaf.headerPosition && leaf.headerPosition !== "top") {
+        delete leaf.headerPosition;
+      }
+      return;
+    }
+
+    if (Array.isArray(record.data)) {
+      for (const child of record.data) visit(child);
+    }
+  };
+
+  visit(cloned.grid?.root);
+  return cloned;
+}
+
 function onReady(event: DockviewReadyEvent) {
   outerApi = event.api;
 
@@ -480,7 +533,7 @@ function onReady(event: DockviewReadyEvent) {
     if (savedOuterLayout) {
       try {
         workspaceStore.withRestore(() => {
-          api.fromJSON(savedOuterLayout as any);
+          api.fromJSON(sanitizeOuterLayout(savedOuterLayout) as any);
         });
       } catch (err) {
         console.error("Failed to restore outer workspace layout:", err);
@@ -492,18 +545,21 @@ function onReady(event: DockviewReadyEvent) {
       createNewWorkspace(true);
     }
 
+    ensureOuterHeadersOnTop(api);
+
     // Persist only after restore/initial setup — avoids empty dockview state
     // overwriting workspace.yml during the hydration window.
     api.onDidLayoutChange(() => {
       if (!outerApi) return;
+      ensureOuterHeadersOnTop(outerApi);
       try {
-        workspaceStore.saveOuterLayout(api.toJSON());
+        workspaceStore.saveOuterLayout(outerApi.toJSON());
       } catch (err) {
         console.error("Failed to serialize outer workspace layout:", err);
       }
     });
 
-    // Persist the post-restore layout (covers default workspace creation).
+    // Persist the post-restore layout (covers default workspace creation + header migration).
     try {
       workspaceStore.saveOuterLayout(api.toJSON());
     } catch (err) {
@@ -646,7 +702,7 @@ function showNativeSpawnMenu() {
       ...WorkspaceLayouts.map((layoutPreset) => ({
         label: layoutPreset.title,
         click: () => {
-          importWorkspaceData(layoutPreset.title, layoutPreset.layout);
+          applyLayoutToActiveWorkspace(layoutPreset.layout);
         },
       })),
       ...(layoutsItem.submenu ?? []),
@@ -751,12 +807,13 @@ onUnmounted(() => {
         </XSidebarButton>
       </div>
     </div>
+
     <div
       ref="containerRef"
       class="workspace-viewport"
     >
       <DockviewVue
-        :class="`dockview-theme-${themeStore.dockviewTheme} sdmx-dockview`"
+        :class="`dockview-theme-${themeStore.dockviewTheme} sdmx-dockview sdmx-dockview--workspaces`"
         :components="components"
         :getTabContextMenuItems="getTabContextMenuItems"
         :floatingGroupDragHandle="'titlebar'"
@@ -815,6 +872,8 @@ onUnmounted(() => {
   container-type: inline-size;
   container-name: viewport;
   flex: 1;
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -832,5 +891,48 @@ onUnmounted(() => {
   --dv-inactivegroup-visiblepanel-tab-color: var(--sdmx-color-text-muted);
   --dv-tab-divider-color: var(--sdmx-color-border-subtle);
   --dv-pane-divider-color: var(--sdmx-color-border-strong);
+}
+
+/* Thin native workspace tab strip — keeps dockview drag-to-split working. */
+.sdmx-dockview--workspaces {
+  --dv-tabs-and-actions-container-height: 26px;
+  --dv-tabs-and-actions-container-font-size: 12px;
+}
+
+.sdmx-dockview--workspaces :deep(.dv-tabs-and-actions-container) {
+  height: 26px !important;
+  min-height: 26px !important;
+  max-height: 26px !important;
+}
+
+.sdmx-dockview--workspaces :deep(.dv-tab) {
+  height: 26px !important;
+  min-height: 26px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Don't let a persisted left-header layout keep a tall vertical strip. */
+.sdmx-dockview--workspaces :deep(.dv-tabs-and-actions-container.dv-groupview-header-vertical) {
+  width: 26px !important;
+  height: auto !important;
+  max-height: none !important;
+}
+
+/* Inner panel tabs keep normal sizing. */
+.sdmx-dockview--workspaces :deep(.sdmx-dockview-inner) {
+  --dv-tabs-and-actions-container-height: 35px;
+  --dv-tabs-and-actions-container-font-size: 13px;
+}
+
+.sdmx-dockview--workspaces :deep(.sdmx-dockview-inner .dv-tabs-and-actions-container) {
+  height: var(--dv-tabs-and-actions-container-height) !important;
+  min-height: var(--dv-tabs-and-actions-container-height) !important;
+  max-height: var(--dv-tabs-and-actions-container-height) !important;
+}
+
+.sdmx-dockview--workspaces :deep(.sdmx-dockview-inner .dv-tab) {
+  height: auto !important;
+  min-height: 0 !important;
 }
 </style>

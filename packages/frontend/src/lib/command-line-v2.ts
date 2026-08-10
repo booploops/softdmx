@@ -174,8 +174,8 @@ function buildProgrammerHelpText(): string {
     '  timeline quantize',
     '',
     'Audio / Spatial',
-    '  audio bind <targetId> [beat|rms|peak|band]',
-    '  audio unbind <targetId>',
+    '  audio bind <fixtureOrGroup> [beat|rms|peak|band]  (recipe; assign to executor to output)',
+    '  audio unbind <fixtureOrGroup>',
     '  align [row|column]',
     '  distribute <spacing>',
     '  mirror',
@@ -735,16 +735,19 @@ export function buildExecutionPlan(ast: CommandAst, deps: ExecutionDeps, canonic
           return `Removed audio mappings for ${targetId ?? 'target'}.`;
         }
         const targetId = ast.args[0] ?? deps.context.selectedFixtures[0];
-        if (!targetId) throw new Error('Usage: audio bind <targetId> [source]');
+        if (!targetId) throw new Error('Usage: audio bind <fixtureOrGroup> [source]');
         const source = (ast.args[1] as 'rms' | 'peak' | 'beat' | 'band' | undefined) ?? 'beat';
+        const isGroup = deps.showStore.document.groups.some((group) => group.name === targetId);
+        const name = `${targetId} Dimmer`;
         deps.showStore.updateDocument((doc) => {
           doc.audioMappings = doc.audioMappings ?? [];
           doc.audioMappings.push({
             id: `audio-map-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            name,
             source,
-            targetType: 'fixture',
+            targetType: isGroup ? 'group' : 'fixture',
             targetId,
-            attribute: 'intensity',
+            attribute: 'Dimmer',
             gain: 1,
             offset: 0,
             enabled: true,
@@ -752,7 +755,7 @@ export function buildExecutionPlan(ast: CommandAst, deps: ExecutionDeps, canonic
             max: 255,
           });
         });
-        return `Bound audio ${source} to ${targetId}.`;
+        return `Created audio mapping "${name}". Assign it to an executor slot and GO to enable output.`;
       },
     };
   }

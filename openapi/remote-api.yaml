@@ -662,9 +662,15 @@ components:
     ShowAudioMapping:
       type: object
       required: [id, source, targetType, targetId]
+      description: |
+        Audio recipe with fixture/group targeting. Live output is gated by assigning the
+        mapping to an active executor slot.
       properties:
         id:
           type: string
+        name:
+          type: string
+          description: Human-readable label for desks and lists
         source:
           type: string
           enum: [rms, peak, beat, band]

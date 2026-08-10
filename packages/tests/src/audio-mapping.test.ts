@@ -10,10 +10,37 @@ import assert from 'node:assert/strict';
 import {
   createAudioMappingEvalState,
   evaluateAudioMappings,
-} from '../../frontend/src/engine/audio-mapping.ts';
-import { createEmptyShow } from '../../frontend/src/show/document.ts';
+} from '../../engine/src/core/audio-mapping.ts';
+import { createEmptyShow } from '../../engine/src/show/document.ts';
 
-console.log('Running test: fixture RMS mapping');
+console.log('Running test: ungated mappings produce no output');
+const ungatedShow = createEmptyShow('Audio Ungated');
+ungatedShow.fixtures.push({ name: 'Kick 1', fixtureId: 'VRSL_Light5CH' });
+ungatedShow.audioMappings = [
+  {
+    id: 'map-rms',
+    source: 'rms',
+    targetType: 'fixture',
+    targetId: 'Kick 1',
+    attribute: 'Dimmer',
+    enabled: true,
+    gain: 1,
+    offset: 0,
+    min: 0,
+    max: 255,
+    attackMs: 0,
+    releaseMs: 0,
+  },
+];
+const ungatedValues = evaluateAudioMappings(
+  ungatedShow,
+  { rms: 0.5, peak: 0.2, bands: [0, 0, 0, 0], beatPulse: false },
+  createAudioMappingEvalState(),
+  100,
+);
+assert.equal(ungatedValues.size, 0);
+
+console.log('Running test: fixture RMS mapping via active contribution');
 const fixtureShow = createEmptyShow('Audio Fixture Mapping');
 fixtureShow.fixtures.push({ name: 'Kick 1', fixtureId: 'VRSL_Light5CH' });
 fixtureShow.audioMappings = [
@@ -38,9 +65,20 @@ const fixtureValues = evaluateAudioMappings(
   fixtureShow,
   { rms: 0.5, peak: 0.2, bands: [0, 0, 0, 0], beatPulse: false },
   fixtureState,
-  100
+  100,
+  [{ mappingId: 'map-rms', level: 1 }],
 );
 assert.equal(fixtureValues.get('show://Kick 1/1'), 128);
+
+console.log('Running test: slot level scales mapping output');
+const scaledValues = evaluateAudioMappings(
+  fixtureShow,
+  { rms: 0.5, peak: 0.2, bands: [0, 0, 0, 0], beatPulse: false },
+  createAudioMappingEvalState(),
+  100,
+  [{ mappingId: 'map-rms', level: 0.5 }],
+);
+assert.equal(scaledValues.get('show://Kick 1/1'), 64);
 
 console.log('Running test: group band mapping fan-out');
 const groupShow = createEmptyShow('Audio Group Mapping');
@@ -67,7 +105,8 @@ const groupValues = evaluateAudioMappings(
   groupShow,
   { rms: 0, peak: 0, bands: [0.1, 0.2, 0.5, 0.1], beatPulse: false },
   createAudioMappingEvalState(),
-  100
+  100,
+  [{ mappingId: 'map-band' }],
 );
 assert.equal(groupValues.get('show://Wash 1/2'), 100);
 assert.equal(groupValues.get('show://Wash 2/2'), 100);
@@ -90,23 +129,27 @@ smoothShow.audioMappings = [
   },
 ];
 const smoothState = createAudioMappingEvalState();
+const smoothContribution = [{ mappingId: 'map-smooth', level: 1 }];
 evaluateAudioMappings(
   smoothShow,
   { rms: 0, peak: 0, bands: [0, 0, 0, 0], beatPulse: false },
   smoothState,
-  0
+  0,
+  smoothContribution,
 );
 const rising = evaluateAudioMappings(
   smoothShow,
   { rms: 0, peak: 1, bands: [0, 0, 0, 0], beatPulse: false },
   smoothState,
-  50
+  50,
+  smoothContribution,
 );
 const falling = evaluateAudioMappings(
   smoothShow,
   { rms: 0, peak: 0, bands: [0, 0, 0, 0], beatPulse: false },
   smoothState,
-  100
+  100,
+  smoothContribution,
 );
 assert.ok((rising.get('show://Strobe 1/1') ?? 0) > 120);
 assert.ok((rising.get('show://Strobe 1/1') ?? 0) < 140);
@@ -131,17 +174,20 @@ beatShow.audioMappings = [
   },
 ];
 const beatState = createAudioMappingEvalState();
+const beatContribution = [{ mappingId: 'map-beat', level: 1 }];
 const beatOn = evaluateAudioMappings(
   beatShow,
   { rms: 0, peak: 0, bands: [0, 0, 0, 0], beatPulse: true },
   beatState,
-  10
+  10,
+  beatContribution,
 );
 const beatOff = evaluateAudioMappings(
   beatShow,
   { rms: 0, peak: 0, bands: [0, 0, 0, 0], beatPulse: false },
   beatState,
-  20
+  20,
+  beatContribution,
 );
 assert.equal(beatOn.get('show://Hit 1/5'), 255);
 assert.equal(beatOff.get('show://Hit 1/5'), 0);

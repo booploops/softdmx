@@ -115,4 +115,42 @@ assert.equal(removed[0]?.attrs.Dimmer, 100);
 const storeTargets = applyProgrammerStoreMode('store', undefined, capture);
 assert.equal(storeTargets[0]?.attrs.Dimmer, 200);
 
+const slashFixtureEntries: ScratchEntry[] = [
+  {
+    path: 'show://Stage/Left/1',
+    value: 180,
+    attributeType: 'intensity',
+    attributeName: 'Dimmer',
+    feature: 'dimmer',
+    touchedAt: 1,
+  },
+];
+const slashMapped = [
+  {
+    fixtureName: 'Stage/Left',
+    def: {
+      id: 'f3',
+      name: 'F3',
+      channels: [
+        {
+          name: 'Dimmer',
+          type: 'intensity',
+          minValue: 0,
+          maxValue: 255,
+          defaultValue: 0,
+          reference: { id: 1, path: 'show://Stage/Left/1', value: 0 },
+        },
+      ],
+    },
+  },
+];
+const slashCapture = captureScratchPreset(
+  slashFixtureEntries,
+  slashMapped as never,
+  new Map([['show://Stage/Left/1', 180]]),
+);
+assert.equal(slashCapture.targets.length, 1);
+assert.equal(slashCapture.targets[0]?.fixtures[0], 'Stage/Left');
+assert.equal(slashCapture.targets[0]?.attrs.Dimmer, 180);
+
 console.log('programmer-capture tests passed');

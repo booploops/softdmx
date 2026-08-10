@@ -8,16 +8,58 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import type { ExecutorSlot } from '@softdmx/engine';
+import type { ExecutorSlotContentType } from '@softdmx/engine';
+import { resolveExecutorSlotContentType } from '@softdmx/engine';
 import { useCueStore } from 'src/stores/cue';
+import { useShowStore } from 'src/stores/show';
 import { useExecutorStore } from 'src/stores/executor';
 
 const cueStore = useCueStore();
+const showStore = useShowStore();
 const executorStore = useExecutorStore();
 
+const contentTypeOptions: Array<{ label: string; value: ExecutorSlotContentType }> = [
+  { label: 'None', value: 'none' },
+  { label: 'Cue', value: 'cue' },
+  { label: 'Preset', value: 'preset' },
+  { label: 'Effect', value: 'effect' },
+  { label: 'Audio', value: 'audio' },
+];
+
 const cueOptions = computed(() => [
-  { label: 'None', value: '' },
-  ...cueStore.cues.map((cue) => ({ label: cue.name, value: cue.id }))
+  { label: 'Select cue…', value: '' },
+  ...cueStore.cues.map((cue) => ({ label: cue.name, value: cue.id })),
 ]);
+
+const presetOptions = computed(() => [
+  { label: 'Select preset…', value: '' },
+  ...(showStore.document.presets ?? []).map((preset) => ({ label: preset.name, value: preset.id })),
+]);
+
+const effectOptions = computed(() => [
+  { label: 'Select effect…', value: '' },
+  ...showStore.document.effects.map((effect) => ({ label: effect.name, value: effect.id })),
+]);
+
+const audioOptions = computed(() => [
+  { label: 'Select audio mapping…', value: '' },
+  ...(showStore.document.audioMappings ?? []).map((mapping) => ({
+    label: executorStore.describeAudioMapping(mapping.id),
+    value: mapping.id,
+  })),
+]);
+
+function slotContentType(slot: ExecutorSlot): ExecutorSlotContentType {
+  return resolveExecutorSlotContentType(slot);
+}
+
+function onContentTypeChange(slot: ExecutorSlot, type: ExecutorSlotContentType) {
+  executorStore.assignSlotContent(slot.id, type);
+}
+
+function onContentTargetChange(slot: ExecutorSlot, type: ExecutorSlotContentType, id: string) {
+  executorStore.assignSlotContent(slot.id, type, id || undefined);
+}
 
 function onSlotTrigger(slot: ExecutorSlot) {
   executorStore.triggerSlot(slot.id);
@@ -42,7 +84,7 @@ function onSlotGoClick(slot: ExecutorSlot) {
         <XInput
           :model-value="executorStore.executor.defaultReleaseMs ?? 400"
           type="number"
-          label="Global release ms"
+          label="Default release ms"
           style="width: 170px"
           @update:model-value="(value) => executorStore.updateExecutor({ defaultReleaseMs: Number(value ?? 0) })"
         />
@@ -51,6 +93,7 @@ function onSlotGoClick(slot: ExecutorSlot) {
           size="sm"
           flat
           icon="chevron-left"
+          :disable="executorStore.activePage <= 1"
           @click="executorStore.previousPage"
         />
         <XButton
@@ -58,7 +101,26 @@ function onSlotGoClick(slot: ExecutorSlot) {
           size="sm"
           flat
           icon="chevron-right"
+          :disable="executorStore.activePage >= executorStore.pageCount"
           @click="executorStore.nextPage"
+        />
+        <XButton
+          v-info="'program.executors.addPage'"
+          size="sm"
+          flat
+          icon="plus"
+          label="Add page"
+          @click="executorStore.addPage"
+        />
+        <XButton
+          v-info="'program.executors.removePage'"
+          size="sm"
+          flat
+          icon="trash"
+          label="Remove page"
+          color="danger"
+          :disable="executorStore.pageCount <= 1"
+          @click="executorStore.removePage()"
         />
         <XButton
           v-info="'desk.playback.stopAll'"
@@ -95,12 +157,56 @@ function onSlotGoClick(slot: ExecutorSlot) {
               size="xs"
             />
           </div>
-          <XSelect
-            :model-value="slot.cueId ?? ''"
-            :options="cueOptions"
-            label="Cue"
-            @update:model-value="(cueId) => executorStore.assignSlot(slot.id, cueId || undefined)"
-          />
+          <div class="slot-card__content">
+            <XSelect
+              :model-value="slotContentType(slot)"
+              :options="contentTypeOptions"
+              label="Content"
+              emit-value
+              map-options
+              @update:model-value="(type) => onContentTypeChange(slot, type as ExecutorSlotContentType)"
+            />
+            <XSelect
+              v-if="slotContentType(slot) === 'cue'"
+              :model-value="slot.cueId ?? ''"
+              :options="cueOptions"
+              label="Cue"
+              @update:model-value="(id) => onContentTargetChange(slot, 'cue', String(id ?? ''))"
+            />
+            <XSelect
+              v-else-if="slotContentType(slot) === 'preset'"
+              :model-value="slot.presetId ?? ''"
+              :options="presetOptions"
+              label="Preset"
+              @update:model-value="(id) => onContentTargetChange(slot, 'preset', String(id ?? ''))"
+            />
+            <XSelect
+              v-else-if="slotContentType(slot) === 'effect'"
+              :model-value="slot.effectId ?? ''"
+              :options="effectOptions"
+              label="Effect"
+              @update:model-value="(id) => onContentTargetChange(slot, 'effect', String(id ?? ''))"
+            />
+            <XSelect
+              v-else-if="slotContentType(slot) === 'audio'"
+              :model-value="slot.audioMappingId ?? ''"
+              :options="audioOptions"
+              label="Audio mapping"
+              @update:model-value="(id) => onContentTargetChange(slot, 'audio', String(id ?? ''))"
+            />
+            <div
+              v-else
+              class="slot-card__empty-content text-caption text-grey-5"
+            >
+              No content assigned
+            </div>
+          </div>
+          <div
+            v-if="executorStore.getSlotContentLabel(slot)"
+            class="slot-card__assigned text-caption"
+          >
+            Assigned: {{ executorStore.getSlotContentLabel(slot) }}
+          </div>
           <div class="slot-card__fields">
             <XSelect
               :model-value="slot.mode ?? 'go'"
@@ -139,6 +245,7 @@ function onSlotGoClick(slot: ExecutorSlot) {
               color="positive"
               size="md"
               label="GO"
+              :disable="!executorStore.getSlotContentLabel(slot)"
               @click.stop="onSlotGoClick(slot)"
               @mousedown="slot.mode === 'flash' ? onSlotTrigger(slot) : undefined"
               @mouseup="onSlotRelease(slot)"
@@ -149,6 +256,7 @@ function onSlotGoClick(slot: ExecutorSlot) {
               color="danger"
               size="md"
               label="STOP"
+              :disable="!executorStore.getSlotContentLabel(slot)"
               @click.stop="executorStore.stopSlot(slot.id)"
             />
           </div>
@@ -237,6 +345,20 @@ function onSlotGoClick(slot: ExecutorSlot) {
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+}
+
+.slot-card__content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.slot-card__assigned {
+  color: var(--sdmx-color-text-muted);
+}
+
+.slot-card__empty-content {
+  padding: 8px 0;
 }
 
 .slot-card__fields {

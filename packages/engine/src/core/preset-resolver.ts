@@ -22,12 +22,35 @@ export function resolveGroupFixtures(show: ShowDocument, groupName: string): str
   return group?.fixtures ?? [];
 }
 
+/** Resolve fixture names from fixtures[], groups[], and legacy group (union). */
+export function resolveTargetFixtureNames(
+  show: ShowDocument,
+  target: { fixtures?: string[]; group?: string; groups?: string[] },
+): string[] {
+  const names = new Set<string>();
+
+  for (const fixtureName of target.fixtures ?? []) {
+    names.add(fixtureName);
+  }
+
+  const groupNames = [
+    ...(target.groups ?? []),
+    ...(target.group ? [target.group] : []),
+  ];
+  for (const groupName of groupNames) {
+    for (const fixtureName of resolveGroupFixtures(show, groupName)) {
+      names.add(fixtureName);
+    }
+  }
+
+  return Array.from(names);
+}
+
 export function resolvePresetTargets(show: ShowDocument, preset: Preset): ResolvedChannelTarget[] {
   const results: ResolvedChannelTarget[] = [];
 
   for (const target of preset.targets) {
-    const fixtureNames =
-      target.fixtures ?? (target.group ? resolveGroupFixtures(show, target.group) : []);
+    const fixtureNames = resolveTargetFixtureNames(show, target);
 
     for (const fixtureName of fixtureNames) {
       const fixture = show.fixtures.find((f) => f.name === fixtureName);
@@ -59,8 +82,7 @@ export function presetToChannels(
   const map = new Map<string, { value: number; attributeType: string }>();
 
   for (const target of preset.targets) {
-    const fixtureNames =
-      target.fixtures ?? (target.group ? resolveGroupFixtures(show, target.group) : []);
+    const fixtureNames = resolveTargetFixtureNames(show, target);
 
     for (const fixtureName of fixtureNames) {
       const fixture = show.fixtures.find((f) => f.name === fixtureName);
@@ -85,12 +107,31 @@ export function presetToChannels(
   return map;
 }
 
+/** Resolve effect attribute names from attrs[] and legacy attr. */
+export function resolveEffectAttributeNames(target: {
+  attr?: string;
+  attrs?: string[];
+}): string[] {
+  const names: string[] = [];
+  for (const attr of target.attrs ?? []) {
+    if (attr && !names.includes(attr)) names.push(attr);
+  }
+  if (!names.length && target.attr) names.push(target.attr);
+  return names;
+}
+
 export function resolveEffectTargets(
   show: ShowDocument,
-  target: { fixtures?: string[]; group?: string; attr: string },
+  target: {
+    fixtures?: string[];
+    group?: string;
+    groups?: string[];
+    attr?: string;
+    attrs?: string[];
+  },
 ): { path: string; attributeType: string; fixtureIndex: number }[] {
-  const fixtureNames =
-    target.fixtures ?? (target.group ? resolveGroupFixtures(show, target.group) : []);
+  const fixtureNames = resolveTargetFixtureNames(show, target);
+  const attrNames = resolveEffectAttributeNames(target);
   const results: { path: string; attributeType: string; fixtureIndex: number }[] = [];
 
   fixtureNames.forEach((fixtureName, fixtureIndex) => {
@@ -100,14 +141,16 @@ export function resolveEffectTargets(
     const def = getFixtureDefinition(fixture.fixtureId);
     if (!def) return;
 
-    const channelIndex = def.channels.findIndex((c) => c.name === target.attr);
-    if (channelIndex === -1) return;
+    for (const attrName of attrNames) {
+      const channelIndex = def.channels.findIndex((c) => c.name === attrName);
+      if (channelIndex === -1) continue;
 
-    results.push({
-      path: `show://${fixtureName}/${channelIndex + 1}`,
-      attributeType: def.channels[channelIndex]!.type,
-      fixtureIndex,
-    });
+      results.push({
+        path: `show://${fixtureName}/${channelIndex + 1}`,
+        attributeType: def.channels[channelIndex]!.type,
+        fixtureIndex,
+      });
+    }
   });
 
   return results;

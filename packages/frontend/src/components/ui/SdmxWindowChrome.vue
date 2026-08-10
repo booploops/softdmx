@@ -6,11 +6,20 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-defineProps<{
-  title: string;
-  icon?: string;
-  info?: string;
-}>();
+withDefaults(
+  defineProps<{
+    title: string;
+    icon?: string;
+    info?: string;
+    /** Show a clickable close control in the header (needed for touch / no-keyboard). */
+    closable?: boolean;
+    closeInfo?: string;
+  }>(),
+  {
+    closable: false,
+    closeInfo: undefined,
+  }
+);
 
 const emit = defineEmits<{ close: [] }>();
 </script>
@@ -23,13 +32,14 @@ const emit = defineEmits<{ close: [] }>();
       <div class="sdmx-window-chrome__actions">
         <slot name="actions" />
         <button
-          v-if="$attrs.onClose !== undefined"
+          v-if="closable"
           type="button"
           class="sdmx-window-chrome__close sdmx-focus-ring"
           aria-label="Close"
+          :data-sdmx-info="closeInfo"
           @click="emit('close')"
         >
-          <XIcon name="x" size="16px" />
+          <XIcon name="x" size="18px" />
         </button>
       </div>
     </header>
@@ -87,13 +97,14 @@ const emit = defineEmits<{ close: [] }>();
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: var(--sdmx-space-touch, 44px);
+  height: var(--sdmx-space-touch, 44px);
   border: none;
   border-radius: var(--sdmx-radius-sm);
   background: transparent;
   color: var(--sdmx-color-text-muted);
   cursor: pointer;
+  flex-shrink: 0;
 }
 
 .sdmx-window-chrome__close:hover {

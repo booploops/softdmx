@@ -152,8 +152,10 @@ programmer: {}
 `PresetTarget` fields:
 
 - `fixtures?: string[]` (fixture names)
-- `group?: string` (group name)
+- `groups?: string[]` (group names)
+- `group?: string` (legacy single group name; still accepted when reading older shows)
 - `attrs: Record<string, number>` (attribute/value pairs)
+- Fixture and group selections may be used together; resolved fixtures are the union of both.
 
 ### `effects`
 
@@ -164,8 +166,10 @@ programmer: {}
   - `enabled: boolean`
   - `target: EffectTarget`
     - `fixtures?: string[]`
-    - `group?: string`
-    - `attr: string`
+    - `groups?: string[]`
+    - `group?: string` (legacy single group name)
+    - `attrs?: string[]` (channel attribute names to modulate)
+    - `attr: string` (legacy single attribute; still accepted when reading older shows)
   - `sync?: "free" | "link"`
 
 Effect-specific fields:
@@ -330,19 +334,22 @@ Effect-specific fields:
 `ShowAudioMapping` fields:
 
 - `id: string`
+- `name?: string` (display label for desks and lists)
 - `source: "rms" | "peak" | "beat" | "band"`
 - `bandIndex?: 0 | 1 | 2 | 3` (used when `source: "band"`)
-- `targetType: "fixture" | "group" | "effect" | "executor" | "submaster"`
-- `targetId: string`
+- `targetType: "fixture" | "group" | "effect" | "executor" | "submaster"` (channel recipes use `fixture` / `group`)
+- `targetId: string` (fixture name or group name)
 - `attribute?: string`
 - `gain?: number`
 - `offset?: number`
-- `enabled?: boolean`
+- `enabled?: boolean` (recipe mute; does not enable live output by itself)
 - `invert?: boolean`
 - `min?: number`
 - `max?: number`
 - `attackMs?: number`
 - `releaseMs?: number`
+
+Audio mappings own fixture/group targeting. Live output still requires assigning the mapping to an executor slot (`contentType: "audio"` + `audioMappingId`) and activating that slot (GO / toggle / latch / flash). `slot.level` scales intensity.
 
 ### `executors`
 
@@ -363,7 +370,11 @@ Effect-specific fields:
 - `name: string`
 - `page: number`
 - `index: number` (zero-based slot index on page)
+- `contentType?: "cue" | "preset" | "effect" | "audio"` (selected kind; retained when no target id is set yet)
 - `cueId?: string`
+- `presetId?: string`
+- `effectId?: string`
+- `audioMappingId?: string` (references `audioMappings[].id`)
 - `mode?: "go" | "toggle" | "flash" | "latch" | string`
 - `fadeMs?: number`
 - `releaseMs?: number`

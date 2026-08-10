@@ -68,7 +68,9 @@ export interface ShowGroup {
 
 export interface PresetTarget {
   fixtures?: string[];
+  /** @deprecated Prefer `groups` for multi-select; still read for older shows. */
   group?: string;
+  groups?: string[];
   attrs: Record<string, number>;
 }
 
@@ -195,8 +197,11 @@ export interface ShowTimelineConfig {
 
 export interface ShowAudioMapping {
   id: string;
+  /** Human-readable label for desks and lists. */
+  name?: string;
   source: "rms" | "peak" | "beat" | "band";
   bandIndex?: 0 | 1 | 2 | 3;
+  /** Channel recipe target; `fixture` / `group` are evaluated. Other values are unused stubs. */
   targetType: "fixture" | "group" | "effect" | "executor" | "submaster";
   targetId: string;
   attribute?: string;
@@ -229,7 +234,12 @@ export interface ExecutorSlot {
   name: string;
   page: number;
   index: number;
+  /** Selected content kind; kept when the target id is not chosen yet. */
+  contentType?: "cue" | "preset" | "effect" | "audio";
   cueId?: string;
+  presetId?: string;
+  effectId?: string;
+  audioMappingId?: string;
   mode?: "go" | "toggle" | "flash" | "latch" | (string & {});
   fadeMs?: number;
   releaseMs?: number;

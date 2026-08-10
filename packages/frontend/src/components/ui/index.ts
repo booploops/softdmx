@@ -17,3 +17,4 @@ export { default as SdmxPanel } from './SdmxPanel.vue';
 export { default as SdmxEmptyState } from './SdmxEmptyState.vue';
 export { default as SdmxIconButton } from './SdmxIconButton.vue';
 export { default as SdmxSelect } from './SdmxSelect.vue';
+export { default as SdmxOptionChecklist } from './SdmxOptionChecklist.vue';

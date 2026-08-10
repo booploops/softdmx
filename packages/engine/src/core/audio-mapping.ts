@@ -112,7 +112,7 @@ function resolveFixtureTarget(
 
 function resolveMappingTargets(show: ShowDocument, mapping: ShowAudioMapping): MappingTarget[] {
   const attribute = mapping.attribute;
-  if (!attribute) return [];
+  if (!attribute || !mapping.targetId) return [];
 
   if (mapping.targetType === "fixture") {
     return resolveFixtureTarget(show, mapping.targetId, attribute);
@@ -129,9 +129,47 @@ function resolveMappingTargets(show: ShowDocument, mapping: ShowAudioMapping): M
     return targets;
   }
 
-  // Effect/executor/submaster mappings are persisted in document schema but are
-  // not channel-addressable output targets in this layer.
   return [];
+}
+
+/** Active executor gate; level scales mapping output (0–1). Targeting comes from the mapping. */
+export interface AudioMappingContribution {
+  mappingId: string;
+  level?: number;
+}
+
+function sourceLabel(mapping: ShowAudioMapping): string {
+  if (mapping.source === "band") {
+    return ["Sub", "Low", "Mid", "High"][mapping.bandIndex ?? 0] ?? "Band";
+  }
+  if (mapping.source === "rms") return "RMS";
+  if (mapping.source === "peak") return "Peak";
+  return "Beat";
+}
+
+/** Prefer the user-facing name; fall back to a short recipe summary. */
+export function resolveAudioMappingLabel(mapping: ShowAudioMapping): string {
+  const named = mapping.name?.trim();
+  if (named) return named;
+  const channel = mapping.attribute?.trim() || "channel";
+  return `${sourceLabel(mapping)} → ${mapping.targetId} · ${channel}`;
+}
+
+export function resolveAudioMappingSummary(mapping: ShowAudioMapping): string {
+  const channel = mapping.attribute?.trim() || "channel";
+  return `${sourceLabel(mapping)} → ${mapping.targetId} · ${channel}`;
+}
+
+function resolveContributionLevels(
+  contributions: AudioMappingContribution[],
+): Map<string, number> {
+  const levelByMapping = new Map<string, number>();
+  for (const contribution of contributions) {
+    const level = clamp01(contribution.level ?? 1);
+    const previous = levelByMapping.get(contribution.mappingId) ?? 0;
+    levelByMapping.set(contribution.mappingId, Math.max(previous, level));
+  }
+  return levelByMapping;
 }
 
 export function evaluateAudioMappings(
@@ -139,6 +177,7 @@ export function evaluateAudioMappings(
   levels: AudioSnapshot,
   state: AudioMappingEvalState,
   nowMs = Date.now(),
+  activeContributions: AudioMappingContribution[] = [],
 ): Map<string, number> {
   const results = new Map<string, number>();
   const activeMappingIds = new Set<string>();
@@ -149,8 +188,18 @@ export function evaluateAudioMappings(
     return results;
   }
 
-  for (const mapping of show.audioMappings ?? []) {
-    if (mapping.enabled === false) continue;
+  const levelByMapping = resolveContributionLevels(activeContributions);
+  if (levelByMapping.size === 0) {
+    state.smoothedById.clear();
+    state.lastUpdateById.clear();
+    return results;
+  }
+
+  const mappingsById = new Map((show.audioMappings ?? []).map((mapping) => [mapping.id, mapping]));
+
+  for (const [mappingId, level] of levelByMapping) {
+    const mapping = mappingsById.get(mappingId);
+    if (!mapping || mapping.enabled === false) continue;
 
     activeMappingIds.add(mapping.id);
     const source = getSourceValue(mapping, levels);
@@ -164,7 +213,7 @@ export function evaluateAudioMappings(
 
     const targets = resolveMappingTargets(show, mapping);
     for (const target of targets) {
-      results.set(target.path, clampDmx(smoothed));
+      results.set(target.path, clampDmx(smoothed * level));
     }
   }
 

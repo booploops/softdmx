@@ -33,6 +33,12 @@ interface CreateWorkspaceRequest {
   timestamp: number;
 }
 
+interface ApplyLayoutRequest {
+  workspaceId: string;
+  layout: unknown;
+  timestamp: number;
+}
+
 function loadStateSync(): WorkspaceState {
   const defaultState: WorkspaceState = {
     outerLayout: null,
@@ -114,6 +120,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
   );
   const activeWorkspaceId = ref<string>(initialState.activeWorkspaceId);
   const spawnRequest = ref<SpawnRequest | null>(null);
+  const applyLayoutRequest = ref<ApplyLayoutRequest | null>(null);
 
   const isHydrated = ref(!isElectronEnv); // true immediately for non-electron
   const hasLocalModifications = ref(false);
@@ -303,6 +310,16 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     };
   }
 
+  function requestApplyLayout(workspaceId: string, layout: unknown) {
+    const cloned = toCloneable(layout);
+    saveWorkspaceLayout(workspaceId, cloned);
+    applyLayoutRequest.value = {
+      workspaceId,
+      layout: cloned,
+      timestamp: Date.now(),
+    };
+  }
+
   const createWorkspaceRequest = ref<CreateWorkspaceRequest | null>(null);
 
   function requestCreateWorkspace(name: string, layout?: unknown) {
@@ -324,6 +341,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     workspaceLayouts,
     activeWorkspaceId,
     spawnRequest,
+    applyLayoutRequest,
     createWorkspaceRequest,
     hydrated: isHydrated, // ref<boolean> - use .value in JS code, auto-unwraps in templates
     ensureHydrated,
@@ -334,6 +352,7 @@ export const useWorkspaceStore = defineStore("workspace", () => {
     setActiveWorkspace,
     getWorkspaceLayout,
     requestSpawnPanel,
+    requestApplyLayout,
     requestCreateWorkspace,
   };
 });

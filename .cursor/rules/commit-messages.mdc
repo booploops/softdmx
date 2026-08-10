@@ -1,0 +1,9 @@
+---
+description: Commit message wording preferences
+alwaysApply: true
+---
+
+# Commit messages
+
+- Never describe a change as an "overhaul" (or similar hype words like "rewrite" / "revamp" unless the user explicitly asks for that framing).
+- Prefer plain, accurate verbs: add, update, fix, remove, rename, move, wire, simplify.

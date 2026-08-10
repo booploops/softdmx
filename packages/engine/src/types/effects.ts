@@ -8,8 +8,13 @@
 
 export interface EffectTarget {
   fixtures?: string[];
+  /** @deprecated Prefer `groups` for multi-select; still read for older shows. */
   group?: string;
+  groups?: string[];
+  /** @deprecated Prefer `attrs` for multi-select; still read for older shows. */
   attr: string;
+  /** Channel attribute names to modulate (union with legacy `attr`). */
+  attrs?: string[];
 }
 
 export interface EffectDefinitionBase {

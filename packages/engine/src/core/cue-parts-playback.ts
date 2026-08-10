@@ -45,11 +45,19 @@ export function evaluateCuePartsAtTime(
 
   if (part.targets) {
     for (const target of part.targets) {
-      const fixtureNames =
-        target.fixtures ??
-        (target.group
-          ? (show.groups.find((group) => group.name === target.group)?.fixtures ?? [])
-          : []);
+      const fixtureNames = (() => {
+        const names = new Set<string>();
+        for (const fixtureName of target.fixtures ?? []) names.add(fixtureName);
+        const groupNames = [
+          ...(target.groups ?? []),
+          ...(target.group ? [target.group] : []),
+        ];
+        for (const groupName of groupNames) {
+          const fixtures = show.groups.find((group) => group.name === groupName)?.fixtures ?? [];
+          for (const fixtureName of fixtures) names.add(fixtureName);
+        }
+        return Array.from(names);
+      })();
       for (const fixtureName of fixtureNames) {
         for (const [attrName, value] of Object.entries(target.attrs)) {
           const fixture = show.fixtures.find((entry) => entry.name === fixtureName);

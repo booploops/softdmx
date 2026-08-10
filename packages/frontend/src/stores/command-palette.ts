@@ -14,7 +14,7 @@ import { useThemeStore } from "src/stores/theme";
 import { useWorkspaceStore } from "src/stores/workspace";
 import { useShowStore } from "src/stores/show";
 import { createWorkspaceWithPanels } from "src/lib/workspace";
-import { WorkspacePanels, shouldSpawnInNewWorkspace } from "src/lib/workspace/panels";
+import { WorkspacePanels } from "src/lib/workspace/panels";
 
 type NinjaKeysCommand = NinjaKeys["data"][number];
 
@@ -246,12 +246,13 @@ export const useCommandPaletteStore = defineStore("command-palette", () => {
           const path = panel.path.startsWith("/")
             ? panel.path
             : `/${panel.path}`;
-          if (shouldSpawnInNewWorkspace(path)) {
-            createWorkspaceWithPanels(panel.label, [path]);
+          let targetWorkspaceId = workspaceStore.activeWorkspaceId;
+          if (!targetWorkspaceId) {
+            targetWorkspaceId = createWorkspaceWithPanels(panel.label, [path]);
             return;
           }
           workspaceStore.requestSpawnPanel(
-            workspaceStore.activeWorkspaceId,
+            targetWorkspaceId,
             path,
             panel.label,
           );

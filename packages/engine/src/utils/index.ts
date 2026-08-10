@@ -7,6 +7,7 @@
  */
 
 export * from "./desk-defaults.ts";
+export * from "./executor-slot.ts";
 export * from "./group-colors.ts";
 export * from "./link-lfo.ts";
 export * from "./midi-parser.ts";

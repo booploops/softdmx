@@ -7,9 +7,12 @@
 -->
 <script setup lang="ts">
 import type { ShowAudioMapping } from '@softdmx/engine';
-import { computed, onMounted, reactive, ref } from 'vue';
+import { resolveAudioMappingLabel, resolveAudioMappingSummary } from '@softdmx/engine';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { SdmxOptionChecklist } from 'src/components/ui';
 import { useAudioStore } from 'src/stores/audio';
 import { useDMXStore } from 'src/stores/dmx';
+import { useExecutorStore } from 'src/stores/executor';
 import { useOutputEngineStore } from 'src/stores/output-playback';
 import { useShowStore } from 'src/stores/show';
 
@@ -18,13 +21,14 @@ type MappingSourceForm = 'rms' | 'peak' | 'beat' | 'sub' | 'low' | 'mid' | 'high
 
 type MappingForm = {
   id: string | null;
+  name: string;
   enabled: boolean;
   source: MappingSourceForm;
   targetMode: MappingTargetMode;
   targetPath: string;
   targetGroup: string;
   targetFixture: string;
-  targetAttribute: string;
+  attribute: string;
   min: number;
   max: number;
   gain: number;
@@ -37,6 +41,7 @@ type MappingForm = {
 const showStore = useShowStore();
 const audioStore = useAudioStore();
 const dmxStore = useDMXStore();
+const executorStore = useExecutorStore();
 const outputEngine = useOutputEngineStore();
 
 const audioMappings = computed(() => showStore.document.audioMappings ?? []);
@@ -57,17 +62,18 @@ const SOURCE_OPTIONS: Array<{ label: string; value: MappingSourceForm }> = [
   { label: 'Band: High', value: 'high' },
 ];
 
-const ATTRIBUTE_OPTIONS = ['intensity', 'dimmer', 'strobe', 'pan', 'tilt', 'red', 'green', 'blue'];
+const INTENSITY_CHANNEL_CANDIDATES = ['Dimmer', 'Intensity', 'Brightness'];
 
 const mappingForm = reactive<MappingForm>({
   id: null,
+  name: '',
   enabled: true,
   source: 'rms',
   targetMode: 'fixtureAttr',
   targetPath: '',
   targetGroup: '',
   targetFixture: '',
-  targetAttribute: 'intensity',
+  attribute: '',
   min: 0,
   max: 255,
   gain: 1,
@@ -76,6 +82,9 @@ const mappingForm = reactive<MappingForm>({
   attackMs: 20,
   releaseMs: 140,
 });
+
+/** True after the user edits the name so auto-suggest won't overwrite it. */
+const nameTouched = ref(false);
 
 const channelPathOptions = computed(() =>
   dmxStore.baseChannels.map((channel) => ({
@@ -96,6 +105,55 @@ const fixtureOptions = computed(() =>
     label: fixture.name,
     value: fixture.name,
   }))
+);
+
+function channelNamesForFixture(fixtureName: string): string[] {
+  const mapped = dmxStore.showfileFixturesMapped.find((fixture) => fixture.fixtureName === fixtureName);
+  return mapped?.def.channels.map((channel) => channel.name) ?? [];
+}
+
+function channelNamesForGroup(groupName: string): string[] {
+  const group = groups.value.find((entry) => entry.name === groupName);
+  if (!group?.fixtures.length) return [];
+
+  const nameSets = group.fixtures.map((fixtureName) => new Set(channelNamesForFixture(fixtureName)));
+  const [first, ...rest] = nameSets;
+  if (!first) return [];
+
+  return [...first].filter((name) => rest.every((set) => set.has(name)));
+}
+
+function pickPreferredChannel(names: string[], candidates: string[] = INTENSITY_CHANNEL_CANDIDATES): string {
+  for (const candidate of candidates) {
+    const match = names.find((name) => name.toLowerCase() === candidate.toLowerCase());
+    if (match) return match;
+  }
+  return names[0] ?? '';
+}
+
+const attributeOptions = computed(() => {
+  if (mappingForm.targetMode === 'groupAttr') {
+    return channelNamesForGroup(mappingForm.targetGroup);
+  }
+  if (mappingForm.targetMode === 'fixtureAttr') {
+    return channelNamesForFixture(mappingForm.targetFixture);
+  }
+  return [];
+});
+
+watch(
+  () => [mappingForm.targetMode, mappingForm.targetFixture, mappingForm.targetGroup, attributeOptions.value] as const,
+  () => {
+    if (mappingForm.targetMode === 'channelPath') return;
+    const options = attributeOptions.value;
+    if (!options.length) {
+      mappingForm.attribute = '';
+      return;
+    }
+    if (!options.includes(mappingForm.attribute)) {
+      mappingForm.attribute = pickPreferredChannel(options);
+    }
+  },
 );
 
 const audioDeviceOptions = computed(() =>
@@ -135,9 +193,10 @@ const meterRows = computed(() =>
 
 const isFormValid = computed(() => {
   if (mappingForm.max < mappingForm.min) return false;
+  if (!mappingForm.attribute.trim()) return false;
   if (mappingForm.targetMode === 'channelPath') return Boolean(mappingForm.targetPath);
-  if (mappingForm.targetMode === 'groupAttr') return Boolean(mappingForm.targetGroup && mappingForm.targetAttribute);
-  return Boolean(mappingForm.targetFixture && mappingForm.targetAttribute);
+  if (mappingForm.targetMode === 'groupAttr') return Boolean(mappingForm.targetGroup);
+  return Boolean(mappingForm.targetFixture);
 });
 
 function createMappingId() {
@@ -219,7 +278,39 @@ function resolveChannelPathTarget(path: string): { fixtureName: string; attribut
   return { fixtureName, attribute: channel.name };
 }
 
+function suggestedMappingName(partial: {
+  source: MappingSourceForm;
+  targetId: string;
+  attribute: string;
+}): string {
+  const sourceLabel = SOURCE_OPTIONS.find((option) => option.value === partial.source)?.label ?? 'Audio';
+  const channel = partial.attribute.trim();
+  if (!partial.targetId && !channel) return sourceLabel;
+  if (!channel) return `${sourceLabel} · ${partial.targetId}`;
+  return `${partial.targetId} ${channel}`;
+}
+
+function currentFormTargetId(): string {
+  if (mappingForm.targetMode === 'groupAttr') return mappingForm.targetGroup;
+  if (mappingForm.targetMode === 'fixtureAttr') return mappingForm.targetFixture;
+  const resolved = resolveChannelPathTarget(mappingForm.targetPath);
+  return resolved?.fixtureName ?? mappingForm.targetPath;
+}
+
+function syncSuggestedName() {
+  if (nameTouched.value) return;
+  mappingForm.name = suggestedMappingName({
+    source: mappingForm.source,
+    targetId: currentFormTargetId(),
+    attribute:
+      mappingForm.targetMode === 'channelPath'
+        ? (resolveChannelPathTarget(mappingForm.targetPath)?.attribute ?? '')
+        : mappingForm.attribute,
+  });
+}
+
 function resetForm() {
+  nameTouched.value = false;
   mappingForm.id = null;
   mappingForm.enabled = true;
   mappingForm.source = 'rms';
@@ -227,7 +318,7 @@ function resetForm() {
   mappingForm.targetPath = channelPathOptions.value[0]?.value ?? '';
   mappingForm.targetGroup = groupOptions.value[0]?.value ?? '';
   mappingForm.targetFixture = fixtureOptions.value[0]?.value ?? '';
-  mappingForm.targetAttribute = 'intensity';
+  mappingForm.attribute = pickPreferredChannel(channelNamesForFixture(mappingForm.targetFixture));
   mappingForm.min = 0;
   mappingForm.max = 255;
   mappingForm.gain = 1;
@@ -235,6 +326,7 @@ function resetForm() {
   mappingForm.invert = false;
   mappingForm.attackMs = 20;
   mappingForm.releaseMs = 140;
+  syncSuggestedName();
 }
 
 function openCreateMappingDialog() {
@@ -245,9 +337,12 @@ function openCreateMappingDialog() {
 
 function openEditMappingDialog(mapping: ShowAudioMapping) {
   editingMappingId.value = mapping.id;
+  nameTouched.value = Boolean(mapping.name?.trim());
   mappingForm.id = mapping.id;
+  mappingForm.name = mapping.name?.trim() || resolveAudioMappingLabel(mapping);
   mappingForm.enabled = mapping.enabled ?? true;
   mappingForm.source = mappingToFormSource(mapping);
+  mappingForm.attribute = mapping.attribute ?? '';
   mappingForm.min = mapping.min ?? 0;
   mappingForm.max = mapping.max ?? 255;
   mappingForm.gain = mapping.gain ?? 1;
@@ -259,13 +354,11 @@ function openEditMappingDialog(mapping: ShowAudioMapping) {
   if (mapping.targetType === 'group') {
     mappingForm.targetMode = 'groupAttr';
     mappingForm.targetGroup = mapping.targetId;
-    mappingForm.targetAttribute = mapping.attribute ?? 'intensity';
   } else {
     const fixtureMatch = fixtureOptions.value.some((option) => option.value === mapping.targetId);
     mappingForm.targetMode = fixtureMatch ? 'fixtureAttr' : 'channelPath';
     mappingForm.targetFixture = fixtureMatch ? mapping.targetId : fixtureOptions.value[0]?.value ?? '';
     mappingForm.targetPath = fixtureMatch ? '' : mapping.targetId;
-    mappingForm.targetAttribute = mapping.attribute ?? 'intensity';
   }
 
   showMappingDialog.value = true;
@@ -276,6 +369,13 @@ function saveMapping() {
   const sourceFields = formSourceToMapping(mappingForm.source);
   const nextMapping: ShowAudioMapping = {
     id: mappingForm.id ?? createMappingId(),
+    name:
+      mappingForm.name.trim() ||
+      suggestedMappingName({
+        source: mappingForm.source,
+        targetId: currentFormTargetId(),
+        attribute: mappingForm.attribute,
+      }),
     source: sourceFields.source,
     bandIndex: sourceFields.bandIndex,
     targetType: mappingForm.targetMode === 'groupAttr' ? 'group' : 'fixture',
@@ -285,7 +385,7 @@ function saveMapping() {
         : mappingForm.targetMode === 'fixtureAttr'
           ? mappingForm.targetFixture
           : mappingForm.targetPath,
-    attribute: mappingForm.targetAttribute,
+    attribute: mappingForm.attribute,
     gain: mappingForm.gain,
     offset: mappingForm.offset,
     invert: mappingForm.invert,
@@ -302,6 +402,13 @@ function saveMapping() {
     nextMapping.targetType = 'fixture';
     nextMapping.targetId = resolved.fixtureName;
     nextMapping.attribute = resolved.attribute;
+    if (!mappingForm.name.trim()) {
+      nextMapping.name = suggestedMappingName({
+        source: mappingForm.source,
+        targetId: resolved.fixtureName,
+        attribute: resolved.attribute,
+      });
+    }
   }
 
   showStore.updateDocument((doc) => {
@@ -320,6 +427,14 @@ function saveMapping() {
 function removeMapping(mappingId: string) {
   showStore.updateDocument((doc) => {
     doc.audioMappings = (doc.audioMappings ?? []).filter((mapping) => mapping.id !== mappingId);
+    for (const executor of doc.executors ?? []) {
+      for (const slot of executor.slots) {
+        if (slot.audioMappingId === mappingId) {
+          delete slot.audioMappingId;
+          if (slot.contentType === 'audio') delete slot.contentType;
+        }
+      }
+    }
   });
   outputEngine.requestMerge();
 }
@@ -332,11 +447,49 @@ function toggleMapping(mappingId: string, enabled: boolean) {
   outputEngine.requestMerge();
 }
 
-function describeTarget(mapping: ShowAudioMapping) {
-  if (mapping.targetType === 'group') {
-    return `${mapping.targetId}.${mapping.attribute ?? 'intensity'}`;
+function describeMapping(mapping: ShowAudioMapping) {
+  return resolveAudioMappingLabel(mapping);
+}
+
+function describeMappingDetails(mapping: ShowAudioMapping) {
+  return resolveAudioMappingSummary(mapping);
+}
+
+watch(
+  () => [
+    mappingForm.source,
+    mappingForm.targetMode,
+    mappingForm.targetFixture,
+    mappingForm.targetGroup,
+    mappingForm.targetPath,
+    mappingForm.attribute,
+  ] as const,
+  () => {
+    syncSuggestedName();
+  },
+);
+
+const assignmentByMappingId = computed(() => {
+  const map = new Map<string, { label: string; slotId: string; active: boolean }>();
+  for (const executor of showStore.document.executors ?? []) {
+    for (const slot of executor.slots) {
+      if (!slot.audioMappingId) continue;
+      map.set(slot.audioMappingId, {
+        slotId: slot.id,
+        label: slot.name.trim() || `P${slot.page}-${slot.index + 1}`,
+        active: executorStore.isSlotActive(slot.id),
+      });
+    }
   }
-  return `${mapping.targetId}.${mapping.attribute ?? 'intensity'}`;
+  return map;
+});
+
+function describeAssignment(mappingId: string): string {
+  const assignment = assignmentByMappingId.value.get(mappingId);
+  if (!assignment) return 'Not assigned to an executor — no live output';
+  return assignment.active
+    ? `Executor ${assignment.label} (active)`
+    : `Executor ${assignment.label} (stopped — GO to enable output)`;
 }
 
 function setAudioEnabled(enabled: boolean) {
@@ -385,13 +538,28 @@ function applyTemplate(template: 'kickDimmer' | 'bassColorPulse' | 'beatStrobe')
       ? { targetType: 'group' as const, targetId: group }
       : { targetType: 'fixture' as const, targetId: fixture! };
 
+  const channelNames =
+    baseTarget.targetType === 'group'
+      ? channelNamesForGroup(baseTarget.targetId)
+      : channelNamesForFixture(baseTarget.targetId);
+
+  const attribute =
+    template === 'kickDimmer'
+      ? pickPreferredChannel(channelNames, INTENSITY_CHANNEL_CANDIDATES)
+      : template === 'bassColorPulse'
+        ? pickPreferredChannel(channelNames, ['Blue', 'blue'])
+        : pickPreferredChannel(channelNames, ['Strobe', 'strobe']);
+
+  if (!attribute) return;
+
   const templateMapping: ShowAudioMapping =
     template === 'kickDimmer'
       ? {
           id: createMappingId(),
+          name: 'Kick dimmer',
           source: 'beat',
           ...baseTarget,
-          attribute: 'intensity',
+          attribute,
           enabled: true,
           gain: 1,
           offset: 0,
@@ -404,10 +572,11 @@ function applyTemplate(template: 'kickDimmer' | 'bassColorPulse' | 'beatStrobe')
       : template === 'bassColorPulse'
         ? {
             id: createMappingId(),
+            name: 'Bass color pulse',
             source: 'band',
             bandIndex: 1,
             ...baseTarget,
-            attribute: 'blue',
+            attribute,
             enabled: true,
             gain: 1.15,
             offset: 0,
@@ -419,9 +588,10 @@ function applyTemplate(template: 'kickDimmer' | 'bassColorPulse' | 'beatStrobe')
           }
         : {
             id: createMappingId(),
+            name: 'Beat strobe',
             source: 'beat',
             ...baseTarget,
-            attribute: 'strobe',
+            attribute,
             enabled: true,
             gain: 1,
             offset: 0,
@@ -578,6 +748,9 @@ onMounted(() => {
         @click="openCreateMappingDialog"
       />
     </div>
+    <div class="audio-panel__caption audio-panel__gate-note">
+      Mappings own fixture/group targets. Assign each mapping to an executor slot and GO to enable live output.
+    </div>
 
     <div class="audio-panel__templates">
       <span class="audio-panel__caption">Templates:</span>
@@ -611,11 +784,18 @@ onMounted(() => {
         :key="mapping.id"
       >
         <div class="audio-panel__mapping-main">
-          <div class="text-subtitle2">{{ describeTarget(mapping) }}</div>
+          <div class="text-subtitle2">{{ describeMapping(mapping) }}</div>
           <div class="audio-panel__caption">
-            {{ mappingToFormSource(mapping).toUpperCase() }} · {{ mapping.min ?? 0 }}-{{ mapping.max ?? 255 }}
+            {{ describeMappingDetails(mapping) }}
+            · {{ mapping.min ?? 0 }}-{{ mapping.max ?? 255 }}
             · gain {{ (mapping.gain ?? 1).toFixed(2) }} · offset {{ (mapping.offset ?? 0).toFixed(2) }}
             · {{ mapping.invert ? 'inverted' : 'normal' }} · atk {{ mapping.attackMs ?? 20 }}ms · rel {{ mapping.releaseMs ?? 140 }}ms
+          </div>
+          <div
+            class="audio-panel__caption"
+            :class="{ 'audio-panel__assignment--active': assignmentByMappingId.get(mapping.id)?.active }"
+          >
+            {{ describeAssignment(mapping.id) }}
           </div>
           <div class="mapping-meter">
             <div
@@ -666,7 +846,9 @@ onMounted(() => {
         class="audio-panel__empty-icon"
       />
       <div class="audio-panel__empty-title">No audio mappings configured</div>
-      <div class="audio-panel__empty-hint">Add a mapping or apply a template to begin reactive control.</div>
+      <div class="audio-panel__empty-hint">
+        Add a mapping or apply a template, then assign it to an executor slot to control live output.
+      </div>
     </XWell>
 
     <XDialog
@@ -678,6 +860,15 @@ onMounted(() => {
         @close="showMappingDialog = false"
       />
       <XDialogBody class="audio-panel__dialog-body">
+        <div>
+          <div class="audio-panel__field-label">Name</div>
+          <XInput
+            v-model="mappingForm.name"
+            placeholder="e.g. Kick dimmer"
+            @update:model-value="nameTouched = true"
+          />
+        </div>
+
         <XSwitch
           v-model="mappingForm.enabled"
           label="Enabled"
@@ -717,18 +908,19 @@ onMounted(() => {
           v-if="mappingForm.targetMode === 'fixtureAttr'"
           class="audio-panel__target-grid"
         >
+          <SdmxOptionChecklist
+            v-model="mappingForm.targetFixture"
+            :options="fixtureOptions"
+            label="Target fixture"
+            empty-hint="No fixtures in show"
+            max-height="180px"
+          />
           <div>
-            <div class="audio-panel__field-label">Target fixture</div>
+            <div class="audio-panel__field-label">Channel</div>
             <XSelect
-              v-model="mappingForm.targetFixture"
-              :options="fixtureOptions"
-            />
-          </div>
-          <div>
-            <div class="audio-panel__field-label">Attribute</div>
-            <XSelect
-              v-model="mappingForm.targetAttribute"
-              :options="ATTRIBUTE_OPTIONS"
+              v-model="mappingForm.attribute"
+              :options="attributeOptions"
+              :disable="attributeOptions.length === 0"
             />
           </div>
         </div>
@@ -737,19 +929,26 @@ onMounted(() => {
           v-else-if="mappingForm.targetMode === 'groupAttr'"
           class="audio-panel__target-grid"
         >
+          <SdmxOptionChecklist
+            v-model="mappingForm.targetGroup"
+            :options="groupOptions"
+            label="Target group"
+            empty-hint="No groups in show"
+            max-height="180px"
+          />
           <div>
-            <div class="audio-panel__field-label">Target group</div>
+            <div class="audio-panel__field-label">Channel</div>
             <XSelect
-              v-model="mappingForm.targetGroup"
-              :options="groupOptions"
+              v-model="mappingForm.attribute"
+              :options="attributeOptions"
+              :disable="attributeOptions.length === 0"
             />
-          </div>
-          <div>
-            <div class="audio-panel__field-label">Attribute</div>
-            <XSelect
-              v-model="mappingForm.targetAttribute"
-              :options="ATTRIBUTE_OPTIONS"
-            />
+            <div
+              v-if="mappingForm.targetGroup && attributeOptions.length === 0"
+              class="audio-panel__caption"
+            >
+              No shared channel names across fixtures in this group.
+            </div>
           </div>
         </div>
 
@@ -901,6 +1100,14 @@ onMounted(() => {
 .audio-panel__caption {
   font-size: 12px;
   color: var(--sdmx-color-text-muted);
+}
+
+.audio-panel__gate-note {
+  margin: -4px 0 8px;
+}
+
+.audio-panel__assignment--active {
+  color: var(--sdmx-color-active);
 }
 
 .audio-panel__templates,

@@ -8,6 +8,7 @@
 <script setup lang="ts">
 import { useIOClient } from 'src/lib/io-client';
 import { ModalsContainer } from 'vue-final-modal'
+import CueEditorDialog from 'src/components/CueEditorDialog.vue';
 
 useIOClient();
 </script>
@@ -15,4 +16,5 @@ useIOClient();
 <template>
   <router-view />
   <modals-container />
+  <CueEditorDialog />
 </template>

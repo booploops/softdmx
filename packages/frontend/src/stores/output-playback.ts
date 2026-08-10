@@ -32,6 +32,7 @@ import { useDMXStore } from './dmx';
 import { useLinkStore } from './link';
 import { useAudioStore } from './audio';
 import { useVideoStore } from './video';
+import { useExecutorStore } from './executor';
 import { clampDmx } from '@softdmx/engine';
 import {
   clampUnit,
@@ -313,11 +314,9 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
 
   function shouldApplyAudioMappings() {
     const show = showStore().document;
-    return (
-      show.audio?.enabled !== false &&
-      audioStore.enabled &&
-      (show.audioMappings ?? []).some((mapping) => mapping.enabled !== false)
-    );
+    if (show.audio?.enabled === false || !audioStore.enabled) return false;
+    // Call at merge time (not store setup) so the executor↔output cycle stays safe.
+    return useExecutorStore().getActiveAudioContributions().length > 0;
   }
 
   function shouldUseTimecodeSetPlayback(show: ShowDocument): boolean {
@@ -425,15 +424,22 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
       layers.push(effectToLayer(effectValues, baseChannels));
     }
 
-    // Audio-reactive layer
+    // Audio-reactive layer (gated by active executor audio slots)
     if (shouldApplyAudioMappings()) {
       const audioLeadMs = show.audio?.latencyMs ?? 0;
-      const audioValues = evaluateAudioMappings(show, {
-        rms: audioStore.levels.rms,
-        peak: audioStore.levels.peak,
-        bands: audioStore.levels.bands,
-        beatPulse: audioStore.beatPulse,
-      }, audioMappingState, performance.now() + audioLeadMs);
+      const activeContributions = useExecutorStore().getActiveAudioContributions();
+      const audioValues = evaluateAudioMappings(
+        show,
+        {
+          rms: audioStore.levels.rms,
+          peak: audioStore.levels.peak,
+          bands: audioStore.levels.bands,
+          beatPulse: audioStore.beatPulse,
+        },
+        audioMappingState,
+        performance.now() + audioLeadMs,
+        activeContributions,
+      );
       if (audioValues.size > 0) {
         layers.push(audioToLayer(audioValues, baseChannels));
       }
@@ -928,6 +934,24 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     firePreset(presetId, fadeMs);
   }
 
+  function revertPreset(presetId: string) {
+    const show = showStore().document;
+    const preset = show.presets.find((p) => p.id === presetId);
+    if (!preset) return;
+
+    presetFadeStates.value.delete(presetId);
+
+    const paths = [...presetToChannels(show, preset).keys()];
+    if (paths.length > 0) {
+      useScratchStore().removePaths(paths);
+    }
+    mergeAndApply();
+  }
+
+  function isPresetFading(presetId: string): boolean {
+    return presetFadeStates.value.has(presetId);
+  }
+
   function setGrandMaster(value: number, options?: MasterLevelOptions) {
     grandMaster.value = clampUnit(value);
     scheduleMasterMerge(options?.flush === true);
@@ -1004,6 +1028,8 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     stackGo,
     firePreset,
     firePresetPoolSlot,
+    revertPreset,
+    isPresetFading,
     setGrandMaster,
     setPlaybackBusMaster,
     flushMasterMerge,

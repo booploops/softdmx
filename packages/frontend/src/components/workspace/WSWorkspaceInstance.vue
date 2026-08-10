@@ -239,9 +239,26 @@ const stopWatchSpawn = watch(
   }
 );
 
+const stopWatchApplyLayout = watch(
+  () => workspaceStore.applyLayoutRequest,
+  (req) => {
+    if (!req || req.workspaceId !== workspaceId) return;
+    if (!innerApi) return;
+
+    try {
+      workspaceStore.withRestore(() => {
+        innerApi!.fromJSON(req.layout as Parameters<DockviewApi['fromJSON']>[0]);
+      });
+    } catch (err) {
+      console.error(`Failed to apply layout to workspace ${workspaceId}:`, err);
+    }
+  }
+);
+
 onUnmounted(() => {
   disposables.forEach((dispose) => dispose());
   stopWatchSpawn();
+  stopWatchApplyLayout();
 });
 </script>
 

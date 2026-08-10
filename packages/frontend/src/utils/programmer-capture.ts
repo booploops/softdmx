@@ -11,6 +11,7 @@ import type { Preset, PresetTarget } from '@softdmx/engine';
 import type { ScratchEntry } from '@softdmx/engine';
 import type { ShowfileFixtureMapped } from '@softdmx/engine';
 import { filterScratchEntries } from './programmer-filter.ts';
+import { parseFixturePath, resolveChannelForPath } from './resolve-channel-path.ts';
 import type { ProgrammerStoreMode } from '../stores/programmer.ts';
 
 export interface ScratchPresetCapture {
@@ -56,20 +57,18 @@ export function captureScratchPreset(
   const attrsByFixture = new Map<string, Record<string, number>>();
 
   for (const entry of filtered) {
-    const parts = entry.path.split('/');
-    const fixtureName = parts[2];
-    const channelIndex = parseInt(parts[3] ?? '0', 10) - 1;
-    if (!fixtureName) continue;
+    const parsed = parseFixturePath(entry.path);
+    if (!parsed) continue;
 
-    const mapped = mappedFixtures.find((fixture) => fixture.fixtureName === fixtureName);
-    const channel = mapped?.def.channels[channelIndex];
+    const channel = resolveChannelForPath(entry.path, mappedFixtures);
     const channelName = entry.attributeName ?? channel?.name;
     if (!channelName) continue;
 
-    if (!attrsByFixture.has(fixtureName)) {
-      attrsByFixture.set(fixtureName, {});
+    if (!attrsByFixture.has(parsed.fixtureName)) {
+      attrsByFixture.set(parsed.fixtureName, {});
     }
-    attrsByFixture.get(fixtureName)![channelName] = mergedByPath.get(entry.path) ?? entry.value;
+    attrsByFixture.get(parsed.fixtureName)![channelName] =
+      mergedByPath.get(entry.path) ?? entry.value;
   }
 
   return {

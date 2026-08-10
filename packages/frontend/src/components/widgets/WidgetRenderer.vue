@@ -127,6 +127,10 @@ const widgetRegistry = computed<Record<string, WidgetRegistryEntry>>(() => ({
 const registryEntry = computed(() => widgetRegistry.value[props.widget.type]);
 const resolvedModel = computed(() => registryEntry.value?.resolveModel() ?? null);
 const useFallback = computed(() => !registryEntry.value || resolvedModel.value === null);
+const errorHint = computed(
+  () =>
+    `Unknown widget type "${props.widget.type}" or missing required channels for ${props.widget.name}.`,
+);
 </script>
 
 <template>
@@ -149,7 +153,7 @@ const useFallback = computed(() => !registryEntry.value || resolvedModel.value =
       v-else
       icon="alert-circle"
       title="Widget Error"
-      :hint="`Unknown widget type \"${widget.type}\" or missing required channels for ${widget.name}.`"
+      :hint="errorHint"
     />
   </div>
 </template>

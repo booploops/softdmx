@@ -20,7 +20,11 @@ import type { AttributeFeature } from '@softdmx/engine';
 import type { ProgrammerStoreMode } from './programmer';
 import { applyProgrammerStoreMode, captureScratchPreset } from 'src/utils/programmer-capture';
 import { filterScratchEntries } from 'src/utils/programmer-filter';
-import { resolvePresetIdFromPoolSlot } from '@softdmx/engine';
+import { resolvePresetIdFromPoolSlot, ensureDefaultPresetPool } from '@softdmx/engine';
+
+export type RecordScratchAsPresetResult =
+  | { ok: true; presetId: string }
+  | { ok: false; reason: 'no-scratch' | 'no-capture' | 'empty-result' };
 
 export const useCueStore = defineStore('cue', () => {
   const showStore = useShowStore();
@@ -119,6 +123,30 @@ export const useCueStore = defineStore('cue', () => {
     activeCueId.value = cue.id;
     activeLayerId.value = cue.layers?.[0]?.id ?? null;
     return cue;
+  }
+
+  function setCueView(cueId: string, view: 'timeline' | 'stack') {
+    const cue = cues.value.find((c) => c.id === cueId);
+    if (!cue || cue.view === view) return;
+
+    engine.stopCue(cueId);
+    showStore.updateDocument((doc) => {
+      const target = doc.cues.find((c) => c.id === cueId);
+      if (!target) return;
+      target.view = view;
+      target.layers = target.layers ?? [];
+      target.stack = target.stack ?? [];
+      if (view === 'timeline' && !target.layers.length) {
+        target.layers.push(createNewLayer(`${target.name} - Main`));
+      }
+      updateCueModified(target);
+    });
+
+    if (activeCueId.value === cueId) {
+      activeLayerId.value = cues.value.find((c) => c.id === cueId)?.layers?.[0]?.id ?? null;
+      activeFrameIndex.value = null;
+      selectedFrames.value = new Set();
+    }
   }
 
   function duplicateCue(cueId: string) {
@@ -221,9 +249,11 @@ export const useCueStore = defineStore('cue', () => {
       poolSlot?: number;
       clearScratch?: boolean;
     }
-  ) {
+  ): RecordScratchAsPresetResult {
     const entries = scratch.getEntries();
-    if (entries.length === 0) return;
+    if (entries.length === 0) {
+      return { ok: false, reason: 'no-scratch' };
+    }
 
     const mode = options?.mode ?? 'store';
     const attributeFilter = options?.attributeFilter;
@@ -236,7 +266,9 @@ export const useCueStore = defineStore('cue', () => {
       mergedByPath,
       attributeFilter
     );
-    if (capture.targets.length === 0) return;
+    if (capture.targets.length === 0) {
+      return { ok: false, reason: 'no-capture' };
+    }
 
     let targetPresetId = options?.presetId;
     if (!targetPresetId && options?.poolId !== undefined && options.poolSlot !== undefined) {
@@ -248,6 +280,10 @@ export const useCueStore = defineStore('cue', () => {
       : undefined;
 
     const nextTargets = applyProgrammerStoreMode(mode, existingPreset, capture);
+    if (nextTargets.length === 0 && mode !== 'remove') {
+      return { ok: false, reason: 'empty-result' };
+    }
+
     if (nextTargets.length === 0 && mode === 'remove' && existingPreset) {
       showStore.updateDocument((doc) => {
         doc.presets = doc.presets.filter((preset) => preset.id !== existingPreset.id);
@@ -257,10 +293,12 @@ export const useCueStore = defineStore('cue', () => {
         const preset = doc.presets.find((entry) => entry.id === existingPreset.id);
         if (!preset) return;
         preset.targets = nextTargets;
+        if (name.trim()) preset.name = name.trim();
       });
     } else {
       const id = generateId();
       showStore.updateDocument((doc) => {
+        doc.presetPools = ensureDefaultPresetPool(doc);
         doc.presets.push({
           id,
           name,
@@ -290,7 +328,7 @@ export const useCueStore = defineStore('cue', () => {
       }
     }
 
-    return targetPresetId;
+    return { ok: true, presetId: targetPresetId! };
   }
 
   function deleteFrame(layerId: string, frameIndex: number) {
@@ -408,6 +446,7 @@ export const useCueStore = defineStore('cue', () => {
     playbackBusMaster,
     generateId,
     addCue,
+    setCueView,
     duplicateCue,
     deleteCue,
     addLayer,

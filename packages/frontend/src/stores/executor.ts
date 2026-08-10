@@ -10,8 +10,16 @@ import { computed, ref, watch } from 'vue';
 import { defineStore } from 'pinia';
 import type { ExecutorSlot, ShowExecutor } from '@softdmx/engine';
 import type { ShowDocument } from '@softdmx/engine';
+import {
+  assignExecutorSlotContent,
+  resolveAudioMappingLabel,
+  resolveExecutorSlotContentType,
+  type ExecutorSlotContentType,
+} from '@softdmx/engine';
 import { useShowStore } from './show';
 import { useOutputEngineStore } from './output-playback';
+
+export type { ExecutorSlotContentType };
 
 export type ExecutorRailSlot =
   | ExecutorSlot
@@ -27,8 +35,17 @@ export type ExecutorRailSlot =
 
 interface SlotRuntimeState {
   activeCueId?: string;
+  activePresetId?: string;
+  activeAudioMappingId?: string;
   isFlashing?: boolean;
   flashRestoreIntensity?: number;
+  flashRestoreEffectEnabled?: boolean;
+  flashRestoreAudioActive?: boolean;
+}
+
+export interface ActiveAudioContribution {
+  mappingId: string;
+  level: number;
 }
 
 function clampUnit(value: number): number {
@@ -104,6 +121,22 @@ export const useExecutorStore = defineStore('executor', () => {
     return slots.value.find((slot) => slot.id === slotId);
   }
 
+  function slotContentType(slot: ExecutorSlot): ExecutorSlotContentType {
+    return resolveExecutorSlotContentType(slot);
+  }
+
+  function setEffectEnabled(effectId: string, enabled: boolean) {
+    showStore.updateDocument((doc) => {
+      const effect = doc.effects.find((entry) => entry.id === effectId);
+      if (effect) effect.enabled = enabled;
+    });
+    output.requestMerge();
+  }
+
+  function isEffectEnabled(effectId: string): boolean {
+    return showStore.document.effects.find((entry) => entry.id === effectId)?.enabled ?? false;
+  }
+
   function currentSlotCueId(slotId: string): string | undefined {
     const runtimeCueId = runtimeBySlot.value.get(slotId)?.activeCueId;
     if (runtimeCueId && output.playbackStates.has(runtimeCueId)) {
@@ -116,9 +149,23 @@ export const useExecutorStore = defineStore('executor', () => {
     return undefined;
   }
 
-  function stopSlot(slotId: string) {
+  function isPresetSlotActive(slotId: string): boolean {
     const slot = resolveSlot(slotId);
-    if (!slot) return;
+    if (!slot?.presetId) return false;
+    const runtime = runtimeBySlot.value.get(slotId);
+    if (runtime?.activePresetId === slot.presetId) return true;
+    return output.isPresetFading(slot.presetId);
+  }
+
+  function isAudioSlotActive(slotId: string): boolean {
+    const slot = resolveSlot(slotId);
+    if (!slot?.audioMappingId) return false;
+    return runtimeBySlot.value.get(slotId)?.activeAudioMappingId === slot.audioMappingId;
+  }
+
+  function stopCueSlot(slotId: string) {
+    const slot = resolveSlot(slotId);
+    if (!slot?.cueId) return;
     const activeCueId = currentSlotCueId(slotId);
     if (!activeCueId) return;
 
@@ -126,7 +173,53 @@ export const useExecutorStore = defineStore('executor', () => {
     output.stopCue(activeCueId, releaseMs);
   }
 
-  function goSlot(slotId: string) {
+  function stopPresetSlot(slotId: string) {
+    const slot = resolveSlot(slotId);
+    if (!slot?.presetId) return;
+
+    output.revertPreset(slot.presetId);
+    const runtime = runtimeBySlot.value.get(slotId);
+    if (runtime) {
+      runtime.activePresetId = undefined;
+      runtimeBySlot.value.set(slotId, runtime);
+    }
+  }
+
+  function stopEffectSlot(slotId: string) {
+    const slot = resolveSlot(slotId);
+    if (!slot?.effectId) return;
+    setEffectEnabled(slot.effectId, false);
+  }
+
+  function stopAudioSlot(slotId: string) {
+    const runtime = runtimeBySlot.value.get(slotId);
+    if (!runtime?.activeAudioMappingId) return;
+    runtime.activeAudioMappingId = undefined;
+    runtimeBySlot.value.set(slotId, runtime);
+    output.requestMerge();
+  }
+
+  function stopSlot(slotId: string) {
+    const slot = resolveSlot(slotId);
+    if (!slot) return;
+
+    switch (slotContentType(slot)) {
+      case 'cue':
+        stopCueSlot(slotId);
+        break;
+      case 'preset':
+        stopPresetSlot(slotId);
+        break;
+      case 'effect':
+        stopEffectSlot(slotId);
+        break;
+      case 'audio':
+        stopAudioSlot(slotId);
+        break;
+    }
+  }
+
+  function goCueSlot(slotId: string) {
     const slot = resolveSlot(slotId);
     if (!slot?.cueId) return;
 
@@ -145,16 +238,92 @@ export const useExecutorStore = defineStore('executor', () => {
     });
   }
 
-  function toggleSlot(slotId: string) {
-    if (currentSlotCueId(slotId)) {
-      stopSlot(slotId);
-      return;
+  function goPresetSlot(slotId: string) {
+    const slot = resolveSlot(slotId);
+    if (!slot?.presetId) return;
+
+    const runtime = runtimeBySlot.value.get(slotId) ?? {};
+    runtime.activePresetId = slot.presetId;
+    runtimeBySlot.value.set(slotId, runtime);
+    output.firePreset(slot.presetId, slot.fadeMs ?? 0);
+  }
+
+  function goEffectSlot(slotId: string) {
+    const slot = resolveSlot(slotId);
+    if (!slot?.effectId) return;
+    setEffectEnabled(slot.effectId, true);
+  }
+
+  function goAudioSlot(slotId: string) {
+    const slot = resolveSlot(slotId);
+    if (!slot?.audioMappingId) return;
+
+    const runtime = runtimeBySlot.value.get(slotId) ?? {};
+    runtime.activeAudioMappingId = slot.audioMappingId;
+    runtimeBySlot.value.set(slotId, runtime);
+    output.requestMerge();
+  }
+
+  function goSlot(slotId: string) {
+    const slot = resolveSlot(slotId);
+    if (!slot) return;
+
+    switch (slotContentType(slot)) {
+      case 'cue':
+        goCueSlot(slotId);
+        break;
+      case 'preset':
+        goPresetSlot(slotId);
+        break;
+      case 'effect':
+        goEffectSlot(slotId);
+        break;
+      case 'audio':
+        goAudioSlot(slotId);
+        break;
     }
-    goSlot(slotId);
+  }
+
+  function toggleSlot(slotId: string) {
+    const slot = resolveSlot(slotId);
+    if (!slot) return;
+
+    switch (slotContentType(slot)) {
+      case 'cue':
+        if (currentSlotCueId(slotId)) stopCueSlot(slotId);
+        else goCueSlot(slotId);
+        break;
+      case 'preset':
+        if (isPresetSlotActive(slotId)) stopPresetSlot(slotId);
+        else goPresetSlot(slotId);
+        break;
+      case 'effect':
+        setEffectEnabled(slot.effectId!, !isEffectEnabled(slot.effectId!));
+        break;
+      case 'audio':
+        if (isAudioSlotActive(slotId)) stopAudioSlot(slotId);
+        else goAudioSlot(slotId);
+        break;
+    }
   }
 
   function latchSlot(slotId: string, latched?: boolean) {
-    const shouldLatch = latched ?? !Boolean(currentSlotCueId(slotId));
+    const slot = resolveSlot(slotId);
+    if (!slot) return;
+
+    const contentType = slotContentType(slot);
+    const isActive =
+      contentType === 'cue'
+        ? Boolean(currentSlotCueId(slotId))
+        : contentType === 'preset'
+          ? isPresetSlotActive(slotId)
+          : contentType === 'effect'
+            ? isEffectEnabled(slot.effectId!)
+            : contentType === 'audio'
+              ? isAudioSlotActive(slotId)
+              : false;
+
+    const shouldLatch = latched ?? !isActive;
     if (shouldLatch) {
       goSlot(slotId);
     } else {
@@ -164,15 +333,41 @@ export const useExecutorStore = defineStore('executor', () => {
 
   function flashSlotStart(slotId: string) {
     const slot = resolveSlot(slotId);
-    if (!slot?.cueId) return;
+    if (!slot) return;
 
+    const contentType = slotContentType(slot);
     const runtime = runtimeBySlot.value.get(slotId) ?? {};
     runtime.isFlashing = true;
+
+    if (contentType === 'effect' && slot.effectId) {
+      runtime.flashRestoreEffectEnabled = isEffectEnabled(slot.effectId);
+      runtimeBySlot.value.set(slotId, runtime);
+      setEffectEnabled(slot.effectId, true);
+      return;
+    }
+
+    if (contentType === 'preset' && slot.presetId) {
+      runtime.activePresetId = slot.presetId;
+      runtimeBySlot.value.set(slotId, runtime);
+      output.firePreset(slot.presetId, slot.fadeMs ?? 0);
+      return;
+    }
+
+    if (contentType === 'audio' && slot.audioMappingId) {
+      runtime.flashRestoreAudioActive = isAudioSlotActive(slotId);
+      runtime.activeAudioMappingId = slot.audioMappingId;
+      runtimeBySlot.value.set(slotId, runtime);
+      output.requestMerge();
+      return;
+    }
+
+    if (!slot.cueId) return;
+
     if (output.playbackStates.has(slot.cueId)) {
       runtime.flashRestoreIntensity = output.playbackStates.get(slot.cueId)?.intensity ?? 1;
     } else {
       runtime.flashRestoreIntensity = undefined;
-      goSlot(slotId);
+      goCueSlot(slotId);
     }
     runtime.activeCueId = slot.cueId;
     runtimeBySlot.value.set(slotId, runtime);
@@ -182,18 +377,43 @@ export const useExecutorStore = defineStore('executor', () => {
   function flashSlotEnd(slotId: string) {
     const slot = resolveSlot(slotId);
     const runtime = runtimeBySlot.value.get(slotId);
-    if (!slot?.cueId || !runtime) return;
+    if (!slot || !runtime) return;
 
-    const wasStartedByFlash = runtime.flashRestoreIntensity === undefined;
+    const contentType = slotContentType(slot);
     runtime.isFlashing = false;
     runtimeBySlot.value.set(slotId, runtime);
 
+    if (contentType === 'effect' && slot.effectId) {
+      setEffectEnabled(slot.effectId, runtime.flashRestoreEffectEnabled ?? false);
+      return;
+    }
+
+    if (contentType === 'preset' && slot.presetId) {
+      stopPresetSlot(slotId);
+      return;
+    }
+
+    if (contentType === 'audio' && slot.audioMappingId) {
+      if (runtime.flashRestoreAudioActive) {
+        runtime.activeAudioMappingId = slot.audioMappingId;
+      } else {
+        runtime.activeAudioMappingId = undefined;
+      }
+      runtime.flashRestoreAudioActive = undefined;
+      runtimeBySlot.value.set(slotId, runtime);
+      output.requestMerge();
+      return;
+    }
+
+    if (!slot.cueId) return;
+
+    const wasStartedByFlash = runtime.flashRestoreIntensity === undefined;
     if (!output.playbackStates.has(slot.cueId)) {
       return;
     }
 
     if (wasStartedByFlash) {
-      stopSlot(slotId);
+      stopCueSlot(slotId);
       return;
     }
 
@@ -202,7 +422,7 @@ export const useExecutorStore = defineStore('executor', () => {
 
   function triggerSlot(slotId: string) {
     const slot = resolveSlot(slotId);
-    if (!slot) return;
+    if (!slot || slotContentType(slot) === 'none') return;
 
     switch (slot.mode ?? 'go') {
       case 'toggle':
@@ -230,13 +450,24 @@ export const useExecutorStore = defineStore('executor', () => {
     runtimeBySlot.value.clear();
   }
 
-  function assignSlot(slotId: string, cueId?: string) {
+  function assignSlotContent(slotId: string, type: ExecutorSlotContentType, id?: string) {
+    const wasAudioActive = isAudioSlotActive(slotId);
     showStore.updateDocument((doc) => {
       const rootExecutor = ensureRootExecutor(doc);
       const slot = rootExecutor.slots.find((candidate) => candidate.id === slotId);
       if (!slot) return;
-      slot.cueId = cueId;
+      assignExecutorSlotContent(slot, type, id);
     });
+    const runtime = runtimeBySlot.value.get(slotId);
+    if (runtime) {
+      runtime.activeAudioMappingId = undefined;
+      runtimeBySlot.value.set(slotId, runtime);
+    }
+    if (wasAudioActive) output.requestMerge();
+  }
+
+  function assignSlot(slotId: string, cueId?: string) {
+    assignSlotContent(slotId, cueId ? 'cue' : 'none', cueId);
   }
 
   function updateSlot(slotId: string, patch: Partial<ExecutorSlot>) {
@@ -256,7 +487,7 @@ export const useExecutorStore = defineStore('executor', () => {
   }
 
   function setActivePage(page: number) {
-    activePage.value = Math.max(1, Math.min(pageCount.value, page));
+    activePage.value = Math.max(1, Math.min(pageCount.value, Math.round(page)));
   }
 
   function nextPage() {
@@ -265,6 +496,74 @@ export const useExecutorStore = defineStore('executor', () => {
 
   function previousPage() {
     setActivePage(activePage.value - 1);
+  }
+
+  function slotsPerPage(rootExecutor: ShowExecutor): number {
+    const counts = new Map<number, number>();
+    for (const slot of rootExecutor.slots) {
+      counts.set(slot.page, (counts.get(slot.page) ?? 0) + 1);
+    }
+    const onActive = counts.get(activePage.value);
+    if (onActive && onActive > 0) return onActive;
+    const first = counts.values().next().value;
+    return Math.max(1, first ?? 8);
+  }
+
+  function addPage() {
+    let createdPage = 1;
+    showStore.updateDocument((doc) => {
+      const rootExecutor = ensureRootExecutor(doc);
+      const nextPageNumber = Math.max(1, rootExecutor.pages ?? 1) + 1;
+      const count = slotsPerPage(rootExecutor);
+      const stamp = Date.now().toString(36);
+      for (let index = 0; index < count; index += 1) {
+        rootExecutor.slots.push({
+          id: `executor-slot-p${nextPageNumber}-${index + 1}-${stamp}`,
+          name: `Slot ${index + 1}`,
+          page: nextPageNumber,
+          index,
+          mode: 'go',
+        });
+      }
+      rootExecutor.pages = nextPageNumber;
+      rootExecutor.activePage = nextPageNumber;
+      createdPage = nextPageNumber;
+    });
+    activePage.value = createdPage;
+    selectedSlotId.value = null;
+  }
+
+  function removePage(page = activePage.value) {
+    if (pageCount.value <= 1) return;
+
+    const targetPage = Math.max(1, Math.min(pageCount.value, Math.round(page)));
+    const slotsOnPage = slots.value.filter((slot) => slot.page === targetPage);
+    for (const slot of slotsOnPage) {
+      stopSlot(slot.id);
+      runtimeBySlot.value.delete(slot.id);
+    }
+
+    showStore.updateDocument((doc) => {
+      const rootExecutor = ensureRootExecutor(doc);
+      rootExecutor.slots = rootExecutor.slots
+        .filter((slot) => slot.page !== targetPage)
+        .map((slot) =>
+          slot.page > targetPage
+            ? {
+                ...slot,
+                page: slot.page - 1,
+              }
+            : slot
+        );
+      rootExecutor.pages = Math.max(1, (rootExecutor.pages ?? 1) - 1);
+      const nextActive = Math.min(activePage.value > targetPage ? activePage.value - 1 : activePage.value, rootExecutor.pages);
+      rootExecutor.activePage = Math.max(1, nextActive);
+      activePage.value = rootExecutor.activePage;
+    });
+
+    if (selectedSlotId.value && !slots.value.some((slot) => slot.id === selectedSlotId.value)) {
+      selectedSlotId.value = null;
+    }
   }
 
   function setSelectedSlot(slotId: string | null) {
@@ -339,14 +638,62 @@ export const useExecutorStore = defineStore('executor', () => {
     output.requestMerge();
   }
 
+  function describeAudioMapping(mappingId: string): string {
+    const mapping = showStore.document.audioMappings?.find((entry) => entry.id === mappingId);
+    if (!mapping) return 'Audio';
+    return resolveAudioMappingLabel(mapping);
+  }
+
+  function getSlotContentLabel(slot: ExecutorSlot): string | null {
+    const doc = showStore.document;
+    if (slot.cueId) {
+      return doc.cues.find((cue) => cue.id === slot.cueId)?.name ?? 'Cue';
+    }
+    if (slot.presetId) {
+      return doc.presets.find((preset) => preset.id === slot.presetId)?.name ?? 'Preset';
+    }
+    if (slot.effectId) {
+      return doc.effects.find((effect) => effect.id === slot.effectId)?.name ?? 'Effect';
+    }
+    if (slot.audioMappingId) {
+      return describeAudioMapping(slot.audioMappingId);
+    }
+    return null;
+  }
+
   function getSlotDisplayLabel(slot: ExecutorSlot): string {
     if (slot.name.trim()) return slot.name;
-    return `P${slot.page}-${slot.index + 1}`;
+    return getSlotContentLabel(slot) ?? `P${slot.page}-${slot.index + 1}`;
   }
 
   function isSlotActive(slotId: string): boolean {
-    const cueId = currentSlotCueId(slotId);
-    return cueId ? output.playbackStates.has(cueId) : false;
+    const slot = resolveSlot(slotId);
+    if (!slot) return false;
+
+    switch (slotContentType(slot)) {
+      case 'cue':
+        return Boolean(currentSlotCueId(slotId));
+      case 'preset':
+        return isPresetSlotActive(slotId);
+      case 'effect':
+        return slot.effectId ? isEffectEnabled(slot.effectId) : false;
+      case 'audio':
+        return isAudioSlotActive(slotId);
+      default:
+        return false;
+    }
+  }
+
+  function getActiveAudioContributions(): ActiveAudioContribution[] {
+    const contributions: ActiveAudioContribution[] = [];
+    for (const slot of slots.value) {
+      if (!slot.audioMappingId || !isAudioSlotActive(slot.id)) continue;
+      contributions.push({
+        mappingId: slot.audioMappingId,
+        level: clampUnit(slot.level ?? 1),
+      });
+    }
+    return contributions;
   }
 
   return {
@@ -360,6 +707,11 @@ export const useExecutorStore = defineStore('executor', () => {
     visibleRailSlots,
     submasters,
     assignSlot,
+    assignSlotContent,
+    slotContentType,
+    getSlotContentLabel,
+    getActiveAudioContributions,
+    describeAudioMapping,
     updateExecutor,
     updateSlot,
     assignSubmaster,
@@ -368,6 +720,8 @@ export const useExecutorStore = defineStore('executor', () => {
     setActivePage,
     nextPage,
     previousPage,
+    addPage,
+    removePage,
     setSelectedSlot,
     goSlot,
     goActive,

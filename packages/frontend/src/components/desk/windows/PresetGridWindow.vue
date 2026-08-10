@@ -6,11 +6,12 @@
   file, You can obtain one at https://mozilla.org/MPL/2.0/.
 -->
 <script setup lang="ts">
-import { useShowStore } from 'src/stores/show';
-import { useOutputEngineStore } from 'src/stores/output-playback';
-import { SdmxButton, SdmxEmptyState, SdmxValueField } from 'src/components/ui';
+import { SdmxButton, SdmxEmptyState } from 'src/components/ui';
 import { useInfoText } from 'src/composables/useInfoText';
 import { presetButtonStyle } from 'src/lib/preset-button-style';
+import { useOutputEngineStore } from 'src/stores/output-playback';
+import { useShowStore } from 'src/stores/show';
+import { computed, ref } from 'vue';
 
 const showStore = useShowStore();
 const engine = useOutputEngineStore();
@@ -28,19 +29,20 @@ function firePreset(presetId: string) {
   <div class="preset-grid-window">
     <div class="preset-grid-window__toolbar">
       <span class="sdmx-text-label">Presets</span>
-      <SdmxValueField label="Fade" :value="presetFadeMs" unit="ms" size="sm" />
-      <q-input
+      <XInput
         v-info="'desk.presets.fadeMs'"
         v-model.number="presetFadeMs"
         type="number"
+        min="0"
         dense
-        outlined
-        label="Fade ms"
-        class="preset-fade-input sdmx-focus-ring"
-        style="width: 110px"
+        label="Fade (ms)"
+        class="preset-grid-window__fade"
       />
     </div>
-    <div v-if="presets.length" class="preset-fire-grid">
+    <div
+      v-if="presets.length"
+      class="preset-fire-grid"
+    >
       <SdmxButton
         v-for="preset in presets"
         :key="preset.id"
@@ -67,6 +69,8 @@ function firePreset(presetId: string) {
   height: 100%;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .preset-grid-window__toolbar {
@@ -78,13 +82,24 @@ function firePreset(presetId: string) {
   flex-shrink: 0;
 }
 
+.preset-grid-window__fade {
+  width: 120px;
+  margin-left: auto;
+}
+
 .preset-fire-grid {
   flex: 1 1 auto;
+  min-height: 0;
   overflow: auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--sdmx-space-sm);
+  align-content: start;
+  padding: var(--sdmx-space-sm);
 }
 
 .preset-fire-btn {
-  min-height: 48px;
+  min-height: var(--sdmx-space-touch);
   width: 100%;
 }
 </style>

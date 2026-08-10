@@ -101,7 +101,7 @@ export default {
     enter: 'Apply value to selected fixtures',
   },
   cueList: {
-    add: 'Add a new cue to the list',
+    add: 'Add a new timeline or stack cue',
     remove: 'Remove the selected cue',
     duplicate: 'Duplicate the selected cue',
     moveUp: 'Move cue earlier in the list',
