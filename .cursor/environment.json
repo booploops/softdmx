@@ -1,0 +1,12 @@
+{
+  "name": "SoftDMX",
+  "user": "ubuntu",
+  "install": "bash .cursor/install.sh",
+  "terminals": [
+    {
+      "name": "frontend",
+      "command": "yarn dev:frontend"
+    }
+  ],
+  "ports": [9000, 5353]
+}
