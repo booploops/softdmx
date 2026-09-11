@@ -6,8 +6,22 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import { stripTypeScriptTypes } from 'node:module';
 import { pathToFileURL, fileURLToPath } from 'node:url';
 import { resolve as pathResolve, dirname, basename } from 'node:path';
+
+const JS_FORMAT_FOR_TYPESCRIPT = new Map([
+  ['module-typescript', 'module'],
+  ['commonjs-typescript', 'commonjs'],
+]);
+
+function decodeSource(source) {
+  if (source == null) return '';
+  if (typeof source === 'string') return source;
+  return Buffer.from(
+    source instanceof Uint8Array ? source : new Uint8Array(source),
+  ).toString('utf8');
+}
 
 const root = pathResolve(fileURLToPath(import.meta.url), '../../../../frontend'); // packages/frontend
 const monorepoRoot = pathResolve(root, '..'); // packages/
@@ -69,6 +83,23 @@ function mapPath(absolutePath) {
     }
   }
   return absolutePath;
+}
+
+// Jazzer's ESM instrumentor only transforms `format === "module"`. Node hands
+// `.ts` files through as `module-typescript` with types intact, so strip them
+// here (we register before Jazzer and become its nextLoad).
+export async function load(url, context, nextLoad) {
+  const result = await nextLoad(url, context);
+  const jsFormat = JS_FORMAT_FOR_TYPESCRIPT.get(result.format);
+  if (!jsFormat || !result.source || !url.startsWith('file:')) {
+    return result;
+  }
+
+  return {
+    format: jsFormat,
+    source: stripTypeScriptTypes(decodeSource(result.source)),
+    shortCircuit: true,
+  };
 }
 
 export async function resolve(specifier, context, nextResolve) {
