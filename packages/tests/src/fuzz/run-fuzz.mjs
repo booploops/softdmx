@@ -28,6 +28,11 @@ if (jazzer.status === 0) {
   process.exit(0);
 }
 
+if (ci) {
+  console.error('\nJazzer harnesses failed in CI.');
+  process.exit(jazzer.status ?? 1);
+}
+
 console.warn('\nJazzer harnesses unavailable or failed; falling back to mutation fuzz.\n');
 
 const mutation = spawnSync(

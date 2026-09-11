@@ -6,13 +6,16 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+import { createRequire } from 'node:module';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
+const require = createRequire(import.meta.url);
 const fuzzDir = path.dirname(fileURLToPath(import.meta.url));
-const repoRoot = path.resolve(fuzzDir, '../..');
-const registerAlias = path.join(repoRoot, 'test/helpers/register-src-alias.mjs');
+const packageRoot = path.resolve(fuzzDir, '../..');
+const registerAlias = path.join(fuzzDir, '../helpers/register-src-alias.mjs');
+const jazzerCli = require.resolve('@jazzer.js/core/dist/cli.js');
 const maxTotalTime = process.env.FUZZ_CI === '1' ? '15' : '30';
 
 const harnesses = [
@@ -38,9 +41,9 @@ for (const harness of harnesses) {
 
   console.log(`\n=== Fuzzing ${harness.file} ===`);
   const result = spawnSync(
-    'npx',
-    ['jazzer', target, corpus, '--', `-max_total_time=${maxTotalTime}`],
-    { cwd: repoRoot, env, stdio: 'inherit' },
+    process.execPath,
+    [jazzerCli, target, corpus, '--', `-max_total_time=${maxTotalTime}`],
+    { cwd: packageRoot, env, stdio: 'inherit' },
   );
 
   if (result.status !== 0) {
