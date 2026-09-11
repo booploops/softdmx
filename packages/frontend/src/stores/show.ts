@@ -25,9 +25,13 @@ import { getRuntimeOptimizationFlags } from 'src/config/runtime-optimization-fla
 import { useDMXStore } from './dmx';
 import { useOutputEngineStore } from './output-playback';
 import { useScratchStore } from './scratch';
+import { isElectronConfigEnv } from 'src/lib/config-persistence';
+import { trpc } from 'src/lib/trpc';
 
 const HISTORY_LIMIT = 100;
+const AUTOSAVE_MS = 15_000;
 let showSyncConnectHookInstalled = false;
+let autosaveTimer: ReturnType<typeof setTimeout> | null = null;
 
 function cloneDocument(doc: ShowDocument): ShowDocument {
   return JSON.parse(JSON.stringify(doc)) as ShowDocument;
@@ -81,11 +85,37 @@ export const useShowStore = defineStore('show', () => {
     redoStack.value = [];
   }
 
+  function scheduleAutosave() {
+    if (!isElectronConfigEnv) return;
+    if (autosaveTimer) clearTimeout(autosaveTimer);
+    autosaveTimer = setTimeout(() => {
+      void persistShowToDisk();
+    }, AUTOSAVE_MS);
+  }
+
+  async function persistShowToDisk(): Promise<string | null> {
+    if (!isElectronConfigEnv) return null;
+    try {
+      const result = await trpc.saveShowToDisk.mutate({
+        document: document.value,
+        path: filePath.value,
+      });
+      if (result.path) {
+        filePath.value = result.path;
+      }
+      return result.path ?? null;
+    } catch (error) {
+      console.error('Failed to persist show to disk:', error);
+      return null;
+    }
+  }
+
   function markDirty() {
     isDirty.value = true;
     document.value.meta.modified = new Date().toISOString();
     persistCrashSnapshot();
     syncToBackend();
+    scheduleAutosave();
   }
 
   function syncToBackend() {
@@ -183,6 +213,7 @@ export const useShowStore = defineStore('show', () => {
   function saveShow(): string {
     isDirty.value = false;
     clearCrashSnapshot();
+    void persistShowToDisk();
     return serializeShowDocument(document.value);
   }
 
@@ -292,6 +323,7 @@ export const useShowStore = defineStore('show', () => {
     redo,
     persistCrashSnapshot,
     persistLastSession,
+    persistShowToDisk,
     markDirty,
     syncToBackend,
   };

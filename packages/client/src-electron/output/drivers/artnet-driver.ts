@@ -9,10 +9,13 @@
 import dgram from "node:dgram";
 import { DmxOutputDriver } from "./dmx-output-driver";
 import { initWasmEngine, type SoftDmxWasmExports } from "@softdmx/engine";
+import { packArtDmxPacket } from "./protocol-packets";
 
 export class ArtNetDriver implements DmxOutputDriver {
   private socket?: dgram.Socket | undefined;
   private sequence = 0;
+  private lastBuffer = new Uint8Array(512);
+  private refreshTimer: ReturnType<typeof setInterval> | null = null;
   private wasmExports: SoftDmxWasmExports | null = null;
   private cachedWasmDmxPtr = 0;
   private cachedWasmDmxSize = 0;
@@ -30,12 +33,27 @@ export class ArtNetDriver implements DmxOutputDriver {
   ) {}
 
   async initialize(): Promise<void> {
-    this.socket = dgram.createSocket("udp4");
+    this.socket = dgram.createSocket({ type: "udp4", reuseAddr: true });
+    await new Promise<void>((resolve, reject) => {
+      this.socket!.once("error", reject);
+      this.socket!.bind(0, () => {
+        try {
+          this.socket!.setBroadcast(true);
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
     this.wasmExports = await initWasmEngine();
+    this.refreshTimer = setInterval(() => {
+      this.send(this.lastBuffer);
+    }, 25);
   }
 
   send(dmxBuffer: Uint8Array): void {
     if (!this.socket) return;
+    this.lastBuffer = dmxBuffer;
 
     // SubUni byte contains subnet (4 bits) and universe (4 bits)
     const subUni = ((this.config.Subnet & 0x0f) << 4) | (this.config.Universe & 0x0f);
@@ -92,28 +110,12 @@ export class ArtNetDriver implements DmxOutputDriver {
       });
     } else {
       // Pure JS fallback
-      const header = Buffer.from([
-        0x41,
-        0x72,
-        0x74,
-        0x2d,
-        0x4e,
-        0x65,
-        0x74,
-        0x00, // ID: "Art-Net\0"
-        0x00,
-        0x50, // OpCode: ArtDmx (0x5000, transmitted low byte first)
-        0x00,
-        0x0e, // Protocol Version 14 (transmitted high byte first)
-        this.sequence, // Sequence (0x01 to 0xFF, 0x00 to disable)
-        0x00, // Physical port that sent the data
-        subUni, // Subnet/Universe address
-        net, // Net address
-        (dmxBuffer.length >> 8) & 0xff, // Length high byte (Big-endian)
-        dmxBuffer.length & 0xff, // Length low byte
-      ]);
-
-      const packet = Buffer.concat([header, dmxBuffer]);
+      const packet = packArtDmxPacket({
+        sequence: this.sequence,
+        subUni,
+        net,
+        dmx: dmxBuffer,
+      });
 
       this.socket.send(packet, 0, packet.length, this.config.Port, this.config.Host, (err) => {
         if (err) {
@@ -127,6 +129,10 @@ export class ArtNetDriver implements DmxOutputDriver {
   }
 
   async destroy(): Promise<void> {
+    if (this.refreshTimer !== null) {
+      clearInterval(this.refreshTimer);
+      this.refreshTimer = null;
+    }
     if (this.socket) {
       this.socket.close();
       this.socket = undefined;

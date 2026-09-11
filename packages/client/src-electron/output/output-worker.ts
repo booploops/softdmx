@@ -76,6 +76,8 @@ class BackgroundOutputEngine {
           Port: settings.Port || 5568,
           Universe: settings.Universe ?? 1,
           SourceName: `SoftDMX-${dest.name}`,
+          Priority: settings.Priority ?? 100,
+          SyncAddress: settings.SyncAddress ?? 0,
         });
       case "dmx_usb":
         return JSON.stringify({
@@ -137,6 +139,8 @@ class BackgroundOutputEngine {
               Port: dest.settings.Port || 5568,
               Universe: dest.settings.Universe ?? 1,
               SourceName: `SoftDMX-${dest.name}`,
+              Priority: dest.settings.Priority ?? 100,
+              SyncAddress: dest.settings.SyncAddress ?? 0,
             });
             break;
           case "dmx_usb":

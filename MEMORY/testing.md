@@ -63,16 +63,15 @@ To run existing tests that import from Node's native test runner (`node:test`) w
 
 When contributing new features, follow these guidelines to keep the test suite running smoothly:
 
-### A. Relative Imports in Tests
-Because the tests are inside the `@softdmx/tests` package but import from `@softdmx/frontend`, relative imports must point back to `frontend/src`:
-- For files at the **root of `src/`** (e.g., `src/audio-mapping.test.ts`), import using:
-  ```typescript
-  import { createEmptyShow } from '../../frontend/src/show/document.ts';
-  ```
-- For nested files in a **subdirectory of `src/`** (e.g., `src/unit/fixture-yaml.test.ts`), import using:
-  ```typescript
-  import { loadFixtureYaml } from '../../../frontend/src/fixture-library/fixture-yaml.ts';
-  ```
+### A. Imports in Tests
+Prefer `@softdmx/engine` for show/engine modules. Fixture YAML/GDTF parsers also live in the engine package:
+
+```typescript
+import { createEmptyShow } from '@softdmx/engine';
+import { loadFixtureYaml } from '@softdmx/engine';
+```
+
+Vitest still remaps legacy `packages/frontend/src/engine/*` and `packages/frontend/src/show/*` paths to `packages/engine/src` so older tests keep working. New tests should not add those frontend paths. Frontend-only modules (stores, Vue components, `fixture-library/loader`) still import via relative paths into `packages/frontend/src`.
 
 ### B. Adding Test Files
 - **Unit Tests**: Place in `src/` (or `src/unit/` for file loader/registry tests) ending in `.test.ts`.

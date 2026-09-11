@@ -13,6 +13,11 @@ import * as fs from "fs/promises";
 import { workspace } from "../state/workspace";
 import { config as appConfig } from "../state/config";
 import { configFileSchema, configPatchSchema } from "@softdmx/shared";
+import { showStore } from "../state/show";
+import { readRecentShows } from "../state/recent-shows";
+import { validateShowDocument } from "@softdmx/engine";
+import { randomBytes } from "node:crypto";
+import { setConfiguredRemoteApiToken } from "../server/auth/remote-token";
 
 export interface CreateContextOptions {
   event: IpcMainInvokeEvent;
@@ -306,6 +311,7 @@ export const appRouter = router({
       sidebar: toCloneable(cf.sidebar),
       theme: toCloneable(cf.theme),
       plot: toCloneable(cf.plot),
+      remote: toCloneable(cf.remote),
     });
   }),
 
@@ -313,6 +319,28 @@ export const appRouter = router({
       appConfig.update(input);
       return { success: true };
     }),
+
+  saveShowToDisk: publicProcedure
+    .input(
+      z.object({
+        document: z.unknown(),
+        path: z.string().nullable().optional(),
+      }),
+    )
+    .mutation(({ input }) => {
+      const doc = validateShowDocument(input.document);
+      const savedPath = showStore.saveShow(doc, input.path ?? showStore.filePath());
+      return { success: true, path: savedPath };
+    }),
+
+  getRecentShows: publicProcedure.query(() => readRecentShows()),
+
+  regenerateRemoteApiToken: publicProcedure.mutation(() => {
+    const token = randomBytes(24).toString("hex");
+    appConfig.update({ remote: { apiToken: token } });
+    setConfiguredRemoteApiToken(token);
+    return { token };
+  }),
 });
 
 export type AppRouter = typeof appRouter;

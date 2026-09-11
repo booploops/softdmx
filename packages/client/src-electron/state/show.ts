@@ -7,9 +7,29 @@
  */
 
 import { signal } from "alien-signals";
-import { createEmptyShow, validateShowDocument, type ShowDocument } from "@softdmx/engine";
+import fs from "fs";
+import path from "path";
+import {
+  createEmptyShow,
+  serializeShowDocument,
+  validateShowDocument,
+  type ShowDocument,
+} from "@softdmx/engine";
+import { Paths } from "../runtime/paths";
+import { rememberRecentShow } from "./recent-shows";
 
 const HISTORY_LIMIT = 100;
+
+function defaultAutosavePath(): string {
+  return path.join(Paths.appData, "autosave", "current.yml");
+}
+
+function resolveWritePath(candidate: string | null | undefined): string {
+  if (candidate && path.isAbsolute(candidate)) {
+    return candidate;
+  }
+  return defaultAutosavePath();
+}
 
 export function createShowStore() {
   const document = signal<ShowDocument>(validateShowDocument(createEmptyShow()));
@@ -22,10 +42,10 @@ export function createShowStore() {
     return JSON.parse(JSON.stringify(doc)) as ShowDocument;
   }
 
-  function loadShow(doc: ShowDocument, path: string | null = null) {
+  function loadShow(doc: ShowDocument, pathName: string | null = null) {
     document(validateShowDocument(doc));
     isDirty(false);
-    filePath(path);
+    filePath(pathName);
     undoStack([]);
     redoStack([]);
   }
@@ -79,8 +99,20 @@ export function createShowStore() {
     isDirty(true);
   }
 
-  function saveShow() {
+  function saveShow(doc: ShowDocument = document(), targetPath: string | null = filePath()): string {
+    const writePath = resolveWritePath(targetPath);
+    const yaml = serializeShowDocument(doc);
+    fs.mkdirSync(path.dirname(writePath), { recursive: true });
+    fs.writeFileSync(writePath, yaml, "utf-8");
+    document(validateShowDocument(doc));
+    filePath(writePath);
     isDirty(false);
+    rememberRecentShow({
+      path: writePath,
+      name: doc.meta.name,
+      modified: new Date().toISOString(),
+    });
+    return writePath;
   }
 
   return {

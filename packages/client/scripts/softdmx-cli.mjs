@@ -16,6 +16,7 @@ import { io } from "socket.io-client";
 const [, , command, ...restArgs] = process.argv;
 const flags = parseFlags(restArgs);
 const host = flags.host || process.env.SOFTDMX_HOST || "http://127.0.0.1:5353";
+const apiToken = flags.token || process.env.SOFTDMX_API_TOKEN || "";
 
 async function main() {
   if (!command || command === "help" || flags.help) {
@@ -121,9 +122,14 @@ async function blackout() {
 }
 
 async function post(path, body) {
+  const headers = { "content-type": "application/json" };
+  if (apiToken) {
+    headers.authorization = `Bearer ${apiToken}`;
+    headers["x-api-token"] = apiToken;
+  }
   const response = await fetch(`${host}${path}`, {
     method: "POST",
-    headers: { "content-type": "application/json" },
+    headers,
     body: JSON.stringify(body),
   });
   if (!response.ok) {
@@ -139,6 +145,8 @@ async function emitSocket(event, payload) {
       transports: ["websocket"],
       reconnection: false,
       timeout: 2500,
+      auth: apiToken ? { token: apiToken } : undefined,
+      extraHeaders: apiToken ? { "x-api-token": apiToken } : undefined,
     });
 
     socket.on("connect", () => {
@@ -181,12 +189,15 @@ Usage:
   node scripts/softdmx-cli.mjs <command> [options]
 
 Commands:
-  load-show   --file ./show.yml [--host http://127.0.0.1:5353]
+  load-show   --file ./show.yml [--host http://127.0.0.1:5353] [--token <api-token>]
   fire-preset --preset preset-id [--fade 1000]
   play-cue    --cue cue-id [--stop]
   set-channel --path show://Fixture/1 --value 255 [--attribute intensity]
               --fixture Fixture --channel 1 --value 255
   blackout    [--off]
+
+Auth:
+  --token <api-token>   or SOFTDMX_API_TOKEN
 `);
 }
 

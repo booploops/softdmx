@@ -11,6 +11,7 @@ import type { ClientIdentity, ShowAudioMapping, ShowDocument } from "@softdmx/en
 import { isSupportedShowVersion } from "@softdmx/engine";
 import type { RemoteContext } from "../context";
 import type { ScratchStateSnapshot } from "../scratch-authority";
+import { consumeRateLimit } from "../auth/rate-limit";
 
 type RemoteHandler = (socket: Socket, payload: unknown, ctx: RemoteContext) => void;
 type AudioMappingMutationPayload =
@@ -127,6 +128,14 @@ const handlers: Record<string, RemoteHandler> = {
     ctx.io.emit("remote:cue:stack:go", payload);
   },
 
+  "cue:stack:back": (_socket, payload, ctx) => {
+    ctx.io.emit("remote:cue:stack:back", payload);
+  },
+
+  "cue:stack:goto": (_socket, payload, ctx) => {
+    ctx.io.emit("remote:cue:stack:goto", payload);
+  },
+
   blackout: (_socket, payload, ctx) => {
     ctx.io.emit("remote:blackout", payload);
   },
@@ -194,7 +203,13 @@ export function registerRemoteHandlers(socket: Socket, ctx: RemoteContext): void
   socket.emit("scratch:layers", ctx.scratchAuthority.getSnapshot());
 
   for (const [event, handler] of Object.entries(handlers)) {
-    socket.on(event, (payload: unknown) => handler(socket, payload, ctx));
+    socket.on(event, (payload: unknown) => {
+      if (!consumeRateLimit(`socket-cmd:${socket.id}`).allowed) {
+        socket.emit("remote:error", { error: "Too many requests" });
+        return;
+      }
+      handler(socket, payload, ctx);
+    });
   }
 
   socket.on("disconnect", () => {

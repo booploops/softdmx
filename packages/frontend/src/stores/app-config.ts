@@ -20,7 +20,7 @@ import { usePlotSettingsStore } from 'src/stores/plot-settings';
 import { useThemeStore } from 'src/stores/theme';
 import { useUIStore } from 'src/stores/ui';
 
-type RemoteConfig = Pick<ConfigFileData, 'interface' | 'sidebar' | 'theme' | 'plot'>;
+type RemoteConfig = Pick<ConfigFileData, 'interface' | 'sidebar' | 'theme' | 'plot' | 'remote'>;
 
 export const useAppConfigStore = defineStore('app-config', () => {
   const isHydrated = ref(!isElectronConfigEnv);

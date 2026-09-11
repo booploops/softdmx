@@ -31,7 +31,6 @@ const BUILD_PATHS = [
 const DEV_PATHS = [
   "packages/frontend/node_modules/.vite",
   "packages/frontend/.quasar",
-  "packages/frontend/.histoire",
 ];
 
 function getAppDataDir() {

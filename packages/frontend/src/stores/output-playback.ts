@@ -14,7 +14,7 @@ import { mergeLayers, scalesWithIntensityMaster } from '@softdmx/engine';
 import { scratchToLayer, mergeClientScratchLayers } from '@softdmx/engine';
 import { evaluateTimelineCueAtTime, getCueTotalDuration } from '@softdmx/engine';
 import { getActiveTimelineCuesAtTimecode } from '@softdmx/engine';
-import { evaluateStackCueAtTime, initStackPlayback, advanceStackStep } from '@softdmx/engine';
+import { evaluateStackCueAtTime, initStackPlayback, advanceStackStep, retreatStackStep, gotoStackStep } from '@softdmx/engine';
 import { evaluateAllEffects } from '@softdmx/engine';
 import {
   createAudioMappingEvalState,
@@ -901,6 +901,22 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     mergeAndApply();
   }
 
+  function stackBack(cueId: string) {
+    const state = playbackStates.value.get(cueId);
+    const cue = showStore().document.cues.find((c) => c.id === cueId);
+    if (!state || !cue || cue.view !== 'stack') return;
+    retreatStackStep(state, cue);
+    mergeAndApply();
+  }
+
+  function stackGoto(cueId: string, index: number) {
+    const state = playbackStates.value.get(cueId);
+    const cue = showStore().document.cues.find((c) => c.id === cueId);
+    if (!state || !cue || cue.view !== 'stack') return;
+    gotoStackStep(state, cue, index);
+    mergeAndApply();
+  }
+
   function firePreset(presetId: string, fadeMs = 0) {
     const show = showStore().document;
     const preset = show.presets.find((p) => p.id === presetId);
@@ -1026,6 +1042,8 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     stopCue,
     stopAllCues,
     stackGo,
+    stackBack,
+    stackGoto,
     firePreset,
     firePresetPoolSlot,
     revertPreset,

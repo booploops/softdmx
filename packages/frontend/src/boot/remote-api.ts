@@ -167,6 +167,14 @@ export default boot(() => {
     cueStore.stackGo(payload.cueId);
   });
 
+  socket.on('remote:cue:stack:back', (payload: { cueId: string }) => {
+    cueStore.stackBack(payload.cueId);
+  });
+
+  socket.on('remote:cue:stack:goto', (payload: { cueId: string; index: number }) => {
+    cueStore.stackGoto(payload.cueId, payload.index);
+  });
+
   socket.on('remote:blackout', (payload: boolean) => {
     engine.setBlackout(!!payload);
   });

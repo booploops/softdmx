@@ -20,7 +20,7 @@ For a detailed walkthrough of when to use WebAssembly, the zero-copy memory mode
 
 ## 🛠 Building the Module
 
-The WebAssembly binary is compiled directly from [src/main.zig](file:///Volumes/Storage/Repos/GitHub/softdmx/packages/wasm/src/main.zig) to a freestanding WASM target using the Zig compiler.
+The WebAssembly binary is compiled from [src/main.zig](src/main.zig) to a freestanding WASM target using the Zig compiler. CI rebuilds it on every run and uploads the result as the `softdmx-wasm` artifact.
 
 ### Prerequisites
 Make sure you have [Zig](https://ziglang.org/) installed and available in your shell environment.

@@ -52,7 +52,7 @@ OpenAPI spec: [`openapi/remote-api.yaml`](../openapi/remote-api.yaml).
 - `/softdmx/group/{name}/master`
 - `/softdmx/cue/{id}/go`
 - `/softdmx/preset/{id}`
-- `/softdmx/scratch/changed` (optional outbound when `softdmx.osc_emit_scratch_changed=1` in localStorage)
+- `/softdmx/scratch/changed` (optional outbound when `softdmx.osc_emit_scratch_changed=1` in localStorage; Electron `sendOsc` to UDP 9000)
 
 SoftDMX also accepts common media-time OSC routes used by Resolume-style controllers, including:
 

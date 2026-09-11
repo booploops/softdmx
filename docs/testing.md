@@ -57,6 +57,6 @@ Runs on push via `.github/workflows/fuzz.yml`.
 
 ## CI
 
-- `ci.yml` — tests, coverage artifact, SPA build, Electron build
-- `security.yml` — OSV-Scanner and CodeQL (also weekly)
+- `ci.yml` — tests (coverage reported in the job log), lint/typecheck/license checks, SPA build, Electron build smoke. Pre-alpha CI does not mark builds releasable. CI rebuilds `softdmx.wasm` on every run (via `yarn build:frontend` / `yarn build`) and also uploads it as the `softdmx-wasm` artifact.
+- `security.yml` — OSV-Scanner and CodeQL on push/PR. Scheduled scans are disabled during pre-alpha.
 - `fuzz.yml` — fuzz harnesses on push

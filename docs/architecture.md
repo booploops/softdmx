@@ -42,8 +42,6 @@ flowchart TB
 | `@softdmx/tests` | `packages/tests/` | Vitest, Playwright, fuzz, and golden fixtures |
 | `@softdmx/buffers` | `packages/buffers/` | FlatBuffers schema (minimal today) |
 
-`packages/server` and `packages/conduit` exist as stubs and are not part of the production desk path yet.
-
 ## Show files (`packages/engine/src/show/`)
 
 - `document.ts` — schema
@@ -66,7 +64,7 @@ Default port: `5353`.
 
 ## Output (`packages/client/src-electron/output/`)
 
-Art-Net, sACN, GridNode, and USB DMX via `output-manager.ts`. Primary/standby pairing lives in `packages/client/src-electron/backup/`. Universe health is broadcast as Socket.IO `output:health`.
+Art-Net, sACN, GridNode, and USB DMX via `output-manager.ts`. Universe health is broadcast as Socket.IO `output:health`.
 
 ## Desk modes
 

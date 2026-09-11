@@ -8,7 +8,8 @@
 
 import type { Server } from "socket.io";
 import type { ActiveChannel, ShowDocument } from "@softdmx/engine";
-import { resolveFixtureChannelsForMode } from "@softdmx/engine";
+import { isSupportedShowVersion, resolveFixtureChannelsForMode } from "@softdmx/engine";
+import { consumeRateLimit } from "../auth/rate-limit";
 import type { OutputManager } from "../../output/output-manager";
 import { getFixtureDefinitionFromDisk } from "../../fixture-lookup";
 import { getCurrentShow, setCurrentShow } from "../context";
@@ -208,24 +209,28 @@ export function attachChannelPipeline(io: Server, outputManager: OutputManager):
     });
 
     socket.on("show:state", (showfile) => {
-      if (showfile) {
-        setCurrentShow(showfile as ShowDocument);
-        cachedShow = showfile as ShowDocument;
-        cachedPatchMap = buildFixturePatchMap(cachedShow);
-        outputManager.setShowfile(showfile);
-        // Broadcast to other clients only — avoid echoing back to the sender
-        socket.broadcast.emit("show:state", showfile);
+      if (!consumeRateLimit(`socket-show:${socket.id}`).allowed) return;
+      if (!showfile || !isSupportedShowVersion((showfile as { version?: unknown }).version)) {
+        return;
       }
+      setCurrentShow(showfile as ShowDocument);
+      cachedShow = showfile as ShowDocument;
+      cachedPatchMap = buildFixturePatchMap(cachedShow);
+      outputManager.setShowfile(showfile);
+      // Broadcast to other clients only — avoid echoing back to the sender
+      socket.broadcast.emit("show:state", showfile);
     });
 
     // Legacy alias
     socket.on("showfile:update", (showfile) => {
-      if (showfile) {
-        setCurrentShow(showfile as ShowDocument);
-        cachedShow = showfile as ShowDocument;
-        cachedPatchMap = buildFixturePatchMap(cachedShow);
-        outputManager.setShowfile(showfile);
+      if (!consumeRateLimit(`socket-show:${socket.id}`).allowed) return;
+      if (!showfile || !isSupportedShowVersion((showfile as { version?: unknown }).version)) {
+        return;
       }
+      setCurrentShow(showfile as ShowDocument);
+      cachedShow = showfile as ShowDocument;
+      cachedPatchMap = buildFixturePatchMap(cachedShow);
+      outputManager.setShowfile(showfile);
     });
   });
 }

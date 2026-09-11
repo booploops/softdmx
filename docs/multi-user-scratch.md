@@ -29,3 +29,7 @@ On connect, clients send `client:hello` with optional `operatorLabel` and `color
 ## Session recording
 
 Programmer session events include `clientId` for per-operator busk transcripts and bake workflows.
+
+## Session epoch
+
+`meta.sessionEpoch` and the frontend helpers (`bumpSessionEpoch`, `canApplyRemoteEpoch`) exist for optimistic show-document conflict detection. They are unused today. Scratch authority above is the current multi-client programming path.

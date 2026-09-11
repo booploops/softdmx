@@ -27,6 +27,8 @@ export interface OutputDestination {
     Subnet?: number;
     PortPath?: string;
     UsbProtocol?: "enttec_pro" | "open_dmx";
+    Priority?: number;
+    SyncAddress?: number;
   };
 }
 

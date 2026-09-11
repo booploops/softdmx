@@ -17,6 +17,10 @@ import {
   getRequiredRemoteApiToken,
   isRemoteApiTokenAuthorized,
 } from "../auth/remote-token";
+import {
+  consumeRateLimit,
+  REMOTE_RATE_LIMIT_MAX_REQUESTS,
+} from "../auth/rate-limit";
 
 type ScratchSetPayload =
   | { path: string; value: number; attributeType?: string; clientId?: string }
@@ -25,23 +29,6 @@ type AudioMappingUpdatePayload = {
   id: string;
   mapping: Partial<ShowAudioMapping>;
 };
-
-const REMOTE_RATE_LIMIT_WINDOW_MS = 60_000;
-const REMOTE_RATE_LIMIT_MAX_REQUESTS = 240;
-
-const clientRequests = new Map<string, { count: number; resetAt: number }>();
-
-function cleanRateLimitCache() {
-  const now = Date.now();
-  for (const [key, record] of clientRequests.entries()) {
-    if (now > record.resetAt) {
-      clientRequests.delete(key);
-    }
-  }
-}
-
-// Every minute, prune expired rate-limit records
-setInterval(cleanRateLimitCache, 60_000).unref?.();
 
 function getClientIp(c: Context<{ Bindings: HttpBindings }>): string {
   const forwarded = c.req.header("x-forwarded-for");
@@ -61,8 +48,6 @@ function isShowDocument(payload: unknown): payload is ShowDocument {
 }
 
 export function registerRemoteRestRoutes(app: Hono<{ Bindings: HttpBindings }>, ctx: RemoteContext): void {
-  const requiredToken = getRequiredRemoteApiToken();
-
   const remoteRouter = new Hono<{ Bindings: HttpBindings }>();
 
   // Custom rate-limiting middleware
@@ -71,21 +56,14 @@ export function registerRemoteRestRoutes(app: Hono<{ Bindings: HttpBindings }>, 
     const clientKey = token ? `token:${token}` : `ip:${getClientIp(c)}`;
 
     const now = Date.now();
-    let record = clientRequests.get(clientKey);
+    const limit = consumeRateLimit(clientKey);
 
-    if (!record || now > record.resetAt) {
-      record = { count: 0, resetAt: now + REMOTE_RATE_LIMIT_WINDOW_MS };
-      clientRequests.set(clientKey, record);
-    }
-
-    record.count++;
-
-    if (record.count > REMOTE_RATE_LIMIT_MAX_REQUESTS) {
+    if (!limit.allowed) {
       c.status(429);
       return c.json({
         error: "Too many requests",
         max: REMOTE_RATE_LIMIT_MAX_REQUESTS,
-        timeWindow: Math.max(0, Math.ceil((record.resetAt - now) / 1000)),
+        timeWindow: Math.max(0, Math.ceil((limit.resetAt - now) / 1000)),
       });
     }
 
@@ -94,6 +72,7 @@ export function registerRemoteRestRoutes(app: Hono<{ Bindings: HttpBindings }>, 
 
   // Custom authorization middleware
   remoteRouter.use("*", async (c, next) => {
+    const requiredToken = getRequiredRemoteApiToken();
     if (requiredToken) {
       const token = extractTokenFromHeaders(c.req.header());
       if (!isRemoteApiTokenAuthorized(token, requiredToken)) {
@@ -294,6 +273,30 @@ export function registerRemoteRestRoutes(app: Hono<{ Bindings: HttpBindings }>, 
       return c.json({ error: "Invalid payload" });
     }
     ctx.io.emit("remote:cue:stack:go", body);
+    return c.json({ ok: true });
+  });
+
+  remoteRouter.post("/cue/stack/back", async (c) => {
+    let body: any;
+    try {
+      body = await c.req.json();
+    } catch {
+      c.status(400);
+      return c.json({ error: "Invalid payload" });
+    }
+    ctx.io.emit("remote:cue:stack:back", body);
+    return c.json({ ok: true });
+  });
+
+  remoteRouter.post("/cue/stack/goto", async (c) => {
+    let body: any;
+    try {
+      body = await c.req.json();
+    } catch {
+      c.status(400);
+      return c.json({ error: "Invalid payload" });
+    }
+    ctx.io.emit("remote:cue:stack:goto", body);
     return c.json({ ok: true });
   });
 

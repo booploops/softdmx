@@ -60,4 +60,4 @@ See [api.md](./api.md) for `GET /scratch`, `GET /scratch/clients`, and session a
 
 ## OSC (optional)
 
-When `localStorage['softdmx.osc_emit_scratch_changed'] = '1'`, scratch writes from OSC mappings emit `/softdmx/scratch/changed` with `[path, value]`.
+When `localStorage['softdmx.osc_emit_scratch_changed'] = '1'`, scratch writes from OSC mappings emit `/softdmx/scratch/changed` with `[path, value]` via Electron `sendOsc` (localhost UDP 9000).

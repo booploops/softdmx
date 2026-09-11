@@ -79,8 +79,14 @@ function buildModeChannels(
 
   for (const dmxChannel of readGdtfChannels(mode)) {
     const offsetRaw = dmxChannel["@_Offset"];
-    const offset =
-      typeof offsetRaw === "string" ? Number(offsetRaw.split(",")[0]) : channels.length + 1;
+    const offsets =
+      typeof offsetRaw === "string"
+        ? offsetRaw
+            .split(",")
+            .map((part) => Number(part.trim()))
+            .filter((value) => Number.isFinite(value) && value > 0)
+        : [];
+    const offset = offsets[0] ?? channels.length + 1;
     const attributeName = resolveChannelAttributeName(dmxChannel);
     const attribute = attributeMap.get(attributeName);
     const featureRaw =
@@ -115,6 +121,20 @@ function buildModeChannels(
     }
 
     channels.push(channel);
+
+    if (offsets.length > 1) {
+      for (let i = 1; i < offsets.length; i += 1) {
+        channels.push({
+          name: `${attributeName} Fine${i > 1 ? ` ${i}` : ""}`.trim(),
+          type,
+          minValue: 0,
+          maxValue: 255,
+          defaultValue: 0,
+          attributeId: `${attributeName}_fine_${i}`,
+          dmxOffset: offsets[i],
+        });
+      }
+    }
   }
 
   return channels.sort((a, b) => (a.dmxOffset ?? 0) - (b.dmxOffset ?? 0));

@@ -8,9 +8,19 @@
 
 import { timingSafeEqual } from "node:crypto";
 
+let configuredToken: string | null = null;
+
+export function setConfiguredRemoteApiToken(token: string | null | undefined): void {
+  const trimmed = typeof token === "string" ? token.trim() : "";
+  configuredToken = trimmed.length > 0 ? trimmed : null;
+}
+
 export function getRequiredRemoteApiToken(): string | null {
-  const token = process.env.SOFTDMX_API_TOKEN?.trim();
-  return token && token.length > 0 ? token : null;
+  const envToken = process.env.SOFTDMX_API_TOKEN?.trim();
+  if (envToken && envToken.length > 0) {
+    return envToken;
+  }
+  return configuredToken;
 }
 
 export function extractBearerOrHeaderToken(

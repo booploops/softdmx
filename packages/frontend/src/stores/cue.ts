@@ -405,6 +405,8 @@ export const useCueStore = defineStore('cue', () => {
   const getCueLevel = (cueId: string) => engine.getCueLevel(cueId);
   const setPlaybackBusMaster = (intensity: number) => engine.setPlaybackBusMaster(intensity);
   const stackGo = (cueId: string) => engine.stackGo(cueId);
+  const stackBack = (cueId: string) => engine.stackBack(cueId);
+  const stackGoto = (cueId: string, index: number) => engine.stackGoto(cueId, index);
   const firePreset = (presetId: string, fadeMs?: number) => engine.firePreset(presetId, fadeMs);
 
   function setCueLooping(cueId: string, isLooping: boolean) {
@@ -471,6 +473,8 @@ export const useCueStore = defineStore('cue', () => {
     setCueLooping,
     getCueProgress,
     stackGo,
+    stackBack,
+    stackGoto,
     firePreset,
   };
 });

@@ -35,6 +35,7 @@ const ALLOWED_EXTENSIONS = new Set([
   '.tsx',
   '.js',
   '.jsx',
+  '.mjs',
   '.vue',
   '.zig',
   '.css',

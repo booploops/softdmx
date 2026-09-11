@@ -8,7 +8,7 @@ This document describes how to create and trigger native desktop context menus i
 
 To maintain a consistent and native desktop feel, SoftDMX utilizes Electron's native menu APIs. While the low-level communication is handled over a tRPC subscription bridge (see [tRPC Electron IPC & Native Menus](./ipc-trpc.md)), the frontend provides a high-level, developer-friendly wrapper: **`createMenu`**.
 
-The `createMenu` helper is defined in [menus.ts](file:///Volumes/Storage/Repos/GitHub/softdmx/packages/frontend/src/lib/menus.ts). It encapsulates:
+The `createMenu` helper is defined in [menus.ts](../packages/frontend/src/lib/menus.ts). It encapsulates:
 1. Mapping click callbacks to unique string identifiers (`clickId`).
 2. Serializing the menu template.
 3. Subscribing to `trpc.showContextMenu`.
@@ -18,7 +18,7 @@ The `createMenu` helper is defined in [menus.ts](file:///Volumes/Storage/Repos/G
 
 ## 📋 Typing and Menu Item Options
 
-Menu templates are arrays of `FrontendMenuItem`, which is declared globally in [env.d.ts](file:///Volumes/Storage/Repos/GitHub/softdmx/packages/frontend/src/env.d.ts).
+Menu templates are arrays of `FrontendMenuItem`, which is declared globally in [env.d.ts](../packages/frontend/src/env.d.ts).
 
 ### `FrontendMenuItem` Properties
 

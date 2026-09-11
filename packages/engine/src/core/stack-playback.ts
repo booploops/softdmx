@@ -62,25 +62,37 @@ function computeStackFadeProgress(
   return Math.min(1, elapsed / step.fadeIn);
 }
 
-export function advanceStackStep(state: CuePlaybackState, cue: Cue): boolean {
+function stackLength(cue: Cue): number {
   const parts = resolveCueParts(cue);
-  if (parts.length > 0) {
-    const nextIndex = (state.stackStepIndex ?? 0) + 1;
-    if (nextIndex >= parts.length) return false;
-    state.stackStepIndex = nextIndex;
-    state.stackStepStartTime = performance.now();
-    return true;
-  }
+  if (parts.length > 0) return parts.length;
+  return cue.stack?.length ?? 0;
+}
 
-  const stack = cue.stack ?? [];
-  if (stack.length === 0) return false;
-
+export function advanceStackStep(state: CuePlaybackState, cue: Cue): boolean {
+  const length = stackLength(cue);
+  if (length === 0) return false;
   const nextIndex = (state.stackStepIndex ?? 0) + 1;
-  if (nextIndex >= stack.length) {
-    return false;
-  }
-
+  if (nextIndex >= length) return false;
   state.stackStepIndex = nextIndex;
+  state.stackStepStartTime = performance.now();
+  return true;
+}
+
+export function retreatStackStep(state: CuePlaybackState, cue: Cue): boolean {
+  const length = stackLength(cue);
+  if (length === 0) return false;
+  const previousIndex = (state.stackStepIndex ?? 0) - 1;
+  if (previousIndex < 0) return false;
+  state.stackStepIndex = previousIndex;
+  state.stackStepStartTime = performance.now();
+  return true;
+}
+
+export function gotoStackStep(state: CuePlaybackState, cue: Cue, index: number): boolean {
+  const length = stackLength(cue);
+  if (length === 0) return false;
+  if (!Number.isInteger(index) || index < 0 || index >= length) return false;
+  state.stackStepIndex = index;
   state.stackStepStartTime = performance.now();
   return true;
 }

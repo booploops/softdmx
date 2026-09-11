@@ -43,6 +43,11 @@ export const configPlotSettingsSchema = z.object({
   autoAlignMode: plotAlignModeSchema.default("row"),
 });
 
+export const configRemoteSettingsSchema = z.object({
+  listenRemote: z.boolean().default(false),
+  apiToken: z.string().default(""),
+});
+
 export type SidebarShortcutOpenMode = z.infer<typeof sidebarShortcutOpenModeSchema>;
 export type SidebarShortcutNewWorkspacePolicy = z.infer<typeof sidebarShortcutNewWorkspacePolicySchema>;
 export type PlotAlignMode = z.infer<typeof plotAlignModeSchema>;
@@ -50,6 +55,7 @@ export type ConfigInterfaceSettings = z.infer<typeof configInterfaceSettingsSche
 export type ConfigSidebarSettings = z.infer<typeof configSidebarSettingsSchema>;
 export type ConfigThemeSettings = z.infer<typeof configThemeSettingsSchema>;
 export type ConfigPlotSettings = z.infer<typeof configPlotSettingsSchema>;
+export type ConfigRemoteSettings = z.infer<typeof configRemoteSettingsSchema>;
 
 export type ConfigFileData = {
   version: number;
@@ -57,6 +63,7 @@ export type ConfigFileData = {
   sidebar: ConfigSidebarSettings;
   theme: ConfigThemeSettings;
   plot: ConfigPlotSettings;
+  remote: ConfigRemoteSettings;
 };
 
 export const configInterfaceSettingsPatchSchema = z.object({
@@ -90,11 +97,17 @@ export const configPlotSettingsPatchSchema = z.object({
   autoAlignMode: plotAlignModeSchema.optional(),
 });
 
+export const configRemoteSettingsPatchSchema = z.object({
+  listenRemote: z.boolean().optional(),
+  apiToken: z.string().optional(),
+});
+
 export const configPatchSchema = z.object({
   interface: configInterfaceSettingsPatchSchema.optional(),
   sidebar: configSidebarSettingsPatchSchema.optional(),
   theme: configThemeSettingsPatchSchema.optional(),
   plot: configPlotSettingsPatchSchema.optional(),
+  remote: configRemoteSettingsPatchSchema.optional(),
 });
 
 export type ConfigPatch = z.infer<typeof configPatchSchema>;
@@ -105,6 +118,7 @@ const configFileInputSchema = z.object({
   sidebar: z.unknown().optional(),
   theme: z.unknown().optional(),
   plot: z.unknown().optional(),
+  remote: z.unknown().optional(),
 });
 
 export function parseConfigFile(input: unknown): ConfigFileData {
@@ -116,6 +130,7 @@ export function parseConfigFile(input: unknown): ConfigFileData {
     sidebar: configSidebarSettingsSchema.parse(raw.sidebar ?? {}),
     theme: configThemeSettingsSchema.parse(raw.theme ?? {}),
     plot: configPlotSettingsSchema.parse(raw.plot ?? {}),
+    remote: configRemoteSettingsSchema.parse(raw.remote ?? {}),
   };
 }
 
@@ -141,6 +156,7 @@ export function mergeConfigPatch(current: ConfigFileData, patch: ConfigPatch): C
         }
       : current.theme,
     plot: validated.plot ? { ...current.plot, ...validated.plot } : current.plot,
+    remote: validated.remote ? { ...current.remote, ...validated.remote } : current.remote,
   });
 }
 
@@ -158,3 +174,4 @@ export const DEFAULT_INTERFACE_SETTINGS = defaultConfig.interface;
 export const DEFAULT_SIDEBAR_SETTINGS = defaultConfig.sidebar;
 export const DEFAULT_THEME_SETTINGS = defaultConfig.theme;
 export const DEFAULT_PLOT_SETTINGS = defaultConfig.plot;
+export const DEFAULT_REMOTE_SETTINGS = defaultConfig.remote;

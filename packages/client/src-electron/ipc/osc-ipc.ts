@@ -5,10 +5,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { BrowserWindow } from "electron";
-import { Server } from "node-osc";
+import { BrowserWindow, ipcMain } from "electron";
+import { Client, Server } from "node-osc";
 
 let oscServer: Server | null = null;
+let oscClient: Client | null = null;
+let sendHandlerRegistered = false;
 
 export function setupOscListener(mainWindow: BrowserWindow) {
   try {
@@ -31,6 +33,16 @@ export function setupOscListener(mainWindow: BrowserWindow) {
     oscServer.on("error", (err) => {
       console.error("OSC Server encountered an error:", err);
     });
+
+    oscClient = new Client("127.0.0.1", 9000);
+    if (!sendHandlerRegistered) {
+      sendHandlerRegistered = true;
+      ipcMain.on("osc-send", (_event, payload: { address?: string; args?: unknown[] }) => {
+        if (!oscClient || typeof payload?.address !== "string") return;
+        const args = Array.isArray(payload.args) ? payload.args : [];
+        oscClient.send(payload.address, ...(args as Array<string | number | boolean>));
+      });
+    }
   } catch (error) {
     console.error("Failed to start OSC Server:", error);
   }
@@ -45,5 +57,13 @@ export function closeOscListener() {
       console.error("Error shutting down OSC Server:", error);
     }
     oscServer = null;
+  }
+  if (oscClient) {
+    try {
+      oscClient.close();
+    } catch (error) {
+      console.error("Error shutting down OSC Client:", error);
+    }
+    oscClient = null;
   }
 }

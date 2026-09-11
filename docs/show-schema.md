@@ -81,7 +81,7 @@ programmer: {}
   - `name: string` (required)
   - `created: string` (ISO timestamp)
   - `modified: string` (ISO timestamp, updated on export)
-  - `sessionEpoch?: number` — incremented on multi-user edits for conflict detection
+  - `sessionEpoch?: number` — unused; optimistic show-document conflict detection
   - `modifiedBy?: string`
   - `lock?: { user: string; since: string }`
 

@@ -115,7 +115,7 @@ export fn sampleFrameToPixelGrid(
 
 In the browser/frontend environment, the WASM module is imported and instantiated within a Web Worker.
 
-Below is the established pattern modeled from [video-sampler.worker.ts](file:///Volumes/Storage/Repos/GitHub/softdmx/packages/frontend/src/workers/video-sampler.worker.ts):
+Below is the established pattern modeled from [video-sampler.worker.ts](../packages/frontend/src/workers/video-sampler.worker.ts):
 
 ### Initialization and Allocation Caching
 ```typescript

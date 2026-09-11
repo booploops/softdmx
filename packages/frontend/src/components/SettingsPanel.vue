@@ -12,6 +12,7 @@ import XTabs from 'src/components/controls/XTabs.vue';
 import SettingsAudioSection from 'src/components/settings/SettingsAudioSection.vue';
 import SettingsInterfaceSection from 'src/components/settings/SettingsInterfaceSection.vue';
 import SettingsOutputSection from 'src/components/settings/SettingsOutputSection.vue';
+import SettingsRemoteSection from 'src/components/settings/SettingsRemoteSection.vue';
 import SettingsSyncSection from 'src/components/settings/SettingsSyncSection.vue';
 import SettingsPlotSection from 'src/components/settings/SettingsPlotSection.vue';
 import SettingsThemeSection from 'src/components/settings/SettingsThemeSection.vue';
@@ -42,6 +43,7 @@ const settingsPanelStore = useSettingsPanelStore();
             </q-tab-panel>
             <q-tab-panel name="output" class="settings-tab-panel">
                 <SettingsOutputSection />
+                <SettingsRemoteSection />
             </q-tab-panel>
             <q-tab-panel name="refresh" class="settings-tab-panel">
                 <SettingsSyncSection />

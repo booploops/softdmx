@@ -5,7 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
-import { app, BrowserWindow, Menu, dialog } from "electron";
+import { app, BrowserWindow, Menu, dialog, ipcMain } from "electron";
 import { fileURLToPath } from "url";
 import { startServer, stopServer } from "./server";
 import { AppState } from "./state/main";
@@ -23,6 +23,8 @@ import { config } from "./state/config";
 import { workspace } from "./state/workspace";
 import { createApplicationMenu } from "./windows/application-menu";
 import { registerGlobalContextMenuHandler } from "./windows/context-menu";
+import { getRequiredRemoteApiToken } from "./server/auth/remote-token";
+import { buildContentSecurityPolicy } from "./server/security/csp";
 
 
 app.setPath("userData", Paths.appData);
@@ -66,6 +68,11 @@ async function shutdownAndQuit() {
 async function createWindow() {
   config.load();
   workspace.load();
+
+  ipcMain.on("remote-api-token-sync", (event) => {
+    event.returnValue = getRequiredRemoteApiToken() ?? "";
+  });
+
   startServer();
   setupGridNodeOverlayIpc();
 

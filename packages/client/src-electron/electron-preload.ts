@@ -33,14 +33,21 @@ contextBridge.exposeInMainWorld("electronVideo", {
 
 contextBridge.exposeInMainWorld("electronAPI", {
   getRemoteApiToken: (): string | undefined => {
-    const token = process.env.SOFTDMX_API_TOKEN?.trim();
-    return token && token.length > 0 ? token : undefined;
+    const envToken = process.env.SOFTDMX_API_TOKEN?.trim();
+    if (envToken && envToken.length > 0) {
+      return envToken;
+    }
+    const fromMain = ipcRenderer.sendSync("remote-api-token-sync");
+    return typeof fromMain === "string" && fromMain.length > 0 ? fromMain : undefined;
   },
   onOscMessage: (callback: (event: any, data: { address: string; args: any[] }) => void) => {
     ipcRenderer.on("osc-received", callback);
   },
   removeOscListener: () => {
     ipcRenderer.removeAllListeners("osc-received");
+  },
+  sendOsc: (address: string, args: unknown[]) => {
+    ipcRenderer.send("osc-send", { address, args });
   },
 });
 

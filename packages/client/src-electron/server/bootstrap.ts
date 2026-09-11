@@ -16,6 +16,8 @@ import { attachChannelPipeline } from "./socket/channels";
 import { registerRemoteHandlers } from "./socket/remote";
 import { registerSettingsHandlers } from "./socket/settings";
 import { app, createRemoteContext, httpServer, io, outputManager } from "./context";
+import { buildContentSecurityPolicy } from "./security/csp";
+import { getListenHost } from "./security/network";
 
 let serverStarted = false;
 
@@ -27,6 +29,11 @@ export function startServer() {
   const assetsPath = join(__dirname, "../dist/spa");
 
   AppState.io = io;
+
+  app.use("*", async (c, next) => {
+    c.header("Content-Security-Policy", buildContentSecurityPolicy());
+    await next();
+  });
 
   app.use("/app/*", serveStatic({
     root: "./",
@@ -44,7 +51,8 @@ export function startServer() {
 
   registerRemoteRestRoutes(app, remoteContext);
   attachChannelPipeline(io, outputManager);
-  httpServer.listen(AppState.port);
+  const listenHost = getListenHost();
+  httpServer.listen(AppState.port, listenHost);
 
   io.on("connection", (socket) => {
     console.log("New client connected:", socket.id);
@@ -53,8 +61,8 @@ export function startServer() {
     registerRemoteHandlers(socket, remoteContext);
   });
 
-  console.log("Server started on port 5353");
-  console.log("WebSocket server started on port 5353");
+  console.log(`Server started on ${listenHost}:${AppState.port}`);
+  console.log(`WebSocket server started on ${listenHost}:${AppState.port}`);
 }
 
 export async function stopServer() {

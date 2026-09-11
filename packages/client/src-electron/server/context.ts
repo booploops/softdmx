@@ -19,6 +19,7 @@ import {
   getRequiredRemoteApiToken,
   isRemoteApiTokenAuthorized,
 } from "./auth/remote-token";
+import { getSocketCors } from "./security/network";
 
 export interface RemoteContext {
   io: Server;
@@ -29,34 +30,27 @@ export interface RemoteContext {
   onMergeRequest?: () => void;
 }
 
-function getIOCors() {
-  return {
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "x-api-token"],
-    credentials: true,
-  };
-}
-
 export const app = new Hono<{ Bindings: HttpBindings }>();
 
 export const httpServer = createServer(getRequestListener(app.fetch));
 
 export const io = new Server(httpServer, {
-  cors: getIOCors(),
+  cors: getSocketCors(),
 });
 
-const requiredRemoteToken = getRequiredRemoteApiToken();
-if (requiredRemoteToken) {
-  io.use((socket, next) => {
-    const token = extractTokenFromSocketHandshake(socket.handshake);
-    if (!isRemoteApiTokenAuthorized(token, requiredRemoteToken)) {
-      next(new Error("Unauthorized"));
-      return;
-    }
+io.use((socket, next) => {
+  const requiredRemoteToken = getRequiredRemoteApiToken();
+  if (!requiredRemoteToken) {
     next();
-  });
-}
+    return;
+  }
+  const token = extractTokenFromSocketHandshake(socket.handshake);
+  if (!isRemoteApiTokenAuthorized(token, requiredRemoteToken)) {
+    next(new Error("Unauthorized"));
+    return;
+  }
+  next();
+});
 
 export const config = new ConfigFile();
 export const outputManager = new OutputManager(config);

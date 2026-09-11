@@ -16,6 +16,7 @@ import { createArtnetWindow } from "./artnet-window";
 import { applyGridNodeOverlayWindowState } from "./gridnode-overlay";
 import { setupOscListener } from "../ipc/osc-ipc";
 import { setupAbletonLink } from "../ipc/link-ipc";
+import { buildContentSecurityPolicy } from "../server/security/csp";
 
 export async function createMainWindow(
   currentDir: string,
@@ -38,6 +39,12 @@ export async function createMainWindow(
 
   setupVideoIpc(mainWindow);
   setBackupPrimaryWindow(mainWindow);
+
+  mainWindow.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+    const headers = { ...details.responseHeaders };
+    headers["Content-Security-Policy"] = [buildContentSecurityPolicy()];
+    callback({ responseHeaders: headers });
+  });
 
   const appBase = isDev()
     ? getDevUrl()

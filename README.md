@@ -31,7 +31,7 @@ yarn dev -- --output-node --show ./my-show.yml
 - **Desk** — Live, Timeline, Program, and Setup modes for busking, cues, patch, and video mapping
 - **Shows** — YAML import/export, schema 1.6, GDTF fixture import
 - **Control** — local UI, touch remote (`/#/remote`), Socket.IO, REST, OSC, MIDI, and CLI
-- **Output** — GridNode, Art-Net, sACN, USB DMX; optional headless output node and primary/standby backup
+- **Output** — GridNode, Art-Net, sACN, USB DMX; optional output-node window
 - **Reactive** — audio-driven mappings; live video → pixel maps (webcam, OBS, Syphon, Spout)
 
 Starter shows ship in `packages/frontend/src/shows/` (Simple Wash, Laser Demo, Example VR Club).

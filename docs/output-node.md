@@ -20,24 +20,10 @@ The output node:
 - Runs the merge engine (cues, effects, audio, video, scratch)
 - Sends Art-Net / sACN / DMX USB / GridNode output
 - Exposes universe health via Socket.IO (`output:health`)
-- Supports **standby** role when `show.backup.role` is `standby`
+- Exposes the same local server as the desk (REST / Socket.IO) so a remote client can attach later
+
+The current output-node path is a slim Electron window, not a standalone appliance binary.
 
 ## Primary / standby
 
-Configure in the show file:
-
-```yaml
-backup:
-  enabled: true
-  role: primary   # or standby
-  partnerHost: 192.168.1.50
-  takeoverMode: manual
-  heartbeatMs: 500
-```
-
-- **Primary** publishes merged channel state and heartbeats.
-- **Standby** receives `backup:state` and only outputs after manual or auto takeover.
-
-## Multi-user session
-
-Show files include `meta.sessionEpoch` for optimistic conflict detection when multiple clients edit the same show over the remote API.
+Show files may include `backup` settings (`enabled`, `role`, `partnerHost`, `takeoverMode`, `heartbeatMs`). Helper functions live in `packages/client/src-electron/backup/coordinator.ts`. Production failover (peer heartbeat, standby output gating, takeover) is not wired.

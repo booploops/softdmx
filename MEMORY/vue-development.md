@@ -62,7 +62,7 @@ export const useCounterStore = defineStore("counter", () => {
 
 ## 🛠️ Configuration Details
 
-This mechanism is defined in [vite.config.ts](file:///Volumes/Storage/Repos/GitHub/softdmx/packages/frontend/vite.config.ts) through `unplugin-auto-import/vite`:
+This mechanism is defined in [vite.config.ts](../packages/frontend/vite.config.ts) through `unplugin-auto-import/vite`:
 
 ```typescript
 AutoImport({

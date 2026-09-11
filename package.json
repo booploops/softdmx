@@ -31,6 +31,8 @@
     "favicon:generate": "yarn workspace @softdmx/frontend favicon:generate",
     "icon:generate": "yarn workspace @softdmx/client icon:generate",
     "clean": "node scripts/clean.mjs",
+    "lint": "oxlint packages/frontend packages/engine packages/client packages/shared packages/tests packages/wasm",
+    "typecheck": "yarn workspace @softdmx/engine type-check && yarn workspace @softdmx/client type-check && yarn workspace @softdmx/frontend type-check",
     "license:check": "node scripts/find-missing-headers.js",
     "license:fix": "node scripts/add-missing-headers.js"
   },

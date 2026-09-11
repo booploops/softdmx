@@ -27,4 +27,7 @@ export default {
     icon: "src-electron/icons/icon.ico",
     target: ["dir"],
   },
+  linux: {
+    target: ["dir"],
+  },
 };

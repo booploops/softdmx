@@ -10,14 +10,7 @@ import dgram from "node:dgram";
 import { randomBytes } from "node:crypto";
 import { DmxOutputDriver } from "./dmx-output-driver";
 import { initWasmEngine, type SoftDmxWasmExports } from "@softdmx/engine";
-
-const ACN_PID = Buffer.from([
-  0x41, 0x53, 0x43, 0x2d, 0x45, 0x31, 0x2e, 0x31, 0x37, 0x00, 0x00, 0x00,
-]);
-
-function pduFlagsAndLength(length: number): Buffer {
-  return Buffer.from([0x70 | ((length >> 8) & 0x0f), length & 0xff]);
-}
+import { packSacnPacket } from "./protocol-packets";
 
 function getDefaultMulticastHost(universe: number): string {
   const uni = Math.max(1, Math.min(63999, universe));
@@ -29,6 +22,8 @@ function getDefaultMulticastHost(universe: number): string {
 export class SacnDriver implements DmxOutputDriver {
   private socket?: dgram.Socket | undefined;
   private sequence = 0;
+  private lastBuffer = new Uint8Array(512);
+  private refreshTimer: ReturnType<typeof setInterval> | null = null;
   private readonly cid = randomBytes(16);
   private wasmExports: SoftDmxWasmExports | null = null;
   private cachedWasmCidPtr = 0;
@@ -45,21 +40,48 @@ export class SacnDriver implements DmxOutputDriver {
       Port: number;
       Universe: number;
       SourceName?: string;
+      Priority?: number;
+      SyncAddress?: number;
     },
   ) {}
 
   async initialize(): Promise<void> {
-    this.socket = dgram.createSocket("udp4");
+    this.socket = dgram.createSocket({ type: "udp4", reuseAddr: true });
+    await new Promise<void>((resolve, reject) => {
+      this.socket!.once("error", reject);
+      this.socket!.bind(0, () => {
+        try {
+          this.socket!.setMulticastTTL(64);
+          const host = this.config.Host || getDefaultMulticastHost(this.config.Universe || 1);
+          if (host.startsWith("239.")) {
+            try {
+              this.socket!.addMembership(host);
+            } catch {
+              // Membership is optional; unicast/send still works.
+            }
+          }
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
     this.wasmExports = await initWasmEngine();
+    this.refreshTimer = setInterval(() => {
+      this.send(this.lastBuffer);
+    }, 25);
   }
 
   send(dmxBuffer: Uint8Array): void {
     if (!this.socket) return;
+    this.lastBuffer = dmxBuffer;
 
     const universe = Math.max(1, Math.min(63999, this.config.Universe || 1));
     const port = this.config.Port || 5568;
     const host = this.config.Host || getDefaultMulticastHost(universe);
     const sourceName = this.config.SourceName || "SoftDMX";
+    const priority = this.config.Priority ?? 100;
+    const syncAddress = this.config.SyncAddress ?? 0;
 
     if (this.wasmExports) {
       const wasm = this.wasmExports;
@@ -133,61 +155,15 @@ export class SacnDriver implements DmxOutputDriver {
         }
       });
     } else {
-      // Pure JS fallback
-      const dmxData = Buffer.alloc(513, 0);
-      const source = Buffer.from(dmxBuffer.subarray(0, 512));
-      source.copy(dmxData, 1);
-
-      const propertyValueCount = dmxData.length;
-      const dmpPduLength = 2 + 1 + 1 + 2 + 2 + 2 + propertyValueCount;
-      const framingPduLength = 2 + 4 + 64 + 1 + 2 + 1 + 1 + 2 + dmpPduLength;
-      const rootPduLength = 2 + 4 + 16 + framingPduLength;
-
-      const rootLayer = Buffer.concat([
-        pduFlagsAndLength(rootPduLength),
-        Buffer.from([0x00, 0x00, 0x00, 0x04]),
-        this.cid,
-      ]);
-
-      const sourceNameField = Buffer.alloc(64, 0);
-      Buffer.from(sourceName, "utf8").subarray(0, 63).copy(sourceNameField);
-      const framingLayer = Buffer.concat([
-        pduFlagsAndLength(framingPduLength),
-        Buffer.from([0x00, 0x00, 0x00, 0x02]),
-        sourceNameField,
-        Buffer.from([
-          100, // Priority
-          0x00,
-          0x00, // Synchronization Address
-          this.sequence & 0xff, // Sequence Number
-          0x00, // Options
-          (universe >> 8) & 0xff,
-          universe & 0xff,
-        ]),
-      ]);
-
-      const dmpLayer = Buffer.concat([
-        pduFlagsAndLength(dmpPduLength),
-        Buffer.from([
-          0x02, // Set Property
-          0xa1, // Address & data type
-          0x00,
-          0x00, // First property address
-          0x00,
-          0x01, // Address increment
-          (propertyValueCount >> 8) & 0xff,
-          propertyValueCount & 0xff,
-        ]),
-        dmxData,
-      ]);
-
-      const packet = Buffer.concat([
-        Buffer.from([0x00, 0x10, 0x00, 0x00]),
-        ACN_PID,
-        rootLayer,
-        framingLayer,
-        dmpLayer,
-      ]);
+      const packet = packSacnPacket({
+        cid: this.cid,
+        sourceName,
+        priority,
+        sequence: this.sequence,
+        universe,
+        dmx: dmxBuffer,
+        syncAddress,
+      });
 
       this.socket.send(packet, 0, packet.length, port, host, (err) => {
         if (err) {
@@ -200,6 +176,10 @@ export class SacnDriver implements DmxOutputDriver {
   }
 
   async destroy(): Promise<void> {
+    if (this.refreshTimer !== null) {
+      clearInterval(this.refreshTimer);
+      this.refreshTimer = null;
+    }
     if (this.socket) {
       this.socket.close();
       this.socket = undefined;

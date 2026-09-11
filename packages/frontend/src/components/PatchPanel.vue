@@ -15,7 +15,7 @@ import { resolveFixtureChannelsForMode } from '@softdmx/engine';
 import type { FixtureChannelWithReference, ShowfileFixture } from '@softdmx/engine';
 import { computeAimPanTilt16Bit, resolveFixturePosition } from '@softdmx/engine';
 import { useFixtureImport } from 'src/composables/useFixtureImport';
-import { createAlert } from 'src/lib/CommonDialogs';
+import { createAlert, createConfirm } from 'src/lib/CommonDialogs';
 import PatchGrid from './PatchGrid.vue';
 import PixelMapPanel from './PixelMapPanel.vue';
 import VisualizerPanel from './VisualizerPanel.vue';
@@ -464,6 +464,36 @@ function addFixtureFromLibrary() {
   dmx.rebuildFromShow(showStore.document);
   showAddFixtureDialog.value = false;
 }
+
+function duplicateFixture(index: number) {
+  const original = showStore.document.fixtures[index];
+  if (!original) return;
+  showStore.updateDocument((doc) => {
+    doc.fixtures.splice(index + 1, 0, {
+      ...original,
+      name: `${original.name} Copy`,
+      startingChannel: undefined,
+    });
+  });
+  dmx.rebuildFromShow(showStore.document);
+}
+
+async function removeFixture(index: number) {
+  const fixture = showStore.document.fixtures[index];
+  if (!fixture) return;
+  const confirmed = await createConfirm({
+    title: 'Remove Fixture',
+    message: `Remove "${fixture.name}" from the patch? It will also leave any groups that list it.`,
+  });
+  if (!confirmed) return;
+  showStore.updateDocument((doc) => {
+    doc.fixtures.splice(index, 1);
+    for (const group of doc.groups ?? []) {
+      group.fixtures = group.fixtures.filter((name) => name !== fixture.name);
+    }
+  });
+  dmx.rebuildFromShow(showStore.document);
+}
 </script>
 
 <template>
@@ -710,6 +740,24 @@ function addFixtureFromLibrary() {
               />
               <div class="patch-table__range">
                 Ch {{ item.startChannel }}-{{ item.endChannel }} ({{ item.channelCount }})
+              </div>
+              <div class="patch-table__row-actions">
+                <XButton
+                  v-info="'setup.patch.duplicateFixture'"
+                  flat
+                  size="sm"
+                  icon="copy"
+                  label="Duplicate"
+                  @click="duplicateFixture(item.index)"
+                />
+                <XButton
+                  v-info="'setup.patch.removeFixture'"
+                  flat
+                  size="sm"
+                  icon="trash"
+                  label="Remove"
+                  @click="removeFixture(item.index)"
+                />
               </div>
             </div>
           </div>

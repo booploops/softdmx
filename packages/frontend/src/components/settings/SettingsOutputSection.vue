@@ -187,6 +187,8 @@ onBeforeUnmount(() => {
               <XInput :model-value="(selectedDestActive.settings?.Host as string) ?? ''" label="Target IP address" @update:model-value="(value) => { ensureDestSettings(selectedDestActive); selectedDestActive.settings!.Host = value; }" />
               <XInput :model-value="(selectedDestActive.settings?.Port as number) ?? 5568" type="number" label="Target UDP port" @update:model-value="(value) => { ensureDestSettings(selectedDestActive); selectedDestActive.settings!.Port = asNumber(value, 5568); }" />
               <XInput :model-value="(selectedDestActive.settings?.Universe as number) ?? 1" type="number" label="Universe" @update:model-value="(value) => { ensureDestSettings(selectedDestActive); selectedDestActive.settings!.Universe = asNumber(value, 1); }" />
+              <XInput :model-value="(selectedDestActive.settings?.Priority as number) ?? 100" type="number" label="Priority (0-200)" @update:model-value="(value) => { ensureDestSettings(selectedDestActive); selectedDestActive.settings!.Priority = asNumber(value, 100); }" />
+              <XInput :model-value="(selectedDestActive.settings?.SyncAddress as number) ?? 0" type="number" label="Sync universe (0 = off)" @update:model-value="(value) => { ensureDestSettings(selectedDestActive); selectedDestActive.settings!.SyncAddress = asNumber(value, 0); }" />
             </div>
 
             <div v-if="selectedDestActive.type === 'dmx_usb'" class="q-gutter-y-sm">

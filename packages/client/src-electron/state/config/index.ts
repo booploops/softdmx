@@ -7,6 +7,7 @@
  */
 
 import { load, dump } from "js-toml";
+import { randomBytes } from "node:crypto";
 import { signal, effect } from "alien-signals";
 import {
   createDefaultConfigFile,
@@ -16,6 +17,7 @@ import {
   type ConfigPatch,
 } from "@softdmx/shared";
 import { Paths } from "../../runtime/paths";
+import { setConfiguredRemoteApiToken } from "../../server/auth/remote-token";
 import fs from "fs";
 import path from "path";
 
@@ -31,8 +33,9 @@ export function createConfigStore() {
       if (fs.existsSync(configPath)) {
         const content = fs.readFileSync(configPath, "utf-8");
         const parsed = load(content);
-        configFile(parseConfigFile(parsed));
+        configFile(ensureRemoteToken(parseConfigFile(parsed)));
       } else {
+        configFile(ensureRemoteToken(configFile()));
         if (!fs.existsSync(Paths.appData)) {
           fs.mkdirSync(Paths.appData, { recursive: true });
         }
@@ -43,6 +46,7 @@ export function createConfigStore() {
     }
 
     isLoaded = true;
+    applyRemoteToken(configFile());
 
     effect(() => {
       try {
@@ -58,12 +62,30 @@ export function createConfigStore() {
   }
 
   function update(patch: ConfigPatch) {
-    const next = mergeConfigPatch(configFile(), patch);
+    const next = ensureRemoteToken(mergeConfigPatch(configFile(), patch));
     configFile(next);
+    applyRemoteToken(next);
     return next;
   }
 
   return { configFile, load: loadConfig, update };
+}
+
+function ensureRemoteToken(data: ConfigFileData): ConfigFileData {
+  if (data.remote.apiToken.trim().length > 0) {
+    return data;
+  }
+  return {
+    ...data,
+    remote: {
+      ...data.remote,
+      apiToken: randomBytes(24).toString("hex"),
+    },
+  };
+}
+
+function applyRemoteToken(data: ConfigFileData): void {
+  setConfiguredRemoteApiToken(data.remote.apiToken);
 }
 
 export const config = createConfigStore();
