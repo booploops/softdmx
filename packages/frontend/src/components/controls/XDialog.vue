@@ -43,7 +43,7 @@ const cardClasses = computed(() => [
 
 <template>
   <q-dialog
-    :ref="props.dialogRef"
+    :ref="props.dialogRef ?? undefined"
     v-bind="$attrs"
     @hide="emit('hide')"
   >

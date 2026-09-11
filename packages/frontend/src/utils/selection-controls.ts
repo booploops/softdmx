@@ -7,6 +7,7 @@
  */
 
 import type {
+  FixtureChannelWithReference,
   FixtureDefinition,
   ProgrammerControl,
   ShowfileFixtureMapped,
@@ -81,11 +82,14 @@ export function buildGroupControlFixture(
     fixtureName: `${groupName} (selection)`,
     def: {
       ...template.def,
-      channels: template.def.channels.map((channel) => ({
+      channels: template.def.channels.map((channel): FixtureChannelWithReference => ({
         ...channel,
         reference: {
-          ...channel.reference,
+          id: channel.reference?.id ?? 0,
+          universe: channel.reference?.universe,
           path: `group://${encodedGroupName}/${encodeURIComponent(channel.name)}`,
+          value: channel.reference?.value ?? 0,
+          attributeType: channel.reference?.attributeType,
         },
       })),
     },

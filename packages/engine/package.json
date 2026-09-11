@@ -16,7 +16,7 @@
     "type-check": "tsgo"
   },
   "dependencies": {
-    "fast-xml-parser": "^5.9.3",
+    "fast-xml-parser": "^5.10.1",
     "fflate": "^0.8.3",
     "yaml": "^2.9.0"
   },

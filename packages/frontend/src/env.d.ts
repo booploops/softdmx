@@ -6,6 +6,36 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+/// <reference types="vite/client" />
+
+declare module 'quasar/wrappers' {
+  import type { App } from 'vue';
+  export function boot(
+    fn: (params: { app: App }) => void | Promise<void>,
+  ): (params: { app: App }) => void | Promise<void>;
+}
+
+declare module 'linear-timecode' {
+  export class Decoder {
+    constructor(sampleRate: number);
+    on(
+      event: 'frame',
+      handler: (frame: {
+        hours: number;
+        minutes: number;
+        seconds: number;
+        frames: number;
+        framerate?: number;
+      }) => void,
+    ): void;
+    decode(samples: number[]): void;
+    removeAllListeners(event?: string): void;
+  }
+}
+
+declare module '@fontsource-variable/noto-sans';
+declare module '@fontsource/noto-mono';
+
 declare namespace NodeJS {
   interface ProcessEnv {
     NODE_ENV: string;

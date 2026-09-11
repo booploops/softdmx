@@ -112,7 +112,7 @@ function handleChange(event: Event) {
     >
       <option
         v-for="opt in normalizedOptions"
-        :key="opt.value"
+        :key="String(opt.value)"
         :value="opt.value"
         :disabled="opt.disable"
       >

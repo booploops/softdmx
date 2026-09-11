@@ -149,7 +149,7 @@ export const useMidiStore = defineStore('midi', () => {
     if (!worker) {
       initWorker();
     }
-    worker.postMessage({ data, deviceName });
+    worker?.postMessage({ data, deviceName });
   }
 
   function startLearning(target: BindingTarget, deviceName?: string) {

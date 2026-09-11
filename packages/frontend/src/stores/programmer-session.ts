@@ -185,7 +185,7 @@ export const useProgrammerSessionStore = defineStore('programmer-session', () =>
     persistSessionBuffer();
   }
 
-  function buildWriteMeta(source: ScratchWriteMeta['source'], meta?: ScratchWriteMeta): ScratchWriteMeta {
+  function buildWriteMeta(source: ScratchWriteMeta['source'], meta?: Partial<ScratchWriteMeta>): ScratchWriteMeta {
     const identity = useClientIdentityStore();
     return {
       source,

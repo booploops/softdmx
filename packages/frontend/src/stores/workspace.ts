@@ -16,7 +16,7 @@ interface WorkspaceState {
   outerLayout: unknown;
   workspaceLayouts: Record<string, unknown>;
   activeWorkspaceId: string;
-  textContents: Record<string, string>;
+  textContents?: Record<string, string>;
 }
 
 interface SpawnRequest {

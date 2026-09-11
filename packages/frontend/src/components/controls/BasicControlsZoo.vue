@@ -397,7 +397,7 @@ const chipRemoveCount = ref(0);
             <XButton
               v-if="!showChip1 || !showChip2"
               label="Reset Chips"
-              size="xs"
+              size="sm"
               flat
               color="primary"
               @click="showChip1 = true; showChip2 = true"

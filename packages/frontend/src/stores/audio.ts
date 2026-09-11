@@ -42,8 +42,8 @@ export const useAudioStore = defineStore('audio', () => {
   let gainNode: GainNode | null = null;
   let sourceNode: MediaStreamAudioSourceNode | null = null;
   let mediaStream: MediaStream | null = null;
-  let timeDomainData: Float32Array | null = null;
-  let frequencyData: Float32Array | null = null;
+  let timeDomainData: Float32Array<ArrayBuffer> | null = null;
+  let frequencyData: Float32Array<ArrayBuffer> | null = null;
   let rafId: number | null = null;
   let lastFrameTs = 0;
   let smoothedEnergy = 0;

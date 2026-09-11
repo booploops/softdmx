@@ -176,7 +176,7 @@ function saveSettings() {
       source: timecodeSource.value,
       fps: Math.max(1, timecodeFps.value),
       latencyMs: Math.max(0, timecodeLatencyMs.value),
-      ltcInputDeviceId: ltcInputDeviceId.value,
+      ltcInputDeviceId: ltcInputDeviceId.value ?? undefined,
       ltcChannel: ltcChannel.value,
       ltcGain: ltcGain.value,
       globalOffsetMs: timecodeGlobalOffsetMs.value,

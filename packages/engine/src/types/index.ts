@@ -83,6 +83,7 @@ export type ShowfileGroup = ShowGroup;
 
 export type {
   DeskWindowType,
+  DeskPaneRect,
   DeskPane,
   DeskView,
   ShowDeskConfig,

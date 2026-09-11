@@ -1058,6 +1058,7 @@ export const useOutputPlaybackStore = defineStore('output-playback', () => {
     setCueIntensity,
     resetPlayback,
     requestMerge,
+    startEngine,
     mergeAndApply,
     computeMergedOutput,
     updateLinkPhase,

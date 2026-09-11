@@ -14,7 +14,7 @@ import { packArtDmxPacket } from "./protocol-packets";
 export class ArtNetDriver implements DmxOutputDriver {
   private socket?: dgram.Socket | undefined;
   private sequence = 0;
-  private lastBuffer = new Uint8Array(512);
+  private lastBuffer: Uint8Array = new Uint8Array(512);
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
   private wasmExports: SoftDmxWasmExports | null = null;
   private cachedWasmDmxPtr = 0;

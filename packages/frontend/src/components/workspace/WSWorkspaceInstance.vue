@@ -105,7 +105,7 @@ function updateFloatingWindowTitlebars() {
       titlebar.appendChild(customTitlebar);
     }
 
-    const group = innerApi.groups.find((g) => floatingEl.contains(g.element));
+    const group = innerApi?.groups.find((g) => floatingEl.contains(g.element));
     if (group && group.activePanel) {
       const activePanel = group.activePanel;
       
@@ -189,7 +189,7 @@ function onReady(event: DockviewReadyEvent) {
     if (savedLayout) {
       try {
         workspaceStore.withRestore(() => {
-          innerApi!.fromJSON(savedLayout);
+          innerApi!.fromJSON(savedLayout as import('dockview-core').SerializedDockview);
         });
       } catch (err) {
         console.error(`Failed to restore workspace layout for ${workspaceId}:`, err);
@@ -270,7 +270,7 @@ onUnmounted(() => {
   >
     <DockviewVue
       :class="`dockview-theme-${themeStore.dockviewTheme} sdmx-dockview-inner`"
-      :components="components"
+      :components="(components as Record<string, never>)"
       :getTabContextMenuItems="getTabContextMenuItems"
       :floatingGroupDragHandle="'titlebar'"
       @ready="onReady"

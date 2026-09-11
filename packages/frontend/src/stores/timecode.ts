@@ -62,6 +62,11 @@ export const useTimecodeStore = defineStore('timecode', () => {
     return Math.max(1, configured);
   });
 
+  const locked = computed(() => {
+    if (lastUpdatedAtMs.value === null) return false;
+    return performance.now() - lastUpdatedAtMs.value < 2500;
+  });
+
   const smpteLabel = computed(() => {
     const pad = (value: number) => String(value).padStart(2, '0');
     return `${pad(smpteHours.value)}:${pad(smpteMinutes.value)}:${pad(smpteSeconds.value)}:${pad(smpteFrames.value)}`;
@@ -158,6 +163,7 @@ export const useTimecodeStore = defineStore('timecode', () => {
     smpteSeconds,
     smpteFrames,
     smpteLabel,
+    locked,
     lastUpdatedAtMs,
     source,
     detectedFps,

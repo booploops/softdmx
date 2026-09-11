@@ -22,7 +22,7 @@ function getDefaultMulticastHost(universe: number): string {
 export class SacnDriver implements DmxOutputDriver {
   private socket?: dgram.Socket | undefined;
   private sequence = 0;
-  private lastBuffer = new Uint8Array(512);
+  private lastBuffer: Uint8Array = new Uint8Array(512);
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
   private readonly cid = randomBytes(16);
   private wasmExports: SoftDmxWasmExports | null = null;

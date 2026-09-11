@@ -9,7 +9,8 @@
   Purpose: Container component for displaying widgets for a linked group of fixtures
 -->
 <script setup lang="ts">
-import type { ShowfileFixtureMapped } from '@softdmx/engine';
+import { computed, ref, watch } from 'vue';
+import type { FixtureChannelWithReference, ShowfileFixtureMapped } from '@softdmx/engine';
 import type { ShowGroup } from '@softdmx/engine';
 import { useDMXStore } from 'src/stores/dmx';
 import { useSelectionStore } from 'src/stores/selection';
@@ -50,11 +51,14 @@ watch(firstFixture, (newFixture) => {
     fixtureName: `${props.group.name} (Group Control)`,
     def: {
       ...newFixture.def,
-      channels: newFixture.def.channels.map((channel) => ({
+      channels: newFixture.def.channels.map((channel): FixtureChannelWithReference => ({
         ...channel,
         reference: {
-          ...channel.reference,
+          id: channel.reference?.id ?? 0,
+          universe: channel.reference?.universe,
           path: `group://${encodedGroupName}/${encodeURIComponent(channel.name)}`,
+          value: channel.reference?.value ?? 0,
+          attributeType: channel.reference?.attributeType,
         },
       })),
     },

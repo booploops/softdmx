@@ -6,6 +6,8 @@
  * file, You can obtain one at https://mozilla.org/MPL/2.0/.
  */
 
+export {};
+
 type AnalyzeRequest = {
   type: "analyze";
   requestId: number;

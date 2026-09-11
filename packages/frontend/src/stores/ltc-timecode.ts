@@ -33,7 +33,7 @@ export const useLtcTimecodeStore = defineStore('ltcTimecode', () => {
   let mediaStream: MediaStream | null = null;
   let decoder: InstanceType<typeof Decoder> | null = null;
   let rafId: number | null = null;
-  let timeDomainData: Float32Array | null = null;
+  let timeDomainData: Float32Array<ArrayBuffer> | null = null;
   let analyserNode: AnalyserNode | null = null;
   let lockTimeoutId: number | null = null;
   let decodeWorker: Worker | null = null;

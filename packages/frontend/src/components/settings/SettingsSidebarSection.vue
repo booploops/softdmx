@@ -60,14 +60,14 @@ function setShortcutEnabled(id: string, value: boolean) {
 
           <XSelect
             :model-value="uiStore.sidebarShortcutOpenMode"
-            :options="openModeOptions"
+            :options="[...openModeOptions]"
             label="Shortcut launch behavior"
             @update:model-value="(value) => uiStore.setSidebarShortcutOpenMode(value)"
           />
 
           <XSelect
             :model-value="uiStore.sidebarShortcutNewWorkspacePolicy"
-            :options="newWorkspacePolicyOptions"
+            :options="[...newWorkspacePolicyOptions]"
             label="New workspace policy"
             :disable="uiStore.sidebarShortcutOpenMode !== 'new-workspace'"
             @update:model-value="(value) => uiStore.setSidebarShortcutNewWorkspacePolicy(value)"

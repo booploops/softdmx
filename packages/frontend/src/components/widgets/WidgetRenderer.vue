@@ -10,7 +10,7 @@
 -->
 <script setup lang="ts">
 import { computed, type Component } from 'vue';
-import type { WidgetConfiguration, ShowfileFixtureMapped, FixtureChannelDefinition } from '@softdmx/engine';
+import type { WidgetConfiguration, ShowfileFixtureMapped, FixtureChannelWithReference } from '@softdmx/engine';
 import ColorPicker from './ColorPicker.vue';
 import LightMover from './LightMover.vue';
 import DimmerSlider from './DimmerSlider.vue';
@@ -34,9 +34,10 @@ type WidgetRegistryEntry = {
   resolveModel: () => unknown | null;
 };
 
-function findChannel(channelName?: string): FixtureChannelDefinition | undefined {
+function findChannel(channelName?: string): FixtureChannelWithReference | undefined {
   if (!channelName) return undefined;
-  return props.fixture.def.channels.find((ch) => ch.name === channelName);
+  const channel = props.fixture.def.channels.find((ch) => ch.name === channelName);
+  return channel?.reference ? (channel as FixtureChannelWithReference) : undefined;
 }
 
 const lightMoverModel = computed((): LightMoverModel | null => {

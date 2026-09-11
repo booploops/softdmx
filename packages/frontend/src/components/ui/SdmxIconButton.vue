@@ -14,7 +14,7 @@ const props = withDefaults(
     icon?: string;
     label?: string;
     color?: string;
-    infoKey: TooltipKey;
+    infoKey?: TooltipKey;
     infoVars?: Record<string, unknown>;
     alwaysShow?: boolean;
     dense?: boolean;
@@ -36,7 +36,9 @@ const props = withDefaults(
 const emit = defineEmits<{ click: [MouseEvent] }>();
 
 const { info } = useInfoText();
-const infoText = computed(() => info(props.infoKey, props.infoVars));
+const infoText = computed(() =>
+  props.infoKey ? info(props.infoKey, props.infoVars) : undefined,
+);
 
 const computedSize = computed(() => (props.dense ? 'sm' : 'md'));
 
@@ -72,7 +74,7 @@ function onClick(event: MouseEvent) {
     @click="onClick"
   >
     <XIcon v-if="icon && !loading" :name="icon" size="sm" :color="color" />
-    <q-tooltip v-if="alwaysShow">{{ infoText }}</q-tooltip>
+    <q-tooltip v-if="alwaysShow && infoText">{{ infoText }}</q-tooltip>
   </XButton>
 </template>
 

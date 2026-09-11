@@ -206,7 +206,7 @@ watch(
   <div class="desk-workspace-root">
     <DockviewVue
       :class="dockviewClass"
-      :components="components"
+      :components="(components as Record<string, never>)"
       @ready="onReady"
     />
   </div>
