@@ -68,7 +68,15 @@ jobs:
         run: yarn --version
 
       - name: Install dependencies
-        run: yarn workspaces focus @softdmx/tests
+        run: yarn workspaces focus @softdmx/tests @softdmx/wasm
+
+      - name: Setup Zig
+        uses: mlugg/setup-zig@v2
+        with:
+          version: 0.16.0
+
+      - name: Build WASM on the fly
+        run: yarn build:wasm
 
       - name: Run tests with coverage
         run: yarn workspace @softdmx/tests test:coverage

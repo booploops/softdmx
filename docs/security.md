@@ -39,3 +39,7 @@ Without a valid token (when one is configured), requests return `401 Unauthorize
 REST is limited to 240 requests / 60s per token or IP. Socket.IO command handlers (`scratch:*`, `show:load`, …) use the same limit; `channels:state` is not limited so DMX refresh is not starved.
 
 `show:state` / `showfile:update` reject payloads whose `version` is not a supported show schema version.
+
+## OSC security
+
+OSC commands received over UDP (port 8000) and emitted over UDP (port 9000) are unauthenticated. Access control relies on network firewalling and interface binding (binding `127.0.0.1` vs `0.0.0.0`). Do not expose port 8000 to untrusted networks.

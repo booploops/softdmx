@@ -62,6 +62,8 @@ SoftDMX also accepts common media-time OSC routes used by Resolume-style control
 
 If a message includes two numeric args and the first is `0-1`, SoftDMX treats it as normalized progress and multiplies by the second arg (duration) to compute `mediaTime`.
 
+> **Note on OSC authentication:** OSC over UDP (inbound port 8000, outbound port 9000) is tokenless. Access control depends on network topology and local interface binding.
+
 ## Timecode Notes and Limits
 
 - Timecode sources (Settings → Show Sync): **OSC**, **LTC** (audio input via `linear-timecode`), or **MTC** (MIDI quarter-frame `0xF1` on enabled MIDI inputs).
@@ -76,12 +78,13 @@ If a message includes two numeric args and the first is `0-1`, SoftDMX treats it
 
 Base URL: `http://127.0.0.1:5353/api/v1/remote`
 
-Optional auth (REST and Socket.IO):
+Authentication (REST and Socket.IO):
 
-- Set `SOFTDMX_API_TOKEN` in the server environment to require auth for all REST routes and Socket.IO connections.
-- Send token in `Authorization: Bearer <token>`, `x-api-token: <token>`, or Socket.IO `auth: { token: '<token>' }` on connect.
-- Electron passes the env token automatically; browser clients may use `?token=` or `localStorage['softdmx-api-token']`.
-- If token auth is enabled and missing/invalid, REST returns `401 Unauthorized` and Socket.IO connections are rejected.
+- In desktop Electron, an API token is generated on first launch and stored in `config.toml` (`remote.apiToken`). Authentication is required by default.
+- Set `SOFTDMX_API_TOKEN` in the server environment to override or supply the token (e.g. for headless servers or CI/testing).
+- Send the token in `Authorization: Bearer <token>`, `x-api-token: <token>`, or Socket.IO `auth: { token: '<token>' }` on connect.
+- The Electron UI passes the configured token automatically via `electronAPI.getRemoteApiToken()`; browser remote clients may use `?token=` in the URL or `localStorage['softdmx-api-token']`.
+- If token auth is enabled and the token is missing or invalid, REST returns `401 Unauthorized` and Socket.IO connections are rejected. In-process test harnesses that never load desktop configuration run without requiring a token unless `SOFTDMX_API_TOKEN` is set.
 
 | Method | Route | Body | Description |
 |---|---|---|---|

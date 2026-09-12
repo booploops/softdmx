@@ -17,7 +17,7 @@
     "test:playwright:electron": "SOFTDMX_E2E=1 playwright test",
     "test:runtime-baseline": "node src/perf/runtime-baseline.mjs",
     "test:runtime-compare": "node src/perf/compare-runtime-baseline.mjs",
-    "test:coverage": "vitest run --coverage 'src/**/*.test.ts' 'src/e2e/**/*.mjs' 'src/e2e-smoke.mjs'",
+    "test:coverage": "vitest run --coverage",
     "test:all": "yarn test"
   },
   "dependencies": {
