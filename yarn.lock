@@ -2944,6 +2944,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "@softdmx/tests@workspace:packages/tests"
   dependencies:
+    "@hono/node-server": "npm:^2.0.10"
     "@jazzer.js/core": "npm:^4.0.0"
     "@playwright/test": "npm:^1.61.1"
     "@softdmx/buffers": "workspace:*"
@@ -2954,8 +2955,12 @@ __metadata:
     "@types/node": "npm:^22.15.0"
     "@vitest/coverage-v8": "npm:^4.1.11"
     fast-check: "npm:^4.8.0"
+    fflate: "npm:^0.8.3"
+    flatbuffers: "npm:^24.12.23"
+    hono: "npm:^4.13.5"
     lodash-es: "npm:^4.18.1"
     socket.io: "npm:^4.8.3"
+    socket.io-client: "npm:^4.8.3"
     typescript: "npm:~6.0.3"
     vitest: "npm:^4.1.11"
     yaml: "npm:^2.9.0"

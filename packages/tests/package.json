@@ -29,13 +29,18 @@
     "yaml": "^2.9.0"
   },
   "devDependencies": {
+    "@hono/node-server": "^2.0.10",
     "@jazzer.js/core": "^4.0.0",
     "@playwright/test": "^1.61.1",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^22.15.0",
     "@vitest/coverage-v8": "^4.1.11",
     "fast-check": "^4.8.0",
+    "fflate": "^0.8.3",
+    "flatbuffers": "^24.12.23",
+    "hono": "^4.13.5",
     "socket.io": "^4.8.3",
+    "socket.io-client": "^4.8.3",
     "typescript": "~6.0.3",
     "vitest": "^4.1.11"
   }
